@@ -28,31 +28,26 @@ export default function LoginPage() {
 
   return (
 	<main className="relative min-h-screen w-full overflow-hidden">
-	  {/* ---- Sunrise sky ---- */}
-	  <div className="absolute inset-0 bg-gradient-to-b from-[#F3E2BD] via-[#E8B44C] to-[#0C1C2C]" />
+	  {/* ---- Layer 1: looping video background ---- */}
+	  <video
+		className="absolute inset-0 h-full w-full object-cover"
+		autoPlay
+		muted
+		loop
+		playsInline
+		poster="/video/ediagd-login-poster.jpg"
+		aria-hidden="true"
+	  >
+		<source src="/video/ediagd-login.webm" type="video/webm" />
+		<source src="/video/ediagd-login.mp4" type="video/mp4" />
+	  </video>
 
-	  {/* ---- Sun ---- */}
-	  <div
-		className="absolute left-1/2 top-[22%] h-40 w-40 -translate-x-1/2 rounded-full"
-		style={{
-		  background: "radial-gradient(circle, #FBEFC8 0%, #E8B44C 55%, rgba(232,180,76,0) 72%)",
-		  animation: "ediagd-sun 6s ease-in-out infinite",
-		}}
-	  />
+	  {/* ---- Layer 2: scrim for text legibility ----
+		  Off by default so the raw video can be evaluated first.
+		  Tune opacities (e.g. from-navy/30 to-navy/60) after reviewing. */}
+	  <div className="absolute inset-0 bg-gradient-to-b from-navy/0 via-navy/0 to-navy/0" />
 
-	  {/* ---- Ocean + waves (SVG, layered, drifting) ---- */}
-	  <div className="absolute inset-x-0 bottom-0 h-[45%]">
-		<svg className="absolute bottom-0 h-full w-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
-		  <path className="wave wave-back" fill="#163A54"
-			d="M0,160 C240,220 480,100 720,140 C960,180 1200,120 1440,160 L1440,320 L0,320 Z" />
-		  <path className="wave wave-mid" fill="#2C6E8A"
-			d="M0,200 C240,160 480,240 720,200 C960,160 1200,240 1440,200 L1440,320 L0,320 Z" />
-		  <path className="wave wave-front" fill="#0C1C2C"
-			d="M0,240 C240,280 480,220 720,250 C960,280 1200,230 1440,260 L1440,320 L0,320 Z" />
-		</svg>
-	  </div>
-
-	  {/* ---- Foreground: logo, form, Mahalo ---- */}
+	  {/* ---- Layer 3: foreground — logo, form, Mahalo ---- */}
 	  <div className="relative z-10 mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
 		<div className="mb-6 flex flex-col items-center">
 		  <img src="/brand/svg/ediagd-mark-primary-light.svg" alt="EDIAGD" className="h-20 w-auto drop-shadow" />
@@ -67,6 +62,8 @@ export default function LoginPage() {
 			<input
 			  type="email"
 			  placeholder="Email"
+			  aria-label="Email"
+			  autoComplete="email"
 			  value={email}
 			  onChange={(e) => setEmail(e.target.value)}
 			  className="w-full rounded-xl border border-line bg-cream-card p-3 text-navy outline-none focus:ring-2 focus:ring-gold"
@@ -74,6 +71,8 @@ export default function LoginPage() {
 			<input
 			  type="password"
 			  placeholder="Password"
+			  aria-label="Password"
+			  autoComplete="current-password"
 			  value={password}
 			  onChange={(e) => setPassword(e.target.value)}
 			  className="w-full rounded-xl border border-line bg-cream-card p-3 text-navy outline-none focus:ring-2 focus:ring-gold"
@@ -89,29 +88,10 @@ export default function LoginPage() {
 		  </div>
 		</div>
 
-		<p className="mt-6 text-center text-3xl text-white/90" style={{ fontFamily: "var(--font-script)" }}>
-		  Mahalo
+		<p className="mt-6 text-center text-3xl text-white/90 drop-shadow" style={{ fontFamily: "var(--font-script)" }}>
+		  {BRAND.signoff}
 		</p>
 	  </div>
-
-	  {/* ---- Animations ---- */}
-	  <style>{`
-		.wave { transform-origin: center bottom; }
-		.wave-back  { animation: ediagd-drift 14s ease-in-out infinite; opacity:.7; }
-		.wave-mid   { animation: ediagd-drift 10s ease-in-out infinite reverse; opacity:.85; }
-		.wave-front { animation: ediagd-drift 8s  ease-in-out infinite; }
-		@keyframes ediagd-drift {
-		  0%,100% { transform: translateX(0) translateY(0); }
-		  50%     { transform: translateX(-28px) translateY(6px); }
-		}
-		@keyframes ediagd-sun {
-		  0%,100% { transform: translateX(-50%) scale(1);    opacity:.95; }
-		  50%     { transform: translateX(-50%) scale(1.05); opacity:1; }
-		}
-		@media (prefers-reduced-motion: reduce) {
-		  .wave, [style*="ediagd-sun"] { animation: none !important; }
-		}
-	  `}</style>
 	</main>
   );
 }
