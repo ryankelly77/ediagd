@@ -93,7 +93,7 @@ export function engagementScore(
 export const BRAND = {
   name: "EDIAGD",
   app: "Eddie",
-  tagline: "Every Day Is A Great Day", // brand book; see note in BRAND.md
+  tagline: "Every Day Is A Great Day", // single source of truth — GREAT overrides the book's GOOD; see BRAND.md
   signoff: "Mahalo", // how every EDIAGD interaction closes
   contentColumnMax: 940,
 } as const;

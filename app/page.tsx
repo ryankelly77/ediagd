@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { BRAND } from "@/lib/brand";
 import { Card } from "@/components/brand/Card";
 import { TierBadge } from "@/components/brand/TierBadge";
 
@@ -28,10 +29,10 @@ export default async function Home() {
         />
         <div className="flex flex-col">
           <span className="font-display text-2xl tracking-[0.22em] text-white">
-            EDIAGD
+            {BRAND.name}
           </span>
           <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-teal">
-            Everyday Is A Great Day
+            {BRAND.tagline}
           </span>
         </div>
       </div>

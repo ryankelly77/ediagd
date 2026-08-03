@@ -24,7 +24,7 @@ EDIAGD ("Every Day Is A Great Day") is an AI-powered coaching platform for autom
 - Colors: Midnight `#0C1C2C` (navy), Deep Water `#163A54`, Ocean `#2C6E8A`, Reef/teal `#4AA8B0`, Seafoam `#7EC8CD`, Sunrise Gold `#E8B44C`, Sand/cream `#F4F0E4`, Mist `#D9ECEE`. Status: palm/green = on track, gold = close, clay = pursue.
 - Tailwind utilities exist for these: `bg-navy`, `text-teal`, `bg-cream`, `text-clay`, `bg-teal-soft`, etc.
 - Wordmark font is **Marcellus**; tagline font is **Montserrat SemiBold**; "Mahalo" accent is a chancery script (`var(--font-script)`). Body/UI is Helvetica/system sans. (Marcellus/Montserrat may not be loaded yet — if you set the wordmark as text, load them via next/font and point `--font-display` at Marcellus.)
-- Tagline is **"Everyday Is A Great Day"** (product decision to use GREAT; the printed brand book says GOOD — GREAT wins in-app).
+- Tagline is **"Every Day Is A Great Day"** (product decision to use GREAT; the printed brand book says GOOD — GREAT wins in-app). Render it from `BRAND.tagline` in `lib/brand.ts` — never retype it inline.
 - Logo files: `public/brand/svg|png|jpg/`. Use `-primary-dark` on dark backgrounds, `-primary-light` on light. `mark-*` = badge only; `lockup-*` = mark+wordmark; `mark-simple-*` = only below ~32px. "Mahalo" is a sign-off, never inside the logo.
 - App shell: wrap pages in the `.ediagd-app` class (cream surface, body font). Cards use `rounded-card`, focus rings are gold.
 

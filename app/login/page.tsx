@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { BRAND } from "@/lib/brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,9 +56,9 @@ export default function LoginPage() {
 	  <div className="relative z-10 mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
 		<div className="mb-6 flex flex-col items-center">
 		  <img src="/brand/svg/ediagd-mark-primary-light.svg" alt="EDIAGD" className="h-20 w-auto drop-shadow" />
-		  <span className="mt-3 font-display text-3xl tracking-[0.22em] text-white drop-shadow">EDIAGD</span>
+		  <span className="mt-3 font-display text-3xl tracking-[0.22em] text-white drop-shadow">{BRAND.name}</span>
 		  <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/85">
-			Everyday Is A Great Day
+			{BRAND.tagline}
 		  </span>
 		</div>
 

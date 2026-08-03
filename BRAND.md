@@ -86,10 +86,8 @@ Cards `16px` radius, pills fully round, buttons `~11px`. `shadow-card` at rest, 
 
 ---
 
-## Open decision: tagline wording
+## Settled: tagline wording
 
-The brand book says **"EVERY DAY IS A GOOD DAY"** — GOOD — and the whole "name is the philosophy" section builds the EDIAGD acronym on it (E-D-I-A-G-D). The token is set to the brand book (**GOOD**).
+In-app the tagline is **"Every Day Is A Great Day"** — GREAT. The printed brand book says GOOD, and the "name is the philosophy" section builds the EDIAGD acronym on it (E-D-I-A-G-D); the acronym still reads with GREAT because the spacing is unchanged (E-D-I-A-G-D), only the adjective differs.
 
-You earlier asked for **"Everyday is a great day"** (GREAT). That contradicts the book and breaks the acronym. Both can't be true — pick one; it's a one-line change in `lib/brand.ts`:
-- Keep the book/acronym -> leave as **"Every Day Is A Good Day"** (current).
-- Override with your preference -> **"Everyday Is A Great Day"** (note: no longer spells EDIAGD).
+Single source of truth is `BRAND.tagline` in `lib/brand.ts`. Render it from that token — `app/layout.tsx` metadata, `app/page.tsx`, and `app/login/page.tsx` all do. Never retype the tagline inline.
