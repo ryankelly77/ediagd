@@ -27,6 +27,25 @@ export type { ServiceStatus, Tier };
  */
 export const MIN_ROS_FOR_COACHING = 20;
 
+// The services EDIAGD coaches advisors on. The DMS also emits catch-all
+// buckets (Maintenance, Repair, Miscellaneous) that are not sellable services —
+// exclude them from all coaching logic. This list is provisional pending Mitch's
+// ruling on Battery / Multi-Point Inspection; keep it as the single source of truth.
+export const COACHABLE_FAMILIES = [
+  "Oil Change",
+  "Brake Service",
+  "Alignment",
+  "Differential",
+  "Spark Plugs",
+  "Filters",
+  "Tires & Rotation",
+  "Fuel System",
+  "Fluids",
+] as const;
+
+export const isCoachable = (family: string) =>
+  (COACHABLE_FAMILIES as readonly string[]).includes(family);
+
 /* ---- Shapes coming out of the views -------------------------------------- */
 
 export type PeriodTotals = {
@@ -95,15 +114,23 @@ function rank(f: ServiceFamily): number {
  * Sort: pursue first, then close, then on-track — biggest opportunity first
  * within each band, so the top of the list is always the best use of the
  * advisor's next conversation.
+ *
+ * Non-coachable buckets are filtered out here — the single choke point every
+ * screen already runs through — so the service list, Eddie's Pick, the tier
+ * score, and the manager's team priorities all correct together. Callers don't
+ * need to know the list exists.
  */
 export function buildServiceFamilies(
   attach: FamilyAttach[],
   benchmarks: FamilyBenchmark[],
   laborPerRoByFamily?: Record<string, number>
 ): ServiceFamily[] {
-  const byFamily = new Map(benchmarks.map((b) => [b.family, b]));
+  const byFamily = new Map(
+    benchmarks.filter((b) => isCoachable(b.family)).map((b) => [b.family, b])
+  );
 
   return attach
+    .filter((a) => isCoachable(a.family))
     .map<ServiceFamily | null>((a) => {
       const bench = byFamily.get(a.family);
       const rate = a.attachRatePct;
