@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-18.0 -18.0 132.0 132.0" width="132.0" height="132.0" role="img" aria-label="EDIAGD">
+  <title>EDIAGD — Primary Dark — mark</title>
+  <circle cx="48" cy="48" r="44" fill="none" stroke="#F5F1E8" stroke-width="2.6"/>
+  <circle cx="60" cy="33" r="9" fill="#E8B44C"/>
+  <path d="M14 62 C 23 40, 47 33, 56 46 C 46 42, 38 48, 39.5 57 C 51 50, 68 53, 79 63 C 57 72, 30 71, 14 62 Z" fill="#7EC8CD"/>
+  <path d="M22 72 C 38 77, 60 77, 74 71" fill="none" stroke="#7EC8CD" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>
+</svg>

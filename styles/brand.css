@@ -1,0 +1,82 @@
+/* ============================================================================
+   EDIAGD — Design Tokens
+   Single source of truth for the brand in code. Two layers:
+     1. Primitives  — the raw brand palette (never reference these in components)
+     2. Semantic    — role-based tokens that components DO use
+   Colors are stored as space-separated RGB channels so Tailwind's opacity
+   modifiers work:  bg-navy/50, text-ink/70, etc.  ->  rgb(var(--x) / <alpha>)
+   ============================================================================ */
+
+:root {
+  /* ---- 1. PRIMITIVES --------------------------------------------------- */
+  --ediagd-navy:        12 28 44;    /* #0C2739  deep header / primary text   */
+  --ediagd-navy-deep:    6 20 34;    /* #081C29  gradient anchor              */
+  --ediagd-ocean:       42 122 138;  /* #12718E  script accent / mid blue     */
+  --ediagd-teal:        74 168 176;  /* #1FA79A  brand accent / Eddie         */
+  --ediagd-teal-soft:  178 218 220;  /* #8FD6CE  tints, chips                 */
+  --ediagd-ice:        234 246 242;  /* #EAF6F2  text on dark surfaces        */
+  --ediagd-ice-dim:    196 230 224;  /* #C4E6E0  muted text on dark           */
+  --ediagd-gold:       232 180 76;   /* #E8A317  primary CTA / highlight      */
+  --ediagd-gold-soft:  244 224 176;  /* #F6D89A  gold tint                    */
+  --ediagd-palm:        59 158 106;  /* #3B9E6A  success / "on track"         */
+  --ediagd-palm-soft:  185 226 200;  /* #B9E2C8  success tint                 */
+  --ediagd-clay:       201 118 47;   /* #C9762F  warm attention — NEVER red   */
+  --ediagd-cream:      244 240 228;  /* #FBF6EA  app background                */
+  --ediagd-cream-card: 252 250 244;  /* #FFFDF7  card surface                 */
+  --ediagd-ink:         12 28 44;    /* #0C2739  body text                    */
+  --ediagd-ink-soft:   104 112 128;  /* #5A6B74  secondary text               */
+  --ediagd-line:       224 216 198;  /* #E7DEC9  hairline borders             */
+  --ediagd-white:      255 255 255;
+
+  /* ---- 2. SEMANTIC ----------------------------------------------------- */
+  --surface:          var(--ediagd-cream);
+  --surface-card:     var(--ediagd-cream-card);
+  --surface-invert:   var(--ediagd-navy);
+  --text:             var(--ediagd-ink);
+  --text-muted:       var(--ediagd-ink-soft);
+  --text-on-invert:   var(--ediagd-white);
+  --text-on-invert-muted: var(--ediagd-ice-dim);
+  --border:           var(--ediagd-line);
+  --accent:           var(--ediagd-gold);   /* calls to action            */
+  --brand:            var(--ediagd-teal);   /* identity accent            */
+
+  /* Advisor service status (glanceable dot). Positive framing — no "red". */
+  --status-on-track:  var(--ediagd-palm);
+  --status-close:     var(--ediagd-gold);
+  --status-pursue:    var(--ediagd-clay);
+
+  /* Advisor tier */
+  --tier-elite:       var(--ediagd-gold);
+  --tier-strong:      var(--ediagd-palm);
+  --tier-low:         var(--ediagd-ocean);
+  --tier-zero:        var(--ediagd-clay);
+
+  /* ---- Shape, elevation, motion --------------------------------------- */
+  --radius-sm:   10px;
+  --radius-card: 16px;
+  --radius-lg:   18px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgb(12 39 57 / 0.05);
+  --shadow-pop:  0 24px 60px rgb(8 28 41 / 0.40);
+  --ring:        0 0 0 3px rgb(var(--ediagd-gold) / 1);
+
+  /* ---- Type ------------------------------------------------------------ */
+  --font-display: ui-serif, Georgia, "Times New Roman", Times, serif;   /* wordmark + headings (brand book = Times) */
+  --font-body: "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-script: "Apple Chancery", "Snell Roundhand", "URW Chancery L", "Pinyon Script", cursive; /* Mahalo accent */
+}
+
+/* Base application shell */
+.ediagd-app {
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+.ediagd-app *,
+.ediagd-app *::before,
+.ediagd-app *::after { box-sizing: border-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ediagd-app * { transition: none !important; animation: none !important; }
+}

@@ -1,26 +1,46 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "../styles/brand.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* primitives */
+  --color-navy: rgb(var(--ediagd-navy));
+  --color-navy-deep: rgb(var(--ediagd-navy-deep));
+  --color-ocean: rgb(var(--ediagd-ocean));
+  --color-teal: rgb(var(--ediagd-teal));
+  --color-teal-soft: rgb(var(--ediagd-teal-soft));
+  --color-ice: rgb(var(--ediagd-ice));
+  --color-ice-dim: rgb(var(--ediagd-ice-dim));
+  --color-gold: rgb(var(--ediagd-gold));
+  --color-gold-soft: rgb(var(--ediagd-gold-soft));
+  --color-palm: rgb(var(--ediagd-palm));
+  --color-palm-soft: rgb(var(--ediagd-palm-soft));
+  --color-clay: rgb(var(--ediagd-clay));
+  --color-cream: rgb(var(--ediagd-cream));
+  --color-cream-card: rgb(var(--ediagd-cream-card));
+  --color-ink: rgb(var(--ediagd-ink));
+  --color-ink-soft: rgb(var(--ediagd-ink-soft));
+  --color-line: rgb(var(--ediagd-line));
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  /* semantic */
+  --color-surface: rgb(var(--surface));
+  --color-surface-card: rgb(var(--surface-card));
+  --color-accent: rgb(var(--accent));
+  --color-brand: rgb(var(--brand));
+  --color-border: rgb(var(--border));
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* status + tier */
+  --color-status-on-track: rgb(var(--status-on-track));
+  --color-status-close: rgb(var(--status-close));
+  --color-status-pursue: rgb(var(--status-pursue));
+  --color-tier-elite: rgb(var(--tier-elite));
+  --color-tier-strong: rgb(var(--tier-strong));
+  --color-tier-low: rgb(var(--tier-low));
+  --color-tier-zero: rgb(var(--tier-zero));
+
+  /* type + shape */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-script: var(--font-script);
+  --radius-card: var(--radius-card);
+  --max-width-app: 940px;
 }

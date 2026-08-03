@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-18.0 -18.0 132.0 132.0" width="132.0" height="132.0" role="img" aria-label="EDIAGD">
+  <title>EDIAGD — Primary Light — mark</title>
+  <circle cx="48" cy="48" r="44" fill="none" stroke="#163A54" stroke-width="2.6"/>
+  <g stroke="#E8B44C" stroke-width="2.4" stroke-linecap="round">
+    <line x1="60" y1="18" x2="60" y2="12"/>
+    <line x1="72" y1="22" x2="75.5" y2="17"/>
+    <line x1="80" y1="31" x2="85.5" y2="28"/>
+  </g>
+  <circle cx="60" cy="33" r="9" fill="#E8B44C"/>
+  <path d="M14 62 C 23 40, 47 33, 56 46 C 46 42, 38 48, 39.5 57 C 51 50, 68 53, 79 63 C 57 72, 30 71, 14 62 Z" fill="#4AA8B0"/>
+  <path d="M22 72 C 38 77, 60 77, 74 71" fill="none" stroke="#7EC8CD" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M30 79 C 42 82.5, 56 82.5, 66 78.5" fill="none" stroke="#7EC8CD" stroke-width="2.0" stroke-linecap="round" opacity="0.6"/>
+</svg>
