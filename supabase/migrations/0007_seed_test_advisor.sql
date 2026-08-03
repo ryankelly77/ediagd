@@ -1,16 +1,14 @@
 -- ============================================================================
--- EDIAGD — 0007 Test advisor membership (DEV SEED)
--- The test account is an 'admin' with no DMS op code, so /advisor had nothing
--- to resolve once the dev fallback was removed. Give it an advisor membership
--- pointed at Esparza (35122) so the screen renders real numbers for a signed-in
--- advisor.
+-- 0007 — intentionally empty.
 --
--- This is environment-specific seed data, not schema. Drop it before this
--- migration set is used to stand up a customer database.
+-- This migration used to link a hardcoded test user UUID to Esparza (35122) as
+-- an advisor. That is environment-specific TEST DATA and would have run against
+-- any database built from this sequence, including production. It now lives in
+-- supabase/seed.sql (SECTION 3).
+--
+-- The file is kept (rather than deleted) because 0007 is already recorded in the
+-- remote migration history; removing it would desync `supabase migration list`.
+-- Do not add data here — put it in supabase/seed.sql.
 -- ============================================================================
 
--- link the existing test user to Esparza (35122) as an advisor at the test rooftop
-insert into membership (user_id, rooftop_id, role, op_code_id)
-values ('78929620-f92b-416f-80ac-41fcc3a6e3e8',
-        '22222222-2222-2222-2222-222222222222', 'advisor', '35122')
-on conflict (user_id, rooftop_id, role) do update set op_code_id = excluded.op_code_id;
+-- no-op

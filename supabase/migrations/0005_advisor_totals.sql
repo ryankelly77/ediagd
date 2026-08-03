@@ -19,12 +19,9 @@ drop policy if exists advisor_total_read on advisor_period_total_src;
 create policy advisor_total_read on advisor_period_total_src
   for select using (rooftop_id in (select my_rooftops()));
 
-insert into advisor_period_total_src (period_id, rooftop_id, advisor_op_id, total_ros, blended_elr, total_labor_sales, gp_pct, total_ro_lines) values
-  ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','35122',100.0,165.049222,36583.16,0.689764,null),
-  ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','400025',109.0,154.977369,32870.7,0.665035,null),
-  ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','400049',61.0,178.436342,29361.7,0.708685,null),
-  ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','400030',8.0,34.282857,119.99,0.168681,null)
-on conflict do nothing;
+-- The authoritative per-advisor rows that used to be inserted here are TEST
+-- DATA and now live in supabase/seed.sql (SECTION 2). This migration keeps only
+-- the structure: the table, its RLS policy, and the two views below.
 
 create or replace view advisor_period_totals as
 select period_id, rooftop_id, advisor_op_id,
