@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { TierBadge } from "@/components/brand/TierBadge";
@@ -17,58 +18,39 @@ import {
   type FamilyBenchmark,
 } from "@/lib/advisor";
 
-// TODO: no auth guard yet — this route renders for signed-out visitors via the
-// dev fallback below. Route protection (redirect to /login when there's no
-// session) is a separate step.
-
-/**
- * TEMPORARY DEV FALLBACK.
- * Until test accounts carry an advisor membership, an unrecognised visitor is
- * shown Esparza's real Doggett numbers so the screen has something to render.
- * Delete this the moment route protection lands — it must never reach prod.
- */
-const DEV_FALLBACK_OP_CODE_ID = "35122";
-const DEV_FALLBACK_NAME = "Esparza";
-
 export default async function AdvisorPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // No session, no screen. The performance views enforce this at the database
+  // level too (0006), but redirecting is the honest user experience.
+  if (!user) redirect("/login");
+
   // ---- Who is this advisor, and which op code are they in the DMS? ----------
-  let opCodeId: string | null = null;
-  let advisorName: string | null = null;
-  let rooftopId: string | null = null;
+  const { data: membership } = await supabase
+    .from("membership")
+    .select("rooftop_id, op_code_id, app_user:user_id(full_name)")
+    .eq("user_id", user.id)
+    .eq("role", "advisor")
+    .eq("active", true)
+    .limit(1)
+    .maybeSingle();
 
-  if (user) {
-    const { data: membership } = await supabase
-      .from("membership")
-      .select("rooftop_id, op_code_id, app_user:user_id(full_name)")
-      .eq("user_id", user.id)
-      .eq("role", "advisor")
-      .eq("active", true)
-      .limit(1)
-      .maybeSingle();
-
-    if (membership?.op_code_id) {
-      opCodeId = membership.op_code_id;
-      rooftopId = membership.rooftop_id;
-      // PostgREST types the embed as an array; it's a to-one join in practice.
-      const embed = membership.app_user as unknown;
-      const appUser = (Array.isArray(embed) ? embed[0] : embed) as
-        | { full_name: string | null }
-        | null
-        | undefined;
-      advisorName = appUser?.full_name ?? user.email ?? null;
-    }
+  if (!membership?.op_code_id) {
+    return <NoAdvisorProfile />;
   }
 
-  const usingFallback = opCodeId === null;
-  if (usingFallback) {
-    opCodeId = DEV_FALLBACK_OP_CODE_ID;
-    advisorName = DEV_FALLBACK_NAME;
-  }
+  const opCodeId: string = membership.op_code_id;
+  const rooftopId: string | null = membership.rooftop_id ?? null;
+  // PostgREST types the embed as an array; it's a to-one join in practice.
+  const embed = membership.app_user as unknown;
+  const appUser = (Array.isArray(embed) ? embed[0] : embed) as
+    | { full_name: string | null }
+    | null
+    | undefined;
+  const advisorName: string | null = appUser?.full_name ?? user.email ?? null;
 
   // ---- Current period ------------------------------------------------------
   // With a real membership the rooftop's latest period wins. Under the dev
@@ -181,13 +163,6 @@ export default async function AdvisorPage() {
         {canCoach && <TierBadge tier={tier} />}
       </header>
 
-      {usingFallback && (
-        <p className="mt-4 rounded-[10px] border border-line bg-gold-soft/50 px-3 py-2 text-xs font-semibold text-navy">
-          Dev preview — showing op code {DEV_FALLBACK_OP_CODE_ID}. Sign in as an
-          advisor to see your own numbers.
-        </p>
-      )}
-
       {/* ---- Daily stat -------------------------------------------------- */}
       <Card className="mt-5 p-5">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
@@ -272,6 +247,23 @@ export default async function AdvisorPage() {
           </Card>
         )}
       </section>
+    </main>
+  );
+}
+
+/** Signed in, but this account isn't linked to a DMS advisor record yet. */
+function NoAdvisorProfile() {
+  return (
+    <main className="mx-auto max-w-app px-4 py-10">
+      <Card className="p-6">
+        <h1 className="text-lg font-extrabold text-navy">
+          No advisor profile linked to this account yet
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          Your daily numbers show up here as soon as your manager links you to
+          your advisor ID. Nothing to do on your end.
+        </p>
+      </Card>
     </main>
   );
 }
