@@ -1,0 +1,196 @@
+/* ============================================================================
+   EDIAGD — advisor daily-view logic
+   Pure functions over the performance views (advisor_period_totals,
+   advisor_family_attach, family_store_benchmark). No Supabase imports here so
+   this stays unit-testable and usable from both server and client components.
+
+   NOTE: `serviceStatus` already lives in lib/brand.ts with exactly the
+   thresholds this screen needs (>= avg -> on-track, >= 60% of avg -> close,
+   else pursue). It is re-exported here rather than redefined — one definition,
+   so the dot on this screen can never drift from the dot anywhere else.
+   ============================================================================ */
+
+import {
+  serviceStatus,
+  tierFromScore,
+  type ServiceStatus,
+  type Tier,
+} from "./brand";
+
+export { serviceStatus };
+export type { ServiceStatus, Tier };
+
+/**
+ * Below this many ROs in the period, attach rates are noise — a single extra
+ * oil change swings a rate by whole points. We show a "building data" state
+ * instead of status dots or a coaching pick.
+ */
+export const MIN_ROS_FOR_COACHING = 20;
+
+/* ---- Shapes coming out of the views -------------------------------------- */
+
+export type PeriodTotals = {
+  periodId: string;
+  rooftopId: string;
+  advisorOpId: string;
+  totalRos: number;
+  totalLaborSales: number;
+  blendedElr: number | null;
+  gpPctWeighted: number | null;
+};
+
+export type FamilyAttach = {
+  family: string;
+  famRos: number;
+  advisorRos: number;
+  attachRatePct: number | null;
+};
+
+export type FamilyBenchmark = {
+  family: string;
+  storeAvgPct: number | null;
+  storeBestPct: number | null;
+};
+
+/* ---- The joined, ranked row the UI renders ------------------------------- */
+
+export type ServiceFamily = {
+  family: string;
+  /** The advisor's attach rate, in percent. */
+  rate: number;
+  storeAvg: number;
+  storeBest: number;
+  status: ServiceStatus;
+  famRos: number;
+  /** Percentage points below store average; 0 when at or above. */
+  gapPp: number;
+  /** ROs the advisor would add by pulling this family up to store average. */
+  missedRos: number;
+  /**
+   * Estimated labor dollars behind `missedRos`. Null when per-family labor
+   * sales aren't readable (see `laborPerRoByFamily` below), in which case
+   * ranking falls back to `missedRos`.
+   */
+  opportunity: number | null;
+};
+
+const STATUS_ORDER: Record<ServiceStatus, number> = {
+  pursue: 0,
+  close: 1,
+  "on-track": 2,
+};
+
+/** Ranking weight: dollars when we have them, otherwise missed ROs. */
+function rank(f: ServiceFamily): number {
+  return f.opportunity ?? f.missedRos;
+}
+
+/**
+ * Join attach rates to store benchmarks and rank them.
+ *
+ * `laborPerRoByFamily` is optional: labor sales per family live on
+ * advisor_op_metric (RLS-gated), not on the views, so callers that can't read
+ * it pass nothing and every `opportunity` comes back null.
+ *
+ * Sort: pursue first, then close, then on-track — biggest opportunity first
+ * within each band, so the top of the list is always the best use of the
+ * advisor's next conversation.
+ */
+export function buildServiceFamilies(
+  attach: FamilyAttach[],
+  benchmarks: FamilyBenchmark[],
+  laborPerRoByFamily?: Record<string, number>
+): ServiceFamily[] {
+  const byFamily = new Map(benchmarks.map((b) => [b.family, b]));
+
+  return attach
+    .map<ServiceFamily | null>((a) => {
+      const bench = byFamily.get(a.family);
+      const rate = a.attachRatePct;
+      const storeAvg = bench?.storeAvgPct;
+      // A family with no rate or no benchmark can't be judged — drop it rather
+      // than render a dot we can't defend.
+      if (rate == null || storeAvg == null) return null;
+
+      const gapPp = Math.max(0, storeAvg - rate);
+      const missedRos = (gapPp / 100) * a.advisorRos;
+      const laborPerRo = laborPerRoByFamily?.[a.family];
+
+      return {
+        family: a.family,
+        rate,
+        storeAvg,
+        storeBest: bench?.storeBestPct ?? storeAvg,
+        status: serviceStatus(rate, storeAvg),
+        famRos: a.famRos,
+        gapPp,
+        missedRos,
+        opportunity: laborPerRo != null ? missedRos * laborPerRo : null,
+      };
+    })
+    .filter((f): f is ServiceFamily => f !== null)
+    .sort(
+      (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || rank(b) - rank(a)
+    );
+}
+
+/** Do we have enough volume this period to coach on? */
+export function hasCoachingVolume(totalRos: number): boolean {
+  return totalRos >= MIN_ROS_FOR_COACHING;
+}
+
+/**
+ * Eddie's Pick — the single biggest opportunity: among families the advisor is
+ * BELOW store average on, the largest revenue-weighted gap. Returns null when
+ * volume is too thin to coach on, or when they're at/above average everywhere
+ * (a good problem to have).
+ */
+export function eddiesPick(
+  families: ServiceFamily[],
+  totalRos: number
+): ServiceFamily | null {
+  if (!hasCoachingVolume(totalRos)) return null;
+  const below = families.filter((f) => f.rate < f.storeAvg);
+  if (below.length === 0) return null;
+  return below.reduce((best, f) => (rank(f) > rank(best) ? f : best));
+}
+
+/**
+ * Tier from the share of the advisor's work that sits at or above store
+ * average, weighted by that family's RO volume (brand.ts describes the tier as
+ * revenue-weighted; RO volume is the closest weight the views expose).
+ */
+export function advisorTier(families: ServiceFamily[]): Tier {
+  const total = families.reduce((sum, f) => sum + f.famRos, 0);
+  if (total <= 0) return "Zero";
+  const atOrAbove = families
+    .filter((f) => f.status === "on-track")
+    .reduce((sum, f) => sum + f.famRos, 0);
+  return tierFromScore(atOrAbove / total);
+}
+
+/* ---- Display helpers ----------------------------------------------------- */
+
+export function formatCurrency(value: number, withCents = false): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: withCents ? 2 : 0,
+    maximumFractionDigits: withCents ? 2 : 0,
+  });
+}
+
+/** Attach rates arrive as percentages already (38.4 -> "38.4%"). */
+export function formatPct(value: number, digits = 1): string {
+  return `${value.toFixed(digits)}%`;
+}
+
+/** gp_pct_weighted is a 0-1 fraction (0.6492 -> "64.9%"). */
+export function formatFraction(value: number, digits = 1): string {
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
+/** "Aloha, {firstName}" wants just the first token of a full name. */
+export function firstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] ?? fullName;
+}

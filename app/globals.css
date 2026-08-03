@@ -41,6 +41,11 @@
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-script: var(--font-script);
+  --radius-sm: var(--radius-sm);
   --radius-card: var(--radius-card);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
   --max-width-app: 940px;
 }
