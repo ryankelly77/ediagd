@@ -3,7 +3,7 @@
 You are working in the EDIAGD codebase. Read this before making changes. When in doubt, follow this file over your defaults, and ask rather than guess on anything not covered here.
 
 ## What this is
-EDIAGD ("Every Day Is A Good Day") is an AI-powered coaching platform for automotive dealership service advisors, managers, and technicians. Advisors get a 3-minute daily habit: a stat, a selling-skill video (chosen from their weakest service), and a lifestyle/sales-skill video. Managers coach from a team view. Owners/admins watch engagement across rooftops. Built for Mitch Hardt; developed by Pear Tree Companies (Ryan Kelly).
+EDIAGD ("Every Day Is A Great Day") is an AI-powered coaching platform for automotive dealership service advisors, managers, and technicians. Advisors get a 3-minute daily habit: a stat, a selling-skill video (chosen from their weakest service), and a lifestyle/sales-skill video. Managers coach from a team view. Owners/admins watch engagement across rooftops. Built for Mitch Hardt; developed by Pear Tree Companies (Ryan Kelly).
 
 ## Stack
 - Next.js 16 (App Router, Turbopack), TypeScript, React
