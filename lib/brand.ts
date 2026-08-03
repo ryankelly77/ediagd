@@ -94,6 +94,7 @@ export const BRAND = {
   name: "EDIAGD",
   app: "Eddie",
   tagline: "Every Day Is A Great Day", // single source of truth — GREAT overrides the book's GOOD; see BRAND.md
+  greeting: "Aloha", // welcome — login screen
   signoff: "Mahalo", // how every EDIAGD interaction closes
   contentColumnMax: 940,
 } as const;
