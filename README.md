@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EDIAGD — Project Context for Claude Code
 
-## Getting Started
+You are working in the EDIAGD codebase. Read this before making changes. When in doubt, follow this file over your defaults, and ask rather than guess on anything not covered here.
 
-First, run the development server:
+## What this is
+EDIAGD ("Every Day Is A Good Day") is an AI-powered coaching platform for automotive dealership service advisors, managers, and technicians. Advisors get a 3-minute daily habit: a stat, a selling-skill video (chosen from their weakest service), and a lifestyle/sales-skill video. Managers coach from a team view. Owners/admins watch engagement across rooftops. Built for Mitch Hardt; developed by Pear Tree Companies (Ryan Kelly).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Stack
+- Next.js 16 (App Router, Turbopack), TypeScript, React
+- Tailwind CSS v4 (CSS-first `@theme` in `app/globals.css` — there is NO tailwind.config.ts in use)
+- Supabase (Postgres + Auth + RLS). `@supabase/ssr` for App Router auth.
+- Session handling lives in `proxy.ts` (Next 16 renamed `middleware` → `proxy`).
+- Deploy target: Vercel.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Hard rules
+- **Never invent brand colors or fonts.** Use the design tokens only (see Brand).
+- **Never use red.** The brand is Aloha/positive. For attention/alerts use `clay` (#C9762F), never red. The lowest service status is "Pursue," never "needs work."
+- **Mobile-first, always.** Design for phone first, scale up. Advisors use this on the service drive on a phone.
+- **No PWA.** Decision made: plain mobile web for now; native (React Native) is a later "if needed" call. Do not add PWA/service-worker/manifest plumbing.
+- **RLS is the security boundary.** Never bypass it from client code. Provisioning/writes that must cross tenants run server-side with the service role only.
+- **Don't hardcode secrets.** Anon key is public/client-safe; the service_role key is server-only and must never appear in `NEXT_PUBLIC_*` or client bundles.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Brand (tokens live in styles/brand.css + app/globals.css @theme)
+- Colors: Midnight `#0C1C2C` (navy), Deep Water `#163A54`, Ocean `#2C6E8A`, Reef/teal `#4AA8B0`, Seafoam `#7EC8CD`, Sunrise Gold `#E8B44C`, Sand/cream `#F4F0E4`, Mist `#D9ECEE`. Status: palm/green = on track, gold = close, clay = pursue.
+- Tailwind utilities exist for these: `bg-navy`, `text-teal`, `bg-cream`, `text-clay`, `bg-teal-soft`, etc.
+- Wordmark font is **Marcellus**; tagline font is **Montserrat SemiBold**; "Mahalo" accent is a chancery script (`var(--font-script)`). Body/UI is Helvetica/system sans. (Marcellus/Montserrat may not be loaded yet — if you set the wordmark as text, load them via next/font and point `--font-display` at Marcellus.)
+- Tagline is **"Everyday Is A Great Day"** (product decision to use GREAT; the printed brand book says GOOD — GREAT wins in-app).
+- Logo files: `public/brand/svg|png|jpg/`. Use `-primary-dark` on dark backgrounds, `-primary-light` on light. `mark-*` = badge only; `lockup-*` = mark+wordmark; `mark-simple-*` = only below ~32px. "Mahalo" is a sign-off, never inside the logo.
+- App shell: wrap pages in the `.ediagd-app` class (cream surface, body font). Cards use `rounded-card`, focus rings are gold.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Data model (Supabase — migrations in supabase/migrations/)
+- Tenancy: `org` → `rooftop` (the billing unit) → `membership` (a person's role AT a rooftop).
+- Roles (`member_role`): `advisor`, `manager`, `technician`, `admin`. Technician is first-class (Joe the Pro add-on).
+- Entitlements: `rooftop_product` = what a rooftop owns; products are `advisor_base`, `manager_meetings`, `joe_the_pro` (flat per-rooftop). `product_catalog` says who each product serves and who can buy it.
+- **The core access rule everywhere: role × product.** You can see add-on content only if your role consumes it AND your rooftop owns the product. Enforced in RLS (0002).
+- Content: `content_item` tagged by `library` (`coaching_cues`, `op_code_videos`, `general_sales`, `stats`, `manager_meetings`, `joe_the_pro`); `content_progress` drives streaks/engagement.
+- Not built yet: performance layer (advisor metrics, attach rates, service families, periods) modeled on the real Doggett op-code report; billing (Stripe ↔ rooftop_product); video pipeline.
 
-## Learn More
+## Real data shape (for the performance layer)
+Source is a monthly DMS op-code export (e.g., Doggett Chrysler June 2026). Per advisor: operator/op-code ID, tier (Elite/Strong/Low/Zero), ROs, labor sales, effective labor rate, GP%. Per advisor × service family: attach rate, with store average and store best for comparison. ~10 service families. No customer PII. Status dots compare an advisor's rate to the STORE AVERAGE; "Eddie's Pick" = their weakest family vs store average, revenue-weighted.
 
-To learn more about Next.js, take a look at the following resources:
+## Conventions
+- Server components read data by default; add `"use client"` only for interactivity (forms, onClick).
+- Supabase clients: `lib/supabase/server.ts` (server), `lib/supabase/client.ts` (browser).
+- Keep components small and in `components/`. Brand primitives in `components/brand/`.
+- After changes, make sure `npm run dev` compiles clean. Report what files you changed and why.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Current status
+Foundation done: branded shell, auth (email+password), multi-tenant schema + RLS verified, seeded test rooftop (admin user, all 3 products). Building now: mobile-first screens, starting with the animated sunrise/beach login.
