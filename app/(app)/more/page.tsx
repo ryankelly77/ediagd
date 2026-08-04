@@ -59,8 +59,15 @@ export default async function MorePage() {
           <li>
             <LinkRow
               href="/admin/content"
-              label="Coaching content"
+              label="Coaching Content"
               hint="Manage cues and videos"
+            />
+          </li>
+          <li>
+            <LinkRow
+              href="/admin/settings"
+              label="Gamification Settings"
+              hint="Sand Dollars and streak grace days"
             />
           </li>
         </ul>

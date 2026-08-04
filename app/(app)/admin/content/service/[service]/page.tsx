@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import { getAdminContext } from "@/lib/guards";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { ContentFilters } from "@/components/admin/content/ContentFilters";
 import {
@@ -81,31 +82,22 @@ export default async function ContentServicePage({
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
-      <header>
-        <Link
-          href="/admin/content"
-          className="text-xs font-bold uppercase tracking-[0.18em] text-ocean hover:underline"
-        >
-          ‹ All services
-        </Link>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-2xl font-extrabold text-navy">
-              {heading}
-            </h1>
-            <p className="mt-0.5 text-sm text-ink-soft">
-              {total.toLocaleString()} {total === 1 ? "item" : "items"}
-              {statusFilter ? ` · ${STATUS_META[statusFilter].label.toLowerCase()}` : ""}
-            </p>
-          </div>
+      <AdminPageHeader
+        back={{ href: "/admin/content", label: "All services" }}
+        eyebrow="Coaching content"
+        title={heading}
+        subtitle={`${total.toLocaleString()} ${total === 1 ? "item" : "items"}${
+          statusFilter ? ` · ${STATUS_META[statusFilter].label.toLowerCase()}` : ""
+        }`}
+        action={
           <Link
             href={newHref}
             className="rounded-xl bg-gold px-3 py-2 text-sm font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
           >
             New content
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <ContentFilters
         basePath={`/admin/content/service/${slug}`}

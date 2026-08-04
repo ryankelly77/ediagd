@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
@@ -185,6 +186,25 @@ export default async function AdminPage() {
         )}
       </section>
 
+      {/* ---- Admin tools --------------------------------------------------- */}
+      <section className="mt-5">
+        <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
+          Tools
+        </h2>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <ToolLink
+            href="/admin/content"
+            label="Manage coaching content"
+            hint="Cues and videos, by service"
+          />
+          <ToolLink
+            href="/admin/settings"
+            label="Gamification settings"
+            hint="Sand Dollars, streak grace days"
+          />
+        </div>
+      </section>
+
       {/* ---- Per-rooftop --------------------------------------------------- */}
       <section className="mt-5">
         <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
@@ -193,6 +213,33 @@ export default async function AdminPage() {
         <RooftopList rooftops={group.rooftops} />
       </section>
     </main>
+  );
+}
+
+function ToolLink({
+  href,
+  label,
+  hint,
+}: {
+  href: string;
+  label: string;
+  hint: string;
+}) {
+  return (
+    <Card>
+      <Link
+        href={href}
+        className="flex items-center gap-3 p-4 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-extrabold text-navy">{label}</span>
+          <span className="mt-0.5 block text-xs text-ink-soft">{hint}</span>
+        </span>
+        <span aria-hidden="true" className="text-lg text-ink-soft">
+          ›
+        </span>
+      </Link>
+    </Card>
   );
 }
 

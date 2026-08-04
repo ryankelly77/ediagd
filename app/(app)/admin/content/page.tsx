@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import { getAdminContext } from "@/lib/guards";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import {
   ALL_SERVICES,
@@ -81,18 +82,14 @@ export default async function ContentHomePage() {
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
-      <header>
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
-          Coaching content
-        </p>
-        <h1 className="mt-1 text-2xl font-extrabold text-navy">
-          Browse by service
-        </h1>
-        <p className="mt-1 text-sm text-ink-soft">
-          {total.toLocaleString()} items across {buckets.length}{" "}
-          {buckets.length === 1 ? "grouping" : "groupings"}.
-        </p>
-      </header>
+      <AdminPageHeader
+        back={{ href: "/admin", label: "Admin" }}
+        eyebrow="Coaching content"
+        title="Browse by service"
+        subtitle={`${total.toLocaleString()} items across ${buckets.length} ${
+          buckets.length === 1 ? "grouping" : "groupings"
+        }.`}
+      />
 
       {/* ---- Mitch's to-do list: everything still in draft ---------------- */}
       <Link
