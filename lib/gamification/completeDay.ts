@@ -1,0 +1,338 @@
+/* ============================================================================
+   EDIAGD — completeDay(): the server-authoritative daily-loop engine
+   SERVER ONLY. Uses the service-role client because 0012 made the economy
+   tables (sand_dollar_entry, swell, user_badge) read-only to users — earns are
+   granted here, after the completion is verified, and nowhere else.
+
+   Every amount and cap is read from game_settings at runtime. No magic numbers.
+
+   ATOMICITY — read this before changing the order of operations.
+   PostgREST gives us no multi-statement transaction from JS, so this is a saga:
+     * The daily_completion INSERT goes FIRST and is the idempotency guard. The
+       unique (user_id, completion_date) index means a second concurrent call
+       loses the race and gets 23505 — checking with a SELECT first would leave
+       a TOCTOU window where two requests both pay out.
+     * Everything after it is compensated on failure (see `rollback`): ledger
+       rows are keyed by ref_id = completion id so they can be removed, the
+       prior swell row is captured up front and restored, and a badge is only
+       revoked if this run inserted it.
+   Residual risk: compensation is itself a network call and can fail, which
+   would leave a completion with partial grants. The clean fix is to move this
+   whole body into a plpgsql function and call it over RPC, which Postgres would
+   run in one transaction. That's a migration and a second implementation of the
+   grace maths in SQL, so it isn't done here — but it is the right end state,
+   and the pure logic in streak.ts is deliberately separate to make porting easy.
+   ============================================================================ */
+
+import { createServiceClient } from "@/lib/supabase/service";
+import {
+  MILESTONE_BADGE,
+  MILESTONE_REASON,
+  applyDailyCompletion,
+  milestoneSand,
+  type GameSettings,
+  type IsoDate,
+  type Milestone,
+  type SwellState,
+} from "./streak";
+
+export type CompleteDayInput = {
+  quoteId?: string | null;
+  cueId?: string | null;
+  videoId?: string | null;
+};
+
+export type CompleteDayResult = {
+  alreadyComplete: boolean;
+  date: IsoDate;
+  streak: number;
+  longest: number;
+  paddleOutAvailable: number;
+  paddleOutSpent: number;
+  paddleOutGranted: number;
+  graceUsed: boolean;
+  streakReset: boolean;
+  sandEarned: number;
+  badgeEarned: string | null;
+  newBalance: number;
+};
+
+export class CompleteDayError extends Error {
+  constructor(
+    message: string,
+    readonly stage: string
+  ) {
+    super(message);
+    this.name = "CompleteDayError";
+  }
+}
+
+const DEFAULT_SWELL: Omit<SwellState, "lastCompletedOn" | "paddleOutLastGranted"> = {
+  currentLen: 0,
+  longestLen: 0,
+  paddleOutAvailable: 0,
+};
+
+export async function completeDay(
+  userId: string,
+  rooftopId: string,
+  content: CompleteDayInput = {}
+): Promise<CompleteDayResult> {
+  const supabase = createServiceClient();
+
+  // ---- 1. Today, in the rooftop's timezone -------------------------------
+  const { data: todayRaw, error: todayError } = await supabase.rpc("rooftop_today", {
+    _rooftop: rooftopId,
+  });
+  if (todayError) throw new CompleteDayError(todayError.message, "rooftop_today");
+  if (!todayRaw) {
+    throw new CompleteDayError(
+      `No timezone resolved for rooftop ${rooftopId}.`,
+      "rooftop_today"
+    );
+  }
+  const today = todayRaw as IsoDate;
+
+  // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
+  const { data: completion, error: completionError } = await supabase
+    .from("daily_completion")
+    .insert({
+      user_id: userId,
+      rooftop_id: rooftopId,
+      completion_date: today,
+      quote_content_id: content.quoteId ?? null,
+      cue_content_id: content.cueId ?? null,
+      video_content_id: content.videoId ?? null,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (completionError) {
+    // 23505 = unique violation: this day is already done. Grant nothing.
+    if (completionError.code === "23505") {
+      return await currentState(supabase, userId, today, true);
+    }
+    throw new CompleteDayError(completionError.message, "daily_completion");
+  }
+  const completionId = completion?.id as string | undefined;
+  if (!completionId) {
+    throw new CompleteDayError("No completion id returned.", "daily_completion");
+  }
+
+  // Best-effort compensation so a failure can't leave a completion with
+  // partial grants — the user must be able to retry the day cleanly.
+  let awardedBadgeKey: string | null = null;
+  let priorSwell: Record<string, unknown> | null = null;
+  let swellExisted = false;
+
+  const rollback = async () => {
+    try {
+      await supabase.from("sand_dollar_entry").delete().eq("ref_id", completionId);
+      if (awardedBadgeKey) {
+        await supabase
+          .from("user_badge")
+          .delete()
+          .eq("user_id", userId)
+          .eq("badge_key", awardedBadgeKey);
+      }
+      if (swellExisted && priorSwell) {
+        await supabase.from("swell").upsert(priorSwell, { onConflict: "user_id" });
+      } else if (!swellExisted) {
+        await supabase.from("swell").delete().eq("user_id", userId);
+      }
+      await supabase.from("daily_completion").delete().eq("id", completionId);
+    } catch {
+      // Swallow: the original error is what the caller needs to see.
+    }
+  };
+
+  try {
+    // ---- 4. Settings — every number below comes from here ----------------
+    const { data: settingsRow, error: settingsError } = await supabase
+      .from("game_settings")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+    if (settingsError) throw new CompleteDayError(settingsError.message, "game_settings");
+    if (!settingsRow) {
+      throw new CompleteDayError("No game_settings row found.", "game_settings");
+    }
+
+    const settings: GameSettings = {
+      paddleOutCap: Number(settingsRow.paddle_out_cap),
+      paddleOutPerMonth: Number(settingsRow.paddle_out_per_month),
+      sandDailyLoop: Number(settingsRow.sand_daily_loop),
+      sandSwell7: Number(settingsRow.sand_swell_7),
+      sandSwell30: Number(settingsRow.sand_swell_30),
+      sandSwell90: Number(settingsRow.sand_swell_90),
+      sandBadge: Number(settingsRow.sand_badge),
+      sandCertification: Number(settingsRow.sand_certification),
+    };
+
+    // ---- 5. Load (or initialise) the Swell ------------------------------
+    const { data: swellRow, error: swellReadError } = await supabase
+      .from("swell")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (swellReadError) throw new CompleteDayError(swellReadError.message, "swell.read");
+
+    swellExisted = Boolean(swellRow);
+    priorSwell = swellRow ?? null;
+
+    const state: SwellState = swellRow
+      ? {
+          currentLen: Number(swellRow.current_len ?? 0),
+          longestLen: Number(swellRow.longest_len ?? 0),
+          lastCompletedOn: (swellRow.last_completed_on as IsoDate | null) ?? null,
+          paddleOutAvailable: Number(swellRow.paddle_out_available ?? 0),
+          paddleOutLastGranted:
+            (swellRow.paddle_out_last_granted as IsoDate | null) ?? null,
+        }
+      : { ...DEFAULT_SWELL, lastCompletedOn: null, paddleOutLastGranted: null };
+
+    // ---- 6 & 7. All the streak/grace rules (pure, testable) -------------
+    const { next, outcome } = applyDailyCompletion(state, today, settings);
+
+    // ---- 8. Mint the daily loop earn ------------------------------------
+    let sandEarned = 0;
+    const { error: dailySandError } = await supabase.from("sand_dollar_entry").insert({
+      user_id: userId,
+      amount: settings.sandDailyLoop,
+      reason: "daily_loop",
+      ref_id: completionId,
+      note: null,
+    });
+    if (dailySandError) throw new CompleteDayError(dailySandError.message, "sand.daily");
+    sandEarned += settings.sandDailyLoop;
+
+    // ---- Persist the Swell ----------------------------------------------
+    const { error: swellWriteError } = await supabase.from("swell").upsert(
+      {
+        user_id: userId,
+        current_len: next.currentLen,
+        longest_len: next.longestLen,
+        last_completed_on: next.lastCompletedOn,
+        paddle_out_available: next.paddleOutAvailable,
+        paddle_out_last_granted: next.paddleOutLastGranted,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+    if (swellWriteError) throw new CompleteDayError(swellWriteError.message, "swell.write");
+
+    // ---- 9. Milestone badge + its sand dollars ---------------------------
+    let badgeEarned: string | null = null;
+    if (outcome.milestone !== null) {
+      const milestone = outcome.milestone as Milestone;
+      const badgeKey = MILESTONE_BADGE[milestone];
+
+      // The badge must exist in the catalog (365 has no row yet — skip quietly).
+      const { data: badgeRow, error: badgeCatalogError } = await supabase
+        .from("badge")
+        .select("key, sand_dollars")
+        .eq("key", badgeKey)
+        .maybeSingle();
+      if (badgeCatalogError) {
+        throw new CompleteDayError(badgeCatalogError.message, "badge.catalog");
+      }
+
+      if (badgeRow) {
+        // Only pay on a FIRST earn — re-reaching a milestone must not double-pay.
+        const { data: already, error: ownedError } = await supabase
+          .from("user_badge")
+          .select("badge_key")
+          .eq("user_id", userId)
+          .eq("badge_key", badgeKey)
+          .maybeSingle();
+        if (ownedError) throw new CompleteDayError(ownedError.message, "badge.owned");
+
+        if (!already) {
+          const { error: awardError } = await supabase
+            .from("user_badge")
+            .insert({ user_id: userId, badge_key: badgeKey });
+          if (awardError) throw new CompleteDayError(awardError.message, "badge.award");
+          awardedBadgeKey = badgeKey;
+          badgeEarned = badgeKey;
+
+          // Settings win over the catalog column: game_settings is the tunable
+          // the admin edits, badge.sand_dollars is seed data.
+          const amount = milestoneSand(milestone, settings);
+          const { error: badgeSandError } = await supabase
+            .from("sand_dollar_entry")
+            .insert({
+              user_id: userId,
+              amount,
+              reason: MILESTONE_REASON[milestone],
+              ref_id: completionId,
+              note: `${badgeKey} milestone`,
+            });
+          if (badgeSandError) {
+            throw new CompleteDayError(badgeSandError.message, "sand.milestone");
+          }
+          sandEarned += amount;
+        }
+      }
+    }
+
+    // ---- 10. Balance + result -------------------------------------------
+    const newBalance = await readBalance(supabase, userId);
+
+    return {
+      alreadyComplete: false,
+      date: today,
+      streak: next.currentLen,
+      longest: next.longestLen,
+      paddleOutAvailable: next.paddleOutAvailable,
+      paddleOutSpent: outcome.paddleOutSpent,
+      paddleOutGranted: outcome.paddleOutGranted,
+      graceUsed: outcome.graceUsed,
+      streakReset: outcome.streakReset,
+      sandEarned,
+      badgeEarned,
+      newBalance,
+    };
+  } catch (error) {
+    await rollback();
+    throw error;
+  }
+}
+
+type ServiceClient = ReturnType<typeof createServiceClient>;
+
+async function readBalance(supabase: ServiceClient, userId: string): Promise<number> {
+  const { data } = await supabase
+    .from("sand_dollar_balance")
+    .select("balance")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return Number(data?.balance ?? 0);
+}
+
+/** The unchanged state to return when the day was already completed. */
+async function currentState(
+  supabase: ServiceClient,
+  userId: string,
+  today: IsoDate,
+  alreadyComplete: boolean
+): Promise<CompleteDayResult> {
+  const [{ data: swellRow }, balance] = await Promise.all([
+    supabase.from("swell").select("*").eq("user_id", userId).maybeSingle(),
+    readBalance(supabase, userId),
+  ]);
+
+  return {
+    alreadyComplete,
+    date: today,
+    streak: Number(swellRow?.current_len ?? 0),
+    longest: Number(swellRow?.longest_len ?? 0),
+    paddleOutAvailable: Number(swellRow?.paddle_out_available ?? 0),
+    paddleOutSpent: 0,
+    paddleOutGranted: 0,
+    graceUsed: false,
+    streakReset: false,
+    sandEarned: 0,
+    badgeEarned: null,
+    newBalance: balance,
+  };
+}
