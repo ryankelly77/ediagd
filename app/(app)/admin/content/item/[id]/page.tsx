@@ -11,9 +11,9 @@ export default async function EditContentPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { supabase, userId, isAdmin } = await getAdminContext();
+  const { supabase, userId, hasAdminAccess } = await getAdminContext();
   if (!userId) redirect("/login");
-  if (!isAdmin) return <AdminsOnly />;
+  if (!hasAdminAccess) return <AdminsOnly />;
 
   const { id } = await params;
 

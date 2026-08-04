@@ -101,9 +101,9 @@ async function loadBuckets(
 }
 
 export default async function ContentHomePage() {
-  const { supabase, userId, isAdmin } = await getAdminContext();
+  const { supabase, userId, hasAdminAccess } = await getAdminContext();
   if (!userId) redirect("/login");
-  if (!isAdmin) return <AdminsOnly />;
+  if (!hasAdminAccess) return <AdminsOnly />;
 
   const { buckets, byType, totalDrafts, total } = await loadBuckets(supabase);
 

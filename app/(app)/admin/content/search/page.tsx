@@ -34,9 +34,9 @@ export default async function ContentSearchPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { supabase, userId, isAdmin } = await getAdminContext();
+  const { supabase, userId, hasAdminAccess } = await getAdminContext();
   if (!userId) redirect("/login");
-  if (!isAdmin) return <AdminsOnly />;
+  if (!hasAdminAccess) return <AdminsOnly />;
 
   const params = await searchParams;
   const query = (params.q ?? "").trim();

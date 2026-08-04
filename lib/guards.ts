@@ -9,7 +9,13 @@ import { createClient } from "@/lib/supabase/server";
 export type AdminContext = {
   supabase: Awaited<ReturnType<typeof createClient>>;
   userId: string | null;
+  /** Dealer admin at one or more rooftops — scoped to those rooftops. */
   isAdmin: boolean;
+  /** Platform owner (Ryan, Mitch) — sees every rooftop. A user property, not
+   *  a membership role; see 0015. */
+  isPlatformOwner: boolean;
+  /** Either one may reach the admin tools. */
+  hasAdminAccess: boolean;
 };
 
 /**
@@ -26,16 +32,41 @@ export async function getAdminContext(): Promise<AdminContext> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { supabase, userId: null, isAdmin: false };
+  if (!user) {
+    return {
+      supabase,
+      userId: null,
+      isAdmin: false,
+      isPlatformOwner: false,
+      hasAdminAccess: false,
+    };
+  }
 
-  const { data } = await supabase
-    .from("membership")
-    .select("rooftop_id")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .eq("active", true)
-    .limit(1)
-    .maybeSingle();
+  const [{ data: membership }, { data: profile }] = await Promise.all([
+    supabase
+      .from("membership")
+      .select("rooftop_id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .eq("active", true)
+      .limit(1)
+      .maybeSingle(),
+    // Readable under app_user_self; the flag is immutable to the user (0015).
+    supabase
+      .from("app_user")
+      .select("is_platform_owner")
+      .eq("id", user.id)
+      .maybeSingle(),
+  ]);
 
-  return { supabase, userId: user.id, isAdmin: Boolean(data) };
+  const isAdmin = Boolean(membership);
+  const isPlatformOwner = Boolean(profile?.is_platform_owner);
+
+  return {
+    supabase,
+    userId: user.id,
+    isAdmin,
+    isPlatformOwner,
+    hasAdminAccess: isAdmin || isPlatformOwner,
+  };
 }

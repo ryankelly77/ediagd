@@ -20,30 +20,44 @@ export default async function AdminPage() {
   if (!user) redirect("/login");
 
   // ---- Which rooftops does this person own/administer? ---------------------
-  // Scoped to rooftops where they hold 'admin' specifically — my_rooftops()
-  // would also include stores where they're merely an advisor.
-  const { data: adminMemberships } = await supabase
-    .from("membership")
-    .select("rooftop_id, app_user:user_id(full_name)")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .eq("active", true);
+  // Dealer admin: rooftops where they hold 'admin' specifically (my_rooftops()
+  // would also include stores where they're merely an advisor).
+  // Platform owner: every rooftop — RLS opens that up as of 0015.
+  const [{ data: adminMemberships }, { data: profile }] = await Promise.all([
+    supabase
+      .from("membership")
+      .select("rooftop_id, app_user:user_id(full_name)")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .eq("active", true),
+    supabase
+      .from("app_user")
+      .select("full_name, is_platform_owner")
+      .eq("id", user.id)
+      .maybeSingle(),
+  ]);
 
-  if (!adminMemberships || adminMemberships.length === 0) {
-    return <NotAnAdmin />;
+  const isPlatformOwner = Boolean(profile?.is_platform_owner);
+
+  let rooftopIds: string[];
+  if (isPlatformOwner) {
+    const { data: allRooftops } = await supabase.from("rooftop").select("id");
+    rooftopIds = (allRooftops ?? []).map((r) => r.id as string);
+  } else {
+    if (!adminMemberships || adminMemberships.length === 0) {
+      return <NotAnAdmin />;
+    }
+    rooftopIds = [...new Set(adminMemberships.map((m) => m.rooftop_id as string))];
   }
 
-  const rooftopIds = [
-    ...new Set(adminMemberships.map((m) => m.rooftop_id as string)),
-  ];
-
   // PostgREST types the embed as an array; it's a to-one join in practice.
-  const viewerEmbed = adminMemberships[0]?.app_user as unknown;
+  const viewerEmbed = adminMemberships?.[0]?.app_user as unknown;
   const viewerUser = (Array.isArray(viewerEmbed) ? viewerEmbed[0] : viewerEmbed) as
     | { full_name: string | null }
     | null
     | undefined;
-  const adminName = viewerUser?.full_name ?? user.email ?? "there";
+  const adminName =
+    profile?.full_name ?? viewerUser?.full_name ?? user.email ?? "there";
 
   // ---- Engagement rows + the people behind them ---------------------------
   const [
@@ -146,7 +160,7 @@ export default async function AdminPage() {
           </p>
         </div>
         <span className="rounded-pill bg-gold-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-navy">
-          Owner
+          {isPlatformOwner ? "Platform" : "Owner"}
         </span>
       </header>
 

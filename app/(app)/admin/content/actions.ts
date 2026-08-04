@@ -21,7 +21,7 @@ export type ActionResult =
 async function requireAdmin() {
   const ctx = await getAdminContext();
   if (!ctx.userId) return { ctx: null, error: "You need to sign in." };
-  if (!ctx.isAdmin) return { ctx: null, error: "Admins only." };
+  if (!ctx.hasAdminAccess) return { ctx: null, error: "Admins only." };
   return { ctx, error: null };
 }
 

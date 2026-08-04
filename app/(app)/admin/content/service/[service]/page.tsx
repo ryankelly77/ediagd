@@ -33,9 +33,9 @@ export default async function ContentServicePage({
   params: Promise<{ service: string }>;
   searchParams: Promise<SearchParams>;
 }) {
-  const { supabase, userId, isAdmin } = await getAdminContext();
+  const { supabase, userId, hasAdminAccess } = await getAdminContext();
   if (!userId) redirect("/login");
-  if (!isAdmin) return <AdminsOnly />;
+  if (!hasAdminAccess) return <AdminsOnly />;
 
   const { service: slug } = await params;
   const filters = await searchParams;

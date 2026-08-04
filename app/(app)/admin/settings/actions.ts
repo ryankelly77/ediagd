@@ -20,7 +20,7 @@ export async function saveGameSettings(
 ): Promise<SaveSettingsResult> {
   const ctx = await getAdminContext();
   if (!ctx.userId) return { ok: false, error: "You need to sign in." };
-  if (!ctx.isAdmin) return { ok: false, error: "Admins only." };
+  if (!ctx.hasAdminAccess) return { ok: false, error: "Admins only." };
 
   const { fieldErrors, clean } = validateGameSettings(values);
   if (Object.keys(fieldErrors).length > 0) {
