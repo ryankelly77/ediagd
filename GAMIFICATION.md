@@ -61,6 +61,18 @@ Tier names (ring progression): **First Light → Dawn Patrol → Golden Hour →
 
 ---
 
+## 3.5 The daily reset (what makes it "daily")
+
+**[decision]** Daily state is **date-driven, not session-driven** — login and logout are irrelevant. Everything (today's quote, Eddie's Pick, whether the loop is done, the streak) is keyed to a **calendar date**.
+
+- **Whose day:** the **rooftop's timezone** (`rooftop.timezone`, default `America/Chicago`). The whole store shares one "today," which keeps manager/admin "who trained today" views coherent.
+- **Boundary:** midnight, rooftop-local. `rooftop_today(rooftop_id)` computes it server-side.
+- **"Have I completed today?"** = does a `daily_completion` row exist for `rooftop_today()`? Not "did I log in this session."
+- **New-day detection:** the app re-checks the date on **focus and navigation** (not just login), so a user who leaves the app open overnight still gets the fresh day's flow when they next interact. Solves the "leave it open forever" hole — an idle open app completes nothing.
+- **Completion is explicit:** a day completes only when the user finishes the loop (writes the completion row). Leaving the app open, or merely logging in, never completes a day or builds a Swell.
+
+---
+
 ## 4. The daily loop
 
 The core habit, in order:
