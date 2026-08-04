@@ -61,11 +61,22 @@ export type ContentDraft = {
   status: ContentStatus;
 };
 
-export const TYPE_META: Record<ContentType, { label: string; short: string }> = {
-  cue: { label: "Coaching cue", short: "Cue" },
-  advisor_video: { label: "Advisor video", short: "Advisor" },
-  manager_video: { label: "Manager video", short: "Manager" },
-  joe_the_pro: { label: "Joe the Pro", short: "Joe" },
+export const TYPE_META: Record<
+  ContentType,
+  { label: string; short: string; plural: string }
+> = {
+  cue: { label: "Coaching cue", short: "Cue", plural: "Cues" },
+  advisor_video: {
+    label: "Advisor video",
+    short: "Advisor",
+    plural: "Advisor Videos",
+  },
+  manager_video: {
+    label: "Manager video",
+    short: "Manager",
+    plural: "Manager Videos",
+  },
+  joe_the_pro: { label: "Joe the Pro", short: "Joe", plural: "Joe the Pro" },
 };
 
 export const TIER_LABEL: Record<ContentTier, string> = {
@@ -107,6 +118,43 @@ export function serviceLabel(service: string | null): string {
 }
 
 export const PAGE_SIZE = 50;
+
+/* ---- Search relevance ---------------------------------------------------- */
+
+export const MATCH_TITLE_PREFIX = 3;
+export const MATCH_TITLE_CONTAINS = 2;
+export const MATCH_BODY_ONLY = 1;
+
+/**
+ * How well a row matches a query. Case-insensitive, to agree with the ilike
+ * filter that produced the row.
+ *
+ * 3 = title starts with the query, 2 = title contains it, 1 = body only.
+ * 0 shouldn't happen for rows the filter returned, but is handled so a widened
+ * filter can't silently promote a non-match.
+ */
+export function scoreContentMatch(
+  item: Pick<ContentRow, "title" | "body">,
+  query: string
+): number {
+  const q = query.trim().toLowerCase();
+  if (!q) return 0;
+
+  const title = (item.title ?? "").toLowerCase();
+  if (title.startsWith(q)) return MATCH_TITLE_PREFIX;
+  if (title.includes(q)) return MATCH_TITLE_CONTAINS;
+  if ((item.body ?? "").toLowerCase().includes(q)) return MATCH_BODY_ONLY;
+  return 0;
+}
+
+/** Relevance desc, then title A–Z so ties are deterministic across renders. */
+export function byRelevance(query: string) {
+  return (a: ContentRow, b: ContentRow): number => {
+    const diff = scoreContentMatch(b, query) - scoreContentMatch(a, query);
+    if (diff !== 0) return diff;
+    return (a.title ?? "").localeCompare(b.title ?? "");
+  };
+}
 
 /** First line / first ~140 chars of a cue body, for list rows. */
 export function snippet(body: string | null, max = 140): string {

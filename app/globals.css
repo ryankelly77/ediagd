@@ -49,3 +49,11 @@
   --shadow-pop: var(--shadow-pop);
   --max-width-app: 940px;
 }
+/* Search inputs: hide the browser's built-in clear button. It only empties the
+   field and can't navigate, so every search box in the app supplies its own ✕
+   that actually resets the view. Without this there are two X's side by side. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}

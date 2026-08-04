@@ -5,16 +5,14 @@ import { getAdminContext } from "@/lib/guards";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { ContentFilters } from "@/components/admin/content/ContentFilters";
+import { ContentResultRow } from "@/components/admin/content/ContentResultRow";
 import {
   ALL_SERVICES,
   NO_SERVICE,
   PAGE_SIZE,
   STATUS_META,
-  TIER_LABEL,
-  TYPE_META,
   serviceLabel,
   slugToService,
-  snippet,
   type ContentRow,
   type ContentStatus,
   type ContentTier,
@@ -118,35 +116,7 @@ export default async function ContentServicePage({
         <ul className="mt-4 space-y-2">
           {rows.map((row) => (
             <li key={row.id}>
-              <Card>
-                <Link
-                  href={`/admin/content/item/${row.id}`}
-                  className="block p-4 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-base font-bold text-navy">{row.title}</p>
-                      {row.body && (
-                        <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-                          {snippet(row.body)}
-                        </p>
-                      )}
-                    </div>
-                    <span aria-hidden="true" className="text-lg text-ink-soft">
-                      ›
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Badge>{TYPE_META[row.type].short}</Badge>
-                    {row.tier && <Badge>{TIER_LABEL[row.tier]}</Badge>}
-                    {isAllServices && row.service_family && (
-                      <Badge>{row.service_family}</Badge>
-                    )}
-                    <StatusBadge status={row.status} />
-                  </div>
-                </Link>
-              </Card>
+              <ContentResultRow item={row} showService={isAllServices} />
             </li>
           ))}
         </ul>
@@ -192,28 +162,7 @@ export default async function ContentServicePage({
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-navy">
-      {children}
-    </span>
-  );
-}
 
-function StatusBadge({ status }: { status: ContentStatus }) {
-  const meta = STATUS_META[status];
-  return (
-    <span
-      className="rounded-pill px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
-      style={{
-        color: `var(--color-${meta.color})`,
-        backgroundColor: `color-mix(in srgb, var(--color-${meta.color}) 15%, transparent)`,
-      }}
-    >
-      {meta.label}
-    </span>
-  );
-}
 
 function PageLink({
   basePath,

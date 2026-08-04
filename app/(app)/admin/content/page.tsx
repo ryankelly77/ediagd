@@ -4,42 +4,62 @@ import { Card } from "@/components/brand/Card";
 import { getAdminContext } from "@/lib/guards";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
+import { ContentSearchBar } from "@/components/admin/content/ContentSearchBar";
 import {
   ALL_SERVICES,
+  CONTENT_TYPES,
+  TYPE_META,
   serviceLabel,
   serviceToSlug,
   type ContentStatus,
+  type ContentType,
 } from "@/lib/content";
 
-type ServiceBucket = {
-  service: string | null;
-  total: number;
-  published: number;
-  draft: number;
-};
+type Tally = { total: number; published: number; draft: number };
+
+type ServiceBucket = Tally & { service: string | null };
+
+const emptyTally = (): Tally => ({ total: 0, published: 0, draft: 0 });
+
+function count(tally: Tally, status: ContentStatus) {
+  tally.total++;
+  if (status === "published") tally.published++;
+  else tally.draft++;
+}
 
 /**
  * PostgREST can't GROUP BY, and adding an RPC would mean a migration, so we
- * page through a two-column projection (service_family, status) and tally in
- * memory. ~1,700 rows of two small columns is cheap; revisit with a view if the
- * library grows an order of magnitude.
+ * page through a small projection (type, service_family, status) and tally in
+ * memory. ~1,700 rows of three small columns is cheap, and ONE pass yields both
+ * the per-service buckets and the per-type totals — no extra count queries.
+ * Revisit with a view if the library grows an order of magnitude.
  */
 async function loadBuckets(
   supabase: Awaited<ReturnType<typeof getAdminContext>>["supabase"]
-): Promise<{ buckets: ServiceBucket[]; totalDrafts: number; total: number }> {
+): Promise<{
+  buckets: ServiceBucket[];
+  byType: Record<ContentType, Tally>;
+  totalDrafts: number;
+  total: number;
+}> {
   const pageSize = 1000; // PostgREST caps a single response; page until short.
-  const rows: { service_family: string | null; status: ContentStatus }[] = [];
+  const rows: {
+    type: ContentType;
+    service_family: string | null;
+    status: ContentStatus;
+  }[] = [];
 
   for (let page = 0; ; page++) {
     const { data, error } = await supabase
       .from("content")
-      .select("service_family, status")
+      .select("type, service_family, status")
       .order("service_family", { ascending: true, nullsFirst: false })
       .range(page * pageSize, page * pageSize + pageSize - 1);
 
     if (error || !data || data.length === 0) break;
     rows.push(
       ...data.map((r) => ({
+        type: r.type as ContentType,
         service_family: (r.service_family as string | null) ?? null,
         status: r.status as ContentStatus,
       }))
@@ -47,16 +67,22 @@ async function loadBuckets(
     if (data.length < pageSize) break;
   }
 
+  // Every type starts at zero, so a type with no content still gets a card —
+  // "0 items" is real information (the videos aren't built yet).
+  const byType = Object.fromEntries(
+    CONTENT_TYPES.map((t) => [t, emptyTally()])
+  ) as Record<ContentType, Tally>;
+
   const byService = new Map<string, ServiceBucket>();
+
   for (const row of rows) {
     const key = row.service_family ?? " none";
     const bucket =
-      byService.get(key) ??
-      { service: row.service_family, total: 0, published: 0, draft: 0 };
-    bucket.total++;
-    if (row.status === "published") bucket.published++;
-    else bucket.draft++;
+      byService.get(key) ?? { service: row.service_family, ...emptyTally() };
+    count(bucket, row.status);
     byService.set(key, bucket);
+
+    if (byType[row.type]) count(byType[row.type], row.status);
   }
 
   const buckets = [...byService.values()].sort((a, b) => {
@@ -68,6 +94,7 @@ async function loadBuckets(
 
   return {
     buckets,
+    byType,
     totalDrafts: buckets.reduce((sum, b) => sum + b.draft, 0),
     total: rows.length,
   };
@@ -78,7 +105,7 @@ export default async function ContentHomePage() {
   if (!userId) redirect("/login");
   if (!isAdmin) return <AdminsOnly />;
 
-  const { buckets, totalDrafts, total } = await loadBuckets(supabase);
+  const { buckets, byType, totalDrafts, total } = await loadBuckets(supabase);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -90,6 +117,36 @@ export default async function ContentHomePage() {
           buckets.length === 1 ? "grouping" : "groupings"
         }.`}
       />
+
+      <ContentSearchBar />
+
+      {/* ---- Library shape, by content type ------------------------------ */}
+      <ul className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {CONTENT_TYPES.map((type) => {
+          const tally = byType[type];
+          return (
+            <li key={type}>
+              <Card className="h-full p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+                  {TYPE_META[type].plural}
+                </p>
+                <p className="mt-1 text-3xl font-extrabold tracking-tight text-navy">
+                  {tally.total.toLocaleString()}
+                </p>
+                <p className="mt-1 text-xs font-semibold">
+                  <span className="text-palm">
+                    {tally.published.toLocaleString()} published
+                  </span>
+                  <span className="text-ink-soft"> · </span>
+                  <span className="text-clay">
+                    {tally.draft.toLocaleString()} draft
+                  </span>
+                </p>
+              </Card>
+            </li>
+          );
+        })}
+      </ul>
 
       {/* ---- Mitch's to-do list: everything still in draft ---------------- */}
       <Link
