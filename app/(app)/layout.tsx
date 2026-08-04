@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
+import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
+import { firstName } from "@/lib/advisor";
 import type { IsoDate } from "@/lib/gamification/streak";
+
+/** First letter of the name (or email) for the avatar. */
+function initialsFor(name: string): string {
+  const trimmed = name.trim();
+  return trimmed ? trimmed[0]!.toUpperCase() : "?";
+}
 
 /**
  * Shell for every signed-in screen. Resolves the viewer's roles server-side and
@@ -21,11 +29,29 @@ export default async function AppLayout({
   // Signed out: the pages themselves redirect to /login, so render bare.
   if (!user) return <>{children}</>;
 
-  const { data: memberships } = await supabase
-    .from("membership")
-    .select("rooftop_id, role")
-    .eq("user_id", user.id)
-    .eq("active", true);
+  // Everything the header needs, resolved once for every screen in the group.
+  const [{ data: memberships }, { data: profile }, { data: balanceRow }] =
+    await Promise.all([
+      supabase
+        .from("membership")
+        .select("rooftop_id, role")
+        .eq("user_id", user.id)
+        .eq("active", true),
+      supabase
+        .from("app_user")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle(),
+      // RLS: the owner reads their own balance (0012).
+      supabase
+        .from("sand_dollar_balance")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
+
+  const displayName = profile?.full_name ?? user.email ?? "there";
+  const balance = balanceRow?.balance == null ? null : Number(balanceRow.balance);
 
   const roles = new Set((memberships ?? []).map((m) => m.role as string));
   const isManager = roles.has("manager");
@@ -64,6 +90,11 @@ export default async function AppLayout({
 
   return (
     <>
+      <AppHeader
+        greetingName={firstName(displayName)}
+        initials={initialsFor(displayName)}
+        balance={balance}
+      />
       {children}
       <TabBar tabs={tabs} showAdminInMore={isAdmin} />
     </>

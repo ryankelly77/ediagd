@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { isImmersive } from "./routes";
+
 export type TabIcon = "sun" | "wave" | "shell" | "team" | "more";
 
 export type Tab = {
@@ -12,9 +14,6 @@ export type Tab = {
   /** Route prefixes that light this tab up. */
   match: string[];
 };
-
-/** Routes where the bar is hidden entirely. */
-const IMMERSIVE = ["/today", "/login"];
 
 /**
  * Fixed bottom tab bar. Mobile-first: safe-area aware, 56px+ targets.
@@ -31,9 +30,7 @@ export function TabBar({
   const pathname = usePathname() ?? "";
 
   // /today is the immersive daily ritual — no chrome over it.
-  if (IMMERSIVE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return null;
-  }
+  if (isImmersive(pathname)) return null;
 
   return (
     <>

@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { RooftopList } from "@/components/admin/RooftopList";
-import { BRAND, ENGAGEMENT_TARGET } from "@/lib/brand";
-import { firstName } from "@/lib/advisor";
+import { ENGAGEMENT_TARGET } from "@/lib/brand";
 import {
   summarizeGroup,
   summarizeRooftop,
@@ -50,14 +49,6 @@ export default async function AdminPage() {
     rooftopIds = [...new Set(adminMemberships.map((m) => m.rooftop_id as string))];
   }
 
-  // PostgREST types the embed as an array; it's a to-one join in practice.
-  const viewerEmbed = adminMemberships?.[0]?.app_user as unknown;
-  const viewerUser = (Array.isArray(viewerEmbed) ? viewerEmbed[0] : viewerEmbed) as
-    | { full_name: string | null }
-    | null
-    | undefined;
-  const adminName =
-    profile?.full_name ?? viewerUser?.full_name ?? user.email ?? "there";
 
   // ---- Engagement rows + the people behind them ---------------------------
   const [
@@ -139,21 +130,11 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
-      {/* ---- Header ------------------------------------------------------ */}
+      {/* ---- Page title (the app greeting lives in AppHeader) ------------ */}
       <header className="flex items-center gap-3">
-        <img
-          src="/brand/svg/ediagd-mark-primary-light.svg"
-          alt=""
-          className="h-10 w-auto"
-        />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xl font-extrabold text-navy">
-            {BRAND.greeting}, {firstName(adminName)}
-          </p>
-          <p className="text-xs uppercase tracking-[0.18em] text-ink-soft">
-            {BRAND.tagline}
-          </p>
-          <p className="truncate text-xs text-ink-soft">
+          <h1 className="text-2xl font-extrabold text-navy">Engagement</h1>
+          <p className="truncate text-sm text-ink-soft">
             {group.rooftops.length}{" "}
             {group.rooftops.length === 1 ? "rooftop" : "rooftops"}
             {workingDays > 0 ? ` · last ${workingDays} working days` : ""}

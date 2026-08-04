@@ -9,7 +9,6 @@ import {
   advisorTier,
   buildServiceFamilies,
   eddiesPick,
-  firstName,
   formatCurrency,
   formatFraction,
   formatPct,
@@ -44,13 +43,6 @@ export default async function AdvisorPage() {
 
   const opCodeId: string = membership.op_code_id;
   const rooftopId: string | null = membership.rooftop_id ?? null;
-  // PostgREST types the embed as an array; it's a to-one join in practice.
-  const embed = membership.app_user as unknown;
-  const appUser = (Array.isArray(embed) ? embed[0] : embed) as
-    | { full_name: string | null }
-    | null
-    | undefined;
-  const advisorName: string | null = appUser?.full_name ?? user.email ?? null;
 
   // ---- Current period ------------------------------------------------------
   // With a real membership the rooftop's latest period wins. Under the dev
@@ -139,27 +131,14 @@ export default async function AdvisorPage() {
   const canCoach = hasCoachingVolume(totalRos);
   const pick = eddiesPick(families, totalRos);
   const tier = advisorTier(families);
-  const greetingName = firstName(advisorName ?? "there");
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
-      {/* ---- Header ---------------------------------------------------- */}
+      {/* ---- Page title (the app greeting lives in AppHeader) ----------- */}
       <header className="flex items-center gap-3">
-        {/* -primary-light is the navy-inked mark — the one that reads on the
-            cream app surface. */}
-        <img
-          src="/brand/svg/ediagd-mark-primary-light.svg"
-          alt=""
-          className="h-10 w-auto"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xl font-extrabold text-navy">
-            {BRAND.greeting}, {greetingName}
-          </p>
-          <p className="text-xs uppercase tracking-[0.18em] text-ink-soft">
-            {BRAND.tagline}
-          </p>
-        </div>
+        <h1 className="min-w-0 flex-1 text-2xl font-extrabold text-navy">
+          Your numbers
+        </h1>
         {canCoach && <TierBadge tier={tier} />}
       </header>
 

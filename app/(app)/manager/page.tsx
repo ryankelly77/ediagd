@@ -2,9 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { TeamRoster } from "@/components/manager/TeamRoster";
-import { BRAND } from "@/lib/brand";
 import {
-  firstName,
   formatPct,
   type FamilyAttach,
   type FamilyBenchmark,
@@ -43,13 +41,6 @@ export default async function ManagerPage() {
   }
 
   const rooftopId: string = viewerMembership.rooftop_id;
-  // PostgREST types the embed as an array; it's a to-one join in practice.
-  const viewerEmbed = viewerMembership.app_user as unknown;
-  const viewerUser = (Array.isArray(viewerEmbed) ? viewerEmbed[0] : viewerEmbed) as
-    | { full_name: string | null }
-    | null
-    | undefined;
-  const managerName = viewerUser?.full_name ?? user.email ?? "there";
 
   // ---- Rooftop + current period -------------------------------------------
   const [{ data: rooftop }, { data: period }] = await Promise.all([
@@ -151,21 +142,15 @@ export default async function ManagerPage() {
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
-      {/* ---- Header ------------------------------------------------------ */}
+      {/* ---- Page title (the app greeting lives in AppHeader) ------------ */}
       <header className="flex items-center gap-3">
-        <img
-          src="/brand/svg/ediagd-mark-primary-light.svg"
-          alt=""
-          className="h-10 w-auto"
-        />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xl font-extrabold text-navy">
-            {BRAND.greeting}, {firstName(managerName)}
-          </p>
-          <p className="truncate text-xs text-ink-soft">
+          <h1 className="truncate text-2xl font-extrabold text-navy">
             {rooftop?.name ?? "Your rooftop"}
-            {period.label ? ` · ${period.label}` : ""}
-          </p>
+          </h1>
+          {period.label && (
+            <p className="truncate text-sm text-ink-soft">{period.label}</p>
+          )}
         </div>
         <span className="rounded-pill bg-teal-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-navy">
           Manager
