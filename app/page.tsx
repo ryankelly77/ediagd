@@ -1,13 +1,46 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BRAND } from "@/lib/brand";
 import { Card } from "@/components/brand/Card";
 import { TierBadge } from "@/components/brand/TierBadge";
+import type { IsoDate } from "@/lib/gamification/streak";
 
 export default async function Home() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // ---- Post-login landing --------------------------------------------------
+  // An advisor starts their day in the ritual; once it's done they go straight
+  // to their numbers. Other roles fall through to the page below.
+  if (user) {
+    const { data: advisorMembership } = await supabase
+      .from("membership")
+      .select("rooftop_id")
+      .eq("user_id", user.id)
+      .eq("role", "advisor")
+      .eq("active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (advisorMembership?.rooftop_id) {
+      const { data: todayRaw } = await supabase.rpc("rooftop_today", {
+        _rooftop: advisorMembership.rooftop_id as string,
+      });
+      const today =
+        (todayRaw as IsoDate | null) ?? new Date().toISOString().slice(0, 10);
+
+      const { data: done } = await supabase
+        .from("daily_completion")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("completion_date", today)
+        .maybeSingle();
+
+      redirect(done ? "/advisor" : "/today");
+    }
+  }
 
   const { data: memberships } = await supabase
     .from("membership")
