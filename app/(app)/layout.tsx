@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
-import { firstName } from "@/lib/advisor";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /** First letter of the name (or email) for the avatar. */
@@ -90,11 +89,7 @@ export default async function AppLayout({
 
   return (
     <>
-      <AppHeader
-        greetingName={firstName(displayName)}
-        initials={initialsFor(displayName)}
-        balance={balance}
-      />
+      <AppHeader initials={initialsFor(displayName)} balance={balance} />
       {children}
       <TabBar tabs={tabs} showAdminInMore={isAdmin} />
     </>
