@@ -77,13 +77,19 @@ export default async function AppLayout({
 
   // Max 5 tabs. Admin lives inside More rather than taking a slot, so a
   // manager-admin doesn't overflow the bar.
+  //
+  // The fifth slot is role-dependent: someone who coaches a team gets Team;
+  // a plain advisor has no use for it, so they get the Swag Shack instead.
+  // Swag stays in More for BOTH, so managers keep a path to it.
+  const leadsTeam = isManager || isAdmin;
   const tabs: Tab[] = [
     { href: todayHref, label: "Today", icon: "sun", match: ["/today", "/advisor"] },
-    { href: "/streak", label: "Streak", icon: "wave", match: ["/streak"] },
+    // Sand Dollars hangs off the Swell, so the Streak tab stays lit there.
+    { href: "/streak", label: "Streak", icon: "wave", match: ["/streak", "/sand-dollars"] },
     { href: "/badges", label: "Badges", icon: "shell", match: ["/badges"] },
-    ...(isManager
-      ? [{ href: "/manager", label: "Team", icon: "team" as const, match: ["/manager"] }]
-      : []),
+    leadsTeam
+      ? { href: "/manager", label: "Team", icon: "team" as const, match: ["/manager"] }
+      : { href: "/swag", label: "Swag", icon: "swag" as const, match: ["/swag"] },
     { href: "/more", label: "More", icon: "more", match: ["/more", "/admin"] },
   ];
 

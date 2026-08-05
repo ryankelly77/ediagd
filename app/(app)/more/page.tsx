@@ -51,6 +51,16 @@ export default async function MorePage() {
         )}
       </Card>
 
+      <ul className="mt-4 space-y-2">
+        <li>
+          <LinkRow
+            href="/swag"
+            label="Swag Shack"
+            hint="Spend your Sand Dollars on the gear"
+          />
+        </li>
+      </ul>
+
       {isAdmin && (
         <ul className="mt-4 space-y-2">
           <li>
@@ -70,6 +80,13 @@ export default async function MorePage() {
               hint="Sand Dollars and streak grace days"
             />
           </li>
+          <li>
+            <LinkRow
+              href="/admin/swag"
+              label="Swag Shack"
+              hint="Fulfillment queue and catalog"
+            />
+          </li>
         </ul>
       )}
 
@@ -80,9 +97,7 @@ export default async function MorePage() {
         <li>
           <SoonRow label="Lessons" hint="Guided courses and certifications" />
         </li>
-        <li>
-          <SoonRow label="Swag Shack" hint="Spend your Sand Dollars" />
-        </li>
+
       </ul>
 
       <form action={signOutAction} className="mt-6">

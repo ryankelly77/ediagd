@@ -197,6 +197,11 @@ export default async function AdminPage() {
             label="Gamification settings"
             hint="Sand Dollars, streak grace days"
           />
+          <ToolLink
+            href="/admin/swag"
+            label="Swag Shack"
+            hint="Fulfillment queue and catalog"
+          />
         </div>
       </section>
 

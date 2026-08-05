@@ -10,6 +10,7 @@
 export type GameSettingsValues = {
   paddle_out_cap: number;
   paddle_out_per_month: number;
+  sand_paddle_out_price: number;
   sand_daily_loop: number;
   sand_swell_7: number;
   sand_swell_30: number;
@@ -51,6 +52,14 @@ export const GAME_SETTING_FIELDS: GameSettingField[] = [
     group: "streak",
     min: 0,
     max: 30,
+  },
+  {
+    key: "sand_paddle_out_price",
+    label: "Cost of buying a grace day",
+    hint: "What an advisor spends in the Swag Shack for one Paddle Back Out day.",
+    group: "streak",
+    min: 0,
+    max: 100_000,
   },
   {
     key: "sand_daily_loop",

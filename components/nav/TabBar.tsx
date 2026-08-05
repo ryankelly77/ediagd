@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { isImmersive } from "./routes";
 
-export type TabIcon = "sun" | "wave" | "shell" | "team" | "more";
+export type TabIcon = "sun" | "wave" | "shell" | "team" | "swag" | "more";
 
 export type Tab = {
   href: string;
@@ -130,6 +130,16 @@ function TabGlyph({ icon, active }: { icon: TabIcon; active: boolean }) {
           <circle cx="9" cy="8" r="3" />
           <path d="M3 20a6 6 0 0 1 12 0" />
           <path d="M16 6.5a3 3 0 0 1 0 5.8M17 20a6 6 0 0 0-2-4.4" />
+        </svg>
+      );
+    case "swag":
+      // The tote from /brand/icons/swag_shack.svg, inlined so it inherits the
+      // active/inactive colour like every other tab glyph.
+      return (
+        <svg {...common}>
+          <path d="M4.8 8h14.4l-1.1 11.1a1.6 1.6 0 0 1-1.6 1.4H7.5a1.6 1.6 0 0 1-1.6-1.4L4.8 8Z" />
+          <path d="M9 8.6V6.4a3 3 0 0 1 6 0v2.2" />
+          <path d="M8.9 14.6c1-1 2.1-1 3.1 0s2.1 1 3.1 0" strokeWidth={1.7} />
         </svg>
       );
     case "more":

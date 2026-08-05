@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
+import { AccountForms } from "@/components/profile/AccountForms";
 import { signOutAction } from "../more/actions";
 
 export default async function ProfilePage() {
@@ -101,7 +102,12 @@ export default async function ProfilePage() {
         </p>
       </Card>
 
-      <form action={signOutAction} className="mt-6">
+      <AccountForms
+        initialName={profile?.full_name ?? ""}
+        currentEmail={user.email ?? ""}
+      />
+
+      <form action={signOutAction} className="mt-8">
         <button
           type="submit"
           className="w-full rounded-xl border border-line bg-surface-card p-3.5 font-extrabold text-clay transition hover:bg-clay/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"

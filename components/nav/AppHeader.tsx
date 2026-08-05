@@ -65,8 +65,8 @@ export function AppHeader({
 
         {/* ---- Status + account ------------------------------------------ */}
         <Link
-          href="/streak"
-          aria-label={`${balance ?? 0} Sand Dollars — view your Swell`}
+          href="/sand-dollars"
+          aria-label={`${balance ?? 0} Sand Dollars — view your ledger`}
           className="flex shrink-0 items-center gap-1.5 rounded-pill bg-gold-soft/60 px-2.5 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <SandDollarIcon size={18} className="shrink-0" />

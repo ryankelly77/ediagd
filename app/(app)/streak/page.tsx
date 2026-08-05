@@ -5,6 +5,7 @@ import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
 import { MILESTONES } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
+import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 
 export default async function StreakPage() {
@@ -87,23 +88,34 @@ export default async function StreakPage() {
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Stat label="Longest Swell" value={longest > 0 ? `${longest} days` : "—"} />
 
-        {/* Balance is what you can spend; total earned only ever climbs. */}
-        <Card className="p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-            Sand Dollars
-          </p>
-          <p className="mt-1 flex items-center gap-1.5">
-            <SandDollarIcon size={22} />
-            <span className="ediagd-numeral text-2xl font-extrabold text-navy">
-              {balance.toLocaleString()}
+        {/* Balance is what you can spend; total earned only ever climbs.
+            Tappable through to the full ledger — chevron says so. */}
+        <Card>
+          <Link
+            href="/sand-dollars"
+            className="block h-full p-4 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            <span className="flex items-center gap-2">
+              <span className="flex-1 text-xs font-bold uppercase tracking-wide text-ink-soft">
+                Sand Dollars
+              </span>
+              <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
+                ›
+              </span>
             </span>
-          </p>
-          <p className="mt-1 text-xs text-ink-soft">
-            <span className="ediagd-numeral font-bold">
-              {totalEarned.toLocaleString()}
-            </span>{" "}
-            earned all time
-          </p>
+            <span className="mt-1 flex items-center gap-1.5">
+              <SandDollarIcon size={22} />
+              <span className="ediagd-numeral text-2xl font-extrabold text-navy">
+                {balance.toLocaleString()}
+              </span>
+            </span>
+            <span className="mt-1 block text-xs text-ink-soft">
+              <span className="ediagd-numeral font-bold">
+                {totalEarned.toLocaleString()}
+              </span>{" "}
+              earned all time
+            </span>
+          </Link>
         </Card>
       </div>
 
@@ -111,8 +123,11 @@ export default async function StreakPage() {
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
           Paddle Back Out
         </p>
-        <p className="mt-1 text-2xl font-extrabold text-navy">
-          {paddleOut} of {paddleOutCap}
+        <p className="mt-1 flex items-center gap-2">
+          <PaddleOutIcon size={26} />
+          <span className="ediagd-numeral text-2xl font-extrabold text-navy">
+            {paddleOut} of {paddleOutCap}
+          </span>
         </p>
         <p className="mt-1 text-sm leading-relaxed text-ink-soft">
           Miss a day and one of these keeps your Swell rolling — automatically.
