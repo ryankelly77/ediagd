@@ -26,6 +26,7 @@ export type GameSettings = {
   sandSwell7: number;
   sandSwell30: number;
   sandSwell90: number;
+  sandSwell365: number;
   sandBadge: number;
   sandCertification: number;
 };
@@ -41,18 +42,21 @@ export type StreakOutcome = {
   gapDays: number;
   /** Milestone reached by this completion, if any. */
   milestone: number | null;
+  /** True on the very first completion ever — earns First Light. */
+  firstEver: boolean;
   /** True when the date was already completed (or is in the past) — no change. */
   noop: boolean;
 };
 
-/** Streak lengths that earn a badge. 365 is intentionally future work. */
-export const MILESTONES = [7, 30, 90] as const;
+/** Streak lengths that earn a badge. */
+export const MILESTONES = [7, 30, 90, 365] as const;
 export type Milestone = (typeof MILESTONES)[number];
 
 export const MILESTONE_BADGE: Record<Milestone, string> = {
   7: "swell_7",
   30: "swell_30",
   90: "swell_90",
+  365: "swell_365",
 };
 
 /** The sand_reason enum value that matches each milestone. */
@@ -60,6 +64,7 @@ export const MILESTONE_REASON: Record<Milestone, string> = {
   7: "swell_7",
   30: "swell_30",
   90: "swell_90",
+  365: "swell_365",
 };
 
 export function milestoneSand(milestone: Milestone, settings: GameSettings): number {
@@ -70,6 +75,8 @@ export function milestoneSand(milestone: Milestone, settings: GameSettings): num
       return settings.sandSwell30;
     case 90:
       return settings.sandSwell90;
+    case 365:
+      return settings.sandSwell365;
   }
 }
 
@@ -122,6 +129,7 @@ export function applyDailyCompletion(
     streakReset: false,
     gapDays: 0,
     milestone: null,
+    firstEver: false,
     noop: false,
   };
 
@@ -150,6 +158,7 @@ export function applyDailyCompletion(
   // ---- 2. Extend, bridge, or restart the Swell ---------------------------
   if (next.lastCompletedOn === null) {
     next.currentLen = 1; // first ever completion
+    outcome.firstEver = true;
   } else {
     const gap = daysBetween(next.lastCompletedOn, today) - 1; // days missed
     outcome.gapDays = Math.max(0, gap);

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
+import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { signOutAction } from "../more/actions";
 
 export default async function ProfilePage() {
@@ -11,7 +12,7 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: memberships }, { data: balanceRow }] =
+  const [{ data: profile }, { data: memberships }, { data: balanceRow }, { data: earnedRow }] =
     await Promise.all([
       supabase
         .from("app_user")
@@ -28,12 +29,18 @@ export default async function ProfilePage() {
         .select("balance")
         .eq("user_id", user.id)
         .maybeSingle(),
+      supabase
+        .from("sand_dollar_earned")
+        .select("total_earned")
+        .eq("user_id", user.id)
+        .maybeSingle(),
     ]);
 
   const displayName = profile?.full_name ?? user.email ?? "Your account";
   const initial = displayName.trim()[0]?.toUpperCase() ?? "?";
   const roles = [...new Set((memberships ?? []).map((m) => m.role as string))];
   const balance = Number(balanceRow?.balance ?? 0);
+  const totalEarned = Number(earnedRow?.total_earned ?? 0);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
@@ -80,8 +87,17 @@ export default async function ProfilePage() {
         <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
           Sand Dollars
         </p>
-        <p className="mt-1 text-3xl font-extrabold text-gold">
-          {balance.toLocaleString()}
+        <p className="mt-1 flex items-center gap-2">
+          <SandDollarIcon size={28} />
+          <span className="ediagd-numeral text-3xl font-extrabold text-gold">
+            {balance.toLocaleString()}
+          </span>
+        </p>
+        <p className="mt-1 text-sm text-ink-soft">
+          <span className="ediagd-numeral font-bold">
+            {totalEarned.toLocaleString()}
+          </span>{" "}
+          earned all time
         </p>
       </Card>
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
 import { isImmersive } from "./routes";
 
@@ -31,14 +32,15 @@ export function AppHeader({
       className="sticky top-0 z-40 border-b border-line bg-surface-card/95 backdrop-blur"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="mx-auto flex max-w-app items-center gap-3 px-4 py-2.5">
+      <div className="mx-auto flex max-w-app items-center gap-2.5 px-4 py-2">
+        {/* The brand anchor — the largest element in the bar, not an afterthought. */}
         <img
           src="/brand/svg/ediagd-mark-primary-light.svg"
           alt=""
-          className="h-7 w-auto shrink-0"
+          className="h-11 w-auto shrink-0"
         />
 
-        <p className="min-w-0 flex-1 truncate text-base font-extrabold text-navy">
+        <p className="min-w-0 flex-1 truncate text-[15px] font-extrabold text-navy">
           {BRAND.greeting}, {greetingName}
         </p>
 
@@ -46,12 +48,10 @@ export function AppHeader({
         <Link
           href="/streak"
           aria-label={`${balance ?? 0} Sand Dollars — view your Swell`}
-          className="flex shrink-0 items-center gap-1.5 rounded-pill bg-gold-soft/60 px-2.5 py-1 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          className="flex shrink-0 items-center gap-1.5 rounded-pill bg-gold-soft/60 px-2.5 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
-          <span aria-hidden="true" className="text-sm leading-none">
-            🐚
-          </span>
-          <span className="text-sm font-extrabold tabular-nums text-navy">
+          <SandDollarIcon className="h-[18px] w-[18px] shrink-0" />
+          <span className="ediagd-numeral text-sm font-extrabold">
             {(balance ?? 0).toLocaleString()}
           </span>
         </Link>

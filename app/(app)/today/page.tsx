@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { loadAdvisorDay } from "@/lib/advisor-data";
 import { ackLabel, cueTierForRate, pickCoachingCue, pickQuoteOfDay } from "@/lib/daily";
 import { firstName } from "@/lib/advisor";
+import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
 import type { IsoDate } from "@/lib/gamification/streak";
 
@@ -81,6 +82,10 @@ export default async function TodayPage() {
     (badgeRows ?? []).map((b) => [b.key as string, b.name as string])
   );
 
+  // What each badge pays — read from game_settings/the catalog, so the
+  // celebration can never quote an amount the engine didn't grant.
+  const badgeRewards = await loadBadgeRewards(supabase);
+
   const embed = membership.app_user as unknown;
   const appUser = (Array.isArray(embed) ? embed[0] : embed) as
     | { full_name: string | null }
@@ -120,6 +125,7 @@ export default async function TodayPage() {
       cueMatch={coaching.matched}
       totalRos={advisorDay?.totalRos ?? 0}
       badgeNames={badgeNames}
+      badgeRewards={badgeRewards}
     />
   );
 }

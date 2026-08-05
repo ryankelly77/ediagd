@@ -5,7 +5,9 @@ export function StatusDot({
   status,
   rate,
   storeAvg,
-  size = 16,
+  // Slightly larger with a soft ring — echoes the badge construction in
+  // DESIGN_LANGUAGE §3 without becoming a bullseye.
+  size = 18,
   withRing = true,
 }: {
   status?: ServiceStatus;
@@ -28,7 +30,9 @@ export function StatusDot({
         height: size,
         borderRadius: "50%",
         background: color,
-        boxShadow: withRing ? `0 0 0 4px color-mix(in srgb, ${color} 15%, transparent)` : undefined,
+        boxShadow: withRing
+          ? `0 0 0 5px color-mix(in srgb, ${color} 16%, transparent)`
+          : undefined,
         flex: "0 0 auto",
       }}
     />
@@ -52,7 +56,7 @@ export function StatusRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 border-b border-line px-1.5 py-3 text-left transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className="flex min-h-[3.5rem] w-full items-center gap-4 px-1.5 py-4 text-left transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
       <StatusDot status={s} />
       <span className="flex-1 text-base font-bold text-navy">{service}</span>

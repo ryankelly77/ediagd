@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { TierBadge } from "@/components/brand/TierBadge";
 import { ServiceList } from "@/components/advisor/ServiceList";
+import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
 import { BRAND } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
@@ -142,91 +143,124 @@ export default async function AdvisorPage() {
         {canCoach && <TierBadge tier={tier} />}
       </header>
 
-      {/* ---- Daily stat -------------------------------------------------- */}
-      <Card className="mt-5 p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
-          Labor sales this period
-        </p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight text-navy">
+      {/* ---- Daily stat: the screen's big number, warm not navy ---------- */}
+      {/* Feature card rather than a second navy hero — DESIGN_LANGUAGE §5 says
+          one hero per screen, and Eddie's Pick is the hero here. */}
+      <section className="ediagd-card-feature mt-6">
+        <p className="ediagd-eyebrow">Labor sales this period</p>
+        <p className="ediagd-figure mt-2 text-navy">
           {formatCurrency(Number(totals.total_labor_sales ?? 0))}
         </p>
-        <dl className="mt-4 flex gap-6 border-t border-line pt-4">
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-              ELR
-            </dt>
-            <dd className="text-lg font-extrabold text-navy">
-              {totals.blended_elr == null
-                ? "—"
-                : formatCurrency(Number(totals.blended_elr), true)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-              Labor GP
-            </dt>
-            <dd className="text-lg font-extrabold text-navy">
-              {totals.gp_pct_weighted == null
-                ? "—"
-                : formatFraction(Number(totals.gp_pct_weighted))}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
-              ROs
-            </dt>
-            <dd className="text-lg font-extrabold text-navy">{totalRos}</dd>
-          </div>
-        </dl>
-      </Card>
 
-      {/* ---- Eddie's Pick ------------------------------------------------ */}
+        <dl className="mt-6 grid grid-cols-3 gap-4 border-t border-line pt-4">
+          <SecondaryStat
+            label="ELR"
+            value={
+              totals.blended_elr == null
+                ? "—"
+                : formatCurrency(Number(totals.blended_elr), true)
+            }
+          />
+          <SecondaryStat
+            label="Labor GP"
+            value={
+              totals.gp_pct_weighted == null
+                ? "—"
+                : formatFraction(Number(totals.gp_pct_weighted))
+            }
+          />
+          <SecondaryStat label="ROs" value={String(totalRos)} />
+        </dl>
+      </section>
+
+      {/* ---- Eddie's Pick: the one hero ---------------------------------- */}
       {canCoach && pick && (
-        <section className="mt-5 rounded-card bg-navy p-5 shadow-card">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">
-            {BRAND.app}&apos;s Pick of the Day
-          </p>
-          <h2 className="mt-1 text-2xl font-extrabold text-white">{pick.family}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-ice-dim">
-            Your {pick.family} attach is{" "}
-            <span className="font-extrabold text-white">{formatPct(pick.rate)}</span>{" "}
-            — the store averages{" "}
-            <span className="font-extrabold text-white">
-              {formatPct(pick.storeAvg)}
-            </span>
-            . Close the gap.
-          </p>
-          <a
-            href="#"
-            className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gold p-3 font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
-          >
-            Watch the pitch
-          </a>
+        <section className="ediagd-hero mt-6">
+          <SunWaveMotif />
+
+          <div className="relative">
+            <p className="ediagd-eyebrow">
+              {BRAND.app}&apos;s Pick of the Day
+            </p>
+            <h2 className="mt-2 text-3xl font-extrabold leading-tight text-white">
+              {pick.family}
+            </h2>
+
+            <p className="mt-3 text-sm leading-relaxed text-ice-dim">
+              Your {pick.family} attach is{" "}
+              <span className="font-extrabold text-white">
+                {formatPct(pick.rate)}
+              </span>{" "}
+              — the store averages{" "}
+              <span className="font-extrabold text-white">
+                {formatPct(pick.storeAvg)}
+              </span>
+              . Close the gap.
+            </p>
+
+            {/* The gap made visual: your rate against the store's. */}
+            <div className="mt-5" aria-hidden="true">
+              <div className="h-2 w-full overflow-hidden rounded-pill bg-white/15">
+                <div
+                  className="h-full rounded-pill bg-gold"
+                  style={{
+                    width: `${Math.max(
+                      4,
+                      Math.min(100, (pick.rate / Math.max(pick.storeAvg, 0.1)) * 100)
+                    )}%`,
+                  }}
+                />
+              </div>
+              <div className="mt-2 flex justify-between text-[11px] font-bold uppercase tracking-wide text-ice-dim">
+                <span>You {formatPct(pick.rate)}</span>
+                <span>Store {formatPct(pick.storeAvg)}</span>
+              </div>
+            </div>
+
+            <a
+              href="#"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3.5 text-base font-extrabold text-navy shadow-[0_4px_16px_rgba(12,28,44,0.24)] transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+            >
+              Watch the pitch
+            </a>
+          </div>
         </section>
       )}
 
       {/* ---- Your services ----------------------------------------------- */}
-      <section className="mt-5">
-        <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
-          Your services
-        </h2>
+      <section className="mt-8">
+        <h2 className="ediagd-eyebrow px-1">Your services</h2>
 
         {canCoach ? (
-          <Card className="mt-2 px-4 py-1">
+          <div className="ediagd-card mt-3 px-4">
             <ServiceList families={families} />
-          </Card>
+          </div>
         ) : (
-          <Card className="mt-2 p-5">
+          <div className="ediagd-card mt-3 p-6">
             <p className="text-base font-extrabold text-navy">Building data</p>
-            <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
               Just {totalRos} {totalRos === 1 ? "RO" : "ROs"} so far this period —
               your coaching picks unlock as your volume grows. We start showing
               service status at {MIN_ROS_FOR_COACHING}.
             </p>
-          </Card>
+          </div>
         )}
       </section>
     </main>
+  );
+}
+
+/** ELR / Labor GP / ROs — quiet supporting numbers under the big one. */
+function SecondaryStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+        {label}
+      </dt>
+      <dd className="ediagd-numeral mt-1 text-xl font-extrabold text-navy">
+        {value}
+      </dd>
+    </div>
   );
 }
 

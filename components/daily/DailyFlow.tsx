@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeDayAction } from "@/app/(app)/daily/actions";
+import { BadgeCelebration } from "./BadgeCelebration";
+import { SwellSun } from "@/components/brand/badges/SwellSun";
+import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
 import { MIN_ROS_FOR_COACHING, formatPct } from "@/lib/advisor";
 import type { CompleteDayResult } from "@/lib/gamification/completeDay";
@@ -30,6 +33,7 @@ export function DailyFlow({
   cueMatch,
   totalRos,
   badgeNames,
+  badgeRewards,
 }: {
   alreadyCompleteOnLoad: boolean;
   currentStreak: number;
@@ -42,6 +46,8 @@ export function DailyFlow({
   cueMatch: "service+tier" | "service" | "generic";
   totalRos: number;
   badgeNames: Record<string, string>;
+  /** Badge key -> Sand Dollars it pays, from game_settings / the catalog. */
+  badgeRewards: Record<string, number>;
 }) {
   const [step, setStep] = useState(1);
   // True once WE started the completion. From that moment the incoming
@@ -99,6 +105,7 @@ export function DailyFlow({
             quoteId={quote?.id ?? null}
             cueId={cue?.id ?? null}
             badgeNames={badgeNames}
+            badgeRewards={badgeRewards}
             today={today}
             fallbackStreak={currentStreak}
           />
@@ -327,12 +334,14 @@ function CelebrationStep({
   quoteId,
   cueId,
   badgeNames,
+  badgeRewards,
   today,
   fallbackStreak,
 }: {
   quoteId: string | null;
   cueId: string | null;
   badgeNames: Record<string, string>;
+  badgeRewards: Record<string, number>;
   today: string;
   fallbackStreak: number;
 }) {
@@ -431,10 +440,10 @@ function CelebrationStep({
         {result.streakReset ? "A fresh Swell begins" : "Your Swell"}
       </p>
 
-      <p className="mt-2 text-6xl font-extrabold tracking-tight text-navy">
-        Day {result.streak}
-        <span aria-hidden="true"> 🌅</span>
-      </p>
+      <div className="mt-2 flex items-center justify-center gap-3">
+        <SwellSun size={64} />
+        <p className="ediagd-figure text-navy">Day {result.streak}</p>
+      </div>
 
       {result.longest > result.streak && (
         <p className="mt-1 text-sm text-ink-soft">
@@ -442,11 +451,13 @@ function CelebrationStep({
         </p>
       )}
 
-      <p className="mt-6 text-2xl font-extrabold text-gold">
-        +{result.sandEarned} Sand Dollars
+      <p className="mt-6 flex items-center justify-center gap-2 text-2xl font-extrabold text-gold">
+        <SandDollarIcon size={26} />
+        <span className="ediagd-numeral">+{result.sandEarned}</span>
+        <span>Sand Dollars</span>
       </p>
       <p className="mt-1 text-sm text-ink-soft">
-        {result.newBalance} banked
+        <span className="ediagd-numeral">{result.newBalance}</span> banked
       </p>
 
       {result.graceUsed && (
@@ -456,13 +467,12 @@ function CelebrationStep({
         </p>
       )}
 
-      {badgeName && (
-        <div className="mt-6 rounded-card border border-gold bg-gold-soft/40 p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-ocean">
-            Badge earned
-          </p>
-          <p className="mt-1 text-xl font-extrabold text-navy">{badgeName}</p>
-        </div>
+      {badgeName && result.badgeEarned && (
+        <BadgeCelebration
+          badgeKey={result.badgeEarned}
+          badgeName={badgeName}
+          reward={badgeRewards[result.badgeEarned] ?? null}
+        />
       )}
 
       <p
@@ -493,9 +503,7 @@ function DoneForTodayScreen({ streak }: { streak: number }) {
   return (
     <main className="min-h-screen bg-cream">
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-8 text-center">
-        <p className="text-6xl" aria-hidden="true">
-          🌅
-        </p>
+        <SwellSun size={88} className="mx-auto" />
         <h1 className="mt-4 text-3xl font-extrabold leading-snug text-navy">
           You&apos;ve completed today&apos;s training
         </h1>

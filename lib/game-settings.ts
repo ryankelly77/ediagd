@@ -14,6 +14,7 @@ export type GameSettingsValues = {
   sand_swell_7: number;
   sand_swell_30: number;
   sand_swell_90: number;
+  sand_swell_365: number;
   sand_badge: number;
   sand_certification: number;
 };
@@ -79,6 +80,14 @@ export const GAME_SETTING_FIELDS: GameSettingField[] = [
     key: "sand_swell_90",
     label: "Bonus for a 90-Day Swell",
     hint: "Paid once, the first time the streak reaches 90.",
+    group: "rewards",
+    min: 0,
+    max: 100_000,
+  },
+  {
+    key: "sand_swell_365",
+    label: "Bonus for a 365-Day Swell",
+    hint: "Paid once, the first time the streak reaches 365 — a year of great days.",
     group: "rewards",
     min: 0,
     max: 100_000,

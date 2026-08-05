@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { BadgeGrid, type BadgeTile } from "@/components/badges/BadgeGrid";
+import { BadgeGrid } from "@/components/badges/BadgeGrid";
+import { BADGES, NOW_BADGE_KEYS } from "@/lib/badges";
+import { loadBadgeRewards } from "@/lib/badge-rewards";
 
 export default async function BadgesPage() {
   const supabase = await createClient();
@@ -9,43 +11,36 @@ export default async function BadgesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // badge is public reference data; user_badge is owner-readable (0012).
-  const [{ data: catalog }, { data: earned }] = await Promise.all([
-    supabase.from("badge").select("key, name, description, ring, sand_dollars"),
-    supabase.from("user_badge").select("badge_key, earned_on").eq("user_id", user.id),
-  ]);
+  // What this user has actually earned (owner-readable, 0012). The badge SET
+  // itself comes from lib/badges.ts so every badge is visible — including the
+  // ones whose feature doesn't exist yet, which the wall marks "Coming soon".
+  const { data: earned } = await supabase
+    .from("user_badge")
+    .select("badge_key, earned_on")
+    .eq("user_id", user.id);
 
-  const earnedByKey = new Map(
+  // Real amounts, from game_settings / the catalog — never hardcoded.
+  const rewards = await loadBadgeRewards(supabase);
+
+  const earnedByKey = Object.fromEntries(
     (earned ?? []).map((e) => [e.badge_key as string, e.earned_on as string])
   );
 
-  const tiles: BadgeTile[] = (catalog ?? []).map((b) => ({
-    key: b.key as string,
-    name: b.name as string,
-    description: (b.description as string | null) ?? null,
-    ring: (b.ring as string) === "gold" ? "gold" : "seafoam",
-    sandDollars: Number(b.sand_dollars ?? 0),
-    earnedOn: earnedByKey.get(b.key as string) ?? null,
-  }));
-
-  // Earned first, then the rest — the wall should read as achievement, not gaps.
-  tiles.sort((a, b) => {
-    if (Boolean(a.earnedOn) !== Boolean(b.earnedOn)) return a.earnedOn ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
-
-  const earnedCount = tiles.filter((t) => t.earnedOn).length;
+  const earnedCount = Object.keys(earnedByKey).length;
+  const earnableCount = NOW_BADGE_KEYS.length;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
-      <h1 className="text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
-        Your badges
-      </h1>
+      <h1 className="ediagd-eyebrow">Your badges</h1>
       <p className="mt-1 text-2xl font-extrabold text-navy">
-        {earnedCount} of {tiles.length} earned
+        <span className="ediagd-numeral">{earnedCount}</span> of{" "}
+        <span className="ediagd-numeral">{earnableCount}</span> earned
+      </p>
+      <p className="mt-1 text-sm text-ink-soft">
+        {BADGES.length} badges in the system — more unlock as new features land.
       </p>
 
-      <BadgeGrid tiles={tiles} />
+      <BadgeGrid earnedByKey={earnedByKey} rewards={rewards} />
     </main>
   );
 }

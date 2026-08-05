@@ -121,19 +121,19 @@ export async function completeDay(
 
   // Best-effort compensation so a failure can't leave a completion with
   // partial grants — the user must be able to retry the day cleanly.
-  let awardedBadgeKey: string | null = null;
+  const awardedBadgeKeys: string[] = [];
   let priorSwell: Record<string, unknown> | null = null;
   let swellExisted = false;
 
   const rollback = async () => {
     try {
       await supabase.from("sand_dollar_entry").delete().eq("ref_id", completionId);
-      if (awardedBadgeKey) {
+      for (const key of awardedBadgeKeys) {
         await supabase
           .from("user_badge")
           .delete()
           .eq("user_id", userId)
-          .eq("badge_key", awardedBadgeKey);
+          .eq("badge_key", key);
       }
       if (swellExisted && priorSwell) {
         await supabase.from("swell").upsert(priorSwell, { onConflict: "user_id" });
@@ -165,6 +165,7 @@ export async function completeDay(
       sandSwell7: Number(settingsRow.sand_swell_7),
       sandSwell30: Number(settingsRow.sand_swell_30),
       sandSwell90: Number(settingsRow.sand_swell_90),
+      sandSwell365: Number(settingsRow.sand_swell_365 ?? 0),
       sandBadge: Number(settingsRow.sand_badge),
       sandCertification: Number(settingsRow.sand_certification),
     };
@@ -221,58 +222,76 @@ export async function completeDay(
     );
     if (swellWriteError) throw new CompleteDayError(swellWriteError.message, "swell.write");
 
-    // ---- 9. Milestone badge + its sand dollars ---------------------------
-    let badgeEarned: string | null = null;
+    // ---- 9. Badges + their sand dollars ----------------------------------
+    // Two ways to earn on a completion: the very first one earns First Light,
+    // and hitting a streak milestone earns that Swell badge. Both pay ONCE —
+    // re-reaching a milestone after a reset must not pay again.
+    const candidates: { key: string; amount: number; reason: string; note: string }[] = [];
+
+    if (outcome.firstEver) {
+      candidates.push({
+        key: "first_light",
+        amount: settings.sandBadge,
+        reason: "badge",
+        note: "first_light",
+      });
+    }
+
     if (outcome.milestone !== null) {
       const milestone = outcome.milestone as Milestone;
-      const badgeKey = MILESTONE_BADGE[milestone];
+      candidates.push({
+        key: MILESTONE_BADGE[milestone],
+        // Settings win over the catalog column: game_settings is the tunable
+        // the admin edits, badge.sand_dollars is seed data.
+        amount: milestoneSand(milestone, settings),
+        reason: MILESTONE_REASON[milestone],
+        note: `${MILESTONE_BADGE[milestone]} milestone`,
+      });
+    }
 
-      // The badge must exist in the catalog (365 has no row yet — skip quietly).
+    let badgeEarned: string | null = null;
+
+    for (const candidate of candidates) {
+      // The badge must exist in the catalog; skip quietly if it doesn't.
       const { data: badgeRow, error: badgeCatalogError } = await supabase
         .from("badge")
-        .select("key, sand_dollars")
-        .eq("key", badgeKey)
+        .select("key")
+        .eq("key", candidate.key)
         .maybeSingle();
       if (badgeCatalogError) {
         throw new CompleteDayError(badgeCatalogError.message, "badge.catalog");
       }
+      if (!badgeRow) continue;
 
-      if (badgeRow) {
-        // Only pay on a FIRST earn — re-reaching a milestone must not double-pay.
-        const { data: already, error: ownedError } = await supabase
-          .from("user_badge")
-          .select("badge_key")
-          .eq("user_id", userId)
-          .eq("badge_key", badgeKey)
-          .maybeSingle();
-        if (ownedError) throw new CompleteDayError(ownedError.message, "badge.owned");
+      const { data: already, error: ownedError } = await supabase
+        .from("user_badge")
+        .select("badge_key")
+        .eq("user_id", userId)
+        .eq("badge_key", candidate.key)
+        .maybeSingle();
+      if (ownedError) throw new CompleteDayError(ownedError.message, "badge.owned");
+      if (already) continue;
 
-        if (!already) {
-          const { error: awardError } = await supabase
-            .from("user_badge")
-            .insert({ user_id: userId, badge_key: badgeKey });
-          if (awardError) throw new CompleteDayError(awardError.message, "badge.award");
-          awardedBadgeKey = badgeKey;
-          badgeEarned = badgeKey;
+      const { error: awardError } = await supabase
+        .from("user_badge")
+        .insert({ user_id: userId, badge_key: candidate.key });
+      if (awardError) throw new CompleteDayError(awardError.message, "badge.award");
+      awardedBadgeKeys.push(candidate.key);
 
-          // Settings win over the catalog column: game_settings is the tunable
-          // the admin edits, badge.sand_dollars is seed data.
-          const amount = milestoneSand(milestone, settings);
-          const { error: badgeSandError } = await supabase
-            .from("sand_dollar_entry")
-            .insert({
-              user_id: userId,
-              amount,
-              reason: MILESTONE_REASON[milestone],
-              ref_id: completionId,
-              note: `${badgeKey} milestone`,
-            });
-          if (badgeSandError) {
-            throw new CompleteDayError(badgeSandError.message, "sand.milestone");
-          }
-          sandEarned += amount;
-        }
+      const { error: badgeSandError } = await supabase.from("sand_dollar_entry").insert({
+        user_id: userId,
+        amount: candidate.amount,
+        reason: candidate.reason,
+        ref_id: completionId,
+        note: candidate.note,
+      });
+      if (badgeSandError) {
+        throw new CompleteDayError(badgeSandError.message, "sand.badge");
       }
+      sandEarned += candidate.amount;
+
+      // A milestone outranks First Light for the celebration headline.
+      badgeEarned = candidate.key;
     }
 
     // ---- 10. Balance + result -------------------------------------------

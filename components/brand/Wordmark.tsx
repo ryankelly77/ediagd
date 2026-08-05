@@ -24,7 +24,10 @@ export function Wordmark({
       <Logo size={size} />
       <div className="leading-tight">
         <div
-          className={`font-display text-2xl font-semibold uppercase tracking-[0.22em] ${
+          // Weight 400: the display face is single-weight, so font-semibold
+          // would render faux-bold once Marcellus loads. Size and tracking
+          // carry the wordmark, not weight.
+          className={`font-display text-2xl uppercase tracking-[0.22em] ${
             onDark ? "text-white" : "text-navy"
           }`}
         >

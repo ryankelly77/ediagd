@@ -60,7 +60,31 @@
   --shadow-pop:  0 24px 60px rgb(8 28 41 / 0.40);
   --ring:        0 0 0 3px rgb(var(--ediagd-gold) / 1);
 
+  /* ---- Design language: gradients -------------------------------------- */
+  /* Navy hero surfaces — Midnight to Deep Water. Depth in the dark register,
+     echoing the login screen's layered sunrise. */
+  --ediagd-hero-gradient:
+    linear-gradient(160deg, #0C1C2C 0%, #163A54 100%);
+  /* Sunrise moments — celebration, the Swell. Gold is earned, used sparingly. */
+  --ediagd-sunrise-gradient:
+    linear-gradient(160deg, #F3E2BD 0%, #E8B44C 100%);
+  /* The page itself: cream that lifts very slightly at the top, so the base
+     surface isn't dead flat. A whisper, not a visible band. */
+  --ediagd-surface-gradient:
+    linear-gradient(180deg, #FBF8EF 0%, rgb(var(--ediagd-cream)) 340px);
+
+  /* ---- Design language: warm, navy-tinted elevation --------------------- */
+  /* Two levels only — cards sit above the page, heroes above cards. */
+  --ediagd-shadow-card: 0 4px 16px rgb(12 28 44 / 0.08);
+  --ediagd-shadow-hero: 0 10px 28px rgb(12 28 44 / 0.16);
+
   /* ---- Type ------------------------------------------------------------ */
+  /* DISPLAY-ONLY, AND WORDS ONLY.
+     Serif for words, tabular sans for figures — the display face's numerals are
+     old-style and proportional, so numbers set in it look uneven (see
+     .ediagd-figure). Use it for the wordmark and display headings; never for
+     numbers, body copy, or labels/eyebrows, which stay in --font-body.
+     It is a titling face: elegant large, poor small. Weight 400 only. */
   --font-display: ui-serif, Georgia, "Times New Roman", Times, serif;   /* wordmark + headings (brand book = Times) */
   --font-body: "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --font-script: "Apple Chancery", "Snell Roundhand", "URW Chancery L", "Pinyon Script", cursive; /* Mahalo accent */
@@ -69,6 +93,8 @@
 /* Base application shell */
 .ediagd-app {
   background: rgb(var(--surface));
+  background-image: var(--ediagd-surface-gradient);
+  background-repeat: no-repeat;
   color: rgb(var(--text));
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -79,4 +105,91 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ediagd-app * { transition: none !important; animation: none !important; }
+}
+
+/* ============================================================================
+   DESIGN LANGUAGE — shared surfaces
+   Screens inherit these rather than re-implementing depth. See
+   DESIGN_LANGUAGE.md. One hero per screen; everything else is a standard card.
+   ============================================================================ */
+
+/* The screen's headline surface: navy gradient, cream text, generous padding. */
+.ediagd-hero {
+  position: relative;
+  overflow: hidden;                    /* clips the corner motif */
+  background: var(--ediagd-hero-gradient);
+  color: rgb(var(--text-on-invert));
+  border-radius: var(--radius-card);
+  box-shadow: var(--ediagd-shadow-hero);
+  padding: 24px;
+}
+
+/* Standard surface for lists and secondary content. */
+.ediagd-card {
+  background: rgb(var(--surface-card));
+  border-radius: var(--radius-card);
+  box-shadow: var(--ediagd-shadow-card);
+  border: 1px solid rgb(var(--border) / 0.6);
+}
+
+/* A cream card that carries the screen's big number — elevated like a hero,
+   but light, so a screen can lead with warmth instead of navy. */
+.ediagd-card-feature {
+  background: rgb(var(--surface-card));
+  border-radius: var(--radius-card);
+  box-shadow: var(--ediagd-shadow-hero);
+  border: 1px solid rgb(var(--border) / 0.6);
+  padding: 24px;
+}
+
+/* The recurring signature: a sun over waves, whisper-quiet in a hero corner.
+   Decorative only — always aria-hidden in markup. */
+.ediagd-motif {
+  position: absolute;
+  top: -28px;
+  right: -28px;
+  width: 156px;
+  height: 156px;
+  pointer-events: none;
+  opacity: 0.09;
+}
+
+/* Eyebrow: Montserrat-style tracked uppercase. Teal on light, gold on navy —
+   both are "the label voice", the colour just follows the surface. */
+.ediagd-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(var(--brand));
+}
+.ediagd-hero .ediagd-eyebrow {
+  color: rgb(var(--ediagd-gold));
+}
+
+/* The confident number: hero stat, streak day, balances.
+   FIGURES ARE SANS, NOT SERIF. The display face has old-style proportional
+   numerals — digits sit at different heights and widths, so "$36,583" reads
+   uneven and bouncy at hero size. Numbers use the body sans with TABULAR
+   LINING numerals: every digit the same width, all on the baseline.
+   A real sans has real weights, so semibold here is genuine, not synthesised.
+   (The single-weight caveat applies to the display serif, not to this.) */
+.ediagd-figure {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 46px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+@media (min-width: 640px) {
+  .ediagd-figure { font-size: 56px; }
+}
+
+/* Smaller numbers that still need to line up in columns (secondary stats,
+   balances, table figures). Same numeral treatment, inherited size. */
+.ediagd-numeral {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }

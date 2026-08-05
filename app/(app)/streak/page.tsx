@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
 import { MILESTONES } from "@/lib/gamification/streak";
+import { SwellSun } from "@/components/brand/badges/SwellSun";
+import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 
 export default async function StreakPage() {
   const supabase = await createClient();
@@ -14,12 +16,19 @@ export default async function StreakPage() {
 
   // Both are RLS-readable by the owner (0012). Nothing is recomputed here —
   // the engine owns these numbers.
-  const [{ data: swell }, { data: balanceRow }, { data: settings }] =
+  const [{ data: swell }, { data: balanceRow }, { data: earnedRow }, { data: settings }] =
     await Promise.all([
       supabase.from("swell").select("*").eq("user_id", user.id).maybeSingle(),
+      // Balance = every ledger row (spending pulls it down).
       supabase
         .from("sand_dollar_balance")
         .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      // Total earned = positive rows only (0017) — never decreases.
+      supabase
+        .from("sand_dollar_earned")
+        .select("total_earned")
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase.from("game_settings").select("paddle_out_cap").limit(1).maybeSingle(),
@@ -30,6 +39,7 @@ export default async function StreakPage() {
   const paddleOut = Number(swell?.paddle_out_available ?? 0);
   const paddleOutCap = Number(settings?.paddle_out_cap ?? 5);
   const balance = Number(balanceRow?.balance ?? 0);
+  const totalEarned = Number(earnedRow?.total_earned ?? 0);
 
   const nextMilestone = MILESTONES.find((m) => m > streak) ?? null;
   const toGo = nextMilestone ? nextMilestone - streak : 0;
@@ -42,9 +52,7 @@ export default async function StreakPage() {
 
       {streak > 0 ? (
         <section className="mt-3 rounded-card bg-navy p-6 text-center shadow-card">
-          <p className="text-6xl" aria-hidden="true">
-            🌅
-          </p>
+          <SwellSun size={92} className="mx-auto" />
           <p className="mt-3 text-5xl font-extrabold tracking-tight text-white">
             Day {streak}
           </p>
@@ -60,9 +68,7 @@ export default async function StreakPage() {
         </section>
       ) : (
         <section className="mt-3 rounded-card bg-navy p-6 text-center shadow-card">
-          <p className="text-6xl" aria-hidden="true">
-            🌅
-          </p>
+          <SwellSun size={92} className="mx-auto" />
           <p className="mt-3 text-3xl font-extrabold text-white">
             Start your Swell today
           </p>
@@ -80,7 +86,25 @@ export default async function StreakPage() {
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Stat label="Longest Swell" value={longest > 0 ? `${longest} days` : "—"} />
-        <Stat label="Sand Dollars" value={balance.toLocaleString()} accent />
+
+        {/* Balance is what you can spend; total earned only ever climbs. */}
+        <Card className="p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+            Sand Dollars
+          </p>
+          <p className="mt-1 flex items-center gap-1.5">
+            <SandDollarIcon size={22} />
+            <span className="ediagd-numeral text-2xl font-extrabold text-navy">
+              {balance.toLocaleString()}
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-ink-soft">
+            <span className="ediagd-numeral font-bold">
+              {totalEarned.toLocaleString()}
+            </span>{" "}
+            earned all time
+          </p>
+        </Card>
       </div>
 
       <Card className="mt-3 p-5">
