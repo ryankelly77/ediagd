@@ -69,6 +69,14 @@ export function SwagShack({
         Earned, never bought. Every piece is paid for in Sand Dollars.
       </p>
 
+      {/* What the mark means — shown with the actual glyph, not described. */}
+      <p className="mt-2 flex items-center gap-2 px-1 text-xs text-ink-soft">
+        <CheckMark size={20} />
+        <span>
+          means you&apos;ve earned enough — everything else shows how far to go.
+        </span>
+      </p>
+
       <ul className="mt-3 grid grid-cols-2 gap-3">
         {items.map((item) => (
           <li key={item.id}>
@@ -240,12 +248,16 @@ function SwagImage({
  * "You can get this now." Palm rather than gold, matching the badge wall's
  * check construction — gold stays reserved for the Swell and milestones
  * (DESIGN_LANGUAGE §5), and affordability isn't a milestone.
+ *
+ * The mark and its positioning are separate so the legend can show the very
+ * same glyph the tiles use, rather than a lookalike that could drift.
  */
-function AffordableCheck() {
+function CheckMark({ size = 28 }: { size?: number }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-pill bg-palm text-white shadow-[0_2px_6px_rgba(12,28,44,0.4)]"
+      className="flex shrink-0 items-center justify-center rounded-pill bg-palm text-white shadow-[0_2px_6px_rgba(12,28,44,0.4)]"
+      style={{ width: size, height: size }}
     >
       <svg viewBox="0 0 24 24" className="h-[62%] w-[62%]" aria-hidden="true">
         <path
@@ -257,6 +269,14 @@ function AffordableCheck() {
           strokeLinejoin="round"
         />
       </svg>
+    </span>
+  );
+}
+
+function AffordableCheck() {
+  return (
+    <span className="absolute right-2 top-2">
+      <CheckMark />
     </span>
   );
 }
