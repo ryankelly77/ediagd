@@ -32,15 +32,22 @@ export default async function StreakPage() {
         .select("total_earned")
         .eq("user_id", user.id)
         .maybeSingle(),
-      supabase.from("game_settings").select("paddle_out_cap").limit(1).maybeSingle(),
+      supabase
+        .from("game_settings")
+        .select("paddle_out_cap, sand_paddle_out_price")
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   const streak = Number(swell?.current_len ?? 0);
   const longest = Number(swell?.longest_len ?? 0);
   const paddleOut = Number(swell?.paddle_out_available ?? 0);
   const paddleOutCap = Number(settings?.paddle_out_cap ?? 5);
+  const paddleOutPrice = Number(settings?.sand_paddle_out_price ?? 500);
   const balance = Number(balanceRow?.balance ?? 0);
   const totalEarned = Number(earnedRow?.total_earned ?? 0);
+  const atCap = paddleOut >= paddleOutCap;
+  const canAfford = balance >= paddleOutPrice;
 
   const nextMilestone = MILESTONES.find((m) => m > streak) ?? null;
   const toGo = nextMilestone ? nextMilestone - streak : 0;
@@ -143,6 +150,34 @@ export default async function StreakPage() {
             />
           ))}
         </div>
+
+        {/* State-aware next step. Never offer a purchase they can't make, and
+            never dress this as a gold CTA — gold stays with milestones. */}
+        {atCap ? (
+          <p className="mt-3 text-sm font-bold text-ocean">
+            Your bank is full.
+          </p>
+        ) : canAfford ? (
+          <Link
+            href="/swag"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-[10px] text-sm font-extrabold text-ocean transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            <SandDollarIcon size={16} />
+            <span className="ediagd-numeral">
+              Buy another for {paddleOutPrice.toLocaleString()}
+            </span>
+            <span aria-hidden="true">⟶</span>
+          </Link>
+        ) : (
+          // No CTA styling — the option exists, but it isn't a live button yet.
+          <p className="mt-3 text-sm text-ink-soft">
+            You can buy more for{" "}
+            <span className="ediagd-numeral font-bold">
+              {paddleOutPrice.toLocaleString()}
+            </span>{" "}
+            Sand Dollars.
+          </p>
+        )}
       </Card>
 
       <p

@@ -23,7 +23,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className="ediagd-app min-h-full">{children}</body>
+      {/* suppressHydrationWarning covers ONE level — attributes on <body>
+          itself. Browser extensions (ColorZilla's cz-shortcut-listen, password
+          managers, translators) inject attributes here before React hydrates,
+          and the resulting warnings would otherwise drown out a real mismatch.
+          We set no dynamic body attributes ourselves, so nothing genuine is
+          hidden; anything deeper in the tree still warns normally. */}
+      <body className="ediagd-app min-h-full" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
