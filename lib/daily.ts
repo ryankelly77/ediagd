@@ -169,79 +169,153 @@ export function ackLabel(date: IsoDate): string {
 
 /* ---- Bulk cue resolution (for the advisor screen) ------------------------ */
 
-export type ServiceCue = { title: string; body: string | null };
+export type ServiceCue = { id: string; title: string; body: string | null };
+
+/** How many cues one service offers up. Fluids alone has 292 published — this
+ *  is a readable preview of the library, not the whole shelf. */
+export const CUES_PER_SERVICE = 8;
+
+/** PostgREST caps every response at 1000 rows, regardless of .limit(). */
+const PAGE_SIZE = 1000;
 
 /**
- * Resolve the coaching cue for MANY services at once, server-side.
+ * How many ids to put in one `.in(...)` filter. PostgREST takes these in the
+ * QUERY STRING, so the real limit is URL length, not row count: 200 uuids is
+ * fine, 400 already fails. Worse, it fails as a network error rather than a
+ * PostgREST error, so an over-long list would come back empty and every service
+ * would quietly claim it has no cues. Ten services × 8 cues is 80 ids today —
+ * this keeps it safe if either number grows.
+ */
+const ID_BATCH = 100;
+
+/**
+ * Every published cue id for these services, paged past the 1000-row cap.
+ *
+ * This has to be exhaustive, not merely large: the rotation indexes into the
+ * pool, so a truncated pool would silently start naming a different cue than
+ * the daily ritual does. There are 841 today across the eight covered services
+ * — comfortably one page, but the CMS lets admins add more, and crossing 1000
+ * would have broken the match invisibly.
+ */
+async function fetchCueIds(
+  client: Client,
+  families: string[]
+): Promise<{ id: string; service_family: string; tier: string | null }[]> {
+  const rows: { id: string; service_family: string; tier: string | null }[] = [];
+
+  // Bounded so a misbehaving backend can't spin: 20 pages is 20,000 cues.
+  for (let page = 0; page < 20; page++) {
+    const from = page * PAGE_SIZE;
+    const { data, error } = await client
+      .from("content")
+      .select("id, service_family, tier")
+      .eq("type", "cue")
+      .eq("status", "published")
+      .in("service_family", families)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error || !data) break;
+    rows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+  }
+  return rows;
+}
+
+/**
+ * Resolve coaching cues for MANY services at once, server-side.
  *
  * The per-service picker costs two round-trips each (a count, then a ranged
- * row). Calling it nine times from the client is what made the service dialog's
- * cue pop in late. This does the whole set in TWO queries:
+ * row). Calling it once per service from the client is what made the service
+ * dialog's cue pop in late. This does the whole set in TWO queries:
  *
  *   1. ids only, for every candidate cue across all the services asked for
- *   2. the chosen rows' title/body
+ *   2. title/body for the handful actually shown
  *
  * Only SERVICE-SPECIFIC cues come back — never the generic fallback, because a
- * generic cue isn't a next step for a particular service.
+ * generic cue isn't a next step for a particular service. Services with no
+ * published cues (Oil Change and Alignment today) are simply absent.
  *
- * The rotation matches pickCoachingCue exactly (same offset, same id ordering),
- * so this screen and the daily ritual name the same cue on the same day.
- * Sorting the uuid text ascending equals Postgres's byte ordering, since
- * lowercase hex sorts the same as the bytes it encodes.
+ * Each list LEADS with the cue pickCoachingCue would name today — same offset,
+ * same id ordering — so the ritual, the service dialog and the pitch dialog all
+ * agree. The rest follow as a preview of the library: the advisor's own tier
+ * first, then the other tier. Sorting uuid text ascending equals Postgres's
+ * byte ordering, since lowercase hex sorts the same as the bytes it encodes.
  */
-export async function pickCuesForServices(
+export async function listCuesForServices(
   client: Client,
   date: IsoDate,
-  services: { family: string; tier: "zero" | "low" }[]
-): Promise<Record<string, ServiceCue>> {
+  services: { family: string; tier: "zero" | "low" }[],
+  perService = CUES_PER_SERVICE
+): Promise<Record<string, ServiceCue[]>> {
   const families = [...new Set(services.map((s) => s.family))];
   if (families.length === 0) return {};
 
-  const { data: candidates, error } = await client
-    .from("content")
-    .select("id, service_family, tier")
-    .eq("type", "cue")
-    .eq("status", "published")
-    .in("service_family", families);
-
-  if (error || !candidates || candidates.length === 0) return {};
+  const candidates = await fetchCueIds(client, families);
+  if (candidates.length === 0) return {};
 
   const byFamily = new Map<string, { id: string; tier: string | null }[]>();
-  for (const row of candidates as { id: string; service_family: string; tier: string | null }[]) {
+  for (const row of candidates) {
     const list = byFamily.get(row.service_family) ?? [];
     list.push({ id: row.id, tier: row.tier });
     byFamily.set(row.service_family, list);
   }
 
-  // Choose one id per service: preferred tier first, any tier otherwise.
-  const chosen = new Map<string, string>();
+  // Pick the ids to show per service, in display order.
+  const chosen = new Map<string, string[]>();
   for (const { family, tier } of services) {
     const all = byFamily.get(family);
     if (!all || all.length === 0) continue;
 
-    const pool = all.filter((c) => c.tier === tier);
-    const from = pool.length > 0 ? pool : all;
-    const ids = from.map((c) => c.id).sort();
-    chosen.set(family, ids[rotationIndex(date, ids.length, 1)]);
+    const mine = all.filter((c) => c.tier === tier).map((c) => c.id).sort();
+    const other = all.filter((c) => c.tier !== tier).map((c) => c.id).sort();
+
+    // Whichever pool the daily picker would have used leads the list, rotated
+    // so its head IS today's cue.
+    const lead = mine.length > 0 ? mine : other;
+    const rest = mine.length > 0 ? other : [];
+
+    const ids = [...rotate(lead, rotationIndex(date, lead.length, 1))];
+    if (ids.length < perService && rest.length > 0) {
+      ids.push(...rotate(rest, rotationIndex(date, rest.length, 1)));
+    }
+    chosen.set(family, ids.slice(0, perService));
   }
 
-  if (chosen.size === 0) return {};
+  const ids = [...chosen.values()].flat();
+  if (ids.length === 0) return {};
 
-  const { data: rows } = await client
-    .from("content")
-    .select("id, title, body")
-    .in("id", [...chosen.values()]);
-
-  const byId = new Map(
-    ((rows ?? []) as { id: string; title: string; body: string | null }[]).map(
-      (r) => [r.id, r]
-    )
+  const batches = await Promise.all(
+    chunk(ids, ID_BATCH).map(async (batch) => {
+      const { data } = await client
+        .from("content")
+        .select("id, title, body")
+        .in("id", batch);
+      return (data ?? []) as { id: string; title: string; body: string | null }[];
+    })
   );
 
-  const result: Record<string, ServiceCue> = {};
-  for (const [family, id] of chosen) {
-    const row = byId.get(id);
-    if (row) result[family] = { title: row.title, body: row.body };
+  const byId = new Map(batches.flat().map((r) => [r.id, r]));
+
+  const result: Record<string, ServiceCue[]> = {};
+  for (const [family, list] of chosen) {
+    const cues = list
+      .map((id) => byId.get(id))
+      .filter((r): r is { id: string; title: string; body: string | null } => !!r);
+    if (cues.length > 0) result[family] = cues;
   }
   return result;
+}
+
+/** Split into fixed-size batches. */
+function chunk<T>(list: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
+  return out;
+}
+
+/** Start an array at `start`, wrapping — [c,d,a,b] for start=2. */
+function rotate<T>(list: T[], start: number): T[] {
+  if (list.length === 0) return list;
+  return [...list.slice(start), ...list.slice(0, start)];
 }

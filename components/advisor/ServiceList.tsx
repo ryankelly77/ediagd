@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { StatusRow, StatusDot } from "@/components/brand/StatusDot";
 import { Modal } from "@/components/brand/Modal";
+import { PitchDialog } from "@/components/advisor/PitchDialog";
+import { CueCard } from "@/components/advisor/CueCard";
 import { STATUS_META } from "@/lib/brand";
 import { formatPct, type ServiceFamily } from "@/lib/advisor";
 import type { ServiceCue } from "@/lib/daily";
@@ -18,12 +20,15 @@ export function ServiceList({
   cues,
 }: {
   families: ServiceFamily[];
-  /** Service -> its coaching cue, resolved server-side. Absent where the
+  /** Service -> its coaching cues, resolved server-side. Absent where the
    *  caller has none to offer (the manager drill-in), and the section is then
    *  simply omitted. */
-  cues?: Record<string, ServiceCue>;
+  cues?: Record<string, ServiceCue[]>;
 }) {
   const [selected, setSelected] = useState<ServiceFamily | null>(null);
+  // The pitch dialog REPLACES the detail rather than stacking on top of it —
+  // two backdrops would double the scrim and give the screen two close buttons.
+  const [pitchFor, setPitchFor] = useState<ServiceFamily | null>(null);
 
   return (
     <>
@@ -43,8 +48,25 @@ export function ServiceList({
       {selected && (
         <ServiceDetail
           family={selected}
-          cue={cues?.[selected.family] ?? null}
+          cue={cues?.[selected.family]?.[0] ?? null}
+          // Only offered where this caller actually has cues to show.
+          onSeePitch={
+            cues
+              ? () => {
+                  setPitchFor(selected);
+                  setSelected(null);
+                }
+              : undefined
+          }
           onClose={() => setSelected(null)}
+        />
+      )}
+
+      {pitchFor && (
+        <PitchDialog
+          service={pitchFor.family}
+          cues={cues?.[pitchFor.family] ?? []}
+          onClose={() => setPitchFor(null)}
         />
       )}
     </>
@@ -56,11 +78,14 @@ export function ServiceList({
 function ServiceDetail({
   family,
   cue,
+  onSeePitch,
   onClose,
 }: {
   family: ServiceFamily;
   /** Already resolved — the dialog never fetches, so nothing pops in late. */
   cue: ServiceCue | null;
+  /** Hands off to the pitch dialog. Undefined where there's nothing to hand to. */
+  onSeePitch?: () => void;
   onClose: () => void;
 }) {
   const missed = Math.round(family.missedRos);
@@ -68,21 +93,17 @@ function ServiceDetail({
   const max = Math.max(family.rate, family.storeAvg, family.storeBest, 1) * 1.12;
 
   return (
-    <Modal label={`${family.family} detail`} onClose={onClose} padded={false}>
+    <Modal
+      label={`${family.family} detail`}
+      onClose={onClose}
+      padded={false}
+      showClose
+    >
       {/* ---- Hero: the insight, not the raw numbers -------------------- */}
       <div
         className="relative px-6 pb-6 pt-5"
         style={{ background: "var(--ediagd-hero-gradient)" }}
       >
-        {/* The only dismiss control besides the backdrop — leaving shouldn't be
-            the loudest action in the dialog. */}
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-pill bg-white/15 text-lg leading-none text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          ×
-        </button>
 
         <span className="flex items-center gap-2">
           {/* The one place the dot pulses: a single service, in focus. */}
@@ -95,7 +116,7 @@ function ServiceDetail({
           </span>
         </span>
 
-        <h2 className="mt-2 pr-8 text-2xl font-extrabold leading-tight text-white">
+        <h2 className="mt-2 pr-14 text-2xl font-extrabold leading-tight text-white">
           {family.family}
         </h2>
 
@@ -144,17 +165,20 @@ function ServiceDetail({
 
         {/* ---- The next step, when one exists ---------------------------- */}
         {cue && (
-          <div className="mt-6 rounded-card border border-line bg-cream-card p-4">
-            <p className="ediagd-eyebrow">Coaching cue</p>
-            <p className="mt-1.5 text-base font-extrabold text-navy">
-              {cue.title}
-            </p>
-            {cue.body && (
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink">
-                {cue.body}
-              </p>
-            )}
+          <div className="mt-6">
+            <p className="ediagd-eyebrow mb-2">Coaching cue</p>
+            <CueCard cue={cue} />
           </div>
+        )}
+
+        {/* Both routes into the coaching content land in the same dialog. */}
+        {onSeePitch && (
+          <button
+            onClick={onSeePitch}
+            className="mt-4 w-full rounded-xl border border-line bg-surface-card px-4 py-3 text-sm font-extrabold text-navy transition hover:bg-teal-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            Watch the pitch
+          </button>
         )}
       </div>
     </Modal>

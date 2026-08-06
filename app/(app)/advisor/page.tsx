@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { TierBadge } from "@/components/brand/TierBadge";
 import { ServiceList } from "@/components/advisor/ServiceList";
+import { PitchButton } from "@/components/advisor/PitchButton";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
-import { cueTierForRate, pickCuesForServices } from "@/lib/daily";
+import { cueTierForRate, listCuesForServices } from "@/lib/daily";
 import { BRAND } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
@@ -133,7 +134,8 @@ export default async function AdvisorPage() {
 
   // Cues for every service, resolved HERE rather than fetched by the dialog on
   // open — two queries for the whole set instead of a round-trip per tap.
-  const serviceCues = await pickCuesForServices(
+  // Lists, not singles: the pitch dialog previews several per service.
+  const serviceCues = await listCuesForServices(
     supabase,
     new Date().toISOString().slice(0, 10),
     families.map((f) => ({ family: f.family, tier: cueTierForRate(f.rate) }))
@@ -226,12 +228,10 @@ export default async function AdvisorPage() {
               </div>
             </div>
 
-            <a
-              href="#"
-              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3.5 text-base font-extrabold text-navy shadow-[0_4px_16px_rgba(12,28,44,0.24)] transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
-            >
-              Watch the pitch
-            </a>
+            <PitchButton
+              service={pick.family}
+              cues={serviceCues[pick.family] ?? []}
+            />
           </div>
         </section>
       )}
