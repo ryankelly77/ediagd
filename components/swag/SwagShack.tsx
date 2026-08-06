@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
+import { Modal } from "@/components/brand/Modal";
 import { buyPaddleOut, redeemSwag } from "@/app/(app)/swag/actions";
 import {
   STATUS_LABEL,
@@ -313,17 +314,7 @@ function RedeemSheet({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 sm:items-center sm:p-6"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={item.name}
-        className="max-h-[88vh] w-full max-w-sm overflow-y-auto rounded-t-card bg-surface-card shadow-pop sm:rounded-card"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal label={item.name} onClose={onClose} padded={false}>
         <SwagImage item={item} detail />
 
         <div className="p-6">
@@ -424,8 +415,7 @@ function RedeemSheet({
             Close
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

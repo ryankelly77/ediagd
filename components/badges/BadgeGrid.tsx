@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BadgeMedallion } from "@/components/brand/badges/BadgeMedallion";
+import { Modal } from "@/components/brand/Modal";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BADGES, BADGE_FAMILIES, type BadgeSpec } from "@/lib/badges";
 
@@ -38,15 +39,6 @@ export function BadgeGrid({
     ...spec,
     earnedOn: earnedByKey[spec.key] ?? null,
   }));
-
-  useEffect(() => {
-    if (!selected) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setSelected(null);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [selected]);
 
   return (
     <>
@@ -196,17 +188,8 @@ function BadgeDetail({
   const state = stateOf(tile);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 sm:items-center sm:p-6"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={tile.name}
-        className="w-full max-w-sm rounded-t-card bg-surface-card p-6 text-center shadow-pop sm:rounded-card"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal label={tile.name} onClose={onClose}>
+      <div className="text-center">
         <span className="mx-auto block w-fit">
           <BadgeMedallion badgeKey={tile.key} state={state} size={136} />
         </span>
@@ -253,7 +236,7 @@ function BadgeDetail({
           Close
         </button>
       </div>
-    </div>
+    </Modal>
   );
 }
 

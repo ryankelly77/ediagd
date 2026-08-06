@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
+import { Modal } from "@/components/brand/Modal";
 import {
   cancelRedemption,
   markFulfilled,
@@ -304,17 +305,7 @@ function ItemForm({
     onChange({ ...draft, [k]: v });
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 sm:items-center sm:p-6"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={draft.id ? "Edit item" : "Add item"}
-        className="max-h-[88vh] w-full max-w-sm overflow-y-auto rounded-t-card bg-surface-card p-6 shadow-pop sm:rounded-card"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal label={draft.id ? "Edit item" : "Add item"} onClose={onClose}>
         <h3 className="text-lg font-extrabold text-navy">
           {draft.id ? "Edit item" : "Add item"}
         </h3>
@@ -382,8 +373,7 @@ function ItemForm({
             Cancel
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

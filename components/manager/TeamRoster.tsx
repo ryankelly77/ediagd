@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TierBadge } from "@/components/brand/TierBadge";
 import { ServiceList } from "@/components/advisor/ServiceList";
+import { Modal } from "@/components/brand/Modal";
 import { formatCurrency } from "@/lib/advisor";
 import type { AdvisorSummary } from "@/lib/manager";
 
@@ -13,15 +14,6 @@ import type { AdvisorSummary } from "@/lib/manager";
  */
 export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
   const [selected, setSelected] = useState<AdvisorSummary | null>(null);
-
-  useEffect(() => {
-    if (!selected) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setSelected(null);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [selected]);
 
   return (
     <>
@@ -66,17 +58,7 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
       </ul>
 
       {selected && (
-        <div
-          className="fixed inset-0 z-40 flex items-end justify-center bg-navy/50 sm:items-center sm:p-6"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${selected.name} services`}
-            className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-card bg-surface-card p-5 shadow-pop sm:rounded-card"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal label={`${selected.name} services`} onClose={() => setSelected(null)} width="md">
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-lg font-extrabold text-navy">
@@ -108,8 +90,7 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
             >
               Close
             </button>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );
