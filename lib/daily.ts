@@ -166,3 +166,82 @@ export const ACK_LABELS = [
 export function ackLabel(date: IsoDate): string {
   return ACK_LABELS[rotationIndex(date, ACK_LABELS.length, 0)];
 }
+
+/* ---- Bulk cue resolution (for the advisor screen) ------------------------ */
+
+export type ServiceCue = { title: string; body: string | null };
+
+/**
+ * Resolve the coaching cue for MANY services at once, server-side.
+ *
+ * The per-service picker costs two round-trips each (a count, then a ranged
+ * row). Calling it nine times from the client is what made the service dialog's
+ * cue pop in late. This does the whole set in TWO queries:
+ *
+ *   1. ids only, for every candidate cue across all the services asked for
+ *   2. the chosen rows' title/body
+ *
+ * Only SERVICE-SPECIFIC cues come back — never the generic fallback, because a
+ * generic cue isn't a next step for a particular service.
+ *
+ * The rotation matches pickCoachingCue exactly (same offset, same id ordering),
+ * so this screen and the daily ritual name the same cue on the same day.
+ * Sorting the uuid text ascending equals Postgres's byte ordering, since
+ * lowercase hex sorts the same as the bytes it encodes.
+ */
+export async function pickCuesForServices(
+  client: Client,
+  date: IsoDate,
+  services: { family: string; tier: "zero" | "low" }[]
+): Promise<Record<string, ServiceCue>> {
+  const families = [...new Set(services.map((s) => s.family))];
+  if (families.length === 0) return {};
+
+  const { data: candidates, error } = await client
+    .from("content")
+    .select("id, service_family, tier")
+    .eq("type", "cue")
+    .eq("status", "published")
+    .in("service_family", families);
+
+  if (error || !candidates || candidates.length === 0) return {};
+
+  const byFamily = new Map<string, { id: string; tier: string | null }[]>();
+  for (const row of candidates as { id: string; service_family: string; tier: string | null }[]) {
+    const list = byFamily.get(row.service_family) ?? [];
+    list.push({ id: row.id, tier: row.tier });
+    byFamily.set(row.service_family, list);
+  }
+
+  // Choose one id per service: preferred tier first, any tier otherwise.
+  const chosen = new Map<string, string>();
+  for (const { family, tier } of services) {
+    const all = byFamily.get(family);
+    if (!all || all.length === 0) continue;
+
+    const pool = all.filter((c) => c.tier === tier);
+    const from = pool.length > 0 ? pool : all;
+    const ids = from.map((c) => c.id).sort();
+    chosen.set(family, ids[rotationIndex(date, ids.length, 1)]);
+  }
+
+  if (chosen.size === 0) return {};
+
+  const { data: rows } = await client
+    .from("content")
+    .select("id, title, body")
+    .in("id", [...chosen.values()]);
+
+  const byId = new Map(
+    ((rows ?? []) as { id: string; title: string; body: string | null }[]).map(
+      (r) => [r.id, r]
+    )
+  );
+
+  const result: Record<string, ServiceCue> = {};
+  for (const [family, id] of chosen) {
+    const row = byId.get(id);
+    if (row) result[family] = { title: row.title, body: row.body };
+  }
+  return result;
+}

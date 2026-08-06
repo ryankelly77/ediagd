@@ -4,6 +4,7 @@ import { Card } from "@/components/brand/Card";
 import { TierBadge } from "@/components/brand/TierBadge";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
+import { cueTierForRate, pickCuesForServices } from "@/lib/daily";
 import { BRAND } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
@@ -129,6 +130,14 @@ export default async function AdvisorPage() {
   }));
 
   const families = buildServiceFamilies(attach, benchmarks, laborPerRoByFamily);
+
+  // Cues for every service, resolved HERE rather than fetched by the dialog on
+  // open — two queries for the whole set instead of a round-trip per tap.
+  const serviceCues = await pickCuesForServices(
+    supabase,
+    new Date().toISOString().slice(0, 10),
+    families.map((f) => ({ family: f.family, tier: cueTierForRate(f.rate) }))
+  );
   const canCoach = hasCoachingVolume(totalRos);
   const pick = eddiesPick(families, totalRos);
   const tier = advisorTier(families);
@@ -233,7 +242,7 @@ export default async function AdvisorPage() {
 
         {canCoach ? (
           <div className="ediagd-card mt-3 px-4">
-            <ServiceList families={families} />
+            <ServiceList families={families} cues={serviceCues} />
           </div>
         ) : (
           <div className="ediagd-card mt-3 p-6">

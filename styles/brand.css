@@ -107,6 +107,28 @@
   .ediagd-app * { transition: none !important; animation: none !important; }
 }
 
+/* The status dot's pulse — ONLY the clay "pursue" dot, and only in the service
+   dialog, where it marks the single service the screen is about. It is never
+   used in the list: nine breathing dots reads as an alarm panel, which is what
+   "never red" exists to avoid.
+
+   A separate halo element sitting UNDER the dot (earlier in the DOM), animating
+   transform and opacity only, so it composites rather than repainting the dot
+   every frame. Slow and shallow — a breath, not a blink. */
+.ediagd-dot-pulse {
+  animation: ediagd-dot-pulse 2.6s cubic-bezier(0.33, 0, 0.2, 1) infinite;
+}
+@keyframes ediagd-dot-pulse {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  65%  { transform: scale(2.3); opacity: 0; }
+  100% { transform: scale(2.3); opacity: 0; }
+}
+/* Belt and braces: the shell-wide rule above already covers this, but the dot
+   should stay still even if the dialog is ever portaled outside .ediagd-app. */
+@media (prefers-reduced-motion: reduce) {
+  .ediagd-dot-pulse { animation: none !important; opacity: 0.28; }
+}
+
 /* ============================================================================
    DESIGN LANGUAGE — shared surfaces
    Screens inherit these rather than re-implementing depth. See
