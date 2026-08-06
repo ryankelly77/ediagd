@@ -58,7 +58,12 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
       </ul>
 
       {selected && (
-        <Modal label={`${selected.name} services`} onClose={() => setSelected(null)} width="md">
+        <Modal
+        label={`${selected.name} services`}
+        onClose={() => setSelected(null)}
+        width="md"
+        showClose
+      >
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-lg font-extrabold text-navy">
