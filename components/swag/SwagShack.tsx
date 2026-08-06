@@ -436,14 +436,19 @@ function PaddleOutCard({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // Spending 500 Sand Dollars shouldn't happen on one tap. Same two-step the
+  // gear tiles use — nothing leaves the balance until "Yes, buy one".
+  const [confirming, setConfirming] = useState(false);
 
   const full = held >= cap;
   const affordable = balance >= price;
+  const after = balance - price;
 
   function buy() {
     startTransition(async () => {
       const response = await buyPaddleOut();
       onResult(response);
+      setConfirming(false);
       if (response.ok) router.refresh();
     });
   }
@@ -477,13 +482,42 @@ function PaddleOutCard({
         <p className="mt-3 rounded-card bg-cream-card px-4 py-3 text-sm font-bold text-clay">
           {shortfallLabel(price, balance)}.
         </p>
+      ) : confirming ? (
+        <div className="mt-4 rounded-card border border-gold bg-gold-soft/30 p-4 text-left">
+          <p className="text-sm font-bold leading-relaxed text-navy">
+            {/* Every gap around an inline <span> is an explicit {" "}: SWC
+                drops a plain leading space when the text node wraps to the
+                next line, which silently glues "500Sand" together. */}
+            Buy a Paddle Back Out day for{" "}
+            <span className="ediagd-numeral">{price.toLocaleString()}</span>{" "}
+            Sand Dollars? You&apos;ll have{" "}
+            <span className="ediagd-numeral">{after.toLocaleString()}</span>{" "}
+            left, and you&apos;ll be holding{" "}
+            <span className="ediagd-numeral">{held + 1}</span>.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={buy}
+              disabled={pending}
+              className="flex-1 rounded-xl bg-gold p-3 font-extrabold text-navy transition hover:brightness-95 disabled:opacity-60"
+            >
+              {pending ? "Banking…" : "Yes, buy one"}
+            </button>
+            <button
+              onClick={() => setConfirming(false)}
+              disabled={pending}
+              className="rounded-xl border border-line px-4 py-3 font-bold text-navy disabled:opacity-60"
+            >
+              Back
+            </button>
+          </div>
+        </div>
       ) : (
         <button
-          onClick={buy}
-          disabled={pending}
-          className="mt-4 w-full rounded-xl bg-navy p-3.5 font-extrabold text-white transition hover:brightness-110 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          onClick={() => setConfirming(true)}
+          className="mt-4 w-full rounded-xl bg-navy p-3.5 font-extrabold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
-          {pending ? "Banking…" : "Buy a Paddle Back Out day"}
+          Buy a Paddle Back Out day
         </button>
       )}
     </Card>
