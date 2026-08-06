@@ -138,7 +138,7 @@ export default async function StreakPage() {
         </p>
         <p className="mt-1 text-sm leading-relaxed text-ink-soft">
           Miss a day and one of these keeps your Swell rolling — automatically.
-          You earn one back each month.
+          You start with one and earn one back each month.
         </p>
         <div className="mt-3 flex gap-1.5" aria-hidden="true">
           {Array.from({ length: paddleOutCap }, (_, i) => (
@@ -178,6 +178,16 @@ export default async function StreakPage() {
             Sand Dollars.
           </p>
         )}
+
+        {/* Where the days came from and where they went — grants, purchases
+            and the ones spent covering a missed day. */}
+        <Link
+          href="/streak/paddle-out"
+          className="mt-3 flex items-center gap-1.5 border-t border-line pt-3 text-sm font-bold text-ink-soft transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          See your Paddle Back Out history
+          <span aria-hidden="true">⟶</span>
+        </Link>
       </Card>
 
       <p

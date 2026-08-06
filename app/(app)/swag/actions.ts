@@ -169,8 +169,10 @@ export async function buyPaddleOut(): Promise<SwagResult> {
     .insert({
       user_id: user.id,
       amount: -price,
-      reason: "adjustment",
-      note: "Paddle Back Out day",
+      reason: "paddle_out_purchase",
+      // The note is the ledger's detail line. "Purchased" separates this from
+      // the free monthly allowance; the arrow says what the 500 bought.
+      note: `Purchased (${held} → ${held + 1})`,
     })
     .select("id")
     .maybeSingle();
@@ -197,6 +199,18 @@ export async function buyPaddleOut(): Promise<SwagResult> {
     }
     return { ok: false, error: grantError.message };
   }
+
+  // History (0021). Deliberately best-effort and last: the day is already
+  // bought and banked, and a missing audit row must never cost someone 500
+  // Sand Dollars. The screen reconciles against the counter and says when
+  // rows are missing, so this fails loudly in the UI rather than silently.
+  await service.from("paddle_out_entry").insert({
+    user_id: user.id,
+    delta: 1,
+    kind: "purchased",
+    ref_id: entry?.id ?? null,
+    note: `Purchased (${held} → ${held + 1})`,
+  });
 
   revalidatePath("/swag");
   revalidatePath("/streak");

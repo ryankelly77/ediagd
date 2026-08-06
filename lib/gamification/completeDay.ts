@@ -128,6 +128,7 @@ export async function completeDay(
   const rollback = async () => {
     try {
       await supabase.from("sand_dollar_entry").delete().eq("ref_id", completionId);
+      await supabase.from("paddle_out_entry").delete().eq("ref_id", completionId);
       for (const key of awardedBadgeKeys) {
         await supabase
           .from("user_badge")
@@ -221,6 +222,49 @@ export async function completeDay(
       { onConflict: "user_id" }
     );
     if (swellWriteError) throw new CompleteDayError(swellWriteError.message, "swell.write");
+
+    // ---- Log what happened to the Paddle Back Out bank (0021) -------------
+    // The counter above is authoritative; these rows only explain it. Written
+    // after the counter so a failure here can't claim something that didn't
+    // happen, and rolled back with everything else via ref_id.
+    const paddleRows: {
+      user_id: string;
+      delta: number;
+      kind: string;
+      ref_id: string;
+      note: string | null;
+    }[] = [];
+
+    if (outcome.paddleOutGranted > 0) {
+      paddleRows.push({
+        user_id: userId,
+        delta: outcome.paddleOutGranted,
+        kind: "monthly_grant",
+        ref_id: completionId,
+        note: null,
+      });
+    }
+    if (outcome.paddleOutSpent > 0) {
+      paddleRows.push({
+        user_id: userId,
+        delta: -outcome.paddleOutSpent,
+        kind: "spent",
+        ref_id: completionId,
+        note:
+          outcome.paddleOutSpent === 1
+            ? "Covered a missed day"
+            : `Covered ${outcome.paddleOutSpent} missed days`,
+      });
+    }
+
+    if (paddleRows.length > 0) {
+      const { error: paddleLogError } = await supabase
+        .from("paddle_out_entry")
+        .insert(paddleRows);
+      if (paddleLogError) {
+        throw new CompleteDayError(paddleLogError.message, "paddle.log");
+      }
+    }
 
     // ---- 9. Badges + their sand dollars ----------------------------------
     // Two ways to earn on a completion: the very first one earns First Light,

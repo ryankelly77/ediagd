@@ -6,6 +6,7 @@ import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
 import {
   LEDGER_PAGE_SIZE,
+  entryDetail,
   entryLabel,
   formatEntryDate,
   type LedgerEntry,
@@ -161,6 +162,7 @@ export default async function SandDollarsPage({
 /** One ledger row: what it was, when, and how much. */
 function LedgerRow({ entry }: { entry: LedgerEntry }) {
   const spend = entry.amount < 0;
+  const detail = entryDetail(entry);
 
   return (
     <div className="flex items-center gap-3 py-3.5">
@@ -170,6 +172,7 @@ function LedgerRow({ entry }: { entry: LedgerEntry }) {
         </span>
         <span className="mt-0.5 block text-xs text-ink-soft">
           {formatEntryDate(entry.createdAt)}
+          {detail && <> · {detail}</>}
         </span>
       </span>
 
