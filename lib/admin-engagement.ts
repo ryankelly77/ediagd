@@ -30,6 +30,12 @@ export type EngagementSummary = {
   reportingRooftops: number;
   advisorBands: Record<EngagementBand, number>;
   rooftopBands: Record<EngagementBand, number>;
+  /**
+   * When the rollup these numbers come from was computed (0028). Null means it
+   * has never run — which the screen has to say out loud, because "0 advisors"
+   * and "nobody has computed this yet" look identical otherwise.
+   */
+  computedAt: string | null;
 };
 
 export type ScopeInfo = {
@@ -50,7 +56,7 @@ export async function loadSummary(client: Client): Promise<EngagementSummary | n
   const { data, error } = await client
     .from("admin_engagement_summary")
     .select(
-      "advisor_count, avg_score, working_days, reporting_rooftops, adv_on_track, adv_close, adv_attention, rt_on_track, rt_close, rt_attention"
+      "advisor_count, avg_score, working_days, reporting_rooftops, adv_on_track, adv_close, adv_attention, rt_on_track, rt_close, rt_attention, computed_at"
     )
     .maybeSingle();
 
@@ -71,6 +77,7 @@ export async function loadSummary(client: Client): Promise<EngagementSummary | n
       building: Number(data.rt_close ?? 0),
       nudge: Number(data.rt_attention ?? 0),
     },
+    computedAt: (data.computed_at as string | null) ?? null,
   };
 }
 

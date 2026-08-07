@@ -7,6 +7,7 @@ import { AdvisorDetail } from "@/components/admin/AdvisorDetail";
 import { DistributionDonut } from "@/components/admin/DistributionDonut";
 import { EngagementHero } from "@/components/admin/EngagementHero";
 import { EngagementList, type EngagementRow } from "@/components/admin/EngagementList";
+import { RollupStamp } from "@/components/admin/RollupStamp";
 import { loadAdvisorDetails, rooftopToday } from "@/lib/admin-advisor-detail";
 import {
   LIST_PAGE_STEP,
@@ -61,6 +62,16 @@ export default async function AdminPage({
 
   const summary = await loadSummary(supabase);
   if (!summary) return <EngagementUnavailable />;
+
+  // Only the platform owner may force a recalculation — 0028's function refuses
+  // anyone else, so showing the control to a dealer admin would be a button
+  // that always fails.
+  const { data: profile } = await supabase
+    .from("app_user")
+    .select("is_platform_owner")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isPlatformOwner = Boolean(profile?.is_platform_owner);
 
   // One rooftop: skip the rooftop level entirely rather than making someone
   // tap through a list of one.
@@ -204,6 +215,8 @@ export default async function AdminPage({
       <div className="mt-4">
         <EngagementHero score={summary.avgScore} scopeLine={scopeLine} />
       </div>
+
+      <RollupStamp computedAt={summary.computedAt} canRefresh={isPlatformOwner} />
 
       {/* ---- 2. Distribution — tap a band to filter the list ------------ */}
       <DistributionDonut
