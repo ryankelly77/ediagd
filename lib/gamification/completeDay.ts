@@ -29,12 +29,14 @@ import {
   MILESTONE_BADGE,
   MILESTONE_REASON,
   applyDailyCompletion,
+  scheduledOn,
   milestoneSand,
   type GameSettings,
   type IsoDate,
   type Milestone,
   type SwellState,
 } from "./streak";
+import { loadScheduleContext } from "@/lib/work-schedule";
 
 export type CompleteDayInput = {
   quoteId?: string | null;
@@ -93,6 +95,18 @@ export async function completeDay(
   }
   const today = todayRaw as IsoDate;
 
+  // ---- 1b. The user's calendar ------------------------------------------
+  // Read BEFORE the day is claimed: if this fails we throw without having
+  // written anything, so there is no half-claimed day to compensate for.
+  // No schedule row means "not onboarded", and the engine then treats every
+  // day as scheduled — identical to the behaviour before 0025.
+  const scheduleContext = await loadScheduleContext(supabase, userId);
+
+  // Three-valued on purpose: null when there's no schedule on file, because
+  // "we don't know" is not the same claim as "they weren't scheduled". Stamped
+  // now rather than derived later, so changing shifts can't rewrite history.
+  const wasScheduled = scheduledOn(today, scheduleContext);
+
   // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
   const { data: completion, error: completionError } = await supabase
     .from("daily_completion")
@@ -103,6 +117,7 @@ export async function completeDay(
       quote_content_id: content.quoteId ?? null,
       cue_content_id: content.cueId ?? null,
       video_content_id: content.videoId ?? null,
+      was_scheduled: wasScheduled,
     })
     .select("id")
     .maybeSingle();
@@ -194,7 +209,12 @@ export async function completeDay(
       : { ...DEFAULT_SWELL, lastCompletedOn: null, paddleOutLastGranted: null };
 
     // ---- 6 & 7. All the streak/grace rules (pure, testable) -------------
-    const { next, outcome } = applyDailyCompletion(state, today, settings);
+    const { next, outcome } = applyDailyCompletion(
+      state,
+      today,
+      settings,
+      scheduleContext
+    );
 
     // ---- 8. Mint the daily loop earn ------------------------------------
     let sandEarned = 0;

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
@@ -27,6 +28,21 @@ export default async function AppLayout({
 
   // Signed out: the pages themselves redirect to /login, so render bare.
   if (!user) return <>{children}</>;
+
+  // ---- Blocking onboarding ------------------------------------------------
+  // ONE gate for every signed-in screen, rather than a check sprinkled through
+  // each page. It lives here rather than in app/page.tsx because that route
+  // only guards the bare domain — a tab-bar tap or a bookmarked /streak would
+  // sail straight past it, and a blocking screen you can tap around isn't one.
+  //
+  // /onboarding sits outside this route group precisely so this can be
+  // unconditional: no pathname sniffing, no way to accidentally exempt a route.
+  const { data: schedule } = await supabase
+    .from("work_schedule")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!schedule) redirect("/onboarding");
 
   // Everything the header needs, resolved once for every screen in the group.
   const [{ data: memberships }, { data: profile }, { data: balanceRow }] =

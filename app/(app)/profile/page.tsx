@@ -4,6 +4,17 @@ import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { AccountForms } from "@/components/profile/AccountForms";
+import { ScheduleForm } from "@/components/schedule/ScheduleForm";
+import { IslandTimePanel } from "@/components/schedule/IslandTimePanel";
+import { addDays, isoWeekday, type IsoDate } from "@/lib/gamification/streak";
+import {
+  SCHEDULE_COLUMNS,
+  describeSchedule,
+  rowToSchedule,
+  scheduleToDraft,
+  type IslandTimeEntry,
+  type ScheduleRow,
+} from "@/lib/work-schedule";
 import { signOutAction } from "../more/actions";
 
 export default async function ProfilePage() {
@@ -13,8 +24,14 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: memberships }, { data: balanceRow }, { data: earnedRow }] =
-    await Promise.all([
+  const [
+    { data: profile },
+    { data: memberships },
+    { data: balanceRow },
+    { data: earnedRow },
+    { data: scheduleRow },
+    { data: islandRows },
+  ] = await Promise.all([
       supabase
         .from("app_user")
         .select("full_name, is_platform_owner")
@@ -22,7 +39,7 @@ export default async function ProfilePage() {
         .maybeSingle(),
       supabase
         .from("membership")
-        .select("role, rooftop:rooftop_id(name)")
+        .select("role, rooftop_id, rooftop:rooftop_id(name)")
         .eq("user_id", user.id)
         .eq("active", true),
       supabase
@@ -35,6 +52,18 @@ export default async function ProfilePage() {
         .select("total_earned")
         .eq("user_id", user.id)
         .maybeSingle(),
+      // RLS scopes both to the owner (0025).
+      supabase
+        .from("work_schedule")
+        .select(SCHEDULE_COLUMNS)
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("island_time")
+        .select("id, start_date, end_date, note")
+        .eq("user_id", user.id)
+        .order("start_date", { ascending: true })
+        .limit(100),
     ]);
 
   const displayName = profile?.full_name ?? user.email ?? "Your account";
@@ -42,6 +71,38 @@ export default async function ProfilePage() {
   const roles = [...new Set((memberships ?? []).map((m) => m.role as string))];
   const balance = Number(balanceRow?.balance ?? 0);
   const totalEarned = Number(earnedRow?.total_earned ?? 0);
+
+  // ---- Schedule + Island Time ------------------------------------------
+  const schedule = rowToSchedule(scheduleRow as ScheduleRow | null);
+
+  // The rooftop's today, so "upcoming Saturdays" and "already started" mean
+  // theirs rather than the server's.
+  let today: IsoDate = new Date().toISOString().slice(0, 10);
+  const rooftopId = memberships?.[0]?.rooftop_id as string | undefined;
+  if (rooftopId) {
+    const { data: todayRaw } = await supabase.rpc("rooftop_today", {
+      _rooftop: rooftopId,
+    });
+    if (todayRaw) today = todayRaw as IsoDate;
+  }
+
+  let cursor: IsoDate = today;
+  while (isoWeekday(cursor) !== 6) cursor = addDays(cursor, 1);
+  const saturdays: IsoDate[] = [];
+  for (let i = 0; i < 6; i++) {
+    saturdays.push(cursor);
+    cursor = addDays(cursor, 7);
+  }
+
+  // Only what's still ahead or running — finished absences are history.
+  const island: IslandTimeEntry[] = ((islandRows ?? []) as {
+    id: string;
+    start_date: string;
+    end_date: string;
+    note: string | null;
+  }[])
+    .map((r) => ({ id: r.id, start: r.start_date, end: r.end_date, note: r.note }))
+    .filter((e) => e.end >= today);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
@@ -100,6 +161,33 @@ export default async function ProfilePage() {
           </span>{" "}
           earned all time
         </p>
+      </Card>
+
+      {/* ---- Work schedule ------------------------------------------- */}
+      <Card className="mt-3 p-5">
+        <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+          Work schedule
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+          Your Swell only counts the days you&apos;re on the drive — right now
+          that&apos;s{" "}
+          <span className="font-bold text-navy">{describeSchedule(schedule)}</span>.
+          Changing it affects days from here on; your history stays as it was.
+        </p>
+
+        <div className="mt-4 border-t border-line pt-4">
+          <ScheduleForm
+            initial={scheduleToDraft(schedule)}
+            saturdays={saturdays}
+            today={today}
+            tone="profile"
+          />
+        </div>
+      </Card>
+
+      {/* ---- Island Time --------------------------------------------- */}
+      <Card className="mt-3 p-5">
+        <IslandTimePanel entries={island} today={today} />
       </Card>
 
       <AccountForms
