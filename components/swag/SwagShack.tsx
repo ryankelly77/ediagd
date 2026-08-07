@@ -6,6 +6,7 @@ import { Card } from "@/components/brand/Card";
 import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { Modal } from "@/components/brand/Modal";
+import { SwagImage } from "@/components/swag/SwagImage";
 import { buyPaddleOut, redeemSwag } from "@/app/(app)/swag/actions";
 import {
   STATUS_LABEL,
@@ -161,7 +162,7 @@ function SwagTile({
           yet makes it drab, which is the opposite of aspirational. The check
           and the shortfall line carry affordability instead. */}
       <span className="relative block w-full">
-        <SwagImage item={item} />
+        <SwagImage src={item.imageUrl} />
         {affordable && <AffordableCheck />}
       </span>
 
@@ -184,64 +185,6 @@ function SwagTile({
         </span>
       </span>
     </button>
-  );
-}
-
-/**
- * Product shot, or a clean branded placeholder.
- *
- * The placeholder covers BOTH cases: no image_url set, and an image_url whose
- * file isn't there (the catalog is seeded with paths before the photography
- * exists). onError flips to the placeholder so a missing file never shows a
- * browser's broken-image icon.
- */
-function SwagImage({
-  item,
-  detail = false,
-}: {
-  item: SwagItem;
-  /** Detail view shows the WHOLE product; the grid crops to a tidy square. */
-  detail?: boolean;
-}) {
-  const [failed, setFailed] = useState(false);
-
-  if (!item.imageUrl || failed) {
-    return (
-      <span
-        aria-hidden="true"
-        className={`flex w-full items-center justify-center bg-teal-soft/25 ${
-          detail ? "h-48" : "aspect-square"
-        }`}
-      >
-        <SandDollarIcon size={detail ? 56 : 34} tone="sand" />
-      </span>
-    );
-  }
-
-  if (detail) {
-    // object-contain + letterbox: nothing of the mockup gets cut off, and the
-    // capped height keeps the sheet's content on screen.
-    return (
-      <span className="flex max-h-[46vh] w-full items-center justify-center bg-teal-soft/15 p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.imageUrl}
-          alt=""
-          onError={() => setFailed(true)}
-          className="max-h-[40vh] w-auto max-w-full object-contain"
-        />
-      </span>
-    );
-  }
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={item.imageUrl}
-      alt=""
-      onError={() => setFailed(true)}
-      className="aspect-square w-full object-cover"
-    />
   );
 }
 
@@ -315,7 +258,7 @@ function RedeemSheet({
 
   return (
     <Modal label={item.name} onClose={onClose} padded={false}>
-        <SwagImage item={item} detail />
+        <SwagImage src={item.imageUrl} variant="detail" />
 
         <div className="p-6">
           <h2 className="text-xl font-extrabold text-navy">{item.name}</h2>

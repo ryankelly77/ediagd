@@ -16,7 +16,7 @@ export default async function AdminSwagPage() {
     supabase
       .from("swag_redemption")
       .select(
-        "id, price_paid, variant, shipping_note, status, created_at, swag_item:swag_item_id(name), app_user:user_id(full_name)"
+        "id, price_paid, variant, shipping_note, status, created_at, swag_item:swag_item_id(name, image_url), app_user:user_id(full_name)"
       )
       .order("created_at", { ascending: false }),
     supabase.from("swag_item").select("*").order("sort_order", { ascending: true }),
@@ -25,7 +25,7 @@ export default async function AdminSwagPage() {
   const queue: QueueRow[] = (redemptionRows ?? []).map((r) => {
     const itemEmbed = r.swag_item as unknown;
     const item = (Array.isArray(itemEmbed) ? itemEmbed[0] : itemEmbed) as
-      | { name: string | null }
+      | { name: string | null; image_url: string | null }
       | null
       | undefined;
     const userEmbed = r.app_user as unknown;
@@ -38,6 +38,7 @@ export default async function AdminSwagPage() {
       id: r.id as string,
       advisorName: person?.full_name?.trim() || "Advisor",
       itemName: item?.name ?? "Swag",
+      itemImageUrl: item?.image_url ?? null,
       pricePaid: Number(r.price_paid ?? 0),
       variant: (r.variant as string | null) ?? null,
       shippingNote: (r.shipping_note as string | null) ?? null,

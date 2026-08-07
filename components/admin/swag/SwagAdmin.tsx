@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { Modal } from "@/components/brand/Modal";
+import { SwagImage } from "@/components/swag/SwagImage";
 import {
   cancelRedemption,
   markFulfilled,
@@ -18,6 +19,7 @@ export type QueueRow = {
   id: string;
   advisorName: string;
   itemName: string;
+  itemImageUrl: string | null;
   pricePaid: number;
   variant: string | null;
   shippingNote: string | null;
@@ -103,6 +105,8 @@ function QueueCard({
   return (
     <Card className="p-4">
       <div className="flex items-start gap-3">
+        {/* What's actually going in the box. */}
+        <SwagImage src={row.itemImageUrl} variant="thumb" />
         <div className="min-w-0 flex-1">
           <p className="text-base font-extrabold text-navy">{row.itemName}</p>
           <p className="mt-0.5 text-sm text-ink-soft">
@@ -225,6 +229,7 @@ function CatalogEditor({
         {items.map((item) => (
           <li key={item.id}>
             <Card className="flex items-center gap-3 p-4">
+              <SwagImage src={item.imageUrl} variant="thumb" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-base font-extrabold text-navy">
                   {item.name}
@@ -301,6 +306,19 @@ function ItemForm({
   onSave: () => void;
   onClose: () => void;
 }) {
+  // Keyed to the src it was reported for, so a stale verdict can't describe a
+  // path the admin has since edited.
+  const [imageCheck, setImageCheck] = useState<{
+    src: string | null;
+    status: "ok" | "missing";
+  } | null>(null);
+
+  const imageStatus: "empty" | "ok" | "missing" | "checking" = !draft.imageUrl
+    ? "empty"
+    : imageCheck && imageCheck.src === draft.imageUrl
+      ? imageCheck.status
+      : "checking";
+
   const set = <K extends keyof SwagItemDraft>(k: K, v: SwagItemDraft[K]) =>
     onChange({ ...draft, [k]: v });
 
@@ -341,13 +359,47 @@ function ItemForm({
               className={input}
             />
           </Field>
-          <Field label="Image URL" hint="e.g. /brand/swag/dad_cap.jpg — blank shows a placeholder.">
+          <Field
+            label="Image URL"
+            hint="e.g. /brand/swag/dad_cap.jpg — blank shows a placeholder."
+          >
             <input
               value={draft.imageUrl ?? ""}
               onChange={(e) => set("imageUrl", e.target.value || null)}
               className={input}
             />
           </Field>
+
+          {/* Live preview: retries on every keystroke, so a typo shows as the
+              placeholder immediately rather than after saving and switching to
+              the advisor view. */}
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              Preview
+            </span>
+            <div className="mt-1">
+              <SwagImage
+                src={draft.imageUrl}
+                variant="preview"
+                onStatus={(status) =>
+                  setImageCheck({ src: draft.imageUrl, status })
+                }
+              />
+            </div>
+            <p
+              className={`mt-1.5 text-xs ${
+                imageStatus === "missing" ? "font-bold text-clay" : "text-ink-soft"
+              }`}
+            >
+              {imageStatus === "missing"
+                ? "That path doesn't resolve — advisors will see the placeholder."
+                : imageStatus === "ok"
+                  ? "This is what the advisor sees."
+                  : imageStatus === "checking"
+                    ? "Checking…"
+                    : "No image set — advisors see the placeholder."}
+            </p>
+          </div>
           <Field label="Sort order">
             <input
               type="number"
