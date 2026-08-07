@@ -57,6 +57,7 @@ Gated on the advisor lesson library (the "do more than 3 minutes" system). These
 | Fifty Sunrises | `fifty_sunrises` | Fifty lessons completed | Golden Hour | rising sun | **[needs lessons]** |
 | Eddie's Pick | `eddies_pick` | Twenty daily picks completed | Golden Hour | surfboard — the board Eddie picks for you | **[now-ish]** — daily picks ARE tracked (daily_completion); buildable once we decide it counts picks completed, not just streak length |
 | Full Horizon | `full_horizon` | Every lesson in a service/track completed | Big Wave | sun fully risen over a long horizon | **[needs lessons]** — needs the concept of a "track" (a complete service curriculum) |
+| Free Surf | `free_surf` | Trained on five days you weren't scheduled | Golden Hour | hammock | **[now, once schedules exist]** — `daily_completion.was_scheduled` is stamped at write time (0025), so `count(*) where was_scheduled = false` is the criterion |
 
 Note: today we have cues, not structured courses. The library defines whether completing a cue = a "lesson."
 
