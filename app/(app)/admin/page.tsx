@@ -205,6 +205,28 @@ export default async function AdminPage() {
         </div>
       </section>
 
+      {/* ---- Design previews ----------------------------------------------- */}
+      {/* Both render real screens with throwaway state and save nothing, so
+          they can be opened as often as you like. Admin-only — an advisor who
+          found the badge URL would see something identical to earning one. */}
+      <section className="mt-5">
+        <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
+          Previews
+        </h2>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <ToolLink
+            href="/onboarding?preview=1"
+            label="First-run onboarding"
+            hint="Six screens, then the first daily loop and First Light — nothing is saved"
+          />
+          <ToolLink
+            href="/preview/badge-celebration"
+            label="Badge celebration"
+            hint="Confetti and reveal, without earning one"
+          />
+        </div>
+      </section>
+
       {/* ---- Per-rooftop --------------------------------------------------- */}
       <section className="mt-5">
         <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">

@@ -1,13 +1,18 @@
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { isAdminViewer } from "@/lib/access";
 import { CelebrationPreview } from "@/components/daily/CelebrationPreview";
 
 /* ============================================================================
-   TEMPORARY DEV PREVIEW — DELETE WHEN THE ANIMATION IS SIGNED OFF.
+   DESIGN PREVIEW — linked from the admin Tools list.
 
    A standalone view of the badge celebration so the confetti and reveal can be
-   tuned without earning a badge. It reads and writes NOTHING — no Supabase
-   client, no auth, no data — so it is safe to open repeatedly, but it is still
-   404'd outside development so it can't ship by accident.
+   tuned without earning a badge. It writes NOTHING, so it is safe to open as
+   often as you like.
+
+   ADMIN-ONLY, and 404 for everyone else. It used to be gated on NODE_ENV, which
+   made it a dead link the moment the app was deployed — and an advisor who
+   found the URL would see something identical to genuinely earning a badge.
 
    Deliberately outside the (app) route group: no header or tab bar, so the
    animation is the only thing on screen.
@@ -18,7 +23,11 @@ export default async function BadgeCelebrationPreviewPage({
 }: {
   searchParams: Promise<{ reward?: string }>;
 }) {
-  if (process.env.NODE_ENV === "production") notFound();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !(await isAdminViewer(supabase, user.id))) notFound();
 
   const { reward } = await searchParams;
   const initialReward = Number(reward) > 0 ? Number(reward) : 50;

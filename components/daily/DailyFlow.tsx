@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeDayAction } from "@/app/(app)/daily/actions";
 import { BadgeCelebration } from "./BadgeCelebration";
+import { MILESTONES } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
@@ -34,6 +35,8 @@ export function DailyFlow({
   totalRos,
   badgeNames,
   badgeRewards,
+  previewResult = null,
+  dailyLoopSand,
 }: {
   alreadyCompleteOnLoad: boolean;
   currentStreak: number;
@@ -48,7 +51,17 @@ export function DailyFlow({
   badgeNames: Record<string, string>;
   /** Badge key -> Sand Dollars it pays, from game_settings / the catalog. */
   badgeRewards: Record<string, number>;
+  /**
+   * Admin demo: a canned outcome to show instead of completing the day.
+   * When present NOTHING is written — no completion, no badge, no Sand
+   * Dollars — and the "already done today" screen is skipped so the whole
+   * first-day arc can be walked as often as you like.
+   */
+  previewResult?: CompleteDayResult | null;
+  /** sand_daily_loop from game_settings — itemised in the celebration. */
+  dailyLoopSand: number;
 }) {
+  const preview = Boolean(previewResult);
   const [step, setStep] = useState(1);
   // True once WE started the completion. From that moment the incoming
   // `alreadyCompleteOnLoad` prop flips true (the action's cookie write
@@ -60,7 +73,7 @@ export function DailyFlow({
 
   // Terminal screen: they've already done today. It WAITS — nothing here
   // navigates on its own.
-  if (doneOnArrival && !ritualRun) {
+  if (doneOnArrival && !ritualRun && !preview) {
     return <DoneForTodayScreen streak={currentStreak} />;
   }
 
@@ -102,6 +115,8 @@ export function DailyFlow({
 
         {step === 4 && (
           <CelebrationStep
+            previewResult={previewResult}
+            dailyLoopSand={dailyLoopSand}
             quoteId={quote?.id ?? null}
             cueId={cue?.id ?? null}
             badgeNames={badgeNames}
@@ -337,6 +352,8 @@ function CelebrationStep({
   badgeRewards,
   today,
   fallbackStreak,
+  previewResult = null,
+  dailyLoopSand,
 }: {
   quoteId: string | null;
   cueId: string | null;
@@ -344,10 +361,15 @@ function CelebrationStep({
   badgeRewards: Record<string, number>;
   today: string;
   fallbackStreak: number;
+  previewResult?: CompleteDayResult | null;
+  /** sand_daily_loop, so the breakdown never hardcodes an amount. */
+  dailyLoopSand: number;
 }) {
   const router = useRouter();
+  // In demo mode the outcome is handed in, and the cache is bypassed entirely
+  // so a real day's celebration can't leak into the demo or vice versa.
   const [result, setResult] = useState<CompleteDayResult | null>(() =>
-    readCachedResult(today)
+    previewResult ?? readCachedResult(today)
   );
   const [alreadyDone, setAlreadyDone] = useState<CompleteDayResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -355,7 +377,8 @@ function CelebrationStep({
 
   useEffect(() => {
     // Already have the numbers (this mount or a previous one) — never re-fire.
-    if (result || fired.current) return;
+    // A demo always has them, so the action is never called.
+    if (result || previewResult || fired.current) return;
     fired.current = true;
 
     (async () => {
@@ -374,7 +397,7 @@ function CelebrationStep({
       writeCachedResult(today, response.result);
       setResult(response.result);
     })();
-  }, [quoteId, cueId, result, today]);
+  }, [quoteId, cueId, result, today, previewResult]);
 
   if (alreadyDone) {
     return <DoneForTodayScreen streak={alreadyDone.streak || fallbackStreak} />;
@@ -434,8 +457,41 @@ function CelebrationStep({
     ? badgeNames[result.badgeEarned] ?? result.badgeEarned
     : null;
 
+  // ---- What was earned, and where it came from ---------------------------
+  // Every amount comes from game_settings / the badge catalog via props — the
+  // celebration can never quote a number the engine didn't grant.
+  const badgeReward = result.badgeEarned
+    ? (badgeRewards[result.badgeEarned] ?? 0)
+    : 0;
+
+  const lines: { label: string; amount: number }[] = [];
+  if (dailyLoopSand > 0) {
+    lines.push({ label: "Daily training", amount: dailyLoopSand });
+  }
+  if (result.badgeEarned && badgeReward > 0) {
+    lines.push({ label: `${badgeName ?? "Badge"} badge`, amount: badgeReward });
+  }
+  const accounted = lines.reduce((n, l) => n + l.amount, 0);
+  const remainder = result.sandEarned - accounted;
+  if (remainder > 0) {
+    lines.push({
+      label: (MILESTONES as readonly number[]).includes(result.streak)
+        ? "Streak milestone"
+        : "Bonus",
+      amount: remainder,
+    });
+  }
+
+  // Only itemise when there's more than one source, and only when the lines
+  // genuinely add up — showing a breakdown that doesn't sum is worse than
+  // showing none, which is the bug this replaces.
+  const itemise =
+    lines.length > 1 &&
+    lines.reduce((n, l) => n + l.amount, 0) === result.sandEarned;
+
   return (
     <section className="flex flex-1 flex-col justify-center text-center">
+      {/* ---- Headline: the Swell day ----------------------------------- */}
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
         {result.streakReset ? "A fresh Swell begins" : "Your Swell"}
       </p>
@@ -451,42 +507,82 @@ function CelebrationStep({
         </p>
       )}
 
-      <p className="mt-6 flex items-center justify-center gap-2 text-2xl font-extrabold text-gold">
-        <SandDollarIcon size={26} />
-        <span className="ediagd-numeral">+{result.sandEarned}</span>
-        <span>Sand Dollars</span>
-      </p>
-      <p className="mt-1 text-sm text-ink-soft">
-        <span className="ediagd-numeral">{result.newBalance}</span> banked
-      </p>
-
       {result.graceUsed && (
-        <p className="mt-6 rounded-card border border-line bg-surface-card p-4 text-sm leading-relaxed text-navy">
+        <p className="mt-4 rounded-card border border-line bg-surface-card p-3 text-sm leading-relaxed text-navy">
           Paddled back out — your Swell&apos;s still rolling. Mahalo for coming
           back.
         </p>
       )}
 
+      {/* ---- Headline: the badge --------------------------------------- */}
+      {/* reward={null} when the amount is itemised below: printing it twice is
+          what made the totals look double-counted. */}
       {badgeName && result.badgeEarned && (
         <BadgeCelebration
           badgeKey={result.badgeEarned}
           badgeName={badgeName}
-          reward={badgeRewards[result.badgeEarned] ?? null}
+          reward={itemise ? null : (badgeRewards[result.badgeEarned] ?? null)}
         />
       )}
 
+      {/* ---- Supporting detail: the money ------------------------------ */}
+      {itemise ? (
+        <div className="mx-auto mt-5 w-full max-w-[17rem] rounded-card border border-line bg-surface-card p-4 text-left">
+          <ul className="space-y-1.5">
+            {lines.map((line) => (
+              <li key={line.label} className="flex items-center gap-2">
+                <SandDollarIcon size={14} tone="sand" />
+                <span className="flex-1 text-sm text-ink-soft">{line.label}</span>
+                <span className="ediagd-numeral text-sm font-bold text-navy">
+                  +{line.amount}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {/* The total sums the lines above — heavier, gold, behind a rule. */}
+          <div className="mt-2.5 flex items-center gap-2 border-t border-line pt-2.5">
+            <SandDollarIcon size={20} />
+            <span className="flex-1 text-sm font-extrabold text-navy">
+              Sand Dollars
+            </span>
+            <span className="ediagd-numeral text-xl font-extrabold text-gold">
+              +{result.sandEarned}
+            </span>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-5 flex items-center justify-center gap-2 text-2xl font-extrabold text-gold">
+          <SandDollarIcon size={26} />
+          <span className="ediagd-numeral">+{result.sandEarned}</span>
+          <span>Sand Dollars</span>
+        </p>
+      )}
+
+      {/* Only when it adds something. On day one the balance IS the amount
+          just earned, so printing it again is the same number twice — the
+          exact confusion the breakdown above exists to remove. */}
+      {result.newBalance !== result.sandEarned && (
+        <p className="mt-2 text-sm text-ink-soft">
+          Balance:{" "}
+          <span className="ediagd-numeral font-bold text-navy">
+            {result.newBalance}
+          </span>
+        </p>
+      )}
+
       <p
-        className="mt-10 text-4xl text-teal"
+        className="mt-6 text-4xl text-teal"
         style={{ fontFamily: "var(--font-script)" }}
       >
         {BRAND.signoff}
       </p>
 
       <button
-        onClick={() => router.push("/advisor")}
-        className="mt-8 w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+        onClick={() => router.push(previewResult ? "/admin" : "/advisor")}
+        className="mt-6 w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
       >
-        See my numbers
+        {previewResult ? "Back to admin" : "See my numbers"}
       </button>
     </section>
   );

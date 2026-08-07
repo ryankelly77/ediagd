@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminViewer } from "@/lib/access";
 import { loadAdvisorDay } from "@/lib/advisor-data";
 import { ackLabel, cueTierForRate, pickCoachingCue, pickQuoteOfDay } from "@/lib/daily";
 import { firstName } from "@/lib/advisor";
@@ -7,7 +8,11 @@ import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
 import type { IsoDate } from "@/lib/gamification/streak";
 
-export default async function TodayPage() {
+export default async function TodayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -86,6 +91,47 @@ export default async function TodayPage() {
   // celebration can never quote an amount the engine didn't grant.
   const badgeRewards = await loadBadgeRewards(supabase);
 
+  // The daily-loop amount, itemised in the celebration so the total visibly
+  // sums its parts. Read from settings — never hardcoded.
+  const { data: gameSettings } = await supabase
+    .from("game_settings")
+    .select("sand_daily_loop")
+    .limit(1)
+    .maybeSingle();
+  const dailyLoopSand = Number(gameSettings?.sand_daily_loop ?? 0);
+
+  // ---- Admin demo -------------------------------------------------------
+  // ?preview=1 walks the real daily loop with a canned outcome: nothing is
+  // written, the "already done today" screen is skipped, and it can be run as
+  // often as you like. Admins only — for anyone else the flag is ignored, so
+  // it can never be used to fake a completion.
+  const { preview: previewParam } = await searchParams;
+  const isPreview =
+    previewParam === "1" && (await isAdminViewer(supabase, user.id));
+
+  let previewResult = null;
+  if (isPreview) {
+    // Real amounts, so the demo quotes what the engine would actually have
+    // granted on a first day.
+    const dailyLoop = dailyLoopSand;
+    const firstLight = Number(badgeRewards["first_light"] ?? 0);
+
+    previewResult = {
+      alreadyComplete: false,
+      date: today,
+      streak: 1,
+      longest: 1,
+      paddleOutAvailable: 1,
+      paddleOutSpent: 0,
+      paddleOutGranted: 0,
+      graceUsed: false,
+      streakReset: false,
+      sandEarned: dailyLoop + firstLight,
+      badgeEarned: "first_light",
+      newBalance: dailyLoop + firstLight,
+    };
+  }
+
   const embed = membership.app_user as unknown;
   const appUser = (Array.isArray(embed) ? embed[0] : embed) as
     | { full_name: string | null }
@@ -94,6 +140,8 @@ export default async function TodayPage() {
 
   return (
     <DailyFlow
+      previewResult={previewResult}
+      dailyLoopSand={dailyLoopSand}
       alreadyCompleteOnLoad={alreadyCompleteOnLoad}
       currentStreak={currentStreak}
       today={today}
