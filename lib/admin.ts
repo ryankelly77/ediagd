@@ -26,84 +26,8 @@ export function engagementBand(score: number): EngagementBand {
   return "nudge";
 }
 
-export type AdvisorEngagement = {
-  userId: string;
-  name: string;
-  workingDays: number;
-  daysLoggedIn: number;
-  videosWatched: number;
-  loginRatePct: number;
-  watchRatePct: number;
-  /** Straight from the view — never recomputed here. */
-  engagementScore: number;
-};
-
-export type RooftopEngagement = {
-  rooftopId: string;
-  name: string;
-  advisors: AdvisorEngagement[];
-  advisorCount: number;
-  engagedCount: number;
-  /** Mean of this rooftop's advisor scores; null when nobody has data yet. */
-  averageScore: number | null;
-};
-
-export type GroupEngagement = {
-  rooftops: RooftopEngagement[];
-  advisorCount: number;
-  engagedCount: number;
-  /**
-   * Mean across every advisor in the group — not a mean of rooftop means, so a
-   * two-advisor store doesn't outweigh a twenty-advisor store.
-   */
-  averageScore: number | null;
-};
-
-function mean(values: number[]): number | null {
-  if (values.length === 0) return null;
-  return Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
-}
-
-/** Lowest engagement first — the people who need a nudge surface at the top. */
-export function rankAdvisors(advisors: AdvisorEngagement[]): AdvisorEngagement[] {
-  return [...advisors].sort(
-    (a, b) => a.engagementScore - b.engagementScore || a.name.localeCompare(b.name)
-  );
-}
-
-export function summarizeRooftop(
-  rooftopId: string,
-  name: string,
-  advisors: AdvisorEngagement[]
-): RooftopEngagement {
-  const ranked = rankAdvisors(advisors);
-  return {
-    rooftopId,
-    name,
-    advisors: ranked,
-    advisorCount: ranked.length,
-    engagedCount: ranked.filter((a) => a.engagementScore >= ENGAGEMENT_TARGET).length,
-    averageScore: mean(ranked.map((a) => a.engagementScore)),
-  };
-}
-
-/**
- * Roll rooftops into the group headline. Rooftops needing the most attention
- * (lowest average) sort first; rooftops with no data yet sink to the bottom
- * rather than reading as a zero.
- */
-export function summarizeGroup(rooftops: RooftopEngagement[]): GroupEngagement {
-  const sorted = [...rooftops].sort((a, b) => {
-    if (a.averageScore == null) return 1;
-    if (b.averageScore == null) return -1;
-    return a.averageScore - b.averageScore;
-  });
-
-  const everyone = sorted.flatMap((r) => r.advisors);
-  return {
-    rooftops: sorted,
-    advisorCount: everyone.length,
-    engagedCount: everyone.filter((a) => a.engagementScore >= ENGAGEMENT_TARGET).length,
-    averageScore: mean(everyone.map((a) => a.engagementScore)),
-  };
-}
+/* The per-advisor / per-rooftop grouping that used to live here is gone: the
+   0026 views (admin_advisor_engagement, admin_rooftop_engagement,
+   admin_engagement_summary) do it in Postgres. Doing it in JS meant fetching
+   every row first, which silently truncated at PostgREST's 1000-row cap.
+   Only the band language survives, because it's shared with the UI. */
