@@ -102,7 +102,6 @@ export default async function ContentSearchPage({
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin/content", label: "All services" }}
-        eyebrow="Coaching content"
         title="Search"
         subtitle={
           query.length > 0

@@ -65,6 +65,13 @@ export default async function AppLayout({
         .maybeSingle(),
     ]);
 
+  // The bell's number. head:true counts in Postgres and transfers no rows, and
+  // RLS (0030) scopes it to this user's own mail without a filter here.
+  const { count: unreadCount } = await supabase
+    .from("notification")
+    .select("id", { count: "exact", head: true })
+    .is("read_at", null);
+
   const displayName = profile?.full_name ?? user.email ?? "there";
   const balance = balanceRow?.balance == null ? null : Number(balanceRow.balance);
 
@@ -111,7 +118,11 @@ export default async function AppLayout({
 
   return (
     <>
-      <AppHeader initials={initialsFor(displayName)} balance={balance} />
+      <AppHeader
+        initials={initialsFor(displayName)}
+        balance={balance}
+        unreadCount={Number(unreadCount ?? 0)}
+      />
       {children}
       <TabBar tabs={tabs} showAdminInMore={isAdmin} />
     </>

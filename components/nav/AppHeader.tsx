@@ -24,10 +24,13 @@ import { isImmersive } from "./routes";
 export function AppHeader({
   initials,
   balance,
+  unreadCount = 0,
 }: {
   initials: string;
   /** Sand Dollars, or null when the user has no ledger yet. */
   balance: number | null;
+  /** Unread notifications. Resolved in the layout; the nav never queries. */
+  unreadCount?: number;
 }) {
   const pathname = usePathname() ?? "";
   if (isImmersive(pathname)) return null;
@@ -75,6 +78,29 @@ export function AppHeader({
           </span>
         </Link>
 
+        {/* The count is a WIN-FIRST inbox, so the badge is gold rather than a
+            warning colour — an unread notification is more often good news
+            than bad, and the header should not imply otherwise. */}
+        <Link
+          href="/notifications"
+          aria-label={
+            unreadCount > 0
+              ? `Notifications — ${unreadCount} unread`
+              : "Notifications"
+          }
+          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-pill text-navy transition hover:bg-teal-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          <BellIcon />
+          {unreadCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="ediagd-numeral absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-pill bg-gold px-1 text-[10px] font-extrabold text-navy"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Link>
+
         <Link
           href="/profile"
           aria-label="Your account"
@@ -88,3 +114,22 @@ export function AppHeader({
 }
 
 export default AppHeader;
+
+/** A bell, drawn rather than imported — one shape, no icon dependency. */
+function BellIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7" />
+      <path d="M13.7 20a1.94 1.94 0 0 1-3.4 0" />
+    </svg>
+  );
+}

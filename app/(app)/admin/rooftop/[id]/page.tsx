@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminSearch } from "@/components/admin/AdminSearch";
 import { AdvisorDetail } from "@/components/admin/AdvisorDetail";
 import { DistributionDonut } from "@/components/admin/DistributionDonut";
@@ -108,16 +108,10 @@ export default async function AdminRooftopPage({
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
-      <Link
-        href="/admin"
-        className="inline-flex items-center gap-1.5 text-sm font-bold text-ink-soft transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-      >
-        <span aria-hidden="true">⟵</span> Engagement
-      </Link>
-
-      <h1 className="mt-3 text-2xl font-extrabold text-navy">
-        {rooftop.rooftopName}
-      </h1>
+      <AdminPageHeader
+        back={{ href: "/admin/engagement", label: "Engagement" }}
+        title={rooftop.rooftopName}
+      />
 
       <div className="mt-4">
         <EngagementHero

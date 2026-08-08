@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js"
+    "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js",
+    "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

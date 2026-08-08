@@ -42,3 +42,6 @@ next-env.d.ts
 
 # offline engine scenarios
 .tmp-test
+
+# Build artefact from npm run check:nav
+.tmp-nav/

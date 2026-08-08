@@ -37,5 +37,5 @@ export async function refreshEngagementRollup(): Promise<void> {
   const { error } = await supabase.rpc("refresh_engagement_rollup");
   if (error) throw new Error(`Could not recalculate engagement: ${error.message}`);
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/engagement");
 }

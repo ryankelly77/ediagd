@@ -28,7 +28,6 @@ export default async function NewContentPage({
               }
             : { href: "/admin/content", label: "All services" }
         }
-        eyebrow="Coaching content"
         title="New content"
         subtitle={service ? `Adding to ${service}` : undefined}
       />

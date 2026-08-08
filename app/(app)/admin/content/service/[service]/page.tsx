@@ -82,7 +82,6 @@ export default async function ContentServicePage({
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin/content", label: "All services" }}
-        eyebrow="Coaching content"
         title={heading}
         subtitle={`${total.toLocaleString()} ${total === 1 ? "item" : "items"}${
           statusFilter ? ` · ${STATUS_META[statusFilter].label.toLowerCase()}` : ""

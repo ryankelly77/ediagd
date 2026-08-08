@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
+import { ADMIN_PREVIEWS, ADMIN_TOOLS } from "@/lib/admin-tools";
 import { BRAND } from "@/lib/brand";
 import { signOutAction } from "./actions";
 
@@ -61,33 +62,37 @@ export default async function MorePage() {
         </li>
       </ul>
 
+      {/* THE ADMIN HUB. Six peers, rendered from lib/admin-tools.ts — the same
+          list `npm run check:nav` validates against the routes on disk.
+          Engagement sits among them rather than above them: it used to be the
+          page you went "into" to reach the rest, which made Impact & ROI look
+          like part of engagement instead of the other half of the question. */}
       {isAdmin && (
-        <ul className="mt-4 space-y-2">
-          <li>
-            <LinkRow href="/admin" label="Admin" hint="Engagement across rooftops" />
-          </li>
-          <li>
-            <LinkRow
-              href="/admin/content"
-              label="Coaching Content"
-              hint="Manage cues and videos"
-            />
-          </li>
-          <li>
-            <LinkRow
-              href="/admin/settings"
-              label="Gamification Settings"
-              hint="Sand Dollars and streak grace days"
-            />
-          </li>
-          <li>
-            <LinkRow
-              href="/admin/swag"
-              label="Swag Shack"
-              hint="Fulfillment queue and catalog"
-            />
-          </li>
-        </ul>
+        <>
+          <h2 className="mt-6 px-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
+            Admin
+          </h2>
+          <ul className="mt-2 space-y-2">
+            {ADMIN_TOOLS.map((tool) => (
+              <li key={tool.href}>
+                <LinkRow {...tool} />
+              </li>
+            ))}
+          </ul>
+
+          {/* App chrome over fabricated data — kept apart from the working
+              tools so a preview is never mistaken for a result. */}
+          <h2 className="mt-6 px-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
+            Previews
+          </h2>
+          <ul className="mt-2 space-y-2">
+            {ADMIN_PREVIEWS.map((tool) => (
+              <li key={tool.href}>
+                <LinkRow {...tool} />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       <h2 className="mt-6 px-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">

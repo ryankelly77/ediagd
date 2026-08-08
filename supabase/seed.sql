@@ -523,13 +523,15 @@ select
   -- 30-day window, and a single timezone would never exercise it.
   (array['America/New_York','America/Chicago','America/Denver',
          'America/Los_Angeles','Pacific/Honolulu'])[1 + (spec.n % 5)],
-  -- The spread the exceptions list exists to surface. 'mixed' is the important
-  -- one: a good store with one or two people dragging it down.
+  -- 20 / 60 / 20, the shape of a real customer base rather than a triage list.
+  -- 'average' is the important band and the biggest: mixed adoption inside one
+  -- store, returns hovering either side of break-even. It is where a nudge
+  -- would actually change something, so the admin tools have to be judged
+  -- against it and not against the extremes.
   case
-    when demo.rnd('arch:' || spec.n) < 0.22 then 'thriving'
-    when demo.rnd('arch:' || spec.n) < 0.44 then 'struggling'
-    when demo.rnd('arch:' || spec.n) < 0.74 then 'mixed'
-    else 'steady'
+    when demo.rnd('arch:' || spec.n) < 0.20 then 'thriving'
+    when demo.rnd('arch:' || spec.n) < 0.80 then 'average'
+    else 'struggling'
   end
 from spec join demo.city c on c.n = spec.n;
 
@@ -578,7 +580,7 @@ select
 from demo.rooftops r
 cross join lateral (
   select 'advisor'::member_role as role, i
-  from generate_series(1, demo.pick('advisors:' || r.n, 3, 8)) i
+  from generate_series(1, demo.pick('advisors:' || r.n, 4, 7)) i
   union all
   select 'manager'::member_role, i
   from generate_series(1, demo.pick('managers:' || r.n, 1, 2)) i
@@ -635,31 +637,60 @@ on conflict (user_id, rooftop_id, role) do nothing;
 -- be on screen somewhere.
 
 create table demo.advisor as
+with ranked as (
+  select
+    s.user_id, s.rooftop_id, s.n, r.archetype,
+    -- Rank inside the store, and how big the store is. Both are needed to hand
+    -- each rooftop its archetype's adoption mix as a QUOTA rather than as a
+    -- coin flip per advisor.
+    row_number() over (
+      partition by s.rooftop_id
+      order by demo.rnd('rank:' || s.user_id::text)
+    ) as rk,
+    count(*) over (partition by s.rooftop_id) as team
+  from demo.staff s
+  join demo.rooftops r on r.id = s.rooftop_id
+  where s.role = 'advisor'
+)
 select
-  s.user_id, s.rooftop_id, s.n, r.archetype,
-  demo.rnd('sched:' || s.user_id::text)     as sched_roll,
-  demo.rnd('onboard:' || s.user_id::text)   as onboard_roll,
-  -- The store's character decides the ODDS; the person still rolls their own.
-  -- A thriving store has the occasional middling advisor and a struggling one
-  -- has a holdout doing everything right — uniform stores would make the
-  -- exceptions list trivial and prove nothing.
-  case r.archetype
+  ranked.user_id, ranked.rooftop_id, ranked.n, ranked.archetype,
+  demo.rnd('sched:' || ranked.user_id::text)     as sched_roll,
+  demo.rnd('onboard:' || ranked.user_id::text)   as onboard_roll,
+  -- ADOPTION AS A QUOTA, NOT A COIN FLIP.
+  --
+  -- Drawing each advisor's tier independently made a store's outcome a
+  -- binomial: with five advisors, "40% engaged" produced stores with one and
+  -- stores with four, and their returns differed by 4x. The result was a
+  -- bimodal network — plenty of winners, plenty of failures, almost nothing in
+  -- the middle, which is the one band the admin tools most need to be judged
+  -- against. Ranking inside the store and cutting at the quota gives each
+  -- rooftop close to its archetype's intended mix.
+  --
+  -- The variation that remains is the honest kind: how big the lift is, whether
+  -- it lands at all, how noisy the months are, and how many advisors the store
+  -- has in the first place.
+  case ranked.archetype
+    -- Thriving: most of the team engaged, and STILL room for someone who is
+    -- not — the ceil() on the first cut leaves the last advisor out of it in
+    -- any store of four or more.
     when 'thriving' then
-      case when demo.rnd('tier:' || s.user_id::text) < 0.82 then 'high' else 'mid' end
-    when 'struggling' then
-      case when demo.rnd('tier:' || s.user_id::text) < 0.78 then 'low' else 'mid' end
-    when 'steady' then
-      case when demo.rnd('tier:' || s.user_id::text) < 0.30 then 'high'
-           when demo.rnd('tier:' || s.user_id::text) < 0.85 then 'mid'
+      case when ranked.rk <= round(0.75 * ranked.team) then 'high'
+           when ranked.rk <= round(0.95 * ranked.team) then 'mid'
            else 'low' end
-    -- 'mixed' is the case the exceptions list exists for: a good store with
-    -- one or two people dragging the average down.
+    -- Struggling: mostly not engaged, but the first advisor is a star. Every
+    -- struggling store has one, which is what makes the drill-down worth
+    -- opening instead of confirming the headline.
+    when 'struggling' then
+      case when ranked.rk = 1 and ranked.team >= 4 then 'high'
+           when ranked.rk <= round(0.30 * ranked.team) then 'mid'
+           else 'low' end
+    -- Average: genuinely split inside one store. This is the 60%.
     else
-      case when demo.rnd('tier:' || s.user_id::text) < 0.26 then 'low' else 'high' end
+      case when ranked.rk <= round(0.45 * ranked.team) then 'high'
+           when ranked.rk <= round(0.75 * ranked.team) then 'mid'
+           else 'low' end
   end as tier
-from demo.staff s
-join demo.rooftops r on r.id = s.rooftop_id
-where s.role = 'advisor';
+from ranked;
 
 insert into work_schedule (
   user_id, works_mon, works_tue, works_wed, works_thu, works_fri, works_sun,
@@ -739,16 +770,19 @@ from demo.advisor a
 cross join lateral (
   select
     case a.tier
-      when 'high' then 0.90 + 0.10 * demo.rnd('l:' || a.user_id::text)
-      when 'mid'  then 0.60 + 0.28 * demo.rnd('l:' || a.user_id::text)
-      else             0.08 + 0.30 * demo.rnd('l:' || a.user_id::text)
+      -- A Mon-Fri advisor can only ever reach 20 of the 24 candidate days, so
+      -- the ceiling on login rate is ~83% and a "high" advisor has to be near
+      -- perfect on their own days to clear an engagement score of 75.
+      when 'high' then 0.95 + 0.05 * demo.rnd('l:' || a.user_id::text)
+      when 'mid'  then 0.60 + 0.25 * demo.rnd('l:' || a.user_id::text)
+      else             0.08 + 0.27 * demo.rnd('l:' || a.user_id::text)
     end as login_rate,
     -- Watching is a fraction of logging in, never more: you can't watch a video
     -- on a day you never opened the app. The gap between the two is the whole
     -- "showed up vs did the work" story the detail card tells.
     case a.tier
-      when 'high' then 0.88 + 0.12 * demo.rnd('w:' || a.user_id::text)
-      when 'mid'  then 0.58 + 0.30 * demo.rnd('w:' || a.user_id::text)
+      when 'high' then 0.92 + 0.08 * demo.rnd('w:' || a.user_id::text)
+      when 'mid'  then 0.58 + 0.28 * demo.rnd('w:' || a.user_id::text)
       else             0.25 + 0.35 * demo.rnd('w:' || a.user_id::text)
     end as watch_mult
 ) r;
@@ -879,7 +913,346 @@ raise notice 'SECTION 5: % demo rooftops, % people, % activity rows, % completio
   (select count(*) from daily_completion dc join rooftop r on r.id = dc.rooftop_id
     where r.name like '[DEMO]%');
 
+end
+$demo$;
+
+
+-- ===========================================================================
+-- SECTION 6 — SIX MONTHS OF PERFORMANCE, AND THE COACHING THAT MAY EXPLAIN IT
+-- ===========================================================================
+-- SECTION 5 proves the engagement screen at scale. This proves the question a
+-- dealer principal actually asks: is the app moving my numbers?
+--
+-- THE COMPARISON THIS DATA HAS TO SUPPORT. Not "engaged advisors sell more" —
+-- that is confounded by everything (better advisors engage more, better stores
+-- hire better advisors). The comparison is WITHIN ONE ADVISOR: the services
+-- they were coached on versus the services they were not, over the same months.
+-- Same person, same store, same customers, same weather, same OEM incentives.
+-- Whatever else moved their numbers moved both sides of that comparison.
+--
+-- SO THE DATA IS BUILT TO BE HONEST, NOT FLATTERING:
+--   * most engaged advisors gain more on coached services than uncoached ones
+--   * ~1 in 5 engaged advisors gain nothing — coaching does not always work
+--   * some disengaged advisors improve anyway — other things exist
+--   * whole families move some months for reasons nobody was coached on
+--   * every series carries noise, so the view has to survive a real signal
+--
+-- If this seed produced a clean upward line, the screen built on it would be
+-- untested — the layout only earns its keep if it stays readable when the
+-- answer is "+2.1 vs +0.4, and a quarter of the sample went the other way".
+--
+-- DOGGETT IS UNTOUCHED. It keeps its single June 2026 period, which is what
+-- exercises the "two months are needed to show movement" empty state.
+-- ===========================================================================
+
+do $impact$
+declare
+  _month0 date := date_trunc('month', current_date)::date;
+begin
+
+-- ---- 6.1 The cues, one per service family ---------------------------------
+-- daily_completion.cue_content_id -> content.service_family is the whole
+-- mechanism: it is how we know WHICH service a person was coached on, on WHICH
+-- day. Generic training cannot make this claim, which is why it is worth the
+-- join. source = 'demo-seed' is what the teardown keys on.
+
+insert into content (id, type, service_family, tier, title, body, status, source)
+select
+  demo.duid('cue:' || fam),
+  'cue',
+  fam,
+  'zero',
+  '[DEMO] ' || fam || ' — the walkaround line',
+  'Ask about ' || lower(fam) || ' before they ask you.',
+  'published',
+  'demo-seed'
+from (select distinct coalesce(family, category) as fam from service_line) f
+on conflict (id) do nothing;
+
+
+-- ---- 6.2 Six monthly periods per demo rooftop ------------------------------
+-- source_file marks them, so the impact screen can tell an admin to their face
+-- that what they are looking at is fabricated.
+
+insert into perf_period (id, rooftop_id, starts_on, ends_on, label, source_file)
+select
+  demo.duid('period:' || r.id::text || ':' || i),
+  r.id,
+  (_month0 - ((5 - i) || ' months')::interval)::date,
+  ((_month0 - ((5 - i) || ' months')::interval) + interval '1 month' - interval '1 day')::date,
+  to_char(_month0 - ((5 - i) || ' months')::interval, 'Mon YYYY'),
+  'demo-seed'
+from rooftop r, generate_series(0, 5) i
+where r.name like '[DEMO]%'
+on conflict (id) do nothing;
+
+
+-- ---- 6.3 Who was coached on what, and when --------------------------------
+-- Two or three families per advisor, and a month when coaching started. Kept
+-- in a table because 6.4 and 6.5 must agree perfectly: the attach lift and the
+-- completion history have to describe the same story or the screen is a lie.
+
+create table demo.plan as
+with adv as (
+  select
+    m.user_id,
+    m.rooftop_id,
+    m.op_code_id,
+    -- The engagement band the screen already shows, so the impact story is
+    -- keyed off the same numbers rather than a parallel invention.
+    coalesce(er.band, 'nudge') as band
+  from membership m
+  join rooftop r on r.id = m.rooftop_id
+  left join engagement_rollup er
+    on er.user_id = m.user_id and er.rooftop_id = m.rooftop_id
+  where m.role = 'advisor' and m.active and r.name like '[DEMO]%'
+    and m.op_code_id is not null
+),
+fams as (select distinct coalesce(family, category) as fam from service_line)
+select
+  a.user_id,
+  a.rooftop_id,
+  a.op_code_id,
+  a.band,
+  -- 2-3 coached families, chosen deterministically per advisor.
+  (select array_agg(f.fam order by demo.rnd('fam:' || a.user_id::text || f.fam))
+     from (select fam from fams) f
+    where demo.rnd('pick:' || a.user_id::text || f.fam)
+          < case when demo.rnd('n:' || a.user_id::text) < 0.5 then 0.17 else 0.25 end
+  ) as coached_families,
+  -- Coaching starts in month 1, 2 or 3 of the six, so there is always a before.
+  demo.pick('start:' || a.user_id::text, 1, 3) as coach_start,
+  -- Points of attach gained per month once coaching starts. The band sets the
+  -- odds; the individual still rolls their own outcome.
+  case a.band
+    when 'engaged' then
+      -- Roughly 1 in 8 engaged advisors STILL get nothing out of it. Coaching
+      -- does not always work and a demo that hid that would be selling — but at
+      -- 1 in 5, with only two or three engaged advisors in a typical store, the
+      -- coin flip was deciding whether the whole ROOFTOP cleared break-even.
+      -- The property is the point; its weight was drowning the archetype.
+      case when demo.rnd('works:' || a.user_id::text) < 0.12 then 0.0
+           else 1.5 + 0.5 * demo.rnd('lift:' || a.user_id::text) end
+    when 'building' then
+      case when demo.rnd('works:' || a.user_id::text) < 0.35 then 0.0
+           else 0.7 + 0.4 * demo.rnd('lift:' || a.user_id::text) end
+    else
+      -- Barely engaged: almost nothing. THIS IS THE FINDING — the effect is
+      -- concentrated in people who actually turn up, and no amount of
+      -- reshaping the distribution is allowed to soften it.
+      case when demo.rnd('works:' || a.user_id::text) < 0.85 then 0.0
+           else 0.2 + 0.4 * demo.rnd('lift:' || a.user_id::text) end
+  end as lift_per_month,
+  -- Movement that has nothing to do with us: a new pay plan, a tyre promotion,
+  -- a good hire. Applies to whatever families this advisor was NOT coached on.
+  case when demo.rnd('other:' || a.user_id::text) < 0.18
+       then 0.3 + 0.7 * demo.rnd('otherlift:' || a.user_id::text)
+       else 0.0 end as uncoached_drift
+from adv a;
+
+
+-- ---- 6.4 Attach history ----------------------------------------------------
+-- Written as op-code ROs against a period total, because that is the shape the
+-- DMS export has and the shape advisor_family_attach already reads. Nothing
+-- here invents an "attach rate" column — the rate stays derived, so the demo
+-- exercises the same maths the real import will.
+
+create table demo.total as
+select
+  p.user_id, p.rooftop_id, p.op_code_id, pp.id as period_id, i.n as period_n,
+  110 + demo.pick('ros:' || p.user_id::text || i.n, 0, 40) as total_ros
+from demo.plan p
+join generate_series(0, 5) with ordinality i(m, n) on true
+join perf_period pp
+  on pp.rooftop_id = p.rooftop_id
+ and pp.id = demo.duid('period:' || p.rooftop_id::text || ':' || i.m);
+
+insert into advisor_period_total_src
+  (period_id, rooftop_id, advisor_op_id, total_ros, blended_elr, total_labor_sales, gp_pct, total_ro_lines)
+select
+  t.period_id, t.rooftop_id, t.op_code_id,
+  t.total_ros,
+  round((140 + demo.rnd('elr:' || t.op_code_id || t.period_n) * 60)::numeric, 2),
+  round((t.total_ros * (240 + demo.rnd('ls:' || t.op_code_id || t.period_n) * 160))::numeric, 2),
+  round((0.58 + demo.rnd('gp:' || t.op_code_id || t.period_n) * 0.18)::numeric, 4),
+  round(t.total_ros * (2.1 + demo.rnd('rl:' || t.op_code_id || t.period_n)))
+from demo.total t
+on conflict (period_id, advisor_op_id) do nothing;
+
+-- One representative op code per family carries that family's ROs. The attach
+-- rate is a family-level number and advisor_family_attach sums op codes back up
+-- to the family, so spreading it over four codes would change nothing except
+-- the row count.
+create table demo.fam_code as
+select distinct on (coalesce(family, category))
+       coalesce(family, category) as fam, op_code
+from service_line
+order by coalesce(family, category), op_code;
+
+insert into advisor_op_metric
+  (period_id, rooftop_id, advisor_op_id, op_code, ros, elr, frhs, frhs_per_ro,
+   labor_sales, labor_per_ro, labor_gp_pct, ro_lines)
+select
+  t.period_id, t.rooftop_id, t.op_code_id, fc.op_code,
+  greatest(0, round(t.total_ros * a.attach / 100.0)) as ros,
+  round((130 + demo.rnd('e:' || t.op_code_id || fc.fam || t.period_n) * 70)::numeric, 2),
+  round((t.total_ros * a.attach / 100.0 * 1.4)::numeric, 2),
+  round((1.1 + demo.rnd('f:' || t.op_code_id || fc.fam) * 0.8)::numeric, 2),
+  round((t.total_ros * a.attach / 100.0 * 280)::numeric, 2),
+  round((190 + demo.rnd('lp:' || t.op_code_id || fc.fam) * 90)::numeric, 2),
+  round((0.55 + demo.rnd('gpp:' || t.op_code_id || fc.fam) * 0.2)::numeric, 4),
+  round(t.total_ros * a.attach / 100.0 * 1.6)
+from demo.total t
+join demo.plan p on p.user_id = t.user_id and p.rooftop_id = t.rooftop_id
+join demo.fam_code fc on true
+cross join lateral (
+  select least(88.0, greatest(2.0,
+      -- Where this advisor started on this service.
+      (10 + demo.rnd('base:' || t.user_id::text || fc.fam) * 34)
+      -- Month-to-month noise, present on every series so nothing reads as a
+      -- ruler-drawn line.
+    + (demo.rnd('noise:' || t.user_id::text || fc.fam || t.period_n) - 0.5) * 2.4
+      -- The coaching effect, if this is a coached family and coaching has begun.
+    + case
+        when p.coached_families is not null
+         and fc.fam = any (p.coached_families)
+         and t.period_n - 1 >= p.coach_start
+        then p.lift_per_month * (t.period_n - 1 - p.coach_start + 1)
+        else 0
+      end
+      -- Drift on the services nobody coached: the "other factors" column.
+    + case
+        when (p.coached_families is null or not (fc.fam = any (p.coached_families)))
+        then p.uncoached_drift * (t.period_n - 1)
+        else 0
+      end
+      -- A whole family moving in a given month, network-wide. Tyres in winter,
+      -- a manufacturer push, a pay-plan change — real, and nothing to do with us.
+    + case when demo.rnd('season:' || fc.fam || t.period_n) > 0.86 then 2.2 else 0 end
+  )) as attach
+) a
+where demo.rnd('has:' || t.user_id::text || fc.fam) < 0.55   -- not every advisor sells every family
+on conflict (period_id, advisor_op_id, op_code) do nothing;
+
+
+-- ---- 6.5 The coaching history that has to match ---------------------------
+-- A completion carrying a cue for a family IS the record of being coached on
+-- it. Historic months get new rows; the current month's completions already
+-- exist from SECTION 5, so they are updated in place rather than duplicated
+-- (daily_completion is unique per user per day).
+
+insert into daily_completion (user_id, rooftop_id, completion_date, cue_content_id, was_scheduled)
+select
+  p.user_id, p.rooftop_id, d.day,
+  demo.duid('cue:' || (p.coached_families)[1 + (extract(day from d.day)::int % array_length(p.coached_families, 1))]),
+  true
+from demo.plan p
+join generate_series(1, 5) mth on true
+cross join lateral (
+  -- How OFTEN someone is coached follows how often they show up. An advisor in
+  -- the nudge band who logged in four times all month cannot also have twelve
+  -- coaching days — and if the seed pretended otherwise, the coached column
+  -- would fill up with people who were never really coached, which is exactly
+  -- how a study of this kind gets its answer wrong.
+  select ((_month0 - (mth || ' months')::interval)::date
+          + demo.pick('cday:' || p.user_id::text || mth || g, 0, 27)) as day
+  from generate_series(1, case p.band
+                             when 'engaged'  then 14
+                             when 'building' then 7
+                             else 3
+                           end) g
+) d
+where p.coached_families is not null
+  and array_length(p.coached_families, 1) > 0
+  and (6 - mth) - 1 >= p.coach_start          -- only after coaching began
+  and demo.rnd('cdo:' || p.user_id::text || mth || d.day::text) < 0.75
+on conflict (user_id, completion_date) do nothing;
+
+-- Attribute the recent completions SECTION 5 already wrote.
+update daily_completion dc
+   set cue_content_id = demo.duid('cue:' ||
+         (p.coached_families)[1 + (extract(day from dc.completion_date)::int
+                                   % array_length(p.coached_families, 1))])
+  from demo.plan p
+ where p.user_id = dc.user_id
+   and dc.cue_content_id is null
+   and p.coached_families is not null
+   and array_length(p.coached_families, 1) > 0;
+
+-- ---- 6.6 Videos and lessons that DO NOT EXIST ------------------------------
+-- READ THIS BEFORE TRUSTING ANY VIDEO OR LESSON NUMBER ON THE IMPACT SCREEN.
+--
+-- There are no advisor videos in the product and the lesson library was never
+-- built: content has zero rows of type advisor_video, daily_completion has
+-- never carried a video_content_id, and content_progress is empty. The
+-- intervention breakdown therefore has nothing real to show for two of its
+-- three columns.
+--
+-- What follows exists ONLY so that layout can be built and reviewed. It is
+-- deliberately marked at every level — content.source = 'demo-seed', and the
+-- rooftops are [DEMO] — and admin_impact_intervention.has_real_data computes
+-- to false for both, which is what makes the screen label them illustrative.
+-- The day a real video is watched at a real rooftop, that flag flips on its
+-- own and the warning disappears without anyone editing a component.
+--
+-- Nothing here should ever be quoted as a finding. "Videos drive more lift
+-- than cues" would be an assumption rendered as evidence.
+
+insert into content (id, type, service_family, title, body, status, source)
+select demo.duid('video:' || fam), 'advisor_video', fam,
+       '[DEMO] ' || fam || ' — the two-minute walkthrough',
+       'Illustrative only. No advisor video content exists yet.',
+       'published', 'demo-seed'
+from (select distinct coalesce(family, category) as fam from service_line) f
+on conflict (id) do nothing;
+
+insert into content (id, type, service_family, title, body, status, source)
+select demo.duid('lesson:' || fam), 'advisor_video', fam,
+       '[DEMO] Lesson: ' || fam,
+       'Stand-in for a lesson. There is no lesson content type yet.',
+       'published', 'demo-seed'
+from (select distinct coalesce(family, category) as fam from service_line) f
+on conflict (id) do nothing;
+
+-- A minority of coaching days also carry a video, so the column has a shape
+-- without implying videos are the main intervention.
+update daily_completion dc
+   set video_content_id = demo.duid('video:' || c.service_family)
+  from demo.plan p, content c
+ where p.user_id = dc.user_id
+   and c.id = dc.cue_content_id
+   and dc.video_content_id is null
+   and demo.rnd('vid:' || dc.user_id::text || dc.completion_date::text) < 0.35;
+
+-- And fewer still finish a "lesson".
+insert into content_progress (user_id, rooftop_id, content_id, watched_pct, completed_at)
+select p.user_id, p.rooftop_id,
+       demo.duid('lesson:' || (p.coached_families)[1]),
+       100,
+       (current_date - demo.pick('lday:' || p.user_id::text, 1, 45))::timestamptz
+from demo.plan p
+where p.coached_families is not null
+  and array_length(p.coached_families, 1) > 0
+  and demo.rnd('lesson:' || p.user_id::text) < 0.22
+on conflict do nothing;
+
+-- Same reason SECTION 5 refreshes the engagement rollup: 0029 computed the
+-- impact fact table when that migration ran, which on a fresh database was
+-- before any of this history existed.
+perform refresh_impact_rollup();
+
+-- And the day's notifications, so the inbox has something in it for the demo
+-- rather than an empty screen. This is the same call the 09:00 UTC job makes;
+-- running it here just brings the first one forward.
+perform generate_notifications();
+
+raise notice 'SECTION 6: % periods, % op-code rows, % coaching completions.',
+  (select count(*) from perf_period where source_file = 'demo-seed'),
+  (select count(*) from advisor_op_metric aom
+     join perf_period pp on pp.id = aom.period_id where pp.source_file = 'demo-seed'),
+  (select count(*) from daily_completion where cue_content_id is not null);
+
 drop schema demo cascade;
 
 end
-$demo$;
+$impact$;

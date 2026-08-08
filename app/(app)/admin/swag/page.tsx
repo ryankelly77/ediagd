@@ -65,7 +65,6 @@ export default async function AdminSwagPage() {
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin", label: "Admin" }}
-        eyebrow="Admin tools"
         title="Swag Shack"
         subtitle={`${awaiting} awaiting fulfillment · ${items.length} items in the catalog`}
       />

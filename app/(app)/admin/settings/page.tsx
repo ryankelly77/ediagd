@@ -42,8 +42,7 @@ export default async function GameSettingsPage() {
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin", label: "Admin" }}
-        eyebrow="Admin tools"
-        title="Gamification settings"
+        title="Gamification Settings"
         subtitle="The engine reads these at runtime — changes take effect on the next completed day, with no deploy. Amounts already awarded stay as they were."
       />
 

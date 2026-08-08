@@ -32,7 +32,6 @@ export default async function EditContentPage({
           href: `/admin/content/service/${serviceToSlug(item.service_family)}`,
           label: serviceLabel(item.service_family),
         }}
-        eyebrow="Coaching content"
         title={item.title}
         subtitle={item.source ? `Source: ${item.source}` : undefined}
       />

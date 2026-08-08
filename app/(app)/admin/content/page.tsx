@@ -111,8 +111,7 @@ export default async function ContentHomePage() {
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin", label: "Admin" }}
-        eyebrow="Coaching content"
-        title="Browse by service"
+        title="Coaching Content"
         subtitle={`${total.toLocaleString()} items across ${buckets.length} ${
           buckets.length === 1 ? "grouping" : "groupings"
         }.`}
