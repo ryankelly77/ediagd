@@ -13,27 +13,58 @@ import Link from "next/link";
  *
  * The back link always steps up ONE level (editor → its service list → all
  * services → Admin), so there's a path home from anywhere.
+ *
+ * `trail` is the ancestry ABOVE that one level, for screens buried deeper than
+ * two — the library runs Lesson Library → course → module → quiz, and a back
+ * link that skipped from the module straight home was both a lie about where
+ * "back" goes and a dead end for anyone wanting the next module in the same
+ * course. Passing the ancestors separately keeps `back` meaning exactly one
+ * level, with no page having to restate its own parent twice.
  */
+export type Crumb = { href: string; label: string };
+
 export function AdminPageHeader({
   back,
+  trail,
   title,
   subtitle,
   action,
 }: {
-  back: { href: string; label: string };
+  back: Crumb;
+  /** Ancestors above `back`, nearest last. Omit on two-level screens. */
+  trail?: Crumb[];
   title: string;
   subtitle?: React.ReactNode;
   /** Optional right-aligned control, e.g. a "New content" button. */
   action?: React.ReactNode;
 }) {
+  const crumbs = [...(trail ?? []), back];
+
   return (
     <header>
-      <Link
-        href={back.href}
-        className="text-xs font-bold uppercase tracking-[0.18em] text-ocean hover:underline"
+      <nav
+        aria-label="Breadcrumb"
+        className="flex flex-wrap items-center gap-x-1.5 gap-y-1"
       >
-        ‹ {back.label}
-      </Link>
+        <span aria-hidden="true" className="text-xs font-bold text-ocean">
+          ‹
+        </span>
+        {crumbs.map((c, i) => (
+          <span key={c.href} className="flex items-center gap-x-1.5">
+            {i > 0 && (
+              <span aria-hidden="true" className="text-[11px] text-ink-soft">
+                ›
+              </span>
+            )}
+            <Link
+              href={c.href}
+              className="text-xs font-bold uppercase tracking-[0.18em] text-ocean hover:underline"
+            >
+              {c.label}
+            </Link>
+          </span>
+        ))}
+      </nav>
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">

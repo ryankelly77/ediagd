@@ -548,6 +548,20 @@ insert into rooftop_product (rooftop_id, product)
 select id, 'advisor_base' from demo.rooftops
 on conflict (rooftop_id, product) do nothing;
 
+-- The two ADD-ONS, sold separately (0001's product_catalog marks both
+-- is_addon). Deliberately only some rooftops: with every store entitled, the
+-- "this isn't on your subscription" state would be unreachable and untested,
+-- and it is the state most users will actually see.
+insert into rooftop_product (rooftop_id, product)
+select id, 'manager_meetings' from demo.rooftops
+where demo.rnd('mm:' || id::text) < 0.30
+on conflict (rooftop_id, product) do nothing;
+
+insert into rooftop_product (rooftop_id, product)
+select id, 'joe_the_pro' from demo.rooftops
+where demo.rnd('jtp:' || id::text) < 0.22
+on conflict (rooftop_id, product) do nothing;
+
 
 -- ---- 5.2 People ------------------------------------------------------------
 -- 3-8 advisors and 1-2 managers per rooftop, plus one group admin per org who
@@ -1213,6 +1227,22 @@ select demo.duid('lesson:' || fam), 'advisor_video', fam,
        'published', 'demo-seed'
 from (select distinct coalesce(family, category) as fam from service_line) f
 on conflict (id) do nothing;
+
+-- ---- A PLAYABLE SAMPLE, so the video mechanic can be exercised ------------
+-- Every video_url in the product is null, which made the player, the 90%
+-- completion threshold and every progress meter untestable. This attaches ONE
+-- real file — the branded login clip already in the repo — to the DEMO video
+-- rows so the whole path can be run end to end.
+--
+-- It is the same clip on every row and it is not a lesson. The UI badges it as
+-- a sample wherever it plays. The WHERE clause is the guard that matters: it
+-- only ever touches content this seed created (source = 'demo-seed'), so no
+-- real row can pick it up.
+update content
+   set video_url = '/video/ediagd-login.mp4',
+       duration_sec = coalesce(duration_sec, 18)
+ where source = 'demo-seed'
+   and type in ('advisor_video', 'joe_the_pro', 'manager_video');
 
 -- A minority of coaching days also carry a video, so the column has a shape
 -- without implying videos are the main intervention.

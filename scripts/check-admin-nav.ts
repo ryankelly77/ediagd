@@ -20,12 +20,20 @@
 
 import { readdirSync, statSync } from "fs";
 import { join } from "path";
-import { ADMIN_TOOLS, NAV_EXEMPT } from "../lib/admin-tools";
+import { ADMIN_TOOLS, MEMBER_SECTIONS, NAV_EXEMPT } from "../lib/navigation";
 
-const ADMIN_DIR = join(process.cwd(), "app", "(app)", "admin");
+const APP_DIR = join(process.cwd(), "app", "(app)");
+
+/**
+ * The trees this walks. Admin was where every orphan happened, and the member
+ * libraries are the newest place one could — they are entitlement-gated, so a
+ * missing link would look like "not entitled" rather than "not linked", which
+ * is the hardest kind of orphan to notice.
+ */
+const WATCHED = ["admin", "library", "joe-the-pro", "meetings"];
 
 /** Every route under app/(app)/admin that has a page. */
-function adminRoutes(dir: string, prefix = "/admin"): string[] {
+function routesUnder(dir: string, prefix: string): string[] {
   const found: string[] = [];
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
@@ -34,15 +42,21 @@ function adminRoutes(dir: string, prefix = "/admin"): string[] {
       continue;
     }
     if (statSync(full).isDirectory()) {
-      found.push(...adminRoutes(full, `${prefix}/${entry}`));
+      found.push(...routesUnder(full, `${prefix}/${entry}`));
     }
   }
   return found;
 }
 
 function main(): void {
-  const registered = new Set(ADMIN_TOOLS.map((t) => t.href));
-  const routes = adminRoutes(ADMIN_DIR).sort();
+  const registered = new Set([
+    ...ADMIN_TOOLS.map((t) => t.href),
+    ...MEMBER_SECTIONS.map((s) => s.href),
+  ]);
+
+  const routes = WATCHED.flatMap((name) =>
+    routesUnder(join(APP_DIR, name), `/${name}`)
+  ).sort();
 
   const orphans: string[] = [];
 
@@ -67,7 +81,7 @@ function main(): void {
     orphans.push(route);
   }
 
-  console.log(`Checked ${routes.length} admin routes.`);
+  console.log(`Checked ${routes.length} routes across ${WATCHED.length} trees.`);
   for (const route of routes) {
     const how = registered.has(route)
       ? "registry"
@@ -83,14 +97,14 @@ function main(): void {
     console.error(
       `\n${orphans.length} admin route(s) have no way in:\n` +
         orphans.map((o) => `  ${o}`).join("\n") +
-        `\n\nAdd each to ADMIN_TOOLS in lib/admin-tools.ts so it appears on ` +
-        `/admin and in the More menu, or to NAV_EXEMPT with the reason it ` +
+        `\n\nAdd each to ADMIN_TOOLS or MEMBER_SECTIONS in lib/navigation.ts ` +
+        `so it appears in navigation, or to NAV_EXEMPT with the reason it ` +
         `doesn't need to.\n`
     );
     process.exit(1);
   }
 
-  console.log("\nEvery admin route is reachable.");
+  console.log("\nEvery watched route is reachable.");
 }
 
 main();

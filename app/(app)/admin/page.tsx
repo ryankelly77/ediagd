@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { getAdminContext } from "@/lib/guards";
-import { ADMIN_PREVIEWS, ADMIN_TOOLS, type AdminTool } from "@/lib/admin-tools";
+import { ADMIN_PREVIEWS, ADMIN_TOOLS, type AdminTool } from "@/lib/navigation";
 
 /* ============================================================================
    EDIAGD — /admin, the hub
@@ -19,7 +19,7 @@ import { ADMIN_PREVIEWS, ADMIN_TOOLS, type AdminTool } from "@/lib/admin-tools";
    /admin/engagement, a peer of /admin/impact, and every admin screen backs out
    to here.
 
-   The list comes from lib/admin-tools.ts, which the More menu renders too, and
+   The list comes from lib/navigation.ts, which the More menu renders too, and
    which `npm run check:nav` validates against the routes on disk — so a new
    admin screen cannot ship without a way in.
    ============================================================================ */
