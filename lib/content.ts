@@ -25,6 +25,31 @@ export type ContentTier = (typeof CONTENT_TIERS)[number];
 export const CONTENT_STATUSES = ["draft", "published"] as const;
 export type ContentStatus = (typeof CONTENT_STATUSES)[number];
 
+/** Mirrors the product_key enum in 0001. */
+export const PRODUCT_KEYS = [
+  "advisor_base",
+  "manager_meetings",
+  "joe_the_pro",
+] as const;
+export type ProductKey = (typeof PRODUCT_KEYS)[number];
+
+/**
+ * Which product entitles each content type, and which role consumes it — the
+ * TypeScript twin of product_for_content_type() and role_for_content_type()
+ * in 0010. Kept in step with them deliberately: the database decides who may
+ * READ a row, this decides which screen offers to show it.
+ */
+export const CONTENT_ENTITLEMENT: Record<
+  ContentType,
+  { product: ProductKey; roles: readonly ("advisor" | "manager")[] }
+> = {
+  cue: { product: "advisor_base", roles: ["advisor"] },
+  advisor_video: { product: "advisor_base", roles: ["advisor"] },
+  manager_video: { product: "manager_meetings", roles: ["manager"] },
+  // 0034: advisor education, not technician training.
+  joe_the_pro: { product: "joe_the_pro", roles: ["advisor", "manager"] },
+};
+
 export type ContentRow = {
   id: string;
   type: ContentType;

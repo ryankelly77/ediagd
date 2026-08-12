@@ -18,6 +18,8 @@ export type GameSettingsValues = {
   sand_swell_365: number;
   sand_badge: number;
   sand_certification: number;
+  sand_lesson: number;
+  video_complete_pct: number;
 };
 
 export type GameSettingKey = keyof GameSettingsValues;
@@ -108,6 +110,22 @@ export const GAME_SETTING_FIELDS: GameSettingField[] = [
     group: "rewards",
     min: 0,
     max: 100_000,
+  },
+  {
+    key: "sand_lesson",
+    label: "Sand Dollars for finishing a lesson",
+    hint: "Paid once per item, ever — a cue or a video in the library. Kept below the daily loop on purpose: a library of hundreds of items shouldn't outpay the habit.",
+    group: "rewards",
+    min: 0,
+    max: 100_000,
+  },
+  {
+    key: "video_complete_pct",
+    label: "How much of a video counts as watched",
+    hint: "Percent. Below this a video isn't finished and pays nothing.",
+    group: "rewards",
+    min: 1,
+    max: 100,
   },
   {
     key: "sand_certification",

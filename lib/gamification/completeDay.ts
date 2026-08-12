@@ -59,6 +59,9 @@ export type CompleteDayResult = {
   newBalance: number;
 };
 
+/** Daily picks needed for Eddie's Pick. */
+const EDDIES_PICK_TARGET = 20;
+
 export class CompleteDayError extends Error {
   constructor(
     message: string,
@@ -298,6 +301,24 @@ export async function completeDay(
         amount: settings.sandBadge,
         reason: "badge",
         note: "first_light",
+      });
+    }
+
+    // Eddie's Pick: twenty daily picks worked all the way through. Counted from
+    // daily_completion, which this function has just written to — so the count
+    // includes today by definition. The pay-once guard below is the same one
+    // every other badge uses, so re-reaching twenty cannot pay twice.
+    const { count: picksDone } = await supabase
+      .from("daily_completion")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (Number(picksDone ?? 0) >= EDDIES_PICK_TARGET) {
+      candidates.push({
+        key: "eddies_pick",
+        amount: settings.sandBadge,
+        reason: "badge",
+        note: "eddies_pick",
       });
     }
 

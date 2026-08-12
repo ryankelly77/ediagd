@@ -1,5 +1,5 @@
 /* ============================================================================
-   EDIAGD — the admin navigation registry
+   EDIAGD — the navigation registry
 
    ONE LIST, TWO SURFACES. /admin renders these as cards and the More menu
    renders them as rows. Before this file each surface kept its own copy, and
@@ -100,8 +100,47 @@ export const ADMIN_PREVIEWS: readonly AdminTool[] = [
  * is registered above, listed here, or sits underneath a registered tool —
  * that last rule is what lets detail pages be reachable from their own list.
  */
+/**
+ * The member-facing libraries.
+ *
+ * Same contract as the admin tools: listed here, rendered by the More menu,
+ * checked against the routes on disk. `requiresRole` decides whether the row is
+ * OFFERED — the page itself re-checks the product entitlement server-side and
+ * RLS enforces it a third time, so hiding a row is a courtesy, never the
+ * control.
+ */
+export type MemberSection = AdminTool & {
+  /** Null means everyone signed in. */
+  requiresRole: "manager" | "technician" | null;
+};
+
+export const MEMBER_SECTIONS: readonly MemberSection[] = [
+  {
+    href: "/library",
+    label: "Lesson Library",
+    hint: "Coaching cues and pitch videos, by service.",
+    requiresRole: null,
+  },
+  {
+    href: "/joe-the-pro",
+    label: "Joe the Pro",
+    hint: "Why a service matters, by vehicle. An add-on.",
+    requiresRole: null,
+  },
+  {
+    href: "/meetings",
+    label: "Manager Meetings",
+    hint: "How to coach it, not how to sell it. An add-on.",
+    requiresRole: "manager",
+  },
+] as const;
+
 export const NAV_EXEMPT: Readonly<Record<string, string>> = {
   "/admin": "The hub itself — it renders this registry, and More links to it.",
   "/admin/rooftop/[id]":
     "Rooftop drill-down, opened from the list on /admin/engagement.",
+  "/library/[course]": "One course, opened from the Lesson Library index.",
+  "/library/m/[module]": "One module, opened from its course.",
+  "/library/m/[module]/quiz": "A module's quiz, opened from the module.",
+  "/joe-the-pro/[make]": "One make, opened from the Joe the Pro index.",
 } as const;

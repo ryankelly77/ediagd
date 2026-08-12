@@ -2,7 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
-import { ADMIN_PREVIEWS, ADMIN_TOOLS } from "@/lib/admin-tools";
+import {
+  ADMIN_PREVIEWS,
+  ADMIN_TOOLS,
+  MEMBER_SECTIONS,
+} from "@/lib/navigation";
 import { BRAND } from "@/lib/brand";
 import { signOutAction } from "./actions";
 
@@ -52,7 +56,17 @@ export default async function MorePage() {
         )}
       </Card>
 
+      {/* Libraries, from lib/navigation.ts. requiresRole decides whether the
+          row is OFFERED; each page re-checks the product entitlement itself and
+          RLS enforces it again, so hiding a row is never the control. */}
       <ul className="mt-4 space-y-2">
+        {MEMBER_SECTIONS.filter(
+          (s) => s.requiresRole == null || roles.has(s.requiresRole)
+        ).map((section) => (
+          <li key={section.href}>
+            <LinkRow {...section} />
+          </li>
+        ))}
         <li>
           <LinkRow
             href="/swag"
@@ -62,7 +76,7 @@ export default async function MorePage() {
         </li>
       </ul>
 
-      {/* THE ADMIN HUB. Six peers, rendered from lib/admin-tools.ts — the same
+      {/* THE ADMIN HUB. Six peers, rendered from lib/navigation.ts — the same
           list `npm run check:nav` validates against the routes on disk.
           Engagement sits among them rather than above them: it used to be the
           page you went "into" to reach the rest, which made Impact & ROI look
@@ -100,9 +114,8 @@ export default async function MorePage() {
       </h2>
       <ul className="mt-2 space-y-2">
         <li>
-          <SoonRow label="Lessons" hint="Guided courses and certifications" />
+          <SoonRow label="Certifications" hint="Guided courses and Big Wave" />
         </li>
-
       </ul>
 
       <form action={signOutAction} className="mt-6">
