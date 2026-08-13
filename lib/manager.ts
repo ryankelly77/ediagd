@@ -16,6 +16,8 @@ import {
 } from "./advisor";
 
 export type AdvisorSummary = {
+  /** Movement against the same worked days last period. Null when new. */
+  trend?: AdvisorTrend | null;
   advisorOpId: string;
   /** Resolved display name — falls back to the op code when unreadable. */
   name: string;
@@ -30,6 +32,16 @@ export type AdvisorSummary = {
   families: ServiceFamily[];
 };
 
+export type AdvisorTrend = {
+  workedDays: number;
+  currentSales: number;
+  priorSales: number;
+  salesDiff: number;
+  rosDiff: number;
+  direction: "up" | "flat" | "down";
+  priorExhausted: boolean;
+};
+
 export type TeamPriority = {
   family: string;
   storeAvgPct: number;
@@ -40,16 +52,44 @@ export type TeamPriority = {
 };
 
 /**
+ * The DMS roster writes names as the report does: "Helton, Erin (671)".
+ *
+ * Turned into "Erin Helton" for display — the trailing operator id is already
+ * shown as its own column, and "Advisor 671" was never a name anybody uses.
+ */
+export function formatRosterName(raw: string | null | undefined): string | null {
+  const cleaned = raw?.replace(/\s*\(\w+\)\s*$/, "").trim();
+  if (!cleaned) return null;
+  const comma = cleaned.indexOf(",");
+  if (comma === -1) return cleaned;
+  const last = cleaned.slice(0, comma).trim();
+  const first = cleaned.slice(comma + 1).trim();
+  return first && last ? `${first} ${last}` : cleaned;
+}
+
+/**
  * A manager can read team `membership` rows but not teammates' `app_user`
- * names (the app_user_self RLS policy is self-only), so most names come back
- * null today. Fall back to the DMS op code rather than rendering "null".
+ * names — app_user's RLS is self-only by design — so those come back null for
+ * everyone but the viewer.
+ *
+ * The DMS ROSTER is the fallback, and it is a better one than it sounds: it
+ * holds the name the dealership itself files the advisor under, and it exists
+ * for people who have no app account at all. That is exactly the case that used
+ * to render "Advisor 671" for a real advisor who started last week.
+ *
+ * The operator id remains the last resort, for somebody who appears in the
+ * performance data and in no roster at all.
  */
 export function displayAdvisorName(
   fullName: string | null | undefined,
-  advisorOpId: string
+  advisorOpId: string,
+  rosterName?: string | null
 ): string {
   const trimmed = fullName?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : `Advisor ${advisorOpId}`;
+  if (trimmed) return trimmed;
+  const roster = formatRosterName(rosterName);
+  if (roster) return roster;
+  return `Advisor ${advisorOpId}`;
 }
 
 /** Roll one advisor's rows into the shape the roster renders. */

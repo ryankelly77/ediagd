@@ -12,7 +12,7 @@ import { Card } from "@/components/brand/Card";
    is a call to make, not a failure.
    ============================================================================ */
 
-export type Band = "engaged" | "building" | "nudge";
+export type Band = "engaged" | "building" | "nudge" | "not_started";
 
 const SEGMENTS: {
   band: Band;
@@ -22,6 +22,13 @@ const SEGMENTS: {
   { band: "engaged", label: "On track", color: "rgb(var(--ediagd-palm))" },
   { band: "building", label: "Close", color: "rgb(var(--ediagd-gold))" },
   { band: "nudge", label: "Need attention", color: "rgb(var(--ediagd-clay))" },
+  /**
+   * NOT THE BOTTOM OF THE SCALE. These rooftops have performance data and no
+   * accounts — nobody has been invited yet. Rendering them in clay beside
+   * "need attention" would accuse eleven stores of failing at something they
+   * have not been given the chance to do. Muted line grey says "not yet".
+   */
+  { band: "not_started", label: "Not started", color: "rgb(var(--ediagd-line))" },
 ];
 
 export function DistributionDonut({

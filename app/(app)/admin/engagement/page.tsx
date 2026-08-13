@@ -172,14 +172,27 @@ export default async function AdminPage({
   }
 
   const noun = advisorLevel ? "advisors" : "rooftops";
-  const counts = advisorLevel ? summary.advisorBands : summary.rooftopBands;
+  /*
+   * THE DONUT MUST TOTAL THE HERO. At rooftop level the three engagement bands
+   * only cover stores that appear in engagement_rollup; the rest are added
+   * back as "Not started" so the segments sum to the rooftop count in the
+   * headline. At advisor level there is no equivalent — an advisor with no
+   * account is not an advisor the app knows about — so the fourth band is
+   * zero there and simply does not render.
+   */
+  const counts = advisorLevel
+    ? { ...summary.advisorBands, not_started: 0 }
+    : { ...summary.rooftopBands, not_started: scope.notStarted };
 
   const scopeLine = [
     `${scope.rooftopCount.toLocaleString()} ${
       scope.rooftopCount === 1 ? "rooftop" : "rooftops"
     }`,
+    // "534 advisors" counted app users with an advisor role. The 73 DMS roster
+    // advisors have no logins and are correctly excluded — but the label has to
+    // say which population it is, or the number reads as "every advisor".
     `${summary.advisorCount.toLocaleString()} ${
-      summary.advisorCount === 1 ? "advisor" : "advisors"
+      summary.advisorCount === 1 ? "advisor with an account" : "advisors with accounts"
     }`,
     summary.workingDays > 0
       ? `last ${summary.workingDays} working days`
@@ -218,6 +231,14 @@ export default async function AdminPage({
       <RollupStamp computedAt={summary.computedAt} canRefresh={isPlatformOwner} />
 
       {/* ---- 2. Distribution — tap a band to filter the list ------------ */}
+      {/* Eleven stores have performance data and nobody invited yet. Said out
+          loud, because a segment an admin cannot explain is worse than none. */}
+      {!advisorLevel && scope.notStartedWithData > 0 && (
+        <p className="mt-3 px-1 text-xs leading-relaxed text-ink-soft">
+          {`${scope.notStartedWithData} of the ${scope.notStarted} “not started” rooftops already have performance data loaded — they are waiting on accounts, not on activity.`}
+        </p>
+      )}
+
       <DistributionDonut
         counts={counts}
         noun={noun}

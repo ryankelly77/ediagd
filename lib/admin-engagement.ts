@@ -42,13 +42,38 @@ export type ScopeInfo = {
   rooftopCount: number;
   /** One rooftop: skip the rooftop level entirely and report on advisors. */
   singleRooftop: boolean;
+  /** Rooftops with no engagement rows at all — see loadCoverage. */
+  notStarted: number;
+  /** Of those, how many already have performance data loaded. */
+  notStartedWithData: number;
 };
 
 /** How many rooftops this admin covers, including ones with no data yet. */
 export async function loadScope(client: Client): Promise<ScopeInfo> {
-  const { data } = await client.from("admin_scope").select("rooftop_count").maybeSingle();
-  const rooftopCount = Number(data?.rooftop_count ?? 0);
-  return { rooftopCount, singleRooftop: rooftopCount === 1 };
+  /*
+   * THREE DENOMINATORS USED TO DISAGREE ON ONE SCREEN. The hero said 112
+   * rooftops, the donut totalled 100, and nothing explained the gap: the donut
+   * is built from engagement_rollup, which only contains rooftops where
+   * somebody has an account and has done something. The eleven Doggett stores
+   * have performance data and no logins, so they were absent from the chart
+   * while being counted in the headline — eleven stores invisible in a total
+   * an admin reads as "all of them".
+   *
+   * Both numbers now come from admin_engagement_coverage, so the donut's
+   * segments plus "Not started" always add up to the hero.
+   */
+  const { data } = await client
+    .from("admin_engagement_coverage")
+    .select("rooftops_in_scope, rooftops_not_started, not_started_with_data")
+    .maybeSingle();
+
+  const rooftopCount = Number(data?.rooftops_in_scope ?? 0);
+  return {
+    rooftopCount,
+    singleRooftop: rooftopCount === 1,
+    notStarted: Number(data?.rooftops_not_started ?? 0),
+    notStartedWithData: Number(data?.not_started_with_data ?? 0),
+  };
 }
 
 /** One row. Everything the hero and the donut need, at any scale. */
