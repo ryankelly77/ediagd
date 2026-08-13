@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { TierBadge } from "@/components/brand/TierBadge";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { Modal } from "@/components/brand/Modal";
 import { formatCurrency } from "@/lib/advisor";
@@ -62,11 +61,8 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
               className="flex w-full items-center gap-3 px-1.5 py-3 text-left transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             >
               <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  <span className="truncate text-base font-bold text-navy">
-                    {advisor.name}
-                  </span>
-                  {advisor.tier && <TierBadge tier={advisor.tier} small />}
+                <span className="block truncate text-base font-bold text-navy">
+                  {advisor.name}
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
                   <span>
@@ -104,17 +100,13 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
         width="md"
         showClose
       >
-            <div className="flex items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-lg font-extrabold text-navy">
-                  {selected.name}
-                </h2>
-                <p className="mt-0.5 text-xs text-ink-soft">
-                  {selected.totalRos} ROs ·{" "}
-                  {formatCurrency(selected.totalLaborSales)}
-                </p>
-              </div>
-              {selected.tier && <TierBadge tier={selected.tier} small />}
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-extrabold text-navy">
+                {selected.name}
+              </h2>
+              <p className="mt-0.5 text-xs text-ink-soft">
+                {selected.totalRos} ROs · {formatCurrency(selected.totalLaborSales)}
+              </p>
             </div>
 
             {selected.hasVolume ? (

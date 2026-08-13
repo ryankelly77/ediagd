@@ -6,7 +6,6 @@ import { TrendAndHistory } from "@/components/advisor/TrendAndHistory";
 import { loadAdvisorTrend } from "@/lib/advisor-trend";
 import { formatPeriod, PERIOD_COLUMNS, toPeriodInfo } from "@/lib/period-label";
 import { formatRosterName } from "@/lib/manager";
-import { TierBadge } from "@/components/brand/TierBadge";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
@@ -14,7 +13,6 @@ import { cueTierForRate, listCuesForServices } from "@/lib/daily";
 import { BRAND } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
-  advisorTier,
   buildServiceFamilies,
   eddiesPick,
   formatCurrency,
@@ -134,7 +132,6 @@ export default async function AdvisorPage() {
   const totalRos = Number(totals.total_ros ?? 0);
 
   const trend = await loadAdvisorTrend(supabase, opCodeId, resolvedRooftopId);
-  const headlineIsPartial = Boolean(periodRow?.is_partial);
 
   /*
    * THE HEADLINE AND THE COACHING COME FROM DIFFERENT MONTHS, ON PURPOSE.
@@ -206,7 +203,6 @@ export default async function AdvisorPage() {
   );
   const canCoach = hasCoachingVolume(coachingRos);
   const pick = eddiesPick(families, coachingRos);
-  const tier = advisorTier(families);
   const periodLabel = formatPeriod(rooftopName, toPeriodInfo(periodRow));
 
   // The pick's chip names the month the PICK came from, which is not always the
@@ -226,8 +222,8 @@ export default async function AdvisorPage() {
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       {/* ---- Page title (the app greeting lives in AppHeader) ----------- */}
-      <header className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
+      <header>
+        <div className="min-w-0">
           {/* BRAND.greeting, never the word itself — the login screen and this
               screen have to say the same thing, and only one of them is a
               place anybody would think to look when it changes. */}
@@ -240,10 +236,6 @@ export default async function AdvisorPage() {
               : "Here are your numbers"}
           </p>
         </div>
-        {/* NO TIER ON A PART-FINISHED MONTH. At 35 ROs one repair order moves an
-            attach rate several points, so a badge earned on ten days is noise
-            wearing a label. It returns when the month does. */}
-        {canCoach && !headlineIsPartial && <TierBadge tier={tier} />}
       </header>
 
       {/* WHICH STORE, WHICH MONTH. "Labor sales this period" named neither, and
