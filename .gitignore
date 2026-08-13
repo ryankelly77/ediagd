@@ -45,3 +45,14 @@ next-env.d.ts
 
 # Build artefact from npm run check:nav
 .tmp-nav/
+
+# tsc scratch output from the script runners in package.json
+.tmp-dms/
+
+# tsc scratch output from the one-off script runners
+.tmp-cm/
+.tmp-remap/
+
+# generated decision sheets — data, not code
+exports/
+.tmp-exp/

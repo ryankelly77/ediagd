@@ -139,6 +139,20 @@ export default async function ImpactPage({
     <Shell>
       {summary.hasDemo && <DemoBanner allDemo={summary.allDemo} />}
 
+      {/*
+        RECONCILE AGAINST THE SAME ROOFTOP SET THE OTHER SCREENS USE.
+        Engagement, Impact and ROI all reported 100 while the network held 111
+        stores, and none of them said why. Impact needs two months of data to
+        compare anything, so newly loaded stores legitimately fall out — but
+        "legitimately excluded" and "silently missing" look identical unless
+        the screen does the subtraction out loud.
+      */}
+      <ImpactCoverage
+        inScope={scope.rooftopCount}
+        counted={summary.rooftops}
+        notStarted={scope.notStarted}
+      />
+
       {/* Money first: it is the only number on this screen a dealer principal
           can act on without translation. */}
       <DollarHeadline summary={summary} />
@@ -264,3 +278,29 @@ function NotAnAdmin() {
 }
 
 export { Delta };
+
+/**
+ * The subtraction, stated. Never a warning — a store with one month of data is
+ * not a problem, it is a store that arrived recently.
+ */
+function ImpactCoverage({
+  inScope,
+  counted,
+  notStarted,
+}: {
+  inScope: number;
+  counted: number;
+  notStarted: number;
+}) {
+  const excluded = Math.max(0, inScope - counted);
+  if (excluded === 0) return null;
+
+  return (
+    <p className="mt-3 px-1 text-xs leading-relaxed text-ink-soft">
+      {`${counted.toLocaleString()} of ${inScope.toLocaleString()} rooftops are counted here. ${excluded.toLocaleString()} are not: impact compares one month against another, so a store needs two months of performance data before it can appear` +
+        (notStarted > 0
+          ? `, and ${notStarted.toLocaleString()} have no accounts yet.`
+          : ".")}
+    </p>
+  );
+}

@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
-import { TierBadge } from "@/components/brand/TierBadge";
+import { PeriodChip, PeriodStamp } from "@/components/brand/PeriodStamp";
+import { TrendAndHistory } from "@/components/advisor/TrendAndHistory";
+import { loadAdvisorTrend } from "@/lib/advisor-trend";
+import { formatPeriod, PERIOD_COLUMNS, toPeriodInfo } from "@/lib/period-label";
+import { formatRosterName } from "@/lib/manager";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
@@ -9,7 +13,6 @@ import { cueTierForRate, listCuesForServices } from "@/lib/daily";
 import { BRAND } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
-  advisorTier,
   buildServiceFamilies,
   eddiesPick,
   formatCurrency,
@@ -47,20 +50,57 @@ export default async function AdvisorPage() {
   const opCodeId: string = membership.op_code_id;
   const rooftopId: string | null = membership.rooftop_id ?? null;
 
+  const fullName =
+    (membership.app_user as { full_name?: string | null } | null)?.full_name ?? null;
+  const firstName = fullName?.trim().split(/\s+/)[0] ?? null;
+
   // ---- Current period ------------------------------------------------------
   // With a real membership the rooftop's latest period wins. Under the dev
   // fallback perf_period is RLS-blocked, so we fall back to whichever period
   // the advisor's own totals expose.
   let periodId: string | null = null;
+  let periodRow: Record<string, unknown> | null = null;
+  let rooftopName: string | null = null;
   if (rooftopId) {
-    const { data: period } = await supabase
-      .from("perf_period")
-      .select("id")
+    const [{ data: period }, { data: rt }] = await Promise.all([
+      supabase
+        .from("perf_period")
+        .select(PERIOD_COLUMNS)
+        .eq("rooftop_id", rooftopId)
+        .order("ends_on", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("rooftop").select("name").eq("id", rooftopId).maybeSingle(),
+    ]);
+    periodId = (period?.id as string | undefined) ?? null;
+    periodRow = (period as Record<string, unknown> | null) ?? null;
+    rooftopName = (rt?.name as string | undefined) ?? null;
+  }
+
+  /*
+   * WHOSE BOOK IS THIS?
+   *
+   * The screen keys on membership.op_code_id, and an operator id belongs to a
+   * person at the dealership — not necessarily to the person logged in. An
+   * admin who attaches a real operator id to their own membership to see real
+   * data then reads "Aloha, Ryan / Here are your numbers" over somebody else's
+   * book, which is the sort of thing that is obvious until it is quoted in a
+   * meeting.
+   *
+   * The DMS roster knows the real name, so the screen says it when it differs.
+   * The greeting stays personal: they are still the one logged in.
+   */
+  let bookOwner: string | null = null;
+  if (rooftopId) {
+    const { data: rosterRow } = await supabase
+      .from("dms_advisor")
+      .select("display_name")
       .eq("rooftop_id", rooftopId)
-      .order("ends_on", { ascending: false })
-      .limit(1)
+      .eq("advisor_op_id", opCodeId)
       .maybeSingle();
-    periodId = period?.id ?? null;
+    const rosterName = formatRosterName(rosterRow?.display_name as string | null);
+    const mine = fullName?.trim().toLowerCase();
+    if (rosterName && rosterName.toLowerCase() !== mine) bookOwner = rosterName;
   }
 
   let totalsQuery = supabase
@@ -91,18 +131,39 @@ export default async function AdvisorPage() {
   const resolvedRooftopId = totals.rooftop_id as string;
   const totalRos = Number(totals.total_ros ?? 0);
 
+  const trend = await loadAdvisorTrend(supabase, opCodeId, resolvedRooftopId);
+
+  /*
+   * THE HEADLINE AND THE COACHING COME FROM DIFFERENT MONTHS, ON PURPOSE.
+   *
+   * The big number is what is happening NOW — an advisor on the 12th wants to
+   * see the 12th. But Eddie's Pick is a judgement about where somebody is weak,
+   * and on eight days of data one repair order swings an attach rate by three
+   * points. So coaching is computed from the last COMPLETE month, and the card
+   * says which month that was.
+   *
+   * Falls back to the headline period when there is no complete month yet —
+   * better a noisy pick than none at all for a store in its first weeks.
+   */
+  const coachingPeriodId = trend.lastComplete?.periodId ?? resolvedPeriodId;
+  const coachingRos = trend.lastComplete?.ros ?? totalRos;
+  const coachingPeriod =
+    trend.lastComplete && trend.lastComplete.periodId !== resolvedPeriodId
+      ? trend.lastComplete
+      : null;
+
   // ---- Attach rates + store benchmarks ------------------------------------
   const [{ data: attachRows }, { data: benchmarkRows }] = await Promise.all([
     supabase
       .from("advisor_family_attach")
       .select("family, fam_ros, advisor_ros, attach_rate_pct")
       .eq("advisor_op_id", opCodeId)
-      .eq("period_id", resolvedPeriodId)
+      .eq("period_id", coachingPeriodId)
       .eq("rooftop_id", resolvedRooftopId),
     supabase
       .from("family_store_benchmark")
       .select("family, store_avg_pct, store_best_pct")
-      .eq("period_id", resolvedPeriodId)
+      .eq("period_id", coachingPeriodId)
       .eq("rooftop_id", resolvedRooftopId),
   ]);
 
@@ -113,7 +174,7 @@ export default async function AdvisorPage() {
     .from("advisor_op_metric")
     .select("ros, labor_sales, service_line(family)")
     .eq("advisor_op_id", opCodeId)
-    .eq("period_id", resolvedPeriodId);
+    .eq("period_id", coachingPeriodId);
 
   const laborPerRoByFamily = buildLaborPerRo(metricRows);
 
@@ -140,25 +201,55 @@ export default async function AdvisorPage() {
     new Date().toISOString().slice(0, 10),
     families.map((f) => ({ family: f.family, tier: cueTierForRate(f.rate) }))
   );
-  const canCoach = hasCoachingVolume(totalRos);
-  const pick = eddiesPick(families, totalRos);
-  const tier = advisorTier(families);
+  const canCoach = hasCoachingVolume(coachingRos);
+  const pick = eddiesPick(families, coachingRos);
+  const periodLabel = formatPeriod(rooftopName, toPeriodInfo(periodRow));
+
+  // The pick's chip names the month the PICK came from, which is not always the
+  // month in the headline. A chip that said "August (partial)" over advice
+  // derived from July would be the exact confusion this split exists to avoid.
+  const pickLabel = coachingPeriod
+    ? formatPeriod(null, {
+        label: coachingPeriod.label,
+        startsOn: coachingPeriod.startsOn,
+        endsOn: coachingPeriod.startsOn,
+        isPartial: false,
+        daysCovered: coachingPeriod.daysCovered,
+        lastDayCovered: coachingPeriod.lastDayCovered,
+      })
+    : periodLabel;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       {/* ---- Page title (the app greeting lives in AppHeader) ----------- */}
-      <header className="flex items-center gap-3">
-        <h1 className="min-w-0 flex-1 text-2xl font-extrabold text-navy">
-          Your numbers
-        </h1>
-        {canCoach && <TierBadge tier={tier} />}
+      <header>
+        <div className="min-w-0">
+          {/* BRAND.greeting, never the word itself — the login screen and this
+              screen have to say the same thing, and only one of them is a
+              place anybody would think to look when it changes. */}
+          <h1 className="text-2xl font-extrabold leading-tight text-navy">
+            {firstName ? `${BRAND.greeting}, ${firstName}` : BRAND.greeting}
+          </h1>
+          <p className="mt-0.5 text-sm text-ink-soft">
+            {bookOwner
+              ? `You're viewing ${bookOwner}'s numbers`
+              : "Here are your numbers"}
+          </p>
+        </div>
       </header>
+
+      {/* WHICH STORE, WHICH MONTH. "Labor sales this period" named neither, and
+          with eleven rooftops and a part-finished August on the books that is
+          not a small omission. */}
+      <PeriodStamp label={periodLabel} className="mt-1" />
 
       {/* ---- Daily stat: the screen's big number, warm not navy ---------- */}
       {/* Feature card rather than a second navy hero — DESIGN_LANGUAGE §5 says
           one hero per screen, and Eddie's Pick is the hero here. */}
       <section className="ediagd-card-feature mt-6">
-        <p className="ediagd-eyebrow">Labor sales this period</p>
+        <p className="ediagd-eyebrow">
+          {periodLabel.period ? `Labor sales · ${periodLabel.period}` : "Labor sales this period"}
+        </p>
         <p className="ediagd-figure mt-2 text-navy">
           {formatCurrency(Number(totals.total_labor_sales ?? 0))}
         </p>
@@ -182,6 +273,10 @@ export default async function AdvisorPage() {
           />
           <SecondaryStat label="ROs" value={String(totalRos)} />
         </dl>
+
+        {/* The competition is yesterday: this advisor against their own last
+            month, same window when the month isn't finished. */}
+        <TrendAndHistory trend={trend} />
       </section>
 
       {/* ---- Eddie's Pick: the one hero ---------------------------------- */}
@@ -190,12 +285,22 @@ export default async function AdvisorPage() {
           <SunWaveMotif />
 
           <div className="relative">
-            <p className="ediagd-eyebrow">
-              {BRAND.app}&apos;s Pick of the Day
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="ediagd-eyebrow">
+                {BRAND.app}&apos;s Pick of the Day
+              </p>
+              {/* The pick is ranked from THIS period's attach rates. A screenshot
+                  of just this card would otherwise carry no date at all. */}
+              <PeriodChip label={pickLabel} />
+            </div>
             <h2 className="mt-2 text-3xl font-extrabold leading-tight text-white">
               {pick.family}
             </h2>
+            {coachingPeriod && (
+              <p className="ediagd-numeral mt-1 text-xs text-ice-dim">
+                {`Based on ${coachingPeriod.label} — the last complete month`}
+              </p>
+            )}
 
             <p className="mt-3 text-sm leading-relaxed text-ice-dim">
               Your {pick.family} attach is{" "}

@@ -14,6 +14,8 @@ import {
   teamPriorities,
   type AdvisorSummary,
 } from "@/lib/manager";
+import { PeriodStamp } from "@/components/brand/PeriodStamp";
+import { formatPeriod, PERIOD_COLUMNS, toPeriodInfo } from "@/lib/period-label";
 
 /** Roles allowed on this screen. */
 const MANAGER_ROLES = ["manager", "admin"] as const;
@@ -43,15 +45,21 @@ export default async function ManagerPage() {
   const rooftopId: string = viewerMembership.rooftop_id;
 
   // ---- Rooftop + current period -------------------------------------------
-  const [{ data: rooftop }, { data: period }] = await Promise.all([
+  const [{ data: rooftop }, { data: period }, { data: dmsRoster }] = await Promise.all([
     supabase.from("rooftop").select("name").eq("id", rooftopId).maybeSingle(),
     supabase
       .from("perf_period")
-      .select("id, label")
+      .select(PERIOD_COLUMNS)
       .eq("rooftop_id", rooftopId)
       .order("ends_on", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // The names the dealership files people under. Covers advisors with no app
+    // account, who otherwise rendered as their operator id.
+    supabase
+      .from("dms_advisor")
+      .select("advisor_op_id, display_name")
+      .eq("rooftop_id", rooftopId),
   ]);
 
   if (!period?.id) {
@@ -112,6 +120,11 @@ export default async function ManagerPage() {
     nameByOpCode.set(row.op_code_id as string, named?.full_name ?? null);
   }
 
+  const rosterByOpCode = new Map<string, string | null>();
+  for (const r of (dmsRoster ?? []) as Record<string, unknown>[]) {
+    rosterByOpCode.set(r.advisor_op_id as string, (r.display_name as string) ?? null);
+  }
+
   const attachByAdvisor = new Map<string, FamilyAttach[]>();
   for (const row of attachRows ?? []) {
     const opId = row.advisor_op_id as string;
@@ -129,13 +142,53 @@ export default async function ManagerPage() {
     const opId = row.advisor_op_id as string;
     return summarizeAdvisor({
       advisorOpId: opId,
-      name: displayAdvisorName(nameByOpCode.get(opId), opId),
+      name: displayAdvisorName(
+        nameByOpCode.get(opId),
+        opId,
+        rosterByOpCode.get(opId)
+      ),
       totalRos: Number(row.total_ros ?? 0),
       totalLaborSales: Number(row.total_labor_sales ?? 0),
       attach: attachByAdvisor.get(opId) ?? [],
       benchmarks,
     });
   });
+
+  /*
+   * WHO IS MOVING, not just who is biggest.
+   *
+   * The roster ranks by attach rate against the store average, which compares
+   * colleagues to each other — the one comparison the rest of the app refuses
+   * to make. This adds each advisor against their OWN last period on matched
+   * worked days, the same rule and the same numbers the advisor sees on their
+   * own screen.
+   */
+  const { data: trendRows } = await supabase.rpc("store_advisor_trend", {
+    _rooftop: rooftopId,
+    _month: (period as Record<string, unknown>).starts_on as string,
+    _compare_to: null,
+  });
+
+  const trendByOp = new Map<string, NonNullable<AdvisorSummary["trend"]>>();
+  for (const t of (trendRows ?? []) as Record<string, unknown>[]) {
+    const currentSales = Number(t.current_sales ?? 0);
+    const priorSales = Number(t.prior_sales ?? 0);
+    const priorRos = Number(t.prior_ros ?? 0);
+    // Nobody is "down" from a period they were not here for.
+    if (priorSales === 0 && priorRos === 0) continue;
+    const salesDiff = currentSales - priorSales;
+    trendByOp.set(String(t.advisor_op_id), {
+      workedDays: Number(t.worked_days ?? 0),
+      currentSales,
+      priorSales,
+      salesDiff,
+      rosDiff: Number(t.current_ros ?? 0) - priorRos,
+      direction:
+        Math.abs(salesDiff) <= 50 ? "flat" : salesDiff > 0 ? "up" : "down",
+      priorExhausted: Boolean(t.prior_exhausted),
+    });
+  }
+  for (const s of summaries) s.trend = trendByOp.get(s.advisorOpId) ?? null;
 
   const roster = rankRoster(summaries);
   const priorities = teamPriorities(summaries, benchmarks);
@@ -148,9 +201,12 @@ export default async function ManagerPage() {
           <h1 className="truncate text-2xl font-extrabold text-navy">
             {rooftop?.name ?? "Your rooftop"}
           </h1>
-          {period.label && (
-            <p className="truncate text-sm text-ink-soft">{period.label}</p>
-          )}
+          {/* The manager already had the store name; what was missing is
+              whether the month is finished. August holds ten days. */}
+          <PeriodStamp
+            label={formatPeriod(null, toPeriodInfo(period as Record<string, unknown>))}
+            className="mt-0.5"
+          />
         </div>
         <span className="rounded-pill bg-teal-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-navy">
           Manager

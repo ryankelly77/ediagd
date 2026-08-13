@@ -117,13 +117,17 @@ export default async function AdminRooftopPage({
         <EngagementHero
           score={rooftop.avgScore}
           scopeLine={`${rooftop.advisorCount} ${
-            rooftop.advisorCount === 1 ? "advisor" : "advisors"
+            rooftop.advisorCount === 1
+              ? "advisor with an account"
+              : "advisors with accounts"
           } at this rooftop`}
         />
       </div>
 
       <DistributionDonut
-        counts={counts}
+        // Advisor level: "not started" has no meaning here — an advisor with
+        // no account is not in this list at all.
+        counts={{ ...counts, not_started: 0 }}
         noun="advisors"
         activeBand={band}
         basePath={base}

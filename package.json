@@ -8,11 +8,16 @@
     "start": "next start",
     "lint": "eslint",
     "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js",
-    "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js"
+    "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js",
+    "verify:dms": "rm -rf .tmp-dms && tsc scripts/dms-verify.ts --outDir .tmp-dms --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dms/scripts/dms-verify.js",
+    "remap": "rm -rf .tmp-remap && tsc scripts/remap.ts --outDir .tmp-remap --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-remap/scripts/remap.js",
+    "checkmap": "rm -rf .tmp-cm && tsc scripts/checkmap.ts --outDir .tmp-cm --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-cm/scripts/checkmap.js",
+    "export-queue": "rm -rf .tmp-exp && tsc scripts/export-queue.ts --outDir .tmp-exp --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-exp/scripts/export-queue.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.111.0",
+    "exceljs": "^4.4.0",
     "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4"

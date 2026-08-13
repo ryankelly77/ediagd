@@ -70,6 +70,11 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     label: "Swag Shack",
     hint: "Fulfilment queue and the product catalog.",
   },
+  {
+    href: "/admin/dms",
+    label: "DMS Upload",
+    hint: "Load the monthly op-code workbook and map its sub-categories.",
+  },
 ] as const;
 
 /**
@@ -133,6 +138,15 @@ export const MEMBER_SECTIONS: readonly MemberSection[] = [
     hint: "How to coach it, not how to sell it. An add-on.",
     requiresRole: "manager",
   },
+  {
+    // Gated on "manager" here as the coarse courtesy this list provides; the
+    // page itself redirects anyone whose scope covers a single store, because
+    // one rooftop is not a group.
+    href: "/group",
+    label: "Your Group",
+    hint: "Every store you run, on one month.",
+    requiresRole: "manager",
+  },
 ] as const;
 
 export const NAV_EXEMPT: Readonly<Record<string, string>> = {
@@ -143,4 +157,6 @@ export const NAV_EXEMPT: Readonly<Record<string, string>> = {
   "/library/m/[module]": "One module, opened from its course.",
   "/library/m/[module]/quiz": "A module's quiz, opened from the module.",
   "/joe-the-pro/[make]": "One make, opened from the Joe the Pro index.",
+  "/admin/dms/mapping":
+    "The sub-category queue, opened from DMS Upload once an import lands.",
 } as const;
