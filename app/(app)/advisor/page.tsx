@@ -10,6 +10,8 @@ import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
 import { cueTierForRate, listCuesForServices } from "@/lib/daily";
+import { loadFamiliesWithCues } from "@/lib/coachable-families";
+import { loadLaborPerRo } from "@/lib/family-labor";
 import { BRAND } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
@@ -167,16 +169,17 @@ export default async function AdvisorPage() {
       .eq("rooftop_id", resolvedRooftopId),
   ]);
 
-  // Per-family labor dollars live on the RLS-gated raw table, not the views.
-  // When it's readable, Eddie's Pick is ranked by revenue; when it isn't, the
-  // ranking falls back to missed ROs. Either way the screen renders.
-  const { data: metricRows } = await supabase
-    .from("advisor_op_metric")
-    .select("ros, labor_sales, service_line(family)")
-    .eq("advisor_op_id", opCodeId)
-    .eq("period_id", coachingPeriodId);
-
-  const laborPerRoByFamily = buildLaborPerRo(metricRows);
+  // Per-family labor dollars come from advisor_family_labor, which resolves
+  // family the same way the attach view does. When it's readable, Eddie's Pick
+  // is ranked by revenue; when it isn't, the ranking falls back to missed ROs.
+  // Either way the screen renders — and every other screen ranks identically,
+  // because they all read this same view. See lib/family-labor.ts.
+  const laborPerRoByFamily = await loadLaborPerRo(
+    supabase,
+    coachingPeriodId,
+    opCodeId
+  );
+  const familiesWithCues = await loadFamiliesWithCues(supabase);
 
   const attach: FamilyAttach[] = (attachRows ?? []).map((r) => ({
     family: r.family as string,
@@ -191,7 +194,12 @@ export default async function AdvisorPage() {
     storeBestPct: r.store_best_pct == null ? null : Number(r.store_best_pct),
   }));
 
-  const families = buildServiceFamilies(attach, benchmarks, laborPerRoByFamily);
+  const families = buildServiceFamilies(
+    attach,
+    benchmarks,
+    laborPerRoByFamily,
+    familiesWithCues
+  );
 
   // Cues for every service, resolved HERE rather than fetched by the dialog on
   // open — two queries for the whole set instead of a round-trip per tap.
@@ -395,37 +403,8 @@ function NoAdvisorProfile() {
   );
 }
 
-/**
- * Average labor dollars per RO for each family, from the raw metric rows.
- * Returns undefined when nothing is readable so callers can skip the
- * revenue weighting entirely.
- */
-function buildLaborPerRo(
-  rows:
-    | { ros: number | null; labor_sales: number | null; service_line: unknown }[]
-    | null
-): Record<string, number> | undefined {
-  if (!rows || rows.length === 0) return undefined;
-
-  const totals = new Map<string, { ros: number; sales: number }>();
-  for (const row of rows) {
-    // PostgREST returns the embedded row as an object (or an array, depending
-    // on how it infers the relationship) — handle both.
-    const embed = Array.isArray(row.service_line)
-      ? row.service_line[0]
-      : row.service_line;
-    const family = (embed as { family?: string | null } | null)?.family;
-    if (!family) continue;
-
-    const entry = totals.get(family) ?? { ros: 0, sales: 0 };
-    entry.ros += Number(row.ros ?? 0);
-    entry.sales += Number(row.labor_sales ?? 0);
-    totals.set(family, entry);
-  }
-
-  const perRo: Record<string, number> = {};
-  for (const [family, { ros, sales }] of totals) {
-    if (ros > 0) perRo[family] = sales / ros;
-  }
-  return Object.keys(perRo).length > 0 ? perRo : undefined;
-}
+/* buildLaborPerRo lived here. It keyed on the embedded service_line.family —
+   the legacy op_code lookup — so anything that became a family through DMS
+   mapping (sub_category_map, and the resolved_family 0054 added) had no dollars
+   and silently fell back to missed ROs. Replaced in 0055 by
+   advisor_family_labor, read through lib/family-labor.ts by all three callers. */
