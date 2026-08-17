@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { loadFamiliesWithCues } from "@/lib/coachable-families";
+import { loadLaborPerRoByAdvisor } from "@/lib/family-labor";
 import { Card } from "@/components/brand/Card";
 import { TeamRoster } from "@/components/manager/TeamRoster";
 import {
@@ -76,6 +78,8 @@ export default async function ManagerPage() {
     { data: attachRows },
     { data: benchmarkRows },
     { data: advisorMemberships },
+    familiesWithCues,
+    laborByAdvisor,
   ] = await Promise.all([
     supabase
       .from("advisor_period_totals")
@@ -98,6 +102,11 @@ export default async function ManagerPage() {
       .eq("rooftop_id", rooftopId)
       .eq("role", "advisor")
       .eq("active", true),
+    loadFamiliesWithCues(supabase),
+    // One query for the whole roster, not one per advisor — this is what lets
+    // the team view rank Eddie's Pick by dollars exactly as the advisor's own
+    // screen does.
+    loadLaborPerRoByAdvisor(supabase, periodId, rooftopId),
   ]);
 
   const benchmarks: FamilyBenchmark[] = (benchmarkRows ?? []).map((r) => ({
@@ -151,6 +160,8 @@ export default async function ManagerPage() {
       totalLaborSales: Number(row.total_labor_sales ?? 0),
       attach: attachByAdvisor.get(opId) ?? [],
       benchmarks,
+      familiesWithCues,
+      laborPerRoByFamily: laborByAdvisor.get(opId),
     });
   });
 

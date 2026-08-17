@@ -100,8 +100,24 @@ export function summarizeAdvisor(input: {
   totalLaborSales: number;
   attach: FamilyAttach[];
   benchmarks: FamilyBenchmark[];
+  /** Content gate for Mitch's new families — see lib/coachable-families.ts. */
+  familiesWithCues?: ReadonlySet<string>;
+  /**
+   * Labor-per-RO by family for THIS advisor — see lib/family-labor.ts.
+   *
+   * Passing it is what makes the manager's team view rank Eddie's Pick the same
+   * way the advisor's own screen does. Omitting it does not error; it silently
+   * reverts this advisor to missed-RO ranking, which is the disagreement 0055
+   * set out to remove.
+   */
+  laborPerRoByFamily?: Record<string, number>;
 }): AdvisorSummary {
-  const families = buildServiceFamilies(input.attach, input.benchmarks);
+  const families = buildServiceFamilies(
+    input.attach,
+    input.benchmarks,
+    input.laborPerRoByFamily,
+    input.familiesWithCues
+  );
   const hasVolume = hasCoachingVolume(input.totalRos);
 
   return {

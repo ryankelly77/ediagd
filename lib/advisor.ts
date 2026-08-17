@@ -29,8 +29,14 @@ export const MIN_ROS_FOR_COACHING = 20;
 
 // The services EDIAGD coaches advisors on. The DMS also emits catch-all
 // buckets (Maintenance, Repair, Miscellaneous) that are not sellable services —
-// exclude them from all coaching logic. This list is provisional pending Mitch's
-// ruling on Battery / Multi-Point Inspection; keep it as the single source of truth.
+// exclude them from all coaching logic. Keep this as the single source of truth.
+//
+// BATTERY IS STILL OFF, and that is now a decision waiting on Ryan rather than
+// on Mitch. Mitch's August triage ruled "Electrical, Charging & Starting" fully
+// covered, and the family has 56 published cues — so it would pass every gate
+// below. Turning it on changes Eddie's Pick for every advisor at every store on
+// the same day, which is a bigger change than applying a mapping sheet, so it is
+// left for its own call.
 export const COACHABLE_FAMILIES = [
   "Oil Change",
   "Brake Service",
@@ -43,8 +49,46 @@ export const COACHABLE_FAMILIES = [
   "Fluids",
 ] as const;
 
-export const isCoachable = (family: string) =>
-  (COACHABLE_FAMILIES as readonly string[]).includes(family);
+/**
+ * Mitch's six new families — intended to be coached, CONTENT-GATED until they
+ * have cues. All six have zero today.
+ *
+ * They exist because his triage routed $435K of Suspension, $540K of HVAC and
+ * 1,611 wiper lines at families that did not exist. Mapping them is what makes
+ * the money visible in reporting; coaching them before anybody has written a
+ * word track would put a gap on an advisor's screen with nothing behind it when
+ * they tap it.
+ *
+ * SEPARATE LIST, NOT A FLAG ON THE FIRST ONE, so the gate FAILS CLOSED: a caller
+ * that does not pass the cue set gets these treated as not coachable. The
+ * reverse default would mean one forgotten argument quietly ships six empty
+ * families to every advisor.
+ */
+export const COACHABLE_PENDING_CONTENT = [
+  "HVAC",
+  "Belts & Cooling",
+  "Wipers",
+  "Lighting",
+  "Suspension",
+  "Inspections",
+] as const;
+
+/**
+ * Two gates, and both must pass for a pending family: somebody INTENDED it to be
+ * coached, and somebody has WRITTEN something to coach with.
+ *
+ * Cue count alone would be wrong in both directions — Battery has 56 published
+ * cues and is deliberately not coached, while Oil Change and Alignment have one
+ * apiece and always have been.
+ */
+export const isCoachable = (
+  family: string,
+  familiesWithCues?: ReadonlySet<string>
+) => {
+  if ((COACHABLE_FAMILIES as readonly string[]).includes(family)) return true;
+  if (!(COACHABLE_PENDING_CONTENT as readonly string[]).includes(family)) return false;
+  return familiesWithCues?.has(family) ?? false;
+};
 
 /* ---- Shapes coming out of the views -------------------------------------- */
 
@@ -123,14 +167,17 @@ function rank(f: ServiceFamily): number {
 export function buildServiceFamilies(
   attach: FamilyAttach[],
   benchmarks: FamilyBenchmark[],
-  laborPerRoByFamily?: Record<string, number>
+  laborPerRoByFamily?: Record<string, number>,
+  familiesWithCues?: ReadonlySet<string>
 ): ServiceFamily[] {
   const byFamily = new Map(
-    benchmarks.filter((b) => isCoachable(b.family)).map((b) => [b.family, b])
+    benchmarks
+      .filter((b) => isCoachable(b.family, familiesWithCues))
+      .map((b) => [b.family, b])
   );
 
   return attach
-    .filter((a) => isCoachable(a.family))
+    .filter((a) => isCoachable(a.family, familiesWithCues))
     .map<ServiceFamily | null>((a) => {
       const bench = byFamily.get(a.family);
       const rate = a.attachRatePct;

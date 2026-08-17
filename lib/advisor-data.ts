@@ -17,6 +17,8 @@ import {
   type FamilyBenchmark,
   type ServiceFamily,
 } from "@/lib/advisor";
+import { loadFamiliesWithCues } from "@/lib/coachable-families";
+import { loadLaborPerRo } from "@/lib/family-labor";
 
 type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -67,19 +69,26 @@ export async function loadAdvisorDay(
   const resolvedRooftopId = totals.rooftop_id as string;
   const totalRos = Number(totals.total_ros ?? 0);
 
-  const [{ data: attachRows }, { data: benchmarkRows }] = await Promise.all([
-    client
-      .from("advisor_family_attach")
-      .select("family, fam_ros, advisor_ros, attach_rate_pct")
-      .eq("advisor_op_id", opCodeId)
-      .eq("period_id", resolvedPeriodId)
-      .eq("rooftop_id", resolvedRooftopId),
-    client
-      .from("family_store_benchmark")
-      .select("family, store_avg_pct, store_best_pct")
-      .eq("period_id", resolvedPeriodId)
-      .eq("rooftop_id", resolvedRooftopId),
-  ]);
+  const [
+    { data: attachRows },
+    { data: benchmarkRows },
+    familiesWithCues,
+    laborPerRoByFamily,
+  ] = await Promise.all([
+      client
+        .from("advisor_family_attach")
+        .select("family, fam_ros, advisor_ros, attach_rate_pct")
+        .eq("advisor_op_id", opCodeId)
+        .eq("period_id", resolvedPeriodId)
+        .eq("rooftop_id", resolvedRooftopId),
+      client
+        .from("family_store_benchmark")
+        .select("family, store_avg_pct, store_best_pct")
+        .eq("period_id", resolvedPeriodId)
+        .eq("rooftop_id", resolvedRooftopId),
+      loadFamiliesWithCues(client),
+      loadLaborPerRo(client, resolvedPeriodId, opCodeId),
+    ]);
 
   const attach: FamilyAttach[] = (attachRows ?? []).map(
     (r: Record<string, unknown>) => ({
@@ -98,7 +107,12 @@ export async function loadAdvisorDay(
     })
   );
 
-  const families = buildServiceFamilies(attach, benchmarks);
+  const families = buildServiceFamilies(
+    attach,
+    benchmarks,
+    laborPerRoByFamily,
+    familiesWithCues
+  );
 
   return {
     periodId: resolvedPeriodId,
