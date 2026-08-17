@@ -14,6 +14,7 @@
    ============================================================================ */
 
 import { useState, useTransition } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import {
@@ -98,13 +99,7 @@ export function DmsUploader() {
             */
             className="block w-full min-w-0 truncate text-sm text-ink-soft file:mr-3 file:min-h-[2.75rem] file:rounded-xl file:border file:border-line file:bg-surface-card file:px-4 file:text-sm file:font-extrabold file:text-navy"
           />
-          <button
-            type="submit"
-            disabled={stage === "parsing"}
-            className="mt-4 flex min-h-[3rem] w-full items-center justify-center rounded-xl bg-gold px-5 text-sm font-extrabold text-navy transition hover:brightness-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-          >
-            {stage === "parsing" ? "Reading the workbook…" : "Upload and preview"}
-          </button>
+          <UploadButton parsing={stage === "parsing"} />
         </form>
 
         {error && <Problem>{error}</Problem>}
@@ -333,6 +328,40 @@ export function DmsUploader() {
 }
 
 /* ---- small parts --------------------------------------------------------- */
+
+/**
+ * The submit button for the upload form.
+ *
+ * SEPARATE COMPONENT BECAUSE useFormStatus READS THE PARENT FORM. The hook
+ * reports the status of the <form> above it in the tree, so a button that calls
+ * it from inside the same component that renders the form always reads
+ * pending: false. It has to be a child. (Next 16 / React 19 — see
+ * node_modules/next/dist/docs/01-app/02-guides/forms.md.)
+ *
+ * WHY NOT THE `stage` STATE ALONE. `stage` only flips to "parsing" once React
+ * has processed a state update from inside the action. The browser is already
+ * busy before that — these workbooks are megabytes, and the file is serialised
+ * into the request before the action body runs at all. useFormStatus is pending
+ * from the moment of submit, which is the whole window the person is waiting
+ * through and the one they are staring at the button during.
+ *
+ * `parsing` is still passed in and OR-ed so the button cannot come back to life
+ * in the gap between the action resolving and the stage advancing to "preview".
+ */
+function UploadButton({ parsing }: { parsing: boolean }) {
+  const { pending } = useFormStatus();
+  const busy = pending || parsing;
+
+  return (
+    <button
+      type="submit"
+      disabled={busy}
+      className="mt-4 flex min-h-[3rem] w-full items-center justify-center rounded-xl bg-gold px-5 text-sm font-extrabold text-navy transition hover:brightness-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      {busy ? "Uploading…" : "Upload and preview"}
+    </button>
+  );
+}
 
 function Line({
   label,
