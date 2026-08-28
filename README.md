@@ -16,7 +16,11 @@ EDIAGD ("Every Day Is A Great Day") is an AI-powered coaching platform for autom
 - **Never invent brand colors or fonts.** Use the design tokens only (see Brand).
 - **Never use red.** The brand is Aloha/positive. For attention/alerts use `clay` (#C9762F), never red. The lowest service status is "Pursue," never "needs work."
 - **Mobile-first, always.** Design for phone first, scale up. Advisors use this on the service drive on a phone.
-- **No PWA.** Decision made: plain mobile web for now; native (React Native) is a later "if needed" call. Do not add PWA/service-worker/manifest plumbing.
+- **No PWA. Native is a Capacitor shell around the deployed web app.** _(Rewritten Aug 2026 — this replaces "plain mobile web for now; native (React Native) is a later if-needed call". The trigger was push: notifications are the feature that a browser tab cannot deliver, and everything else about going native follows from wanting them.)_
+  - **Still no PWA plumbing.** No service worker, no `manifest.json`, no web push. Those solve the same problem worse and Apple's support for them is not something to build a product on.
+  - **React Native is not planned.** It would mean rewriting every screen. The app is already mobile-first and ships continuously; a wrapper keeps one codebase and one deploy, and copy changes never wait on an App Store review.
+  - **The shell is deliberately thin.** It loads the production URL in a webview and adds only what a tab cannot do: push, universal/app links, home-screen presence, and biometric unlock. If a feature can be built in the web app, build it there.
+  - Config in `capacitor.config.ts`; native seam in `lib/native/bridge.ts` (every function no-ops in a browser); shell behaviour mounted once in `app/(app)/layout.tsx`. Bundle id `ai.ediagd.app` on both platforms.
 - **RLS is the security boundary.** Never bypass it from client code. Provisioning/writes that must cross tenants run server-side with the service role only.
 - **Don't hardcode secrets.** Anon key is public/client-safe; the service_role key is server-only and must never appear in `NEXT_PUBLIC_*` or client bundles.
 

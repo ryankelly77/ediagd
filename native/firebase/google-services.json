@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "983447476679",
+    "project_id": "ediagd-8c0a5",
+    "storage_bucket": "ediagd-8c0a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983447476679:android:ddd6619d5ef4351a7b61e2",
+        "android_client_info": {
+          "package_name": "ai.ediagd.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQuNSgcOArMJdodjdUgmxQclSqi7PvVI0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
