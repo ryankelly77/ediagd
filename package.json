@@ -13,7 +13,8 @@
     "remap": "rm -rf .tmp-remap && tsc scripts/remap.ts --outDir .tmp-remap --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-remap/scripts/remap.js",
     "checkmap": "rm -rf .tmp-cm && tsc scripts/checkmap.ts --outDir .tmp-cm --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-cm/scripts/checkmap.js",
     "export-queue": "rm -rf .tmp-exp && tsc scripts/export-queue.ts --outDir .tmp-exp --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-exp/scripts/export-queue.js",
-    "export-residue": "rm -rf .tmp-res && tsc scripts/export-residue.ts --outDir .tmp-res --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-res/scripts/export-residue.js"
+    "export-residue": "rm -rf .tmp-res && tsc scripts/export-residue.ts --outDir .tmp-res --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-res/scripts/export-residue.js",
+    "export-catalog": "rm -rf .tmp-cat && tsc scripts/export-catalog.ts --outDir .tmp-cat --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-cat/scripts/export-catalog.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

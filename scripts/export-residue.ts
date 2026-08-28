@@ -38,12 +38,40 @@ type Row = {
   rooftops: number;
 };
 
+/**
+ * PAGED, BECAUSE THE UNPAGED VERSION LIED.
+ *
+ * PostgREST caps a response at 1,000 rows (`max_rows`), including rows returned
+ * by an RPC. The first version of this script POSTed once and wrote whatever
+ * came back — so the sheet stopped at exactly 1,000 rows and reported that as
+ * the total. It looked like a plausible number rather than a truncation, which
+ * is the dangerous kind of wrong: Mitch would have ruled on a sheet that
+ * silently omitted the rest, and the omitted part is money.
+ *
+ * The 2025 backfill is what exposed it — the residue grew past the cap.
+ *
+ * PAGE WITH limit/offset IN THE QUERY STRING, NOT A Range HEADER. A Range
+ * header on this RPC is accepted and then ignored: every request comes back
+ * with the same first thousand rows, so a loop that trusts it never terminates.
+ * The query-string form is honoured.
+ */
+async function fetchResidue(): Promise<Row[]> {
+  const out: Row[] = [];
+  const PAGE = 1000;
+  for (let offset = 0; ; offset += PAGE) {
+    const res = await fetch(
+      `${URL}/rest/v1/rpc/op_text_residue?limit=${PAGE}&offset=${offset}`,
+      { method: "POST", headers: H, body: "{}" }
+    );
+    if (!res.ok) throw new Error(`op_text_residue: ${res.status} ${(await res.text()).slice(0, 200)}`);
+    const page = (await res.json()) as Row[];
+    out.push(...page);
+    if (page.length < PAGE) return out;
+  }
+}
+
 async function main() {
-  const res = await fetch(`${URL}/rest/v1/rpc/op_text_residue`, {
-    method: "POST", headers: H, body: "{}",
-  });
-  if (!res.ok) throw new Error(`op_text_residue: ${res.status} ${(await res.text()).slice(0, 200)}`);
-  const rows = (await res.json()) as Row[];
+  const rows = await fetchResidue();
 
   const totalMoney = rows.reduce((s, r) => s + Number(r.labor_sales ?? 0), 0);
   const totalLines = rows.reduce((s, r) => s + Number(r.lines ?? 0), 0);
