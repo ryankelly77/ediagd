@@ -154,14 +154,40 @@ export function TrendAndHistory({ trend }: { trend: AdvisorTrend }) {
 
 /* ---- the chart ----------------------------------------------------------- */
 
+/**
+ * How many months the chart opens on.
+ *
+ * The 2025 backfill took an advisor's history from five or six months to
+ * fifteen. The bar row is flex, not a scroller, so it did not overflow — it
+ * COMPRESSED, and fifteen bars on a 360px phone is about 20px each, which is
+ * a texture rather than a chart. Six is what fits while staying readable, and
+ * it is also the horizon somebody actually coaches against.
+ */
+const DEFAULT_MONTHS = 6;
+
 function History({ points }: { points: MonthPoint[] }) {
   const [selected, setSelected] = useState<string | null>(
     points[points.length - 1]?.periodId ?? null
   );
+  const [showAll, setShowAll] = useState(false);
 
-  const maxSales = Math.max(...points.map((p) => p.laborSales), 1);
-  const maxRos = Math.max(...points.map((p) => p.ros), 1);
-  const active = points.find((p) => p.periodId === selected) ?? null;
+  const shown = showAll ? points : points.slice(-DEFAULT_MONTHS);
+
+  /* Scale to what is VISIBLE. Scaling to the full set would leave the default
+     six bars measured against a maximum the person cannot see, so a tall month
+     hidden behind the tap would silently flatten everything on screen. */
+  const maxSales = Math.max(...shown.map((p) => p.laborSales), 1);
+  const maxRos = Math.max(...shown.map((p) => p.ros), 1);
+
+  /* Falling back to the newest VISIBLE month covers collapsing while an older
+     month is selected — the alternative is a chart with nothing highlighted
+     and a header reading "Tap a month" for a month still on screen. */
+  const active =
+    shown.find((p) => p.periodId === selected) ?? shown[shown.length - 1] ?? null;
+
+  /* Two years of history means two Julys. The year only earns its space when
+     the visible window actually crosses one. */
+  const spansYears = new Set(shown.map((p) => p.startsOn.slice(0, 4))).size > 1;
 
   return (
     <div className="mt-4">
@@ -182,8 +208,16 @@ function History({ points }: { points: MonthPoint[] }) {
         )}
       </div>
 
-      <div className="mt-3 flex items-end gap-2">
-        {points.map((p) => {
+      {/* Expanded, the bars stop sharing the width and start scrolling — past
+          about eight, flex-1 makes them thinner than the gap between them. */}
+      <div
+        className={
+          showAll
+            ? "mt-3 flex items-end gap-2 overflow-x-auto pb-1"
+            : "mt-3 flex items-end gap-2"
+        }
+      >
+        {shown.map((p) => {
           const isActive = p.periodId === selected;
           const salesH = Math.max(4, (p.laborSales / maxSales) * 88);
           const rosH = Math.max(3, (p.ros / maxRos) * 88);
@@ -193,7 +227,9 @@ function History({ points }: { points: MonthPoint[] }) {
               type="button"
               onClick={() => setSelected(p.periodId)}
               aria-label={`${p.label}: ${money(p.laborSales)}, ${Math.round(p.ros)} ROs${p.isPartial ? ", partial month" : ""}`}
-              className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg py-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              className={`flex flex-col items-center gap-1 rounded-lg py-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
+                showAll ? "w-11 shrink-0" : "min-w-0 flex-1"
+              }`}
               style={{
                 background: isActive
                   ? "color-mix(in srgb, rgb(var(--ediagd-teal)) 8%, transparent)"
@@ -227,12 +263,30 @@ function History({ points }: { points: MonthPoint[] }) {
                 />
               </span>
               <span className="ediagd-numeral block w-full truncate text-center text-[10px] text-ink-soft">
-                {shortMonth(p.label, points.length)}
+                {shortMonth(p.label, shown.length, spansYears)}
               </span>
             </button>
           );
         })}
       </div>
+
+      {points.length > DEFAULT_MONTHS && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="mt-3 flex min-h-[2.5rem] w-full items-center justify-center gap-1.5 rounded-xl border border-line text-xs font-extrabold text-navy transition hover:bg-teal-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          {showAll
+            ? `Show last ${DEFAULT_MONTHS} months`
+            : `Show more · ${points.length - DEFAULT_MONTHS} earlier ${
+                points.length - DEFAULT_MONTHS === 1 ? "month" : "months"
+              }`}
+          <span aria-hidden="true" className="text-[10px]">
+            {showAll ? "▲" : "▼"}
+          </span>
+        </button>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-ink-soft">
         <Key color="rgb(var(--ediagd-teal))" label="Labor sales" />
@@ -250,9 +304,9 @@ function History({ points }: { points: MonthPoint[] }) {
 
       {/* The format boundary, said out loud rather than left as a mystery step
           in the bars. */}
-      {new Set(points.map((p) => (p.sourceKind === "dms_daily" ? "dynatron" : p.sourceKind))).size > 1 && (
+      {new Set(shown.map((p) => (p.sourceKind === "dms_daily" ? "dynatron" : p.sourceKind))).size > 1 && (
         <p className="mt-3 text-[11px] leading-relaxed text-ink-soft">
-          {`${points.filter((p) => p.sourceKind !== "dynatron" && p.sourceKind !== "dms_daily").map((p) => p.label).join(", ")} came from a different report format than the months around it. A step at that point may be a change in what the report counts, not in what you did.`}
+          {`${shown.filter((p) => p.sourceKind !== "dynatron" && p.sourceKind !== "dms_daily").map((p) => p.label).join(", ")} came from a different report format than the months around it. A step at that point may be a change in what the report counts, not in what you did.`}
         </p>
       )}
 
@@ -278,12 +332,20 @@ function History({ points }: { points: MonthPoint[] }) {
  *
  * Five bars on a 360px phone leaves about 62px each; "September" needs ~70 and
  * truncates to "Septem…", which is worse than an abbreviation everybody reads
- * without thinking. The year is always dropped — the chart is one advisor's
- * recent run, not an archive.
+ * without thinking.
+ *
+ * THE YEAR COMES BACK WHEN THE WINDOW CROSSES ONE. Dropping it was right while
+ * history was one advisor's recent run; with the 2025 backfill an expanded
+ * chart holds two Julys, and two identical labels on two different bars is a
+ * misread waiting to happen. "Jul '25" is the smallest thing that separates
+ * them.
  */
-function shortMonth(label: string, barCount: number): string {
+function shortMonth(label: string, barCount: number, spansYears = false): string {
   const name = label.replace(/\s*20\d\d$/, "").trim();
-  return barCount >= 4 ? name.slice(0, 3) : name;
+  const short = barCount >= 4 ? name.slice(0, 3) : name;
+  if (!spansYears) return short;
+  const year = label.match(/(20)(\d\d)$/)?.[2];
+  return year ? `${short} '${year}` : short;
 }
 
 function Key({ color, label }: { color: string; label: string }) {
