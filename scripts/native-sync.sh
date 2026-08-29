@@ -45,6 +45,23 @@ if [ -d ios ] || [ -d android ]; then
     --iconBackgroundColorDark '#0C1C2C' \
     --splashBackgroundColor '#0C1C2C' \
     --splashBackgroundColorDark '#0C1C2C' || say "asset generation skipped"
+
+  # @capacitor/assets also emits PWA output — a manifest and a web icon set —
+  # whether or not you asked for it. README.md forbids PWA plumbing outright
+  # ("no service-worker/manifest"), and a stray manifest.webmanifest in public/
+  # would be picked up by browsers and quietly re-open a decision that was made
+  # deliberately. Deleted every run rather than argued about later.
+  rm -f public/manifest.webmanifest
+  rm -rf public/icons
+  # It also drops a bare icons/ at the repo root, which is neither PWA nor
+  # native — just litter from the generator's web target.
+  rm -rf icons
+  say "removed PWA output (README: no PWA plumbing)"
+fi
+
+# Android 12+ splash colours — see the docstring in the script.
+if [ -d android ]; then
+  python3 scripts/patch-android-theme.py
 fi
 
 say "done"

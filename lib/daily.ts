@@ -10,6 +10,7 @@
 
 import type { ContentRow } from "@/lib/content";
 import type { IsoDate } from "@/lib/gamification/streak";
+import { playbackFor } from "@/lib/mux/playback";
 
 type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -319,3 +320,103 @@ function rotate<T>(list: T[], start: number): T[] {
   if (list.length === 0) return list;
   return [...list.slice(start), ...list.slice(0, start)];
 }
+
+/* ============================================================================
+   The lifestyle / sales-skill video
+   ============================================================================ */
+
+/**
+ * The video for the daily loop's lifestyle slot, signed and ready to play.
+ *
+ * PLACEMENT, NOT TYPE. content_type says who may see a thing and RLS is built
+ * on it; placement (0057) says where the app surfaces it. Both videos in the
+ * library are advisor_video — one belongs in the daily loop and one in
+ * onboarding, and only placement can tell them apart.
+ *
+ * Returns null rather than throwing when nothing is published or Mux is
+ * unconfigured, so the step renders its honest empty state instead of taking
+ * the daily loop down. A missing video must never cost somebody their streak.
+ */
+export async function pickLifestyleVideo(
+  client: Client,
+  today: IsoDate,
+  userId: string
+): Promise<LifestyleVideoData | null> {
+  const { data: rows } = await client
+    .from("content")
+    .select(
+      "id, title, mux_playback_id, mux_playback_policy, " +
+        "vertical_playback_id, vertical_status"
+    )
+    .eq("type", "advisor_video")
+    .eq("placement", "daily_lifestyle")
+    .eq("status", "published")
+    .not("mux_playback_id", "is", null)
+    .limit(24);
+
+  const list = (rows ?? []) as {
+    id: string; title: string;
+    mux_playback_id: string | null; mux_playback_policy: string | null;
+    vertical_playback_id: string | null; vertical_status: string | null;
+  }[];
+  if (!list.length) return null;
+
+  /* Same deterministic day-rotation the quotes and cues use, so the loop feels
+     composed rather than shuffled, and two advisors at one store see the same
+     thing on the same day. */
+  const row = list[rotationIndex(today, list.length, 3)];
+
+  /*
+   * THE APP PLAYS VERTICAL. The daily loop is a phone held upright on a service
+   * drive, so a derived 9:16 crop is the right picture and the 16:9 master is
+   * the fallback, not the other way round.
+   *
+   * 'stale' is deliberately NOT used: it means the master was trimmed after the
+   * crop was made, so the vertical is a second out of step with its own
+   * captions. Falling back to a CSS-cropped master is a worse picture but an
+   * honest one.
+   */
+  const useVertical =
+    row.vertical_status === "ready" && Boolean(row.vertical_playback_id);
+
+  const tokens = await playbackFor(
+    useVertical
+      ? { mux_playback_id: row.vertical_playback_id, mux_playback_policy: "signed" }
+      : row
+  );
+  if (!tokens) return null;
+
+  const { data: progress } = await client
+    .from("content_progress")
+    .select("watched_pct, position_sec")
+    .eq("content_id", row.id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return {
+    contentId: row.id,
+    title: row.title,
+    playbackId: tokens.playbackId,
+    token: tokens.token,
+    thumbnailToken: tokens.thumbnailToken,
+    storyboardToken: tokens.storyboardToken,
+    watchedPct: Number(progress?.watched_pct ?? 0),
+    positionSec: progress?.position_sec == null ? null : Number(progress.position_sec),
+    orientation: useVertical ? ("vertical" as const) : ("landscape" as const),
+    // No derived vertical yet: squeeze the master rather than letterbox it.
+    cropToVertical: !useVertical,
+  };
+}
+
+export type LifestyleVideoData = {
+  contentId: string;
+  title: string;
+  playbackId: string;
+  token: string;
+  thumbnailToken: string;
+  storyboardToken: string;
+  watchedPct: number;
+  positionSec: number | null;
+  orientation: "vertical" | "landscape";
+  cropToVertical: boolean;
+};
