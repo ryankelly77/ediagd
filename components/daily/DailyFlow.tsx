@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MuxVideo, VideoNotReady } from "@/components/video/MuxVideo";
 import { completeDayAction } from "@/app/(app)/daily/actions";
 import { BadgeCelebration } from "./BadgeCelebration";
 import { MILESTONES } from "@/lib/gamification/streak";
@@ -16,7 +17,7 @@ type Cue = { id: string; title: string; body: string | null };
 type Focus = { service: string; rate: number; storeAvg: number };
 
 /**
- * The daily ritual: quote → focus → video → celebration.
+ * The daily ritual: quote → focus → pitch → lifestyle video → celebration.
  *
  * Steps 1-3 are pure UI. The ONLY mutation is completeDayAction(), fired once
  * on entering step 4 — so bailing out early genuinely means the day isn't
@@ -37,6 +38,8 @@ export function DailyFlow({
   badgeRewards,
   previewResult = null,
   dailyLoopSand,
+  lifestyle,
+  videoThreshold,
 }: {
   alreadyCompleteOnLoad: boolean;
   currentStreak: number;
@@ -60,6 +63,14 @@ export function DailyFlow({
   previewResult?: CompleteDayResult | null;
   /** sand_daily_loop from game_settings — itemised in the celebration. */
   dailyLoopSand: number;
+  /**
+   * The lifestyle / sales-skill video, signed and ready to play, or null when
+   * none is published. Null keeps the step in the flow with an honest empty
+   * state rather than silently skipping a beat of the ritual.
+   */
+  lifestyle: LifestyleVideo | null;
+  /** game_settings.video_complete_pct — the bar a watch has to clear. */
+  videoThreshold: number;
 }) {
   const preview = Boolean(previewResult);
   const [step, setStep] = useState(1);
@@ -101,24 +112,28 @@ export function DailyFlow({
           />
         )}
 
-        {step === 3 && (
-          <VideoStep
-            focus={focus}
+        {step === 3 && <VideoStep focus={focus} onNext={() => setStep(4)} />}
+
+        {step === 4 && (
+          <LifestyleStep
+            video={lifestyle}
+            threshold={videoThreshold}
             onNext={() => {
               // Mark the ritual as ours BEFORE the mutation fires, so the
               // server re-render it triggers can't bounce us to /advisor.
               setRitualRun(true);
-              setStep(4);
+              setStep(5);
             }}
           />
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <CelebrationStep
             previewResult={previewResult}
             dailyLoopSand={dailyLoopSand}
             quoteId={quote?.id ?? null}
             cueId={cue?.id ?? null}
+            videoId={lifestyle?.contentId ?? null}
             badgeNames={badgeNames}
             badgeRewards={badgeRewards}
             today={today}
@@ -132,10 +147,87 @@ export function DailyFlow({
 
 /* ---- Progress ------------------------------------------------------------ */
 
+
+/** Signed playback for the lifestyle slot, minted per view on the server. */
+export type LifestyleVideo = {
+  contentId: string;
+  title: string;
+  playbackId: string;
+  token: string;
+  thumbnailToken: string;
+  storyboardToken: string;
+  watchedPct: number;
+  positionSec: number | null;
+  orientation: "vertical" | "landscape";
+  cropToVertical: boolean;
+};
+
+/* ---- Step 4: the lifestyle / sales-skill video --------------------------- */
+/**
+ * The first real video in the daily loop.
+ *
+ * WATCHING IS NOT GATED. Continue is always enabled, deliberately: the ritual
+ * is three minutes on a service drive, and a hard watch-gate turns a habit into
+ * a hurdle the first time somebody's signal drops. The watch is RECORDED —
+ * content_progress via the player, and daily_completion.video_content_id when
+ * the day completes — so the data is honest about who actually watched without
+ * the app policing it.
+ *
+ * The button changes its words once the bar is cleared, which is
+ * acknowledgement rather than enforcement.
+ */
+function LifestyleStep({
+  video,
+  threshold,
+  onNext,
+}: {
+  video: LifestyleVideo | null;
+  threshold: number;
+  onNext: () => void;
+}) {
+  const [cleared, setCleared] = useState((video?.watchedPct ?? 0) >= threshold);
+
+  return (
+    <section className="flex flex-1 flex-col">
+      <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
+        Today&apos;s three minutes
+      </p>
+      <h1 className="mt-1 text-3xl font-extrabold text-navy">
+        {video?.title ?? "Coming soon"}
+      </h1>
+
+      <div className="flex flex-1 flex-col justify-center py-6">
+        {video ? (
+          <MuxVideo
+            contentId={video.contentId}
+            playbackId={video.playbackId}
+            token={video.token}
+            thumbnailToken={video.thumbnailToken}
+            storyboardToken={video.storyboardToken}
+            title={video.title}
+            threshold={threshold}
+            initialWatchedPct={video.watchedPct}
+            initialPositionSec={video.positionSec}
+            orientation={video.orientation}
+            cropToVertical={video.cropToVertical}
+            onReachedThreshold={() => setCleared(true)}
+          />
+        ) : (
+          <VideoNotReady reason="The next one lands here as soon as it's cut." />
+        )}
+      </div>
+
+      <PrimaryButton onClick={onNext}>
+        {cleared ? "Finish the day" : "Continue"}
+      </PrimaryButton>
+    </section>
+  );
+}
+
 function StepDots({ step }: { step: number }) {
   return (
     <div className="flex items-center justify-center gap-2 pb-8" aria-hidden="true">
-      {[1, 2, 3, 4].map((n) => (
+      {[1, 2, 3, 4, 5].map((n) => (
         <span
           key={n}
           className={`h-1.5 rounded-pill transition-all ${
@@ -348,6 +440,7 @@ function writeCachedResult(today: string, result: CompleteDayResult) {
 function CelebrationStep({
   quoteId,
   cueId,
+  videoId,
   badgeNames,
   badgeRewards,
   today,
@@ -357,6 +450,7 @@ function CelebrationStep({
 }: {
   quoteId: string | null;
   cueId: string | null;
+  videoId: string | null;
   badgeNames: Record<string, string>;
   badgeRewards: Record<string, number>;
   today: string;
@@ -382,7 +476,7 @@ function CelebrationStep({
     fired.current = true;
 
     (async () => {
-      const response = await completeDayAction({ quoteId, cueId });
+      const response = await completeDayAction({ quoteId, cueId, videoId });
       if (!response.ok) {
         setError(response.error);
         return;
@@ -397,7 +491,7 @@ function CelebrationStep({
       writeCachedResult(today, response.result);
       setResult(response.result);
     })();
-  }, [quoteId, cueId, result, today, previewResult]);
+  }, [quoteId, cueId, videoId, result, today, previewResult]);
 
   if (alreadyDone) {
     return <DoneForTodayScreen streak={alreadyDone.streak || fallbackStreak} />;

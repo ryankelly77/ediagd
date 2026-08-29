@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminViewer } from "@/lib/access";
 import { loadAdvisorDay } from "@/lib/advisor-data";
-import { ackLabel, cueTierForRate, pickCoachingCue, pickQuoteOfDay } from "@/lib/daily";
+import { ackLabel, cueTierForRate, pickCoachingCue, pickLifestyleVideo, pickQuoteOfDay } from "@/lib/daily";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
@@ -75,9 +75,12 @@ export default async function TodayPage({
   const focusService = pick?.family ?? null;
   const cueTier = pick ? cueTierForRate(pick.rate) : null;
 
-  const [quote, coaching] = await Promise.all([
+  const [quote, coaching, lifestyle] = await Promise.all([
     pickQuoteOfDay(supabase, today),
     pickCoachingCue(supabase, today, focusService, cueTier),
+    // Signed playback is minted per view — never cached across users, because
+    // the token IS the authorisation.
+    pickLifestyleVideo(supabase, today, user.id),
   ]);
 
   // Badge display names, so the celebration can say "First Light earned!"
@@ -95,10 +98,13 @@ export default async function TodayPage({
   // sums its parts. Read from settings — never hardcoded.
   const { data: gameSettings } = await supabase
     .from("game_settings")
-    .select("sand_daily_loop")
+    .select("sand_daily_loop, video_complete_pct")
     .limit(1)
     .maybeSingle();
   const dailyLoopSand = Number(gameSettings?.sand_daily_loop ?? 0);
+  // The bar a watch has to clear. Same setting the library re-checks
+  // server-side in completeLibraryItem, so the two surfaces cannot disagree.
+  const videoThreshold = Number(gameSettings?.video_complete_pct ?? 90);
 
   // ---- Admin demo -------------------------------------------------------
   // ?preview=1 walks the real daily loop with a canned outcome: nothing is
@@ -142,6 +148,8 @@ export default async function TodayPage({
     <DailyFlow
       previewResult={previewResult}
       dailyLoopSand={dailyLoopSand}
+      lifestyle={lifestyle}
+      videoThreshold={videoThreshold}
       alreadyCompleteOnLoad={alreadyCompleteOnLoad}
       currentStreak={currentStreak}
       today={today}
