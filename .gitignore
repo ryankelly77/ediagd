@@ -64,3 +64,5 @@ exports/
 /android/
 .tmp-push/
 .tmp-cat/
+.tmp-dv/
+.tmp-rv/

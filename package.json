@@ -20,7 +20,8 @@
     "native:add": "npx cap add ios && npx cap add android && bash scripts/native-sync.sh",
     "native:open:ios": "npx cap open ios",
     "native:open:android": "npx cap open android",
-    "derive:vertical": "rm -rf .tmp-dv && tsc scripts/derive-vertical.ts --outDir .tmp-dv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dv/derive-vertical.js"
+    "derive:vertical": "rm -rf .tmp-dv && tsc scripts/derive-vertical.ts --outDir .tmp-dv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dv/derive-vertical.js",
+    "replace:video": "rm -rf .tmp-rv && tsc scripts/replace-video.ts --outDir .tmp-rv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-rv/replace-video.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

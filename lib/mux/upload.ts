@@ -58,7 +58,19 @@ export async function createDirectUpload(origin: string) {
     new_asset_settings: {
       // Signed, always. See the note above — this is the line that matters.
       playback_policies: ["signed"],
-      video_quality: "basic",
+      /*
+       * PREMIUM, AND ONLY FOR MASTERS. video_quality caps what Mux keeps:
+       * "basic" tops out at the 1080p tier, so a 4K upload is stored as UHD but
+       * read back — including through master access — at about 2K. That was
+       * measured, not assumed: a 3840x2160 master ingested as basic came back
+       * 2048x1152, which turns the 9:16 slice from 1215px into 648px and forces
+       * a 1.67x upscale. It defeats the entire reason for shooting 4K.
+       *
+       * Derived VERTICALS stay basic on purpose — they are 1080x1920, inside
+       * the basic tier already, and premium would cost more for nothing.
+       */
+      video_quality: "premium",
+      max_resolution_tier: "2160p",
       // Captions, generated on ingest. Accessibility, and an advisor on a
       // service drive often has the sound off.
       inputs: [
@@ -130,7 +142,10 @@ export async function clipAsset(opts: {
       },
     ],
     playback_policies: ["signed"],
-    video_quality: "basic",
+    // A clip of a master is still a master — do not downgrade it on the way
+    // through, or trimming a 4K video quietly costs you the 4K.
+    video_quality: "premium",
+    max_resolution_tier: "2160p",
     normalize_audio: true,
   });
 
