@@ -9,9 +9,17 @@
    Supabase, and turns notification taps and universal links into router
    navigations.
 
-   WHY IT LIVES IN THE LAYOUT RATHER THAN A PAGE. A notification tap can land on
-   any route, and the listener has to already exist when it does. Mounting it
-   per-page would mean the first tap after a cold start is dropped.
+   WHY IT LIVES IN THE ROOT LAYOUT AND NOT THE (app) ONE. It was in (app) first,
+   and that shipped a bug straight to the emulator: /login sits OUTSIDE that
+   group, so on a cold launch to the login screen this never mounted, and with
+   `launchAutoHide: false` the splash screen had nobody to hide it. The app
+   opened to a permanent splash. A notification tap or a universal link can also
+   arrive while signed out, and both need the listener to already exist.
+
+   PUSH REGISTRATION IS GATED ON A SESSION, splash and deep links are not. There
+   is no point asking a stranger on the login screen for notification permission
+   — iOS only offers that prompt once — and register_push_token would fail
+   without a session anyway.
    ============================================================================ */
 
 import { useEffect } from "react";
@@ -38,6 +46,15 @@ export function NativeBridge() {
         if (!disposed) router.push(route);
       };
 
+      /* Deep links and the splash must work signed out. Do them first, so a
+         failure in the push path below can never leave the splash up. */
+      cleanupLinks = await handleAppLinks(go);
+      await readyShell();
+
+      const supabaseAuth = createClient();
+      const { data: { user } } = await supabaseAuth.auth.getUser();
+      if (!user) return;
+
       /*
        * Token -> device_push_token, through the RPC in 0056 so RLS applies and
        * a token can never be registered against somebody else's account.
@@ -46,10 +63,9 @@ export function NativeBridge() {
        * on the drive should never see an error toast because a token round-trip
        * lost a race with a network handover.
        */
-      const supabase = createClient();
       const result = await registerForPush(
         async (token, platform) => {
-          const { error } = await supabase.rpc("register_push_token", {
+          const { error } = await supabaseAuth.rpc("register_push_token", {
             _token: token,
             _platform: platform,
           });
@@ -64,8 +80,6 @@ export function NativeBridge() {
         console.info("[ediagd] push permission not granted");
       }
 
-      cleanupLinks = await handleAppLinks(go);
-      await readyShell();
     })();
 
     return () => {

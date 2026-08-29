@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
-import { NativeBridge } from "@/components/native/NativeBridge";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /** First letter of the name (or email) for the avatar. */
@@ -119,10 +118,6 @@ export default async function AppLayout({
 
   return (
     <>
-      {/* Inside the Capacitor shell this registers for push and routes
-          notification taps and universal links. In a browser it renders null
-          and does nothing at all — see components/native/NativeBridge.tsx. */}
-      <NativeBridge />
       <AppHeader
         initials={initialsFor(displayName)}
         balance={balance}

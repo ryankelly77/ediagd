@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
+import { NativeBridge } from "@/components/native/NativeBridge";
 
 export const metadata: Metadata = {
   title: BRAND.name,
@@ -30,6 +31,14 @@ export default function RootLayout({
           We set no dynamic body attributes ourselves, so nothing genuine is
           hidden; anything deeper in the tree still warns normally. */}
       <body className="ediagd-app min-h-full" suppressHydrationWarning>
+        {/* Capacitor shell only: hides the splash, routes notification taps and
+            universal links, and registers for push once signed in. Renders null
+            and does nothing at all in a browser.
+
+            MUST BE IN THE ROOT LAYOUT. /login lives outside the (app) group, so
+            mounting it there meant a cold launch to the login screen never hid
+            the splash — the app opened to a permanent logo. */}
+        <NativeBridge />
         {children}
       </body>
     </html>

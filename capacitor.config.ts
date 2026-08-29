@@ -88,11 +88,22 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       /*
-       * Held until the webview reports the first paint, then faded. A splash
-       * that disappears before the app has drawn shows a white flash, which on
-       * a navy-branded app reads as a crash.
+       * BOTH a JS hide and a hard timeout, deliberately.
+       *
+       * readyShell() hides it as soon as the webview has drawn, which is the
+       * good path and keeps the navy field up until there is something to show
+       * — a splash that leaves early flashes white, and on a navy app that
+       * reads as a crash.
+       *
+       * launchAutoHide stays TRUE as the floor. The first emulator run had it
+       * false and the app opened to a splash that never lifted, because the
+       * component that calls hide() was mounted in a layout the login route
+       * does not use. Anything that stops that JS from running — a bad deploy,
+       * no network on a cold start, an exception before mount — must not be
+       * able to brick the app on its own launch screen.
        */
-      launchAutoHide: false,
+      launchAutoHide: true,
+      launchShowDuration: 3000,
       backgroundColor: "#0C1C2C",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
