@@ -23,13 +23,37 @@ export function dayOfYear(date: IsoDate): number {
   return Math.floor((Date.UTC(y, m - 1, d) - start) / 86_400_000) + 1;
 }
 
+/** Days since 1970-01-01. Counts straight through New Year — see below. */
+export function epochDay(date: IsoDate): number {
+  const [y, m, d] = date.split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
 /**
  * Rotate stably through a pool: same index all day, next one tomorrow.
  * Offset lets two different pools (quote vs cue) advance independently.
+ *
+ * ---------------------------------------------------------------------------
+ * THIS COUNTS EPOCH DAYS, NOT DAYS OF THE YEAR, AND THAT IS A BUG FIX
+ * ---------------------------------------------------------------------------
+ * It used dayOfYear(), which runs 1-366 and then RESETS. Any pool bigger than
+ * 366 therefore had a tail nothing could ever reach: with the 404 generic cues,
+ * indices 0 and 367-403 were unreachable — 38 cues, 9% of the pool, invisible
+ * since the day they were imported. The comment above pickQuoteOfDay claimed
+ * the pool "cycles for over a year before repeating"; it never cycled at all,
+ * it restarted every January 1st and showed the same 366 in the same order.
+ *
+ * The new quote pools are 322 and 415, so slot 3 would have inherited exactly
+ * the same dead tail. Epoch days increase forever, so `% count` genuinely walks
+ * the whole pool and crossing New Year is not a special case.
+ *
+ * The visible cost is one-off: today's cue and today's video are not the ones
+ * yesterday's arithmetic would have chosen. Tomorrow onwards it advances by one
+ * as before.
  */
 function rotationIndex(date: IsoDate, count: number, offset = 0): number {
   if (count <= 0) return 0;
-  return (dayOfYear(date) + offset) % count;
+  return (epochDay(date) + offset) % count;
 }
 
 const CUE_COLUMNS =
@@ -68,25 +92,167 @@ async function pickByRotation(
   return data[0] as ContentRow;
 }
 
+/* ---------------------------------------------------------------------------
+   QUOTES
+   ---------------------------------------------------------------------------
+   Two of the day's three slots are quotes. The third — the sales tip for the
+   advisor's own op code — is the coaching cue below, not a quote.
+
+     slot2  a quote that carries a SELLING lesson, shown with the focus cue
+     slot3  a mindset / character / life quote, the first thing of the day
+
+   A quote tagged 'both' is eligible for either draw.
+--------------------------------------------------------------------------- */
+
+export type QuoteSlot = "slot2" | "slot3";
+
+export type QuoteRow = ContentRow & {
+  voice: string | null;
+  quote_slot: "slot2" | "slot3" | "both" | null;
+  coaching_nugget: string | null;
+  best_used_for: string | null;
+  needs_translation: boolean;
+};
+
+const QUOTE_COLUMNS = `${CUE_COLUMNS}, voice, quote_slot, coaching_nugget, best_used_for, needs_translation, quote_key`;
+
 /**
- * The Quote of the Day: a published generic cue (no service attached).
- * 404 of these exist, so the pool cycles for over a year before repeating.
+ * Order the pool so that NO TWO NEIGHBOURS SHARE A VOICE.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY AN ORDERING RATHER THAN "CHECK WHAT YESTERDAY WAS"
+ * ---------------------------------------------------------------------------
+ * The obvious way to get "not the same voice two days running" is to draw
+ * today, look at yesterday's draw, and step forward on a clash. That does not
+ * actually work, because yesterday's draw was itself adjusted — to know what an
+ * advisor really saw yesterday you have to know what they saw the day before,
+ * and so on backwards forever. Cutting the recursion off at one day gives a
+ * rule that is right most of the time and quietly wrong the rest, which is the
+ * worst of both.
+ *
+ * So the constraint moves into the ORDER instead of the draw. Lay the pool out
+ * once so neighbours never share a voice, then take one per day. Consecutive
+ * days are neighbours, so the property holds by construction, with no lookback,
+ * no stored state, and no recursion. It also holds across the wrap from the
+ * last entry back to the first.
+ *
+ * The method is the standard rearrangement greedy: repeatedly take the voice
+ * with the most quotes left that is not the one just used. Mitch Hardt is
+ * 161 of the 322 slot-2 quotes — EXACTLY half, the most a cyclic arrangement
+ * can absorb — so slot 2 alternates Mitch, someone else, Mitch, someone else
+ * all year. That is a property of the library, not of this function; it
+ * resolves on its own as other voices are added.
+ *
+ * Deterministic: same pool in, same order out, on every server and every
+ * request. Ties break on the id, never on iteration order.
+ */
+function voiceDiverseOrder(rows: { id: string; voice: string | null }[]): string[] {
+  const byVoice = new Map<string, string[]>();
+  for (const r of [...rows].sort((a, b) => a.id.localeCompare(b.id))) {
+    const v = r.voice ?? "";
+    if (!byVoice.has(v)) byVoice.set(v, []);
+    byVoice.get(v)!.push(r.id);
+  }
+
+  const out: string[] = [];
+  let previous: string | null = null;
+
+  while (out.length < rows.length) {
+    const pick = [...byVoice.entries()]
+      .filter(([v, ids]) => ids.length > 0 && v !== previous)
+      // Most remaining first, so no voice is left stranded at the end with
+      // nothing to separate its copies. Voice name breaks the tie so the
+      // result does not depend on Map insertion order.
+      .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))[0];
+
+    // Only reachable when one voice owns MORE than half the pool: everything
+    // left is that voice. Placing it back-to-back is then unavoidable, and
+    // silently dropping it would be worse than repeating it.
+    const [voice, ids] = pick ?? [...byVoice.entries()].find(([, i]) => i.length > 0)!;
+
+    out.push(ids.shift()!);
+    previous = voice;
+  }
+  return out;
+}
+
+/**
+ * The quote for one of the day's two quote slots.
+ *
+ * Two queries and no full-row scan: the pool's (id, voice) pairs, which is what
+ * the ordering needs, then the single chosen row. Both pools are well under the
+ * 1,000-row PostgREST cap (322 and 415) and both are explicitly ORDERED, so the
+ * page is stable rather than whatever the planner felt like returning.
+ */
+export async function pickQuoteForSlot(
+  client: Client,
+  date: IsoDate,
+  slot: QuoteSlot,
+  /**
+   * An id the other slot has already taken today.
+   *
+   * 253 of the 484 quotes are tagged 'both', so the two pools OVERLAP and each
+   * one drawing independently will eventually hand the same quote to both slots
+   * on the same day. Staggering the two rotations with different offsets does
+   * not fix that — the pools are different sizes, so the offset only delays the
+   * collision instead of preventing it. Excluding the id outright does prevent
+   * it, and costs one step of the rotation on the days it fires.
+   */
+  exclude?: string | null
+): Promise<QuoteRow | null> {
+  const { data: pool, error } = await client
+    .from("content")
+    .select("id, voice")
+    .eq("type", "quote")
+    .eq("status", "published")
+    .in("quote_slot", [slot, "both"])
+    .order("id", { ascending: true })
+    .limit(1000);
+
+  if (error || !pool || pool.length === 0) return null;
+
+  const order = voiceDiverseOrder(pool as { id: string; voice: string | null }[]);
+  let index = rotationIndex(date, order.length, 0);
+  if (exclude && order[index] === exclude) index = (index + 1) % order.length;
+
+  const { data } = await client
+    .from("content")
+    .select(QUOTE_COLUMNS)
+    .eq("id", order[index])
+    .limit(1);
+  return (data?.[0] as QuoteRow) ?? null;
+}
+
+/**
+ * Both of the day's quotes, drawn so they can never be the same quote.
+ *
+ * Slot 3 goes first because it is the one the advisor meets first, on step 1;
+ * slot 2 yields to it on the rare day they collide.
+ */
+export async function pickQuotesForDay(
+  client: Client,
+  date: IsoDate
+): Promise<{ slot2: QuoteRow | null; slot3: QuoteRow | null }> {
+  const slot3 = await pickQuoteForSlot(client, date, "slot3");
+  const slot2 = await pickQuoteForSlot(client, date, "slot2", slot3?.id ?? null);
+  return { slot2, slot3 };
+}
+
+/**
+ * The life quote that opens the day. Slot 3.
+ *
+ * WHAT THIS USED TO RETURN: a generic CUE — `type='cue' AND tier='generic' AND
+ * service_family IS NULL`, 404 rows of full coaching passages. There was no
+ * quote pool to draw from, so step 1 borrowed the cue pool and rendered a
+ * 600-character lesson as a pull quote. Those 404 rows are untouched and still
+ * back the generic fallback in pickCoachingCue below; they are simply no longer
+ * pretending to be quotes.
  */
 export async function pickQuoteOfDay(
   client: Client,
   date: IsoDate
-): Promise<ContentRow | null> {
-  return pickByRotation(
-    client,
-    (q) =>
-      q
-        .eq("type", "cue")
-        .eq("tier", "generic")
-        .eq("status", "published")
-        .is("service_family", null),
-    date,
-    0
-  );
+): Promise<QuoteRow | null> {
+  return pickQuoteForSlot(client, date, "slot3");
 }
 
 /**

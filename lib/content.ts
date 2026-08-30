@@ -13,6 +13,11 @@ import type { ColorName } from "./brand";
 
 export const CONTENT_TYPES = [
   "cue",
+  // 0059. A quote is not a short cue: it is attributed to a voice, it fills one
+  // of the day's two quote slots, and it carries a nugget explaining its
+  // coaching use. Modelling it as a cue is what had the daily loop opening on a
+  // 600-character lesson rendered as a pull quote.
+  "quote",
   "advisor_video",
   "manager_video",
   "joe_the_pro",
@@ -44,6 +49,10 @@ export const CONTENT_ENTITLEMENT: Record<
   { product: ProductKey; roles: readonly ("advisor" | "manager")[] }
 > = {
   cue: { product: "advisor_base", roles: ["advisor"] },
+  // Same gate as a cue. Confirmed against prod by calling the two functions
+  // rather than reading them: both end in an `else`, so 'quote' inherits
+  // advisor / advisor_base and no policy needed changing.
+  quote: { product: "advisor_base", roles: ["advisor"] },
   advisor_video: { product: "advisor_base", roles: ["advisor"] },
   manager_video: { product: "manager_meetings", roles: ["manager"] },
   // 0034: advisor education, not technician training.
@@ -67,6 +76,24 @@ export type ContentRow = {
   source: string | null;
   created_at: string;
   updated_at: string;
+  /* ---- quotes (0059). Null on every other type. ---- */
+  voice: string | null;
+  quote_slot: "slot2" | "slot3" | "both" | null;
+  coaching_nugget: string | null;
+  best_used_for: string | null;
+  needs_translation: boolean | null;
+  op_code: string | null;
+  quote_key: string | null;
+};
+
+export const QUOTE_SLOTS = ["slot2", "slot3", "both"] as const;
+export type QuoteSlotValue = (typeof QUOTE_SLOTS)[number];
+
+/** What each slot means, in the words the daily loop uses. */
+export const QUOTE_SLOT_META: Record<QuoteSlotValue, string> = {
+  slot2: "Slot 2 — sales (shown with the focus cue)",
+  slot3: "Slot 3 — life (opens the day)",
+  both: "Both — works in either",
 };
 
 /** The editable shape — what the editor sends to the save action. */
@@ -84,6 +111,10 @@ export type ContentDraft = {
   video_url: string | null;
   duration_sec: number | null;
   status: ContentStatus;
+  /* ---- quotes. Ignored by the save action for every other type. ---- */
+  voice?: string | null;
+  quote_slot?: QuoteSlotValue | null;
+  coaching_nugget?: string | null;
 };
 
 export const TYPE_META: Record<
@@ -91,6 +122,7 @@ export const TYPE_META: Record<
   { label: string; short: string; plural: string }
 > = {
   cue: { label: "Coaching cue", short: "Cue", plural: "Cues" },
+  quote: { label: "Quote", short: "Quote", plural: "Quotes" },
   advisor_video: {
     label: "Advisor video",
     short: "Advisor",

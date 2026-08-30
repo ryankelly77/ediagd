@@ -14,6 +14,9 @@ import {
   STATUS_META,
   TIER_LABEL,
   TYPE_META,
+  QUOTE_SLOTS,
+  QUOTE_SLOT_META,
+  type QuoteSlotValue,
   isVideoType,
   serviceToSlug,
   type ContentDraft,
@@ -57,7 +60,15 @@ export function ContentEditor({
     video_url: item?.video_url ?? null,
     duration_sec: item?.duration_sec ?? null,
     status: item?.status ?? "draft",
+    voice: item?.voice ?? null,
+    quote_slot: item?.quote_slot ?? null,
+    coaching_nugget: item?.coaching_nugget ?? null,
   });
+
+  // Quotes hide the cue furniture and show their own. A quote has no service
+  // and no tier — leaving those fields on screen invites someone to set one,
+  // which would pull the quote into a cue pool it does not belong in.
+  const isQuote = draft.type === "quote";
 
   const showVideoFields = isVideoType(draft.type);
   const showVehicleFields = draft.type === "joe_the_pro";
@@ -130,6 +141,7 @@ export function ContentEditor({
             </select>
           </Field>
 
+          {!isQuote && (
           <Field
             label="Service"
             hint="Pick an existing name where you can — it keeps the library tidy."
@@ -147,7 +159,9 @@ export function ContentEditor({
               ))}
             </datalist>
           </Field>
+          )}
 
+          {!isQuote && (
           <Field label="Subcategory" hint="Optional finer grouping.">
             <input
               value={draft.subcategory ?? ""}
@@ -155,7 +169,9 @@ export function ContentEditor({
               className={inputClass}
             />
           </Field>
+          )}
 
+          {!isQuote && (
           <Field label="Tier">
             <select
               value={draft.tier ?? ""}
@@ -172,6 +188,43 @@ export function ContentEditor({
               ))}
             </select>
           </Field>
+          )}
+
+          {isQuote && (
+            <>
+              <Field
+                label="Voice"
+                hint="Who said it. Shown under the quote — do not repeat it inside the text."
+              >
+                <input
+                  value={draft.voice ?? ""}
+                  onChange={(e) => set("voice", e.target.value || null)}
+                  placeholder="e.g. Mitch Hardt"
+                  className={inputClass}
+                />
+              </Field>
+
+              <Field
+                label="Slot"
+                hint="Required. A quote with no slot is never drawn by anything."
+              >
+                <select
+                  value={draft.quote_slot ?? ""}
+                  onChange={(e) =>
+                    set("quote_slot", (e.target.value || null) as QuoteSlotValue | null)
+                  }
+                  className={inputClass}
+                >
+                  <option value="">Pick one</option>
+                  {QUOTE_SLOTS.map((sl) => (
+                    <option key={sl} value={sl}>
+                      {QUOTE_SLOT_META[sl]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
+          )}
 
           <Field label="Title" hint="Required.">
             <input
@@ -181,14 +234,28 @@ export function ContentEditor({
             />
           </Field>
 
-          <Field label={showVideoFields ? "Notes" : "Body"}>
+          <Field label={showVideoFields ? "Notes" : isQuote ? "The quote" : "Body"}>
             <textarea
               value={draft.body ?? ""}
               onChange={(e) => set("body", e.target.value || null)}
-              rows={showVideoFields ? 3 : 8}
+              rows={showVideoFields ? 3 : isQuote ? 4 : 8}
               className={`${inputClass} leading-relaxed`}
             />
           </Field>
+
+          {isQuote && (
+            <Field
+              label="Coaching nugget"
+              hint="What the quote is FOR. Shown under it as 'Why this one'."
+            >
+              <textarea
+                value={draft.coaching_nugget ?? ""}
+                onChange={(e) => set("coaching_nugget", e.target.value || null)}
+                rows={5}
+                className={`${inputClass} leading-relaxed`}
+              />
+            </Field>
+          )}
 
           {showVideoFields && (
             <>

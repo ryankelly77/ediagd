@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminViewer } from "@/lib/access";
 import { loadAdvisorDay } from "@/lib/advisor-data";
-import { ackLabel, cueTierForRate, pickCoachingCue, pickLifestyleVideo, pickQuoteOfDay } from "@/lib/daily";
+import { ackLabel, cueTierForRate, pickCoachingCue, pickLifestyleVideo, pickQuotesForDay } from "@/lib/daily";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
@@ -75,13 +75,42 @@ export default async function TodayPage({
   const focusService = pick?.family ?? null;
   const cueTier = pick ? cueTierForRate(pick.rate) : null;
 
-  const [quote, coaching, lifestyle] = await Promise.all([
-    pickQuoteOfDay(supabase, today),
+  // Both quotes together: 253 of the 484 are eligible for either slot, so
+  // drawing them independently would eventually hand the same quote to both on
+  // the same day. pickQuotesForDay makes slot 2 yield to slot 3 on a collision.
+  const [quotes, coaching, lifestyle] = await Promise.all([
+    pickQuotesForDay(supabase, today),
     pickCoachingCue(supabase, today, focusService, cueTier),
     // Signed playback is minted per view — never cached across users, because
     // the token IS the authorisation.
     pickLifestyleVideo(supabase, today, user.id),
   ]);
+
+  // Which of the day's quotes this advisor has already kept. ONE query for
+  // both, and it reads through the user's client so the policy in 0059 is what
+  // decides — a save is private and the service role would step straight over
+  // that.
+  const quoteIds = [quotes.slot3?.id, quotes.slot2?.id].filter(Boolean) as string[];
+  const { data: savedRows } = quoteIds.length
+    ? await supabase
+        .from("saved_content")
+        .select("content_id")
+        .eq("user_id", user.id)
+        .in("content_id", quoteIds)
+    : { data: [] };
+  const savedIds = new Set((savedRows ?? []).map((r) => r.content_id as string));
+
+  const shapeQuote = (q: typeof quotes.slot3) =>
+    q
+      ? {
+          id: q.id,
+          title: q.title,
+          body: q.body,
+          voice: q.voice,
+          nugget: q.coaching_nugget,
+          saved: savedIds.has(q.id),
+        }
+      : null;
 
   // Badge display names, so the celebration can say "First Light earned!"
   // rather than "first_light". The catalog is public reference data.
@@ -155,11 +184,8 @@ export default async function TodayPage({
       today={today}
       greetingName={firstName(appUser?.full_name ?? user.email ?? "there")}
       ackLabel={ackLabel(today)}
-      quote={
-        quote
-          ? { id: quote.id, title: quote.title, body: quote.body }
-          : null
-      }
+      quote={shapeQuote(quotes.slot3)}
+      salesQuote={shapeQuote(quotes.slot2)}
       focus={
         pick
           ? {

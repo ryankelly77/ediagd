@@ -11,8 +11,21 @@ import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
 import { MIN_ROS_FOR_COACHING, formatPct } from "@/lib/advisor";
 import type { CompleteDayResult } from "@/lib/gamification/completeDay";
+import { PhoneScreen } from "@/components/brand/PhoneScreen";
+import { PullQuote } from "@/components/brand/ScreenBlocks";
+import { LongCopy } from "@/components/brand/LongCopy";
+import { SaveHeart } from "./SaveHeart";
 
-type Quote = { id: string; title: string; body: string | null };
+type Quote = {
+  id: string;
+  title: string;
+  body: string | null;
+  /** Who said it. Rendered as the citation, never inside the quote text. */
+  voice: string | null;
+  /** What the quote is FOR — the coaching use, shown beneath it. */
+  nugget: string | null;
+  saved: boolean;
+};
 type Cue = { id: string; title: string; body: string | null };
 type Focus = { service: string; rate: number; storeAvg: number };
 
@@ -30,6 +43,7 @@ export function DailyFlow({
   greetingName,
   ackLabel,
   quote,
+  salesQuote,
   focus,
   cue,
   cueMatch,
@@ -47,6 +61,8 @@ export function DailyFlow({
   greetingName: string;
   ackLabel: string;
   quote: Quote | null;
+  /** Slot 2 — the selling quote, shown with the focus cue on step 2. */
+  salesQuote: Quote | null;
   focus: Focus | null;
   cue: Cue | null;
   cueMatch: "service+tier" | "service" | "generic";
@@ -89,9 +105,11 @@ export function DailyFlow({
   }
 
   return (
-    <main className="min-h-screen bg-cream">
-      <div className="mx-auto flex min-h-screen max-w-md flex-col px-6 py-8">
+    <PhoneScreen>
+      {/* Below the island, with clear space. */}
+      <PhoneScreen.Rail>
         <StepDots step={step} />
+      </PhoneScreen.Rail>
 
         {step === 1 && (
           <QuoteStep
@@ -107,6 +125,7 @@ export function DailyFlow({
             focus={focus}
             cue={cue}
             cueMatch={cueMatch}
+            salesQuote={salesQuote}
             totalRos={totalRos}
             onNext={() => setStep(3)}
           />
@@ -140,8 +159,7 @@ export function DailyFlow({
             fallbackStreak={currentStreak}
           />
         )}
-      </div>
-    </main>
+    </PhoneScreen>
   );
 }
 
@@ -188,7 +206,10 @@ function LifestyleStep({
   const [cleared, setCleared] = useState((video?.watchedPct ?? 0) >= threshold);
 
   return (
-    <section className="flex flex-1 flex-col">
+    <>
+      {/* The CTA lives in the footer, not the flow: on a short screen it
+          was below the fold and on a long one it clipped. */}
+      <PhoneScreen.Body>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
         Today&apos;s three minutes
       </p>
@@ -216,17 +237,19 @@ function LifestyleStep({
           <VideoNotReady reason="The next one lands here as soon as it's cut." />
         )}
       </div>
-
-      <PrimaryButton onClick={onNext}>
+      </PhoneScreen.Body>
+      <PhoneScreen.Footer>
+        <PrimaryButton onClick={onNext}>
         {cleared ? "Finish the day" : "Continue"}
       </PrimaryButton>
-    </section>
+      </PhoneScreen.Footer>
+    </>
   );
 }
 
 function StepDots({ step }: { step: number }) {
   return (
-    <div className="flex items-center justify-center gap-2 pb-8" aria-hidden="true">
+    <div className="flex items-center justify-center gap-2" aria-hidden="true">
       {[1, 2, 3, 4, 5].map((n) => (
         <span
           key={n}
@@ -253,22 +276,52 @@ function QuoteStep({
   onNext: () => void;
 }) {
   return (
-    <section className="flex flex-1 flex-col">
+    <>
+      {/* The CTA lives in the footer, not the flow: on a short screen it
+          was below the fold and on a long one it clipped.
+
+          NO LONGER `centre`. That was right when this screen was a kicker and
+          one short line: pinned to the top it left most of the display empty
+          and read as a page that had failed to load. It now carries the quote,
+          the coaching nugget and the keep control, and centring all of that
+          floated the greeting away from the progress dots — the exact gap that
+          got fixed on every other screen. Every screen starts in one place. */}
+      <PhoneScreen.Body>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
         {BRAND.greeting}, {greetingName}
       </p>
 
-      <div className="flex flex-1 flex-col justify-center py-8">
+      {/* A pull quote, not a headline. At display size a coaching passage
+          fills the screen, forces a scroll for three sentences, and reads as
+          shouting; the citation was also crammed against the bottom edge.
+
+          The citation is the VOICE now, not the title. Before the quote import
+          this pool held generic coaching cues, so `title` was the nearest thing
+          to an attribution available — "The Money Objection — Sunbit Before
+          They Finish the Sentence" cited beneath a paragraph. A quote knows who
+          said it. */}
+      <div className="py-8">
         {quote ? (
           <>
-            <p className="text-2xl font-extrabold leading-snug text-navy">
-              {quote.body ?? quote.title}
-            </p>
-            {quote.body && quote.title !== quote.body && (
-              <p className="mt-4 text-sm font-semibold uppercase tracking-wide text-ink-soft">
-                {quote.title}
-              </p>
+            <PullQuote cite={quote.voice ?? undefined}>
+              <p>{quote.body ?? quote.title}</p>
+            </PullQuote>
+
+            {/* Why this quote is here. Clamped at a sentence boundary because
+                22 of the nuggets arrived from the workbook cut at exactly 900
+                characters — the same truncation the cues had. */}
+            {quote.nugget && (
+              <div className="mt-6 border-t border-line pt-5">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
+                  Why this one
+                </p>
+                <LongCopy text={quote.nugget} className="mt-2 text-sm" />
+              </div>
             )}
+
+            <div className="mt-6">
+              <SaveHeart contentId={quote.id} initialSaved={quote.saved} />
+            </div>
           </>
         ) : (
           <p className="text-2xl font-extrabold leading-snug text-navy">
@@ -276,9 +329,11 @@ function QuoteStep({
           </p>
         )}
       </div>
-
-      <PrimaryButton onClick={onNext}>{ackLabel}</PrimaryButton>
-    </section>
+      </PhoneScreen.Body>
+      <PhoneScreen.Footer>
+        <PrimaryButton onClick={onNext}>{ackLabel}</PrimaryButton>
+      </PhoneScreen.Footer>
+    </>
   );
 }
 
@@ -288,17 +343,23 @@ function FocusStep({
   focus,
   cue,
   cueMatch,
+  salesQuote,
   totalRos,
   onNext,
 }: {
   focus: Focus | null;
   cue: Cue | null;
   cueMatch: "service+tier" | "service" | "generic";
+  /** Slot 2 — the selling quote that sits with the cue. */
+  salesQuote: Quote | null;
   totalRos: number;
   onNext: () => void;
 }) {
   return (
-    <section className="flex flex-1 flex-col">
+    <>
+      {/* The CTA lives in the footer, not the flow: on a short screen it
+          was below the fold and on a long one it clipped. */}
+      <PhoneScreen.Body>
       {focus ? (
         <>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
@@ -335,11 +396,10 @@ function FocusStep({
           {cue ? (
             <>
               <p className="text-base font-extrabold text-navy">{cue.title}</p>
-              {cue.body && (
-                <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-ink">
-                  {cue.body}
-                </p>
-              )}
+              {/* Clamped at a sentence boundary, never a character count —
+                  47 cue bodies arrived from the import already chopped
+                  mid-clause. See lib/text.ts. */}
+              {cue.body && <LongCopy text={cue.body} className="mt-3" />}
               {focus && cueMatch === "generic" && (
                 <p className="mt-4 text-xs text-ink-soft">
                   Service-specific cues for {focus.service} are on the way.
@@ -353,10 +413,38 @@ function FocusStep({
             </p>
           )}
         </div>
-      </div>
 
-      <PrimaryButton onClick={onNext}>Got it</PrimaryButton>
-    </section>
+        {/* Slot 2: a quote that carries the SELLING lesson, sitting with the
+            cue it reinforces rather than on a step of its own. The op-code cue
+            above is the technique; this is the line to remember it by.
+
+            Outside the card on purpose — one hero per screen, and the cue is
+            the hero. This reads as a margin note, which is what it is. */}
+        {salesQuote && (
+          <div className="mt-5 border-l-2 border-teal pl-4">
+            <p className="text-[15px] italic leading-relaxed text-ink">
+              {salesQuote.body ?? salesQuote.title}
+            </p>
+            {salesQuote.voice && (
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+                {salesQuote.voice}
+              </p>
+            )}
+            <div className="mt-3">
+              <SaveHeart
+                contentId={salesQuote.id}
+                initialSaved={salesQuote.saved}
+                label="Keep"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      </PhoneScreen.Body>
+      <PhoneScreen.Footer>
+        <PrimaryButton onClick={onNext}>Got it</PrimaryButton>
+      </PhoneScreen.Footer>
+    </>
   );
 }
 
@@ -364,7 +452,10 @@ function FocusStep({
 
 function VideoStep({ focus, onNext }: { focus: Focus | null; onNext: () => void }) {
   return (
-    <section className="flex flex-1 flex-col">
+    <>
+      {/* The CTA lives in the footer, not the flow: on a short screen it
+          was below the fold and on a long one it clipped. */}
+      <PhoneScreen.Body>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
         The pitch
       </p>
@@ -398,9 +489,11 @@ function VideoStep({ focus, onNext }: { focus: Focus | null; onNext: () => void 
           </button>
         </div>
       </div>
-
-      <PrimaryButton onClick={onNext}>Continue</PrimaryButton>
-    </section>
+      </PhoneScreen.Body>
+      <PhoneScreen.Footer>
+        <PrimaryButton onClick={onNext}>Continue</PrimaryButton>
+      </PhoneScreen.Footer>
+    </>
   );
 }
 
