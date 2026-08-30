@@ -13,6 +13,21 @@ export type Tab = {
   icon: TabIcon;
   /** Route prefixes that light this tab up. */
   match: string[];
+  /**
+   * Light this tab for anything NO tab claims. Exactly one should carry it.
+   *
+   * More is a drawer, not a destination: /saved, /library, /joe-the-pro,
+   * /meetings, /group, /profile and /notifications are all reached through it,
+   * and none of them were in any tab's `match`, so the bar went dark the moment
+   * you followed a link out of it — the app reading as "you are nowhere"
+   * on seven screens. /swag did it too, but only for managers, whose fifth slot
+   * is Team.
+   *
+   * Listing those routes on More would have fixed today and broken again on the
+   * next page added behind it, which is exactly how /saved arrived. A fallback
+   * cannot go stale.
+   */
+  fallback?: boolean;
 };
 
 /**
@@ -32,6 +47,17 @@ export function TabBar({
   // /today is the immersive daily ritual — no chrome over it.
   if (isImmersive(pathname)) return null;
 
+  /*
+   * An explicit match always beats the fallback, so /swag lights the Swag tab
+   * for an advisor who has one and More for a manager who does not — from the
+   * same tab list, with no branch here. -1 when nothing matches and no tab is
+   * marked fallback, which lights nothing, as before.
+   */
+  const explicit = tabs.findIndex((t) =>
+    t.match.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+  );
+  const activeIndex = explicit !== -1 ? explicit : tabs.findIndex((t) => t.fallback);
+
   return (
     <>
       {/* Spacer so fixed-position chrome never covers the last row of content. */}
@@ -46,10 +72,8 @@ export function TabBar({
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <ul className="mx-auto flex max-w-app items-stretch">
-          {tabs.map((tab) => {
-            const active = tab.match.some(
-              (p) => pathname === p || pathname.startsWith(`${p}/`)
-            );
+          {tabs.map((tab, i) => {
+            const active = i === activeIndex;
             return (
               <li key={tab.label} className="flex-1">
                 <Link

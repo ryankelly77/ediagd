@@ -113,7 +113,16 @@ export default async function AppLayout({
     leadsTeam
       ? { href: "/manager", label: "Team", icon: "team" as const, match: ["/manager"] }
       : { href: "/swag", label: "Swag", icon: "swag" as const, match: ["/swag"] },
-    { href: "/more", label: "More", icon: "more", match: ["/more", "/admin"] },
+    // fallback: More is a drawer. Everything reached through it — Saved, the
+    // libraries, Your Group, profile, notifications — keeps it lit, without
+    // each new page behind it having to be remembered here. See TabBar.
+    {
+      href: "/more",
+      label: "More",
+      icon: "more",
+      match: ["/more", "/admin"],
+      fallback: true,
+    },
   ];
 
   return (
