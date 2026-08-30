@@ -126,29 +126,46 @@ export default async function ContentHomePage() {
 
       <ContentSearchBar />
 
-      {/* ---- Library shape, by content type ------------------------------ */}
+      {/* ---- Library shape, by content type ------------------------------
+          THESE ARE LINKS. They were counts you could read and not open, which
+          was survivable while everything in the library had a service family to
+          be found under — every cue and video lives in one of the service
+          groups below, so the cards were a summary of a list you could already
+          reach another way.
+
+          A QUOTE HAS NO SERVICE, and never will: it is not about brakes or
+          alignment. So all 436 of them landed in the "no service" bucket with
+          the generic cues, and there was no route in the app that said
+          "Quotes". Making every card a link fixes that for the type that needed
+          it and for the three that did not, which is better than bolting a
+          Quotes-shaped exception onto a page organised by service. */}
       <ul className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {CONTENT_TYPES.map((type) => {
           const tally = byType[type];
           return (
             <li key={type}>
-              <Card className="h-full p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-                  {TYPE_META[type].plural}
-                </p>
-                <p className="mt-1 text-3xl font-extrabold tracking-tight text-navy">
-                  {tally.total.toLocaleString()}
-                </p>
-                <p className="mt-1 text-xs font-semibold">
-                  <span className="text-palm">
-                    {tally.published.toLocaleString()} published
-                  </span>
-                  <span className="text-ink-soft"> · </span>
-                  <span className="text-clay">
-                    {tally.draft.toLocaleString()} draft
-                  </span>
-                </p>
-              </Card>
+              <Link
+                href={`/admin/content/service/${ALL_SERVICES}?type=${type}`}
+                className="block h-full rounded-card transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              >
+                <Card className="h-full p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+                    {TYPE_META[type].plural}
+                  </p>
+                  <p className="mt-1 text-3xl font-extrabold tracking-tight text-navy">
+                    {tally.total.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold">
+                    <span className="text-palm">
+                      {tally.published.toLocaleString()} published
+                    </span>
+                    <span className="text-ink-soft"> · </span>
+                    <span className="text-clay">
+                      {tally.draft.toLocaleString()} draft
+                    </span>
+                  </p>
+                </Card>
+              </Link>
             </li>
           );
         })}

@@ -12,6 +12,7 @@ import {
   PAGE_SIZE,
   STATUS_META,
   serviceLabel,
+  TYPE_META,
   slugToService,
   type ContentRow,
   type ContentStatus,
@@ -70,9 +71,20 @@ export default async function ContentServicePage({
   const total = count ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  /*
+   * THE TYPE NAMES THE PAGE WHEN THERE IS NO SERVICE TO NAME IT.
+   * Arriving from the "Quotes" card gave a screen headed "All services", which
+   * is true and useless — a quote has no service, so the only honest label for
+   * that list is what is in it. Services keep their own name when there is one;
+   * the type is appended so a filtered service list still says which filter is
+   * on rather than silently showing a subset.
+   */
   const heading = isAllServices
-    ? "All services"
-    : serviceLabel(isNoService ? null : service);
+    ? typeFilter
+      ? TYPE_META[typeFilter].plural
+      : "All services"
+    : serviceLabel(isNoService ? null : service) +
+      (typeFilter ? ` · ${TYPE_META[typeFilter].plural}` : "");
 
   const newHref = isAllServices
     ? "/admin/content/item/new"

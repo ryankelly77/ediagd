@@ -58,7 +58,7 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
   {
     href: "/admin/content",
     label: "Coaching Content",
-    hint: "Cues and videos, organised by service family.",
+    hint: "Cues, quotes and videos. Tap a type to open it.",
   },
   {
     href: "/admin/settings",
