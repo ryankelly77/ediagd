@@ -68,5 +68,6 @@ exports/
 .tmp-rv/
 # import-quotes build output
 .tmp-iq/
+.tmp-po/
 .tmp-rc/
 .tmp-cq/
