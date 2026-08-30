@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveWorkSchedule } from "@/lib/schedule-actions";
 import {
@@ -12,6 +12,8 @@ import {
   type ScheduleDraft,
 } from "@/lib/work-schedule";
 import type { IsoDate, SaturdayMode } from "@/lib/gamification/streak";
+import { createPortal } from "react-dom";
+import { FOOTER_SLOT } from "@/components/brand/PhoneScreen";
 
 /* ============================================================================
    EDIAGD — the work schedule form
@@ -28,12 +30,22 @@ export function ScheduleForm({
   onSaved,
   onSuccess,
   preview = false,
+  submitInFooter = false,
 }: {
   initial: ScheduleDraft;
   /** Upcoming Saturdays for the alternating anchor picker. */
   saturdays: IsoDate[];
   today: IsoDate;
   tone: "onboarding" | "profile";
+  /**
+   * Render the save button into the screen's sticky footer instead of inline.
+   *
+   * On a small phone the Saturday options and this button both fell below the
+   * fold, so the form looked like it had no way to finish. The button portals
+   * into PhoneScreen.Footer rather than being lifted out, because all the state
+   * it needs — pending, the draft — lives in here.
+   */
+  submitInFooter?: boolean;
   /** Where to go after a successful save. Profile just refreshes. */
   onSaved?: string;
   /** Advance a flow instead of navigating. Takes precedence over onSaved, and
@@ -83,6 +95,22 @@ export function ScheduleForm({
       router.refresh();
     });
   }
+
+  const submitButton = (
+    <button
+      onClick={save}
+      disabled={pending}
+      className={`w-full rounded-xl bg-gold p-3.5 text-base font-extrabold text-navy transition hover:brightness-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 ${
+        submitInFooter ? "" : "mt-5"
+      }`}
+    >
+      {pending
+        ? "Saving…"
+        : tone === "onboarding"
+          ? "That's my week"
+          : "Save schedule"}
+    </button>
+  );
 
   return (
     <div>
@@ -186,19 +214,28 @@ export function ScheduleForm({
         </p>
       )}
 
-      <button
-        onClick={save}
-        disabled={pending}
-        className="mt-5 w-full rounded-xl bg-gold p-3.5 text-base font-extrabold text-navy transition hover:brightness-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
-      >
-        {pending
-          ? "Saving…"
-          : tone === "onboarding"
-            ? "That's my week"
-            : "Save schedule"}
-      </button>
+      {submitInFooter ? <FooterSubmit>{submitButton}</FooterSubmit> : submitButton}
     </div>
   );
+}
+
+/**
+ * Renders its child into the screen's sticky footer.
+ *
+ * Mounted in an effect rather than at first render because the footer element
+ * only exists once PhoneScreen has painted; portalling before then finds
+ * nothing and silently drops the button.
+ */
+function FooterSubmit({ children }: { children: React.ReactNode }) {
+  /* Client-only, without setting state in an effect: the server render has no
+     document, and reaching for the footer before hydration finds nothing. */
+  const onClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const slot = onClient ? document.getElementById(FOOTER_SLOT) : null;
+  return slot ? createPortal(children, slot) : null;
 }
 
 /* ---- Pieces -------------------------------------------------------------- */

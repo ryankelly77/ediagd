@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BrushUnderline } from "@/components/brand/BrushUnderline";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
+import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { ScheduleForm } from "@/components/schedule/ScheduleForm";
 import { WelcomeGift } from "@/components/onboarding/WelcomeGift";
@@ -85,8 +86,7 @@ export function OnboardingFlow({
   }
 
   return (
-    <main
-      className="ediagd-app min-h-dvh"
+    <PhoneScreen
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onKeyDown={(e) => {
@@ -95,11 +95,14 @@ export function OnboardingFlow({
       }}
       tabIndex={-1}
     >
-      <div className="mx-auto flex min-h-dvh max-w-app flex-col px-5 pb-10 pt-7">
+      {/* Under the top inset with clear space — on a Dynamic Island phone these
+          dots were sitting behind the island. */}
+      <PhoneScreen.Rail>
         <StepDots step={step} />
+      </PhoneScreen.Rail>
 
-        {/* key= restarts the entrance animation on each screen */}
-        <div key={step} className="ediagd-step-in flex flex-1 flex-col">
+      {/* key= restarts the entrance animation on each screen */}
+      <div key={step} className="ediagd-step-in flex min-h-0 flex-1 flex-col">
           {step === 1 && (
             <Screen1
               firstName={firstName}
@@ -133,8 +136,7 @@ export function OnboardingFlow({
             />
           )}
         </div>
-      </div>
-    </main>
+    </PhoneScreen>
   );
 }
 
@@ -142,7 +144,7 @@ export function OnboardingFlow({
 
 function StepDots({ step }: { step: number }) {
   return (
-    <div className="flex items-center justify-center gap-2 pb-7" aria-hidden="true">
+    <div className="flex items-center justify-center gap-2" aria-hidden="true">
       {Array.from({ length: TOTAL }, (_, i) => i + 1).map((n) => (
         <span
           key={n}
@@ -169,24 +171,30 @@ function Narrative({
   cta: string;
 }) {
   return (
-    <div className="flex flex-1 flex-col">
-      <button
-        type="button"
-        onClick={onNext}
-        aria-label={cta}
-        className="flex flex-1 flex-col text-left focus-visible:outline-none"
-      >
-        {children}
-      </button>
+    <>
+      {/* Top-pinned: the headline card sits just under the progress dots, and
+          the body runs down from there — scrolling if it needs to. */}
+      <PhoneScreen.Body>
+        <button
+          type="button"
+          onClick={onNext}
+          aria-label={cta}
+          className="flex w-full flex-col text-left focus-visible:outline-none"
+        >
+          {children}
+        </button>
+      </PhoneScreen.Body>
 
-      <button
-        type="button"
-        onClick={onNext}
-        className="mt-8 w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
-      >
-        {cta}
-      </button>
-    </div>
+      <PhoneScreen.Footer>
+        <button
+          type="button"
+          onClick={onNext}
+          className="w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+        >
+          {cta}
+        </button>
+      </PhoneScreen.Footer>
+    </>
   );
 }
 
@@ -433,7 +441,10 @@ function Screen5({
   onSaved: () => void;
 }) {
   return (
-    <div className="flex flex-1 flex-col">
+    /* Body, like every other screen — so the banner lands in exactly the same
+       place under the progress bar rather than riding up against it. */
+    <>
+      <PhoneScreen.Body>
       <section className="ediagd-hero">
         <SunWaveMotif />
         <div className="relative">
@@ -455,6 +466,7 @@ function Screen5({
           today={today}
           tone="onboarding"
           preview={preview}
+          submitInFooter
           onSuccess={onSaved}
         />
       </div>
@@ -464,7 +476,12 @@ function Screen5({
           ? "Preview — nothing here is saved."
           : "You can change this any time in your profile."}
       </p>
-    </div>
+      </PhoneScreen.Body>
+
+      {/* Empty on purpose: ScheduleForm portals its save button in here, so the
+          CTA is visible without scrolling on a small phone. */}
+      <PhoneScreen.Footer />
+    </>
   );
 }
 
