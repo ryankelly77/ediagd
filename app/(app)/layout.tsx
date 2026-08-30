@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
+import { DayRollover } from "@/components/nav/DayRollover";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /** First letter of the name (or email) for the avatar. */
@@ -82,13 +83,21 @@ export default async function AppLayout({
   // The Today tab points at the ritual until it's done, then at the numbers —
   // so the tab is always "where today lives" rather than a dead end.
   let todayHref = "/today";
+  // Handed to DayRollover so a webview left open overnight notices. Both stay
+  // null when there is no rooftop, which is the case where there is no
+  // "today" to be stale about.
+  let renderedDate: string | null = null;
+  let rooftopTz: string | null = null;
   const rooftopId = memberships?.[0]?.rooftop_id as string | undefined;
   if (rooftopId) {
-    const { data: todayRaw } = await supabase.rpc("rooftop_today", {
-      _rooftop: rooftopId,
-    });
+    const [{ data: todayRaw }, { data: rooftopRow }] = await Promise.all([
+      supabase.rpc("rooftop_today", { _rooftop: rooftopId }),
+      supabase.from("rooftop").select("timezone").eq("id", rooftopId).maybeSingle(),
+    ]);
     const today =
       (todayRaw as IsoDate | null) ?? new Date().toISOString().slice(0, 10);
+    renderedDate = today;
+    rooftopTz = (rooftopRow?.timezone as string | null) ?? null;
     const { data: done } = await supabase
       .from("daily_completion")
       .select("id")
@@ -127,6 +136,12 @@ export default async function AppLayout({
 
   return (
     <>
+      {/* Renders nothing. Watches for the rooftop's midnight and refreshes the
+          server components once it passes, so a shell nobody closes stops
+          showing yesterday. */}
+      {renderedDate && rooftopTz && (
+        <DayRollover serverDate={renderedDate} timezone={rooftopTz} />
+      )}
       <AppHeader
         initials={initialsFor(displayName)}
         balance={balance}
