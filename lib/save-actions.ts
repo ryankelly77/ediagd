@@ -63,6 +63,7 @@ export async function toggleSaveAction(contentId: string): Promise<SaveResult> {
     const { error } = await supabase.from("saved_content").delete().eq("id", existing.id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/today");
+    revalidatePath("/saved");
     return { ok: true, saved: false };
   }
 
@@ -76,5 +77,6 @@ export async function toggleSaveAction(contentId: string): Promise<SaveResult> {
   if (error && error.code !== "23505") return { ok: false, error: error.message };
 
   revalidatePath("/today");
+  revalidatePath("/saved");
   return { ok: true, saved: true };
 }

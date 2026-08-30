@@ -95,6 +95,23 @@ export const ADMIN_PREVIEWS: readonly AdminTool[] = [
     label: "Onboarding Flow",
     hint: "All six screens, the first daily loop and First Light. Nothing is saved.",
   },
+  {
+    /*
+     * THE DAILY LOOP ON ITS OWN. The onboarding preview ends with the daily
+     * loop, which made it the only way to see the ritual — six screens of
+     * setup before the thing you actually wanted to look at. This is the same
+     * five steps with the same canned outcome, straight in.
+     *
+     * The machinery already existed; it was simply never listed. ?preview=1 is
+     * checked against isAdminViewer server-side, so the flag is inert for
+     * anyone else and can never be used to fake a completion. Nothing is
+     * written: previewResult short-circuits completeDayAction, so no
+     * completion row, no badge, no Sand Dollars, and the streak is untouched.
+     */
+    href: "/today?preview=1",
+    label: "Daily Loop",
+    hint: "The five steps with a canned first-day result. Nothing is saved.",
+  },
 ] as const;
 
 /**
@@ -120,6 +137,14 @@ export type MemberSection = AdminTool & {
 };
 
 export const MEMBER_SECTIONS: readonly MemberSection[] = [
+  {
+    // First in the list because it is the only one that is THEIRS. Everything
+    // else here is a library somebody else filled.
+    href: "/saved",
+    label: "Saved",
+    hint: "Quotes and cues you kept from the daily loop.",
+    requiresRole: null,
+  },
   {
     href: "/library",
     label: "Lesson Library",

@@ -89,6 +89,8 @@ export function DailyFlow({
   videoThreshold: number;
 }) {
   const preview = Boolean(previewResult);
+  // The close button in the rail needs it; the nested steps have their own.
+  const router = useRouter();
   const [step, setStep] = useState(1);
   // True once WE started the completion. From that moment the incoming
   // `alreadyCompleteOnLoad` prop flips true (the action's cookie write
@@ -106,9 +108,43 @@ export function DailyFlow({
 
   return (
     <PhoneScreen>
-      {/* Below the island, with clear space. */}
+      {/* Below the island, with clear space.
+
+          THE CLOSE BUTTON EXISTS BECAUSE THE CHROME DOES NOT. /today is in
+          IMMERSIVE_ROUTES, so AppHeader and TabBar both render null over it —
+          deliberate, and right for a three-minute ritual. But the shell launches
+          at the bare domain, and app/page.tsx sends anyone who has not completed
+          the day straight here, so this is the DEFAULT way into the native app.
+          On iOS there is no back button and no browser chrome behind it, which
+          left an advisor who opened the app and wanted to check their streak
+          first with no way out but force-quitting.
+
+          Leaving costs nothing, which is what makes a bare × honest rather than
+          a trap door: steps 1-4 write nothing at all, and the comment at the top
+          of this file has always said so. Step 5 has no × — the day is already
+          complete by then and it has its own way onward. */}
       <PhoneScreen.Rail>
-        <StepDots step={step} />
+        <div className="flex items-center justify-between gap-3">
+          <StepDots step={step} />
+          {step < 5 && (
+            <button
+              type="button"
+              onClick={() => router.push(preview ? "/admin" : "/advisor")}
+              aria-label="Leave the daily loop"
+              className="-mr-1 shrink-0 rounded-full p-2 text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
       </PhoneScreen.Rail>
 
         {step === 1 && (
