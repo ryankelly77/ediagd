@@ -43,6 +43,17 @@ export async function saveContent(draft: ContentDraft): Promise<ActionResult> {
   const title = clean(draft.title);
   if (!title) return { ok: false, error: "Title is required." };
 
+  const isQuote = draft.type === "quote";
+  /*
+   * A quote with no slot is invisible. Both daily draws filter on
+   * quote_slot IN (slot, 'both'), so a null one is never selected by anything
+   * — it would sit in the library looking published and never appear. Better
+   * to refuse it here than to let someone write a quote nobody ever sees.
+   */
+  if (isQuote && !draft.quote_slot) {
+    return { ok: false, error: "Pick which slot this quote can fill — otherwise it will never be drawn." };
+  }
+
   const payload = {
     type: draft.type,
     service_family: clean(draft.service_family),
@@ -58,6 +69,15 @@ export async function saveContent(draft: ContentDraft): Promise<ActionResult> {
     video_url: isVideoType(draft.type) ? clean(draft.video_url) : null,
     duration_sec: isVideoType(draft.type) ? draft.duration_sec ?? null : null,
     status: draft.status,
+    /*
+     * QUOTE FIELDS ARE NULLED FOR EVERY OTHER TYPE, the same way video_url is.
+     * Switching a quote to a cue and leaving a voice and a slot behind would
+     * put it back in a daily quote draw it no longer belongs in — the row
+     * would be a cue by type and a quote by every filter that matters.
+     */
+    voice: isQuote ? clean(draft.voice) : null,
+    quote_slot: isQuote ? draft.quote_slot ?? null : null,
+    coaching_nugget: isQuote ? clean(draft.coaching_nugget) : null,
   };
 
   if (draft.id) {

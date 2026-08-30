@@ -107,6 +107,13 @@ export default async function ContentHomePage() {
 
   const { buckets, byType, totalDrafts, total } = await loadBuckets(supabase);
 
+  // The queue of things an import could not decide. Head-only count — the page
+  // itself does the reading.
+  const { count: needsYou } = await supabase
+    .from("content_review")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "open");
+
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
@@ -146,6 +153,33 @@ export default async function ContentHomePage() {
           );
         })}
       </ul>
+
+      {/* ---- The two to-do lists, and they are different jobs -------------
+          "Needs you" is ABOVE drafts on purpose: a draft is work you have not
+          started, and an open review is work that is blocked on one answer.
+          The second is cheaper to clear and unblocks content already live. */}
+      {(needsYou ?? 0) > 0 && (
+        <Link
+          href="/admin/content/review"
+          className="mt-5 block rounded-card bg-clay p-5 shadow-card transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/80">
+            Needs you
+          </p>
+          <p className="mt-1 flex items-baseline gap-2">
+            <span className="text-4xl font-extrabold tracking-tight text-white">
+              {(needsYou ?? 0).toLocaleString()}
+            </span>
+            <span className="text-sm font-bold text-white/80">
+              {needsYou === 1 ? "question" : "questions"}
+            </span>
+          </p>
+          <p className="mt-2 text-sm text-white/80">
+            Things the import couldn&apos;t decide — pick an ending, supply the
+            missing words, say who said it. →
+          </p>
+        </Link>
+      )}
 
       {/* ---- Mitch's to-do list: everything still in draft ---------------- */}
       <Link

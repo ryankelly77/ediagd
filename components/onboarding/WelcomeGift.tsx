@@ -5,6 +5,7 @@ import { ConfettiBurst } from "@/components/brand/ConfettiBurst";
 import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { claimWelcomePaddleOut } from "@/lib/schedule-actions";
 import { BRAND } from "@/lib/brand";
+import { PhoneScreen } from "@/components/brand/PhoneScreen";
 
 /* ============================================================================
    EDIAGD — the welcome gift
@@ -52,7 +53,11 @@ export function WelcomeGift({
   const holding = preview ? 1 : held;
 
   return (
-    <div className="flex flex-1 flex-col">
+    /* Same Body/Footer split as every other screen: the hero lands in the same
+       place under the progress bar, and the CTA lives in the footer instead of
+       trailing the content. */
+    <>
+      <PhoneScreen.Body>
       <section className="ediagd-hero relative flex flex-1 flex-col justify-center overflow-hidden">
         <div className="relative flex flex-col items-center px-2 py-6 text-center">
           <ConfettiBurst topOffset={64} />
@@ -100,14 +105,17 @@ export function WelcomeGift({
           </p>
         </div>
       </section>
+      </PhoneScreen.Body>
 
-      <button
-        type="button"
-        onClick={onStart}
-        className="mt-8 w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
-      >
-        {preview ? "See my first day" : "Start my first day"}
-      </button>
+      <PhoneScreen.Footer>
+        <button
+          type="button"
+          onClick={onStart}
+          className="w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+        >
+          {preview ? "See my first day" : "Start my first day"}
+        </button>
+      </PhoneScreen.Footer>
 
       <style>{`
         /* Same arrival as the badge medallion, so the two moments feel like
@@ -124,7 +132,7 @@ export function WelcomeGift({
           .ediagd-gift-pop { animation: none; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
 

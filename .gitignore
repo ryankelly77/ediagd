@@ -66,3 +66,7 @@ exports/
 .tmp-cat/
 .tmp-dv/
 .tmp-rv/
+# import-quotes build output
+.tmp-iq/
+.tmp-rc/
+.tmp-cq/

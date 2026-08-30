@@ -21,7 +21,10 @@
     "native:open:ios": "npx cap open ios",
     "native:open:android": "npx cap open android",
     "derive:vertical": "rm -rf .tmp-dv && tsc scripts/derive-vertical.ts --outDir .tmp-dv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dv/derive-vertical.js",
-    "replace:video": "rm -rf .tmp-rv && tsc scripts/replace-video.ts --outDir .tmp-rv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-rv/replace-video.js"
+    "replace:video": "rm -rf .tmp-rv && tsc scripts/replace-video.ts --outDir .tmp-rv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-rv/replace-video.js",
+    "restore:cues": "rm -rf .tmp-rc && tsc scripts/restore-cues.ts --outDir .tmp-rc --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-rc/restore-cues.js",
+    "export:cue-questions": "rm -rf .tmp-cq && tsc scripts/export-cue-questions.ts --outDir .tmp-cq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-cq/export-cue-questions.js",
+    "import:quotes": "rm -rf .tmp-iq && tsc scripts/import-quotes.ts --outDir .tmp-iq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-iq/import-quotes.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
