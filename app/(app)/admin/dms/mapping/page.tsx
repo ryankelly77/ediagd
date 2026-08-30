@@ -232,7 +232,12 @@ function MapRow({
         <select
           name="family"
           defaultValue={row.family ?? ""}
-          className="min-h-[2.75rem] min-w-0 flex-1 rounded-xl border border-line bg-surface-card px-3 text-sm text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          /* No text size class: it inherits the 16px base on purpose. Below
+             16px iOS Safari — and the WKWebView the app ships in — zooms the
+             whole page when a select takes focus, and this is a queue you work
+             down one row at a time, so it would have jumped on every single
+             one. */
+          className="min-h-[2.75rem] min-w-0 flex-1 rounded-xl border border-line bg-surface-card px-3 text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <option value="">— leave unmapped —</option>
           {families.map((f) => (

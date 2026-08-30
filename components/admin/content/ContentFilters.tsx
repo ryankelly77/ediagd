@@ -37,13 +37,29 @@ export function ContentFilters({
     router.push(qs ? `${basePath}?${qs}` : basePath);
   }
 
+  /*
+   * Tier is inert for quotes — they carry no tier, by design, which is what
+   * keeps them out of the cue pools pickCoachingCue falls back through. Leaving
+   * the control on screen offers a filter that can only ever return nothing.
+   */
+  const showTier = type !== "quote";
+
   return (
-    <div className="mt-4 flex flex-wrap gap-3">
+    /*
+     * A GRID, NOT flex-wrap. Three `min-w-[9rem] flex-1` fields do not fit
+     * across a phone, so the third wrapped onto its own line and then stretched
+     * to the full width — two narrow controls above one wide one, which is the
+     * "off" of it. A grid gives every filter the same width on every screen,
+     * and drops to a clean pair when Tier is hidden.
+     */
+    <div
+      className={`mt-4 grid gap-3 ${showTier ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}
+    >
       <Field label="Type">
         <select
           value={type}
           onChange={(e) => apply({ type: e.target.value })}
-          className="w-full rounded-xl border border-line bg-cream-card p-2.5 text-sm font-semibold text-navy outline-none focus:ring-2 focus:ring-gold"
+          className={selectClass}
         >
           <option value="">All types</option>
           {CONTENT_TYPES.map((t) => (
@@ -54,11 +70,12 @@ export function ContentFilters({
         </select>
       </Field>
 
+      {showTier && (
       <Field label="Tier">
         <select
           value={tier}
           onChange={(e) => apply({ tier: e.target.value })}
-          className="w-full rounded-xl border border-line bg-cream-card p-2.5 text-sm font-semibold text-navy outline-none focus:ring-2 focus:ring-gold"
+          className={selectClass}
         >
           <option value="">All tiers</option>
           {CONTENT_TIERS.map((t) => (
@@ -68,12 +85,13 @@ export function ContentFilters({
           ))}
         </select>
       </Field>
+      )}
 
       <Field label="Status">
         <select
           value={status}
           onChange={(e) => apply({ status: e.target.value })}
-          className="w-full rounded-xl border border-line bg-cream-card p-2.5 text-sm font-semibold text-navy outline-none focus:ring-2 focus:ring-gold"
+          className={selectClass}
         >
           <option value="">All statuses</option>
           {CONTENT_STATUSES.map((s) => (
@@ -87,6 +105,19 @@ export function ContentFilters({
   );
 }
 
+/**
+ * Matches the editor's own inputClass on the same feature — p-3, and NO size
+ * class, so it inherits the 16px base.
+ *
+ * THE SIZE IS NOT COSMETIC. iOS Safari, and so the WKWebView the app ships in,
+ * zooms the whole page when a select or input smaller than 16px takes focus.
+ * These were text-sm, so opening a filter jumped the layout every time. The old
+ * value also just disagreed with every other control in the CMS: p-2.5 against
+ * p-3, 14px against 16px, on two screens of the same feature.
+ */
+const selectClass =
+  "w-full rounded-xl border border-line bg-cream-card p-3 font-semibold text-navy outline-none focus:ring-2 focus:ring-gold";
+
 function Field({
   label,
   children,
@@ -95,7 +126,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="min-w-[9rem] flex-1">
+    <label className="block min-w-0">
       <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-soft">
         {label}
       </span>
