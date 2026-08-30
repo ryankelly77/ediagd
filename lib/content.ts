@@ -59,6 +59,30 @@ export const CONTENT_ENTITLEMENT: Record<
   joe_the_pro: { product: "joe_the_pro", roles: ["advisor", "manager"] },
 };
 
+/**
+ * Display name and add-on status per product — the client-safe twin of
+ * `product_catalog`, which is the source of truth (display_name, is_addon).
+ * Verified against prod rather than assumed: advisor_base is included,
+ * manager_meetings and joe_the_pro are is_addon = true.
+ *
+ * Here so the CMS can say WHICH LIBRARIES A STORE PAYS EXTRA FOR without a
+ * query. It decides how a shelf is LABELLED, never who may read it — that is
+ * rooftop_has_product() in RLS, and it always has been.
+ */
+export const PRODUCT_META: Record<
+  ProductKey,
+  { label: string; isAddon: boolean }
+> = {
+  advisor_base: { label: "Advisor Coaching", isAddon: false },
+  manager_meetings: { label: "Manager Meetings", isAddon: true },
+  joe_the_pro: { label: "Joe the Pro", isAddon: true },
+};
+
+/** Content types a store pays extra for, derived rather than listed. */
+export function isAddonType(type: ContentType): boolean {
+  return PRODUCT_META[CONTENT_ENTITLEMENT[type].product].isAddon;
+}
+
 export type ContentRow = {
   id: string;
   type: ContentType;

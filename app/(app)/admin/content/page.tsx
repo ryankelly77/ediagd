@@ -7,8 +7,11 @@ import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { ContentSearchBar } from "@/components/admin/content/ContentSearchBar";
 import {
   ALL_SERVICES,
+  CONTENT_ENTITLEMENT,
   CONTENT_TYPES,
+  PRODUCT_META,
   TYPE_META,
+  isAddonType,
   serviceLabel,
   serviceToSlug,
   type ContentStatus,
@@ -127,49 +130,77 @@ export default async function ContentHomePage() {
       <ContentSearchBar />
 
       {/* ---- Library shape, by content type ------------------------------
-          THESE ARE LINKS. They were counts you could read and not open, which
-          was survivable while everything in the library had a service family to
-          be found under — every cue and video lives in one of the service
-          groups below, so the cards were a summary of a list you could already
-          reach another way.
+          TWO GROUPS, BECAUSE A STORE PAYS FOR THEM SEPARATELY. Manager Meetings
+          and Joe the Pro are is_addon = true in product_catalog: a dealership
+          buys them on top of the advisor subscription, and a rooftop that has
+          not bought one sees none of its content no matter how much is written.
+          Showing all five types in one undifferentiated grid hid that — the
+          counts read as one library when they are three products.
 
-          A QUOTE HAS NO SERVICE, and never will: it is not about brakes or
-          alignment. So all 436 of them landed in the "no service" bucket with
-          the generic cues, and there was no route in the app that said
-          "Quotes". Making every card a link fixes that for the type that needed
-          it and for the three that did not, which is better than bolting a
-          Quotes-shaped exception onto a page organised by service. */}
-      <ul className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {CONTENT_TYPES.map((type) => {
-          const tally = byType[type];
-          return (
-            <li key={type}>
-              <Link
-                href={`/admin/content/service/${ALL_SERVICES}?type=${type}`}
-                className="block h-full rounded-card transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-              >
-                <Card className="h-full p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-                    {TYPE_META[type].plural}
-                  </p>
-                  <p className="mt-1 text-3xl font-extrabold tracking-tight text-navy">
-                    {tally.total.toLocaleString()}
-                  </p>
-                  <p className="mt-1 text-xs font-semibold">
-                    <span className="text-palm">
-                      {tally.published.toLocaleString()} published
-                    </span>
-                    <span className="text-ink-soft"> · </span>
-                    <span className="text-clay">
-                      {tally.draft.toLocaleString()} draft
-                    </span>
-                  </p>
-                </Card>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+          The split is DERIVED, through CONTENT_ENTITLEMENT to product_catalog,
+          not a hand-kept list of which types are extra. A new content type
+          lands in the right group by virtue of the product it is gated on,
+          which is the same fact RLS uses to decide who may read it.
+
+          THESE ARE LINKS. They were counts you could read and not open, which
+          was survivable while everything had a service family to be found
+          under. A quote has no service and never will, so all 436 landed in the
+          "no service" bucket and no route in the app said "Quotes". */}
+      {([false, true] as const).map((addon) => {
+        const types = CONTENT_TYPES.filter((t) => isAddonType(t) === addon);
+        if (types.length === 0) return null;
+        return (
+          <section key={String(addon)} className="mt-5">
+            <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
+              {addon ? "Paid add-ons" : "In every subscription"}
+            </h2>
+            <p className="mt-1 px-1 text-xs text-ink-soft">
+              {addon
+                ? "Bought on top of the advisor subscription. A rooftop that hasn't bought one sees none of it."
+                : "Included wherever the advisor subscription is."}
+            </p>
+            <ul className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {types.map((type) => {
+                const tally = byType[type];
+                return (
+                  <li key={type}>
+                    <Link
+                      href={`/admin/content/service/${ALL_SERVICES}?type=${type}`}
+                      className="block h-full rounded-card transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                    >
+                      <Card className="h-full p-4">
+                        <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+                          {TYPE_META[type].plural}
+                        </p>
+                        <p className="mt-1 text-3xl font-extrabold tracking-tight text-navy">
+                          {tally.total.toLocaleString()}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold">
+                          <span className="text-palm">
+                            {tally.published.toLocaleString()} published
+                          </span>
+                          <span className="text-ink-soft"> · </span>
+                          <span className="text-clay">
+                            {tally.draft.toLocaleString()} draft
+                          </span>
+                        </p>
+                        {addon && (
+                          /* Which add-on, by name. "Paid add-ons" says a store
+                             pays extra; this says extra for WHAT, which is the
+                             thing anyone pricing it actually needs. */
+                          <p className="mt-2 inline-block rounded-pill bg-teal-soft/50 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-navy">
+                            {PRODUCT_META[CONTENT_ENTITLEMENT[type].product].label}
+                          </p>
+                        )}
+                      </Card>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
 
       {/* ---- The two to-do lists, and they are different jobs -------------
           "Needs you" is ABOVE drafts on purpose: a draft is work you have not
