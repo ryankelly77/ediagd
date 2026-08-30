@@ -15,6 +15,35 @@
 import { useState } from "react";
 import { clampToSentence, tidyTruncation } from "@/lib/text";
 
+/**
+ * Coaching copy, at the one size coaching copy is set in.
+ *
+ * ONE DEFINITION, because there were two and they drifted. This markup used to
+ * live only inside LongCopy, on an inner div whose explicit size OVERRODE any
+ * className the caller passed — so a caller asking for `text-sm` still got
+ * 17px and could not tell. When the daily loop stopped clamping, the replacement
+ * paragraphs were hand-written and came out at 14px and 16px: smaller, for no
+ * reason anybody chose.
+ *
+ * 17px/1.65 is the reading size on a phone. Paragraphs split on blank lines and
+ * are spaced rather than indented.
+ */
+export function Prose({
+  text,
+  className = "",
+}: {
+  text: string;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-4 text-[1.0625rem] leading-[1.65] text-ink ${className}`}>
+      {text.split(/\n{2,}/).map((para, i) => (
+        <p key={i}>{para}</p>
+      ))}
+    </div>
+  );
+}
+
 export function LongCopy({
   text,
   budget = 320,
@@ -35,11 +64,7 @@ export function LongCopy({
 
   return (
     <div className={className}>
-      <div className="space-y-4 text-[1.0625rem] leading-[1.65] text-ink">
-        {display.split(/\n{2,}/).map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
-      </div>
+      <Prose text={display} />
 
       {clamped && (
         <button

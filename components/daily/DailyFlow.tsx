@@ -14,6 +14,7 @@ import { citationFor } from "@/lib/content";
 import type { CompleteDayResult } from "@/lib/gamification/completeDay";
 import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { PullQuote } from "@/components/brand/ScreenBlocks";
+import { Prose } from "@/components/brand/LongCopy";
 import { SaveHeart } from "./SaveHeart";
 
 type Quote = {
@@ -362,9 +363,7 @@ function QuoteStep({
                 and the copy arrives whole. */}
             {quote.nugget && (
               <div className="mt-6 border-t border-line pt-5">
-                <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
-                  {quote.nugget}
-                </p>
+                <Prose text={quote.nugget} />
               </div>
             )}
 
@@ -450,11 +449,7 @@ function FocusStep({
                   restored cues run to 1,200 characters now, which is exactly
                   the case where a "Read the rest" tap buys nothing — the words
                   were the point of restoring them. */}
-              {cue.body && (
-                <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-ink">
-                  {cue.body}
-                </p>
-              )}
+              {cue.body && <Prose text={cue.body} className="mt-3" />}
               {focus && cueMatch === "generic" && (
                 <p className="mt-4 text-xs text-ink-soft">
                   Service-specific cues for {focus.service} are on the way.

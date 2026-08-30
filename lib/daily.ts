@@ -324,10 +324,25 @@ export function cueTierForRate(rate: number): "zero" | "low" {
 }
 
 /** Rotate the acknowledgement wording so the ritual doesn't feel canned. */
+/**
+ * What the button under the quote says.
+ *
+ * IT MOVES YOU ON; IT DOES NOT MEAN YOU LIKED IT. All three of these used to be
+ * about affection — "Love it", "That resonates today", "I needed that" — which
+ * was the only way to respond to a quote before there was a heart. Now the
+ * heart keeps it and this advances the day, and two controls on one screen both
+ * saying "I liked this" makes the advisor pick between them: tapping "Love it"
+ * to continue reads as having already said so, which is the thing most likely
+ * to stop them ever using the one that actually saves anything.
+ *
+ * So these carry the quote FORWARD instead. Still three, still rotating, still
+ * warm — a bare "Next" would be honest and cold, and this is the first thing an
+ * advisor reads in the morning.
+ */
 export const ACK_LABELS = [
-  "Love it",
-  "That resonates today",
-  "I needed that",
+  "Let's get to it",
+  "Carry it with me",
+  "On to today",
 ] as const;
 
 export function ackLabel(date: IsoDate): string {
