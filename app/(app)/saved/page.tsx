@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { SaveHeart } from "@/components/daily/SaveHeart";
 import { LongCopy } from "@/components/brand/LongCopy";
+import { citationFor } from "@/lib/content";
 
 /* ============================================================================
    EDIAGD — the things you kept
@@ -86,9 +87,11 @@ export default async function SavedPage() {
                     <p className="text-lg font-semibold leading-relaxed text-navy">
                       {c!.body ?? c!.title}
                     </p>
-                    {c!.voice && (
+                    {/* Same rule as the daily loop: the app does not cite
+                        itself. See HOUSE_VOICE. */}
+                    {citationFor(c!.voice) && (
                       <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
-                        {c!.voice}
+                        {citationFor(c!.voice)}
                       </p>
                     )}
                     {c!.coaching_nugget && (

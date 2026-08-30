@@ -110,6 +110,30 @@ export type ContentRow = {
   quote_key: string | null;
 };
 
+/**
+ * The voice the app itself speaks in.
+ *
+ * Every quote stores an attribution and 192 of the 436 are Mitch's own. But a
+ * citation exists to credit someone OUTSIDE the conversation: "Kobe Bryant"
+ * under a line tells an advisor where it came from and lends it the weight of
+ * whoever said it. "Mitch Hardt" under a line inside Mitch's own coaching app
+ * tells them nothing they had not already assumed — and at 44% of the library
+ * it lands every other day, reading as the coach quoting himself back at them.
+ *
+ * THE DATA IS UNCHANGED. Every row keeps its voice, the admin editor still
+ * shows and edits it, and the daily draw still uses it for voice diversity —
+ * this decides only whether to PRINT it. If Mitch wants his name on his own
+ * words, deleting this function restores it everywhere at once.
+ */
+export const HOUSE_VOICE = "Mitch Hardt";
+
+/** The attribution to show, or null when the app is quoting itself. */
+export function citationFor(voice: string | null | undefined): string | null {
+  const v = voice?.trim();
+  if (!v) return null;
+  return v.toLowerCase() === HOUSE_VOICE.toLowerCase() ? null : v;
+}
+
 export const QUOTE_SLOTS = ["slot2", "slot3", "both"] as const;
 export type QuoteSlotValue = (typeof QUOTE_SLOTS)[number];
 

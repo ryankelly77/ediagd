@@ -10,10 +10,10 @@ import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
 import { MIN_ROS_FOR_COACHING, formatPct } from "@/lib/advisor";
+import { citationFor } from "@/lib/content";
 import type { CompleteDayResult } from "@/lib/gamification/completeDay";
 import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { PullQuote } from "@/components/brand/ScreenBlocks";
-import { LongCopy } from "@/components/brand/LongCopy";
 import { SaveHeart } from "./SaveHeart";
 
 type Quote = {
@@ -92,6 +92,7 @@ export function DailyFlow({
   // The close button in the rail needs it; the nested steps have their own.
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   // True once WE started the completion. From that moment the incoming
   // `alreadyCompleteOnLoad` prop flips true (the action's cookie write
   // re-renders this page on the server) and must be ignored.
@@ -129,7 +130,7 @@ export function DailyFlow({
           {step < 5 && (
             <button
               type="button"
-              onClick={() => router.push(preview ? "/admin" : "/advisor")}
+              onClick={() => setConfirmLeave(true)}
               aria-label="Leave the daily loop"
               className="-mr-1 shrink-0 rounded-full p-2 text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             >
@@ -179,6 +180,13 @@ export function DailyFlow({
               setRitualRun(true);
               setStep(5);
             }}
+          />
+        )}
+
+        {confirmLeave && (
+          <LeaveConfirm
+            onStay={() => setConfirmLeave(false)}
+            onLeave={() => router.push(preview ? "/admin" : "/advisor")}
           />
         )}
 
@@ -339,19 +347,24 @@ function QuoteStep({
       <div className="py-8">
         {quote ? (
           <>
-            <PullQuote cite={quote.voice ?? undefined}>
+            <PullQuote cite={citationFor(quote.voice) ?? undefined}>
               <p>{quote.body ?? quote.title}</p>
             </PullQuote>
 
-            {/* Why this quote is here. Clamped at a sentence boundary because
-                22 of the nuggets arrived from the workbook cut at exactly 900
-                characters — the same truncation the cues had. */}
+            {/* Why this quote is here — the rule says it, so it does not need
+                a label saying it too. Quote, separator, coaching.
+
+                NOT CLAMPED. LongCopy exists to keep long copy scannable in a
+                LIST, and this is a single screen inside PhoneScreen.Body, which
+                is already a scroll region with a fade when there is more below.
+                Clamping here spent a "Read the rest" tap to hide two words and
+                a whole screen of empty space. Scrolling is the cheaper gesture
+                and the copy arrives whole. */}
             {quote.nugget && (
               <div className="mt-6 border-t border-line pt-5">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
-                  Why this one
+                <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
+                  {quote.nugget}
                 </p>
-                <LongCopy text={quote.nugget} className="mt-2 text-sm" />
               </div>
             )}
 
@@ -432,10 +445,16 @@ function FocusStep({
           {cue ? (
             <>
               <p className="text-base font-extrabold text-navy">{cue.title}</p>
-              {/* Clamped at a sentence boundary, never a character count —
-                  47 cue bodies arrived from the import already chopped
-                  mid-clause. See lib/text.ts. */}
-              {cue.body && <LongCopy text={cue.body} className="mt-3" />}
+              {/* Also unclamped, and for the same reason as the nugget on step
+                  1: one screen in a scroll region, not a row in a list. The 94
+                  restored cues run to 1,200 characters now, which is exactly
+                  the case where a "Read the rest" tap buys nothing — the words
+                  were the point of restoring them. */}
+              {cue.body && (
+                <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-ink">
+                  {cue.body}
+                </p>
+              )}
               {focus && cueMatch === "generic" && (
                 <p className="mt-4 text-xs text-ink-soft">
                   Service-specific cues for {focus.service} are on the way.
@@ -461,9 +480,9 @@ function FocusStep({
             <p className="text-[15px] italic leading-relaxed text-ink">
               {salesQuote.body ?? salesQuote.title}
             </p>
-            {salesQuote.voice && (
+            {citationFor(salesQuote.voice) && (
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
-                {salesQuote.voice}
+                {citationFor(salesQuote.voice)}
               </p>
             )}
             <div className="mt-3">
@@ -713,7 +732,23 @@ function CelebrationStep({
     lines.reduce((n, l) => n + l.amount, 0) === result.sandEarned;
 
   return (
-    <section className="flex flex-1 flex-col justify-center text-center">
+    <>
+      {/*
+        THROUGH THE SHELL, LIKE EVERY OTHER STEP. This screen used to return a
+        bare <section> straight into PhoneScreen's column, which supplies no
+        horizontal padding of its own — Body and Footer are where px-5 lives. So
+        the full-width button ran edge to edge against the glass while the four
+        steps before it sat inset, and on a phone that reads as a broken screen
+        rather than a deliberate one.
+
+        Same omission as onboarding screens 5 and 6, and the same fix: a screen
+        that does not go through the shell does not get the shell's insets.
+
+        `centre` is right here and nowhere else in this flow — the celebration
+        is a badge and a number with no headline card to anchor to the top.
+      */}
+      <PhoneScreen.Body centre>
+      <section className="text-center">
       {/* ---- Headline: the Swell day ----------------------------------- */}
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
         {result.streakReset ? "A fresh Swell begins" : "Your Swell"}
@@ -801,13 +836,110 @@ function CelebrationStep({
         {BRAND.signoff}
       </p>
 
+      </section>
+      </PhoneScreen.Body>
+
+      {/* The CTA joins the other four in the footer, so it sits above the home
+          indicator and in the same place on every step of the ritual. It was
+          also the last hand-rolled copy of PrimaryButton's classes. */}
+      <PhoneScreen.Footer>
+        <PrimaryButton
+          onClick={() => router.push(previewResult ? "/admin" : "/advisor")}
+        >
+          {previewResult ? "Back to admin" : "See my numbers"}
+        </PrimaryButton>
+      </PhoneScreen.Footer>
+    </>
+  );
+}
+
+/* ---- Leaving early ------------------------------------------------------- */
+
+/**
+ * The sheet behind the × on steps 1-4.
+ *
+ * ---------------------------------------------------------------------------
+ * WHAT IT DOES NOT SAY, AND WHY
+ * ---------------------------------------------------------------------------
+ * "You could lose your streak" would usually be FALSE, and a warning that is
+ * usually false is worse than none — it teaches people to dismiss the next one.
+ * Read against lib/gamification/streak.ts, leaving right now costs nothing:
+ *
+ *   * The Swell is only ever recalculated by applyDailyCompletion, which runs
+ *     when someone FINISHES a day. Walking away triggers no evaluation at all.
+ *   * A missed day only counts against them if it was a SCHEDULED work day —
+ *     not Island Time, not a day off. countMissedWorkDays skips the rest.
+ *   * Banked Paddle Back Out grace bridges a gap even then.
+ *
+ * So the true statement is that the day is still open, and that is also the
+ * more useful one: it tells them what to do rather than what to fear. Nothing
+ * has been earned yet either, which is the honest other half — steps 1-4 write
+ * nothing, and the amount is deliberately not quoted here because the
+ * celebration is where a number belongs.
+ *
+ * STAYING IS THE PRIMARY ACTION. Leaving is the one they already chose by
+ * tapping the ×, so it does not need the gold; making it quiet and keeping it
+ * one tap away is the difference between a reminder and a guilt trip.
+ */
+function LeaveConfirm({
+  onStay,
+  onLeave,
+}: {
+  onStay: () => void;
+  onLeave: () => void;
+}) {
+  // Escape closes it, because a sheet that can only be dismissed by choosing
+  // one of two things is a trap of a smaller kind.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onStay();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onStay]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ediagd-leave-title"
+    >
+      {/* Tapping the scrim stays, matching Escape and the phone convention. */}
       <button
-        onClick={() => router.push(previewResult ? "/admin" : "/advisor")}
-        className="mt-6 w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+        type="button"
+        aria-label="Keep going"
+        onClick={onStay}
+        className="absolute inset-0 bg-navy/40"
+      />
+      <div
+        className="relative w-full max-w-app rounded-t-card bg-cream p-5 shadow-card"
+        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
       >
-        {previewResult ? "Back to admin" : "See my numbers"}
-      </button>
-    </section>
+        <p
+          id="ediagd-leave-title"
+          className="text-xl font-extrabold leading-snug text-navy"
+        >
+          The day&apos;s still open
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          Today counts once you finish it — so nothing&apos;s lost and nothing&apos;s
+          been earned yet. Come back any time before the store closes and it
+          still lands, Sand Dollars and all.
+        </p>
+
+        <div className="mt-5 space-y-2">
+          <PrimaryButton onClick={onStay}>Keep going</PrimaryButton>
+          <button
+            type="button"
+            onClick={onLeave}
+            className="w-full rounded-xl p-3 text-base font-bold text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            Leave for now
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -7,9 +7,7 @@ import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { ContentSearchBar } from "@/components/admin/content/ContentSearchBar";
 import {
   ALL_SERVICES,
-  CONTENT_ENTITLEMENT,
   CONTENT_TYPES,
-  PRODUCT_META,
   TYPE_META,
   isAddonType,
   serviceLabel,
@@ -184,14 +182,11 @@ export default async function ContentHomePage() {
                             {tally.draft.toLocaleString()} draft
                           </span>
                         </p>
-                        {addon && (
-                          /* Which add-on, by name. "Paid add-ons" says a store
-                             pays extra; this says extra for WHAT, which is the
-                             thing anyone pricing it actually needs. */
-                          <p className="mt-2 inline-block rounded-pill bg-teal-soft/50 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-navy">
-                            {PRODUCT_META[CONTENT_ENTITLEMENT[type].product].label}
-                          </p>
-                        )}
+                        {/* No product pill. It named the add-on the card was
+                            already named after — a "Joe the Pro" badge under a
+                            card headed "Joe the Pro" — under a heading that had
+                            already said these are the paid ones. Three ways of
+                            saying the same thing in one tile. */}
                       </Card>
                     </Link>
                   </li>
