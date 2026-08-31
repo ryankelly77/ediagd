@@ -50,12 +50,25 @@ export type UploadDraft = {
  * so the origin has to be named; leaving it open would let any page that
  * learned a URL upload into this account.
  */
-export async function createDirectUpload(origin: string) {
+export async function createDirectUpload(origin: string, title?: string) {
   const mux = muxClient();
 
   const upload = await mux.video.uploads.create({
     cors_origin: origin,
     new_asset_settings: {
+      /*
+       * THE DASHBOARD SHOWS meta.title, AND NOTHING ELSE.
+       *
+       * Without it Mux lists a bare asset id, which is survivable for three
+       * videos and useless for a hundred: after the first MINDSET batch the
+       * dashboard was 112 rows of `CjePCURls9mdTjkgV4uoG01…` with no way to
+       * tell a master from its 9:16 sibling, let alone which quote it was.
+       *
+       * It is display only — nothing reads it back. The app's own title lives
+       * on the content row, which is why this went unnoticed until somebody
+       * opened the Mux dashboard.
+       */
+      ...(title ? { meta: { title } } : {}),
       // Signed, always. See the note above — this is the line that matters.
       playback_policies: ["signed"],
       /*
