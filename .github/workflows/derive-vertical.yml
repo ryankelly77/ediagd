@@ -1,0 +1,74 @@
+# ============================================================================
+# EDIAGD — derive the 9:16 renditions on a schedule
+#
+# WHY THIS EXISTS BEFORE THE BATCH, NOT AFTER. Every landscape master needs a
+# vertical sibling cropped from it, and derive:vertical does one queue sweep and
+# stops. Ingesting 56 videos without a scheduler means somebody sits at a
+# terminal running the same command 56 times, spread over however long Mux takes
+# to transcode each master — because a vertical cannot be derived until its
+# master is ready.
+#
+# WHY GITHUB ACTIONS AND NOT A VERCEL CRON. The script shells out to ffmpeg and
+# moves hundreds of megabytes through a temp directory. A Vercel function has no
+# ffmpeg binary and a hard timeout; this runner has both a disk and an hour.
+# That reasoning is already written down at the top of lib/mux/derive.ts — this
+# workflow is that decision, scheduled.
+#
+# IT EXITS CLEAN WHEN IDLE. The script reads vertical_derivation_queue, prints
+# "0 row(s) awaiting a vertical rendition", and returns. No rows means no work,
+# not an error — so a quiet week is a column of green ticks rather than noise
+# somebody learns to ignore.
+# ============================================================================
+name: derive-vertical
+
+on:
+  schedule:
+    # Every 30 minutes. Mux takes a few minutes per 4K master, so this picks up
+    # a batch in waves rather than all at once — which is what we want, since
+    # each derivation downloads a master and re-encodes it.
+    - cron: "*/30 * * * *"
+  # So a batch can be pushed along by hand without waiting for the next tick.
+  workflow_dispatch:
+
+# ONE AT A TIME. A sweep of 56 masters can outlast the 30-minute tick, and two
+# concurrent runs would both claim the same queue rows and encode them twice.
+# `cancel-in-progress: false` because killing a run mid-encode would leave the
+# row marked pending with a half-uploaded rendition — better to skip a tick.
+concurrency:
+  group: derive-vertical
+  cancel-in-progress: false
+
+jobs:
+  derive:
+    runs-on: ubuntu-latest
+    # Generous, not unlimited: a stuck ffmpeg should fail the run rather than
+    # burn an hour of runner time on every tick.
+    timeout-minutes: 50
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # ffmpeg is the whole job. ubuntu-latest ships it, but pinning the install
+      # means a runner image change cannot silently remove it.
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+
+      - run: npm ci
+
+      - name: Derive pending verticals
+        env:
+          SB_URL: ${{ secrets.SB_URL }}
+          SB_KEY: ${{ secrets.SB_KEY }}
+          MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID }}
+          MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET }}
+          MUX_SIGNING_KEY_ID: ${{ secrets.MUX_SIGNING_KEY_ID }}
+          MUX_SIGNING_KEY_PRIVATE: ${{ secrets.MUX_SIGNING_KEY_PRIVATE }}
+        run: npm run derive:vertical

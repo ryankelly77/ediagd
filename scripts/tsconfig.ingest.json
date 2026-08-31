@@ -1,0 +1,17 @@
+{
+  "//": "Standalone build for ingest-videos.ts. It imports lib/mux/upload via the @/ alias, which a bare `tsc file.ts` invocation cannot resolve — the other scripts avoid this by importing nothing from the app. Reusing the upload helper is the point (one definition of the master settings), so the script gets a config instead of a copy.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-iv",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./ingest-videos.ts", "../lib/mux/upload.ts", "../lib/mux/playback.ts"]
+}
