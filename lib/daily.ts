@@ -533,7 +533,22 @@ export async function pickLifestyleVideo(
     .eq("placement", "daily_lifestyle")
     .eq("status", "published")
     .not("mux_playback_id", "is", null)
-    .limit(24);
+    /*
+     * ORDERED, AND NOT CAPPED AT 24.
+     *
+     * This used to take `.limit(24)` with no `.order()`, which was two bugs
+     * wearing one coat. Unordered, PostgREST may return any 24 rows and a
+     * different 24 next time — so the "deterministic day rotation" below was
+     * rotating over a set that could change under it. And capped, a pool bigger
+     * than 24 has a tail nothing can reach: the MINDSET batch takes this pool to
+     * 57, so 33 videos would have been published and permanently invisible.
+     *
+     * Same family of bug as the dayOfYear rotation fixed alongside the quotes.
+     * A cap is only safe when it is bigger than the pool can get, and this pool
+     * is heading for the playbook's 240.
+     */
+    .order("id", { ascending: true })
+    .limit(1000);
 
   const list = (rows ?? []) as {
     id: string; title: string;
