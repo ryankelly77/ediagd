@@ -30,8 +30,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/brand/Card";
 import {
-  CONTENT_TYPES,
-  TYPE_META,
   CONTENT_ENTITLEMENT,
   PRODUCT_META,
 } from "@/lib/content";
@@ -407,15 +405,45 @@ export function ContentDetail({
             </select>
           </Field>
 
+          {/*
+            THE OPTIONS READ AS GATES, NOT FORMATS.
+            "Advisor video" is the type value's name; this field asks which
+            paywall the artifact sits behind, and answering it with a format
+            makes the control read as "what kind of video is this".
+
+            ONLY THE VIDEO TYPES ARE OFFERED, and that is what makes the gate
+            labels unambiguous. Five type values collapse to three gates —
+            cue, quote and advisor_video all mean advisor_base — so labelling
+            every option by its gate would print "Advisor Coaching — base"
+            three times with no way to tell them apart. For a video the three
+            video types map one-to-one onto the three gates, so the list is
+            exactly the three real answers.
+
+            A cue or a quote has no choice to make: both are advisor_base by
+            definition, so the gate is stated rather than offered.
+          */}
           <Field label="Entitlement">
-            <select className={input} value={draft.type} onChange={(e) => set("type", e.target.value)}>
-              {CONTENT_TYPES.map((t) => <option key={t} value={t}>{TYPE_META[t].label}</option>)}
-            </select>
+            {isVideo ? (
+              <select className={input} value={draft.type} onChange={(e) => set("type", e.target.value)}>
+                {(["advisor_video", "manager_video", "joe_the_pro"] as const).map((t) => {
+                  const g = PRODUCT_META[CONTENT_ENTITLEMENT[t].product];
+                  return (
+                    <option key={t} value={t}>
+                      {g.label} — {g.isAddon ? "add-on" : "base"}
+                    </option>
+                  );
+                })}
+              </select>
+            ) : (
+              <p className="rounded-xl bg-cream-card p-3 text-navy">
+                {product ? `${product.label} — ${product.isAddon ? "add-on" : "base"}` : "—"}
+              </p>
+            )}
             {product && (
               <span className="mt-1 block text-xs text-ink-soft">
                 {product.isAddon
-                  ? `${product.label} — paid add-on, requires an explicit grant`
-                  : `${product.label} — in every subscription`}
+                  ? "Paid add-on — a rooftop must have bought it."
+                  : "In every subscription."}
               </span>
             )}
           </Field>
@@ -427,7 +455,9 @@ export function ContentDetail({
         <ul className="space-y-3 text-sm">
           <li className="flex items-start justify-between gap-3">
             <span className="text-ink-soft">Daily loop</span>
-            <span className={`text-right ${structure.dailyLoopEligible ? "font-bold text-palm" : "text-ink-soft"}`}>
+            {/* Teal is the brand's active/positive state. palm read as a
+                generic success green borrowed from somewhere else. */}
+            <span className={`text-right ${structure.dailyLoopEligible ? "font-bold text-teal" : "text-ink-soft"}`}>
               {structure.dailyLoopEligible ? "In rotation" : "Not in rotation"}
               <span className="block text-xs text-ink-soft">{structure.dailyLoopReason}</span>
             </span>
