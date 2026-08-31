@@ -15,8 +15,8 @@
    card — and in the worst case (group 10) a passage contains two DIFFERENT
    lines, so retiring both to keep the passage destroys two usable quotes. That
    is an editorial call, it belongs to Mitch, and it belongs in the app rather
-   than in a spreadsheet round trip. This script counts those groups and leaves
-   them alone; the Duplicates review queue is where they get answered.
+   than in a spreadsheet round trip. `--queue` seeds them into the Duplicates
+   review queue instead of applying anything.
 
    ---------------------------------------------------------------------------
    RETIRE, NEVER DELETE
@@ -42,6 +42,7 @@
 
      npm run dedupe:quotes -- --from=reports/quote-duplicates.csv
      npm run dedupe:quotes -- --from=reports/quote-duplicates.csv --apply
+     npm run dedupe:quotes -- --from=reports/quote-duplicates.csv --queue
      npm run dedupe:quotes -- --verify
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
@@ -55,6 +56,7 @@ const args = process.argv.slice(2);
 const FROM = args.find((a) => a.startsWith("--from="))?.split("=").slice(1).join("=");
 const APPLY = args.includes("--apply");
 const VERIFY = args.includes("--verify");
+const QUEUE = args.includes("--queue");
 
 /** Minimal RFC-4180 reader — quote bodies contain commas. */
 function parseCsv(text: string): Record<string, string>[] {
@@ -213,7 +215,12 @@ function unionSlot(a: string | null, b: string | null): string | null {
 
   console.log(`  ${all.length} groups in ${FROM.split("/").pop()}`);
   console.log(`    mechanical (exact + drift): ${mechanical.length}   <- this script acts on these`);
-  console.log(`    editorial  (excerpt)      : ${editorial.length}   <- left for the review queue\n`);
+  console.log(`    editorial  (excerpt)      : ${editorial.length}   <- --queue sends these to Mitch\n`);
+
+  if (QUEUE) {
+    await seedQueue(editorial);
+    return;
+  }
 
   /* ---- Resolve every row fresh, then check the whole group before writing -- */
   const ids = mechanical.flatMap((g) => g.members.map((m) => m.id));
@@ -357,3 +364,107 @@ function unionSlot(a: string | null, b: string | null): string | null {
   console.error(e.message ?? e);
   process.exit(1);
 });
+
+/* ============================================================================
+   Seeding the Duplicates queue
+
+   THE FLIPPED RULES. Phase 1 proposed the fuller text as the survivor, which is
+   right for wording drift and wrong for an excerpt: there the short row is the
+   servable line and the long row is the passage it came from. So:
+
+     * a linked row always survives — the video points at it
+     * otherwise the SHORT rows survive and the passage retires
+     * a passage containing two or more distinct surviving lines keeps all of
+       them, which is the group-10 shape
+
+   Nothing here is applied. It is a proposal rendered as a pre-selection on a
+   card, and Mitch decides.
+   ============================================================================ */
+async function seedQueue(groups: Group[]) {
+  const ids = groups.flatMap((g) => g.members.map((m) => m.id));
+  const rows = new Map<string, { id: string; quote_key: string | null; body: string | null; voice: string | null; retired_at: string | null }>();
+  for (let o = 0; o < ids.length; o += 200) {
+    const { data, error } = await sb
+      .from("content")
+      .select("id, quote_key, body, voice, retired_at")
+      .in("id", ids.slice(o, o + 200));
+    if (error) throw new Error(error.message);
+    (data ?? []).forEach((r) => rows.set(r.id as string, r as never));
+  }
+
+  const { data: linkRows } = await sb
+    .from("content")
+    .select("id, artifact_id")
+    .not("artifact_id", "is", null);
+  const linked = new Set((linkRows ?? []).map((l) => l.artifact_id as string));
+
+  // Pairs a person has already ruled "not a duplicate" never come back.
+  const { data: sup } = await sb.from("quote_duplicate_suppression").select("a_id, b_id, relation");
+  const suppressed = new Set((sup ?? []).map((s) => `${s.a_id}|${s.b_id}|${s.relation}`));
+
+  const { data: openGroups } = await sb
+    .from("quote_duplicate_group")
+    .select("id, status, quote_duplicate_member(content_id)");
+
+  const existing = new Set(
+    (openGroups ?? []).map((g) =>
+      ((g.quote_duplicate_member ?? []) as { content_id: string }[])
+        .map((m) => m.content_id).sort().join("|")
+    )
+  );
+
+  let inserted = 0;
+  let skippedSuppressed = 0;
+  let skippedExisting = 0;
+
+  for (const g of groups) {
+    const members = g.members.filter((m) => rows.has(m.id) && !rows.get(m.id)!.retired_at);
+    if (members.length < 2) continue;
+
+    const key = members.map((m) => m.id).sort().join("|");
+    if (existing.has(key)) { skippedExisting++; continue; }
+
+    // Suppression is pair-level, so a group is skipped only when EVERY pair in
+    // it has been ruled on. A three-row group where one pair was cleared still
+    // has a question left in it.
+    const pairs: [string, string][] = [];
+    for (let i = 0; i < members.length; i++)
+      for (let j = i + 1; j < members.length; j++)
+        pairs.push([members[i].id, members[j].id].sort() as [string, string]);
+    if (pairs.length && pairs.every((p) => suppressed.has(`${p[0]}|${p[1]}|${g.why}`))) {
+      skippedSuppressed++;
+      continue;
+    }
+
+    const len = (m: Member) => (rows.get(m.id)?.body ?? "").length;
+    const shortest = Math.min(...members.map(len));
+    const anyLinked = members.some((m) => linked.has(m.id));
+
+    /* Survive: the linked row if there is one, otherwise every row that is not
+       the longest — which for a two-row group is just the short line, and for
+       the group-10 shape is both contained lines. */
+    const longest = Math.max(...members.map(len));
+    const survives = (m: Member) =>
+      anyLinked ? linked.has(m.id) : len(m) < longest || len(m) === shortest;
+
+    const { data: ins, error } = await sb
+      .from("quote_duplicate_group")
+      .insert({ shape: g.shape, relation: g.why, source_group: g.gid })
+      .select("id")
+      .single();
+    if (error) { console.log(`    FAILED group ${g.gid}: ${error.message}`); continue; }
+
+    const { error: mErr } = await sb.from("quote_duplicate_member").insert(
+      members.map((m) => ({
+        group_id: ins.id,
+        content_id: m.id,
+        proposed: survives(m) ? "survive" : "retire",
+        unretirable: linked.has(m.id),
+      }))
+    );
+    if (mErr) { console.log(`    FAILED members ${g.gid}: ${mErr.message}`); continue; }
+    inserted++;
+  }
+
+  console.log(`  queued: ${inserted}   already queued: ${skippedExisting}   suppressed: ${skippedSuppressed}\n`);
+}
