@@ -44,7 +44,7 @@ const TYPES = [
 
 export function VideoUploader({ families }: { families: string[] }) {
   const [title, setTitle] = useState("");
-  const [series, setSeries] = useState("");
+  const [collection, setCollection] = useState("");
   const [placement, setPlacement] = useState("");
   const [family, setFamily] = useState("");
   const [type, setType] = useState<string>("advisor_video");
@@ -66,7 +66,7 @@ export function VideoUploader({ families }: { families: string[] }) {
       const started = await startUpload(
         {
           title: title.trim(),
-          series: series.trim() || null,
+          collection: collection.trim() || null,
           placement: (placement || null) as never,
           service_family: family || null,
           type: type as never,
@@ -116,7 +116,7 @@ export function VideoUploader({ families }: { families: string[] }) {
         xhr.send(file);
       });
     },
-    [title, series, placement, family, type]
+    [title, collection, placement, family, type]
   );
 
   const onDrop = useCallback(
@@ -146,8 +146,8 @@ export function VideoUploader({ families }: { families: string[] }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Series">
             <input
-              value={series}
-              onChange={(e) => setSeries(e.target.value)}
+              value={collection}
+              onChange={(e) => setCollection(e.target.value)}
               placeholder="Buffett Series"
               className={inputClass}
             />

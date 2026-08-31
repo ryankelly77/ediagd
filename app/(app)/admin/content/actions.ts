@@ -135,20 +135,16 @@ export async function setContentStatus(
   return { ok: true, id: data.id as string };
 }
 
-export async function deleteContent(id: string): Promise<ActionResult> {
-  const { ctx, error } = await requireAdmin();
-  if (!ctx) return { ok: false, error: error! };
-
-  const { data, error: deleteError } = await ctx.supabase
-    .from("content")
-    .delete()
-    .eq("id", id)
-    .select("id, service_family")
-    .maybeSingle();
-
-  if (deleteError) return { ok: false, error: deleteError.message };
-  if (!data) return { ok: false, error: "That item no longer exists." };
-
-  revalidateFor((data.service_family as string | null) ?? null);
-  return { ok: true, id: data.id as string };
-}
+/*
+ * deleteContent() REMOVED.
+ *
+ * A Server Function is reachable by direct POST whether or not a button renders
+ * it, so hiding the control was not enough. A hard delete on `content` cascades
+ * content_progress, saved_content and content_review, and is refused outright by
+ * daily_completion's foreign key — meaning the old action either destroyed an
+ * advisor's saves and an open review item, or threw a raw FK error at the admin.
+ *
+ * Retiring replaces it: app/(app)/admin/content/item/[id]/actions.ts →
+ * retireContent(), which sets retired_at, unpublishes, and keeps every foreign
+ * key intact.
+ */
