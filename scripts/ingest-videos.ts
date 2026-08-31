@@ -69,9 +69,9 @@ const SRC: string = DIR;
 
 /* ---- Where each collection surfaces ---------------------------------------
  * NO NEW COLUMNS. The content-model audit proposes `collection` and `format`;
- * this predates that decision on purpose, so it maps onto what exists today —
- * `series` (free text) and `placement` (the 0057 enum). When `collection`
- * lands, this table is the migration.
+ * The six collections and where each one is served. `collection` is the shelf
+ * (0062); `placement` is where the app surfaces it (0057). They are different
+ * questions and both are needed.
  *
  * `craftSeries` is the certification tag. There is no certification table yet,
  * so it rides in `subcategory`: a label a later lesson-assignment pass can
@@ -79,20 +79,23 @@ const SRC: string = DIR;
  */
 type Route = {
   placement: "daily_lifestyle" | "daily_pitch" | "onboarding_intro" | null;
-  series: string | null;
+  /** One of the six collections. Was `series` until 0063 replaced it. */
+  collection: string | null;
   craftSeries: string | null;
 };
 
 const ROUTES: Record<string, Route> = {
   // Live in the daily loop's lifestyle slot, in the mindset rotation.
-  MINDSET: { placement: "daily_lifestyle", series: "MINDSET", craftSeries: null },
+  MINDSET: { placement: "daily_lifestyle", collection: "Mindset", craftSeries: null },
   // The four craft series: same rotation, each pre-tagged for its certification.
-  WALKAROUND: { placement: "daily_lifestyle", series: "CRAFT", craftSeries: "Walk-Around" },
-  CLOSE: { placement: "daily_lifestyle", series: "CRAFT", craftSeries: "The Close" },
-  OBJECTION: { placement: "daily_lifestyle", series: "CRAFT", craftSeries: "Objection Handling" },
-  MPI: { placement: "daily_lifestyle", series: "CRAFT", craftSeries: "Multi-Point Inspection" },
+  WALKAROUND: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "Walk-Around" },
+  CLOSE: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "The Close" },
+  OBJECTION: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "Objection Handling" },
+  MPI: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "Multi-Point Inspection" },
   // Craft rotation, series deliberately unassigned — somebody will sort it.
-  CRAFT: { placement: "daily_lifestyle", series: "CRAFT", craftSeries: null },
+  CRAFT: { placement: "daily_lifestyle", collection: "Craft", craftSeries: null },
+  // The first-run intro. Stored correctly; no screen consumes it yet.
+  ONBOARDING: { placement: "onboarding_intro", collection: "Onboarding", craftSeries: null },
 };
 
 type Parsed = {
@@ -100,36 +103,76 @@ type Parsed = {
   collection: string;
   title: string;
   voice: string | null;
-  version: string;
+  version: number;
   bytes: number;
+  ext: string;
 };
 
 /**
- * Split `COLLECTION — Title (Voice) — vN.ext`.
+ * Read a working name and make it correct.
  *
- * Em dash is the separator Mitch uses; the regex also accepts an en dash or a
- * spaced hyphen because a filename typed on a phone will not always carry the
- * right one, and that is a keyboard difference rather than a different intent.
- * The voice parenthetical is optional — plenty of these are Mitch's own words.
+ * ---------------------------------------------------------------------------
+ * THE PARSER IS FORGIVING ON PURPOSE. THAT IS THE PRODUCT.
+ * ---------------------------------------------------------------------------
+ * Mitch was told he gives a quick working name and ingest sorts it out. A
+ * parser that rejects `ONBOARDING - Welcome from Mitch.MOV` because the dash is
+ * a hyphen and the version is missing is a parser that makes him follow OUR
+ * convention — the exact thing he was promised he would not have to do. He is
+ * filming on a phone between classes; the strictness belongs here, not in his
+ * hands.
+ *
+ * So it accepts any separator (em dash, en dash, hyphen, colon) with any
+ * spacing, any case on the prefix, a missing version meaning v1, a version
+ * token anywhere (`v2`, `V2`, `(v2)`), and any case on the extension.
+ *
+ * STRICTNESS LIVES IN canonical_filename. Whatever arrives, ingest stores the
+ * normalised `COLLECTION — Title — vN.mov` and keeps what Mitch typed in
+ * source_filename. The canonical name is what a re-drop is matched against, so
+ * the convention holds in the database without ever being his problem.
+ *
+ * What it will NOT do is guess a collection. A name with no recognisable prefix
+ * goes to review with a reason — never rejected silently, never filed on a
+ * shelf nobody chose.
  */
 function parseName(file: string): Parsed | null {
-  const base = file.replace(/\.(mov|mp4|m4v)$/i, "");
-  const m = base.match(
-    /^([A-Z][A-Z0-9 _-]*?)\s*[—–]\s*(.+?)\s*[—–]\s*v(\d+)$/i
-  );
+  const ext = (file.match(/\.(mov|mp4|m4v)$/i)?.[1] ?? "mov").toLowerCase();
+  let base = file.replace(/\.(mov|mp4|m4v)$/i, "").trim();
+
+  // Version first, from anywhere in the name, so it cannot be mistaken for part
+  // of the title. Absent means v1 — a first take is the unmarked case.
+  let version = 1;
+  const vm = base.match(/[\s(\[_-]v(\d+)\)?\]?\s*$/i) ?? base.match(/\bv(\d+)\b/i);
+  if (vm) {
+    version = Number(vm[1]);
+    base = base.replace(vm[0], " ").trim();
+  }
+
+  // The prefix is a single word-ish token, so a title containing a dash is not
+  // mistaken for a collection boundary.
+  const m = base.match(/^\s*([A-Za-z][A-Za-z0-9 _]*?)\s*[—–:-]+\s*(.+)$/);
   if (!m) return null;
 
-  const collection = m[1].trim().toUpperCase().replace(/[\s_-]+/g, "");
-  let title = m[2].trim();
+  const collection = m[1].trim().toUpperCase().replace(/[\s_]+/g, "");
+  let title = m[2].replace(/[\s—–:-]+$/, "").trim();
   let voice: string | null = null;
 
-  // A trailing "(Someone)" is the attribution, not part of the title.
-  const v = title.match(/^(.*?)\s*\(([^()]+)\)$/);
+  const v = title.match(/^(.*?)\s*\(([^()]+)\)\s*$/);
   if (v) {
     title = v[1].trim();
     voice = v[2].trim();
   }
-  return { file, collection, title, voice, version: `v${m[3]}`, bytes: 0 };
+  if (!title) return null;
+
+  return { file, collection, title, voice, version, bytes: 0, ext };
+}
+
+/**
+ * What the file SHOULD have been called. Stored as canonical_filename so a
+ * re-drop of the same idea under a different working name still matches.
+ */
+function canonicalName(p: Parsed, label: string): string {
+  const voice = p.voice ? ` (${p.voice})` : "";
+  return `${label.toUpperCase()} — ${p.title}${voice} — v${p.version}.${p.ext}`;
 }
 
 /**
@@ -214,7 +257,7 @@ async function putFile(url: string, filePath: string, bytes: number) {
   for (const [c, n] of [...byCollection].sort()) {
     const r = ROUTES[c];
     console.log(
-      `    ${String(n).padStart(3)}  ${c.padEnd(11)} -> series=${r.series ?? "—"} placement=${r.placement ?? "—"}` +
+      `    ${String(n).padStart(3)}  ${c.padEnd(11)} -> collection=${r.collection ?? "—"} placement=${r.placement ?? "—"}` +
         (r.craftSeries ? `  cert=${r.craftSeries}` : "")
     );
   }
@@ -302,10 +345,17 @@ async function putFile(url: string, filePath: string, bytes: number) {
         draft: {
           title: p.title,
           type: "advisor_video",
-          series: route.series,
+          collection: route.collection,
           placement: route.placement,
           subcategory: route.craftSeries,
-          body: p.voice ? `Voice: ${p.voice}` : null,
+          // Voice goes in its own column now, never into notes. Writing it as
+          // prose was the mistake the Phase 3 backfill had to undo.
+          voice: p.voice ?? "Mitch Hardt",
+          version: p.version,
+          // What Mitch typed, and what it should have been called. The second
+          // is what a re-drop is matched against.
+          source_filename: p.file,
+          canonical_filename: canonicalName(p, route.collection ?? p.collection),
         },
       });
       if (error) throw new Error(`mux_upload insert: ${error.message}`);

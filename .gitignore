@@ -70,5 +70,7 @@ exports/
 .tmp-iq/
 .tmp-po/
 .tmp-iv/
+.tmp-oc/
+.tmp-bf/
 .tmp-rc/
 .tmp-cq/

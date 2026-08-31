@@ -35,7 +35,14 @@ import { muxClient } from "@/lib/mux/playback";
 
 export type UploadDraft = {
   title: string;
-  series?: string | null;
+  /** The shelf. Replaces `series`, dropped in 0063. */
+  collection?: string | null;
+  /** Who is speaking. Its own column since 0059 — never notes. */
+  voice?: string | null;
+  version?: number | null;
+  /** What was dropped, and what ingest normalised it to. */
+  source_filename?: string | null;
+  canonical_filename?: string | null;
   placement?: "daily_lifestyle" | "daily_pitch" | "onboarding_intro" | null;
   service_family?: string | null;
   subcategory?: string | null;

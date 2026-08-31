@@ -26,7 +26,9 @@
     "export:cue-questions": "rm -rf .tmp-cq && tsc scripts/export-cue-questions.ts --outDir .tmp-cq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-cq/export-cue-questions.js",
     "import:quotes": "rm -rf .tmp-iq && tsc scripts/import-quotes.ts --outDir .tmp-iq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-iq/import-quotes.js",
     "provision:owner": "rm -rf .tmp-po && tsc scripts/provision-owner.ts --outDir .tmp-po --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-po/provision-owner.js",
-    "ingest:videos": "rm -rf .tmp-iv && tsc -p scripts/tsconfig.ingest.json && mkdir -p .tmp-iv/node_modules/server-only && echo \"module.exports={};\" > .tmp-iv/node_modules/server-only/index.js && ln -sfn .. .tmp-iv/node_modules/@ && node .tmp-iv/scripts/ingest-videos.js"
+    "ingest:videos": "rm -rf .tmp-iv && tsc -p scripts/tsconfig.ingest.json && mkdir -p .tmp-iv/node_modules/server-only && echo \"module.exports={};\" > .tmp-iv/node_modules/server-only/index.js && ln -sfn .. .tmp-iv/node_modules/@ && node .tmp-iv/scripts/ingest-videos.js",
+    "seed:op-codes": "rm -rf .tmp-oc && tsc scripts/seed-op-codes.ts --outDir .tmp-oc --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-oc/seed-op-codes.js",
+    "backfill:content": "rm -rf .tmp-bf && tsc scripts/backfill-content-tags.ts --outDir .tmp-bf --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-bf/backfill-content-tags.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
