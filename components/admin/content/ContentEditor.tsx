@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/brand/Card";
 import {
-  deleteContent,
   saveContent,
   setContentStatus,
 } from "@/app/(app)/admin/content/actions";
@@ -18,7 +17,6 @@ import {
   QUOTE_SLOT_META,
   type QuoteSlotValue,
   isVideoType,
-  serviceToSlug,
   type ContentDraft,
   type ContentRow,
   type ContentTier,
@@ -44,7 +42,6 @@ export function ContentEditor({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const [draft, setDraft] = useState<ContentDraft>({
     id: item?.id,
@@ -107,19 +104,6 @@ export function ContentEditor({
       }
       set("status", next);
       router.refresh();
-    });
-  }
-
-  function handleDelete() {
-    if (!draft.id) return;
-    setError(null);
-    startTransition(async () => {
-      const result = await deleteContent(draft.id!);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      router.push(`/admin/content/service/${serviceToSlug(draft.service_family)}`);
     });
   }
 
@@ -350,37 +334,11 @@ export function ContentEditor({
           {STATUS_META[draft.status].label}
         </span>
 
-        {draft.id && (
-          <span className="ml-auto">
-            {confirmingDelete ? (
-              // Inline confirm rather than window.confirm — a native dialog
-              // blocks the page and can't be styled.
-              <span className="flex items-center gap-2">
-                <span className="text-sm font-bold text-navy">Delete this?</span>
-                <button
-                  onClick={handleDelete}
-                  disabled={pending}
-                  className="rounded-xl bg-clay px-3 py-2 text-sm font-extrabold text-white transition hover:brightness-95 disabled:opacity-60"
-                >
-                  Yes, delete
-                </button>
-                <button
-                  onClick={() => setConfirmingDelete(false)}
-                  className="rounded-xl border border-line px-3 py-2 text-sm font-bold text-navy"
-                >
-                  Cancel
-                </button>
-              </span>
-            ) : (
-              <button
-                onClick={() => setConfirmingDelete(true)}
-                className="rounded-xl border border-line px-3 py-2 text-sm font-bold text-clay transition hover:bg-clay/10"
-              >
-                Delete
-              </button>
-            )}
-          </span>
-        )}
+        {/* NO DELETE. A hard delete on `content` cascades saves, progress and
+            open review items, and daily_completion refuses it outright — so the
+            old button either destroyed an advisor's saves or threw a foreign-key
+            error at the admin. Retire lives on the detail screen, and the
+            deleteContent action was removed so it is not POST-reachable either. */}
       </div>
     </div>
   );

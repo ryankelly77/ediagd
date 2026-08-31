@@ -1,12 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import { getAdminContext } from "@/lib/guards";
-import { listServiceNames } from "@/lib/content-server";
+import { loadContentDetail } from "@/lib/content-detail";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
-import { ContentEditor } from "@/components/admin/content/ContentEditor";
-import { serviceLabel, serviceToSlug, type ContentRow } from "@/lib/content";
+import { ContentDetail } from "@/components/admin/content/ContentDetail";
 
-export default async function EditContentPage({
+/**
+ * One artifact, on the content model.
+ *
+ * The back link goes to the COLLECTION rather than the service family: a video
+ * has no service, and sending somebody back to "No service" after editing a
+ * Mindset clip is the old taxonomy leaking through the navigation.
+ */
+export default async function ContentItemPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -16,27 +22,31 @@ export default async function EditContentPage({
   if (!hasAdminAccess) return <AdminsOnly />;
 
   const { id } = await params;
+  const detail = await loadContentDetail(supabase, id);
+  if (!detail) notFound();
 
-  const [{ data, error }, services] = await Promise.all([
-    supabase.from("content").select("*").eq("id", id).maybeSingle(),
-    listServiceNames(supabase),
-  ]);
-
-  if (error || !data) notFound();
-  const item = data as ContentRow;
+  const { row, voices, opCodes, versions, linked, mux, structure } = detail;
+  const collection = row.collection as string | null;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
-        back={{
-          href: `/admin/content/service/${serviceToSlug(item.service_family)}`,
-          label: serviceLabel(item.service_family),
-        }}
-        title={item.title}
-        subtitle={item.source ? `Source: ${item.source}` : undefined}
+        back={
+          collection
+            ? { href: `/admin/content?collection=${encodeURIComponent(collection)}`, label: collection }
+            : { href: "/admin/content", label: "Coaching Content" }
+        }
+        title={row.title as string}
       />
-
-      <ContentEditor item={item} services={services} />
+      <ContentDetail
+        item={row}
+        voices={voices}
+        opCodes={opCodes}
+        versions={versions}
+        linked={linked}
+        mux={mux}
+        structure={structure}
+      />
     </main>
   );
 }
