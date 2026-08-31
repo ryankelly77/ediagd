@@ -15,7 +15,8 @@
      Identity    title, voice, version, filenames
      Taxonomy    the five tags — the only editable classification
      Structure   where it surfaces, derived and read-only
-     Notes       notes, now that voice has moved out of them
+     Notes       notes, now that voice has moved out of them — but on a quote
+                 row `body` IS the quote, so the section renames itself
      Actions     save, publish, retire
 
    READ-ONLY IS A FEATURE HERE. Mux ids, dimensions, version history and
@@ -174,6 +175,20 @@ export function ContentDetail({
 
   const id = item.id as string;
   const isVideo = item.format === "video";
+  /*
+   * ON A QUOTE ROW, `body` IS THE QUOTE — NOT A NOTE ABOUT IT.
+   *
+   * One column, two meanings, depending on the format: for a video `body` is
+   * the standing description, for a quote it is the words themselves, the ones
+   * the advisor reads on step 1 of the loop. The screen was built for videos
+   * and labelled the box "Notes" for everything, so Mitch would open a quote,
+   * read a heading that says this is a scratchpad, and edit the live quote
+   * believing he was leaving a comment.
+   *
+   * The fix is the label, not the field. Moving quote text to its own column
+   * would fork every reader in the daily loop for no gain.
+   */
+  const isQuote = item.format === "quote";
   const retired = Boolean(item.retired_at);
 
   const [draft, setDraft] = useState<DetailDraft>({
@@ -492,15 +507,24 @@ export function ContentDetail({
         </ul>
       </Section>
 
-      {/* ---- Notes -------------------------------------------------------- */}
-      <Section title="Notes">
+      {/* ---- The words, or the notes about them ---------------------------- */}
+      <Section title={isQuote ? "The quote" : "Notes"}>
         <textarea
           className={`${input} leading-relaxed`}
           rows={4}
           value={draft.body ?? ""}
           onChange={(e) => set("body", e.target.value || null)}
-          placeholder="Anything worth knowing about this item."
+          placeholder={
+            isQuote
+              ? "The words themselves, as the advisor reads them."
+              : "Anything worth knowing about this item."
+          }
         />
+        {isQuote ? (
+          <p className="mt-2 text-sm text-ink-soft">
+            This is the live text an advisor sees in the daily loop. Editing it changes the quote.
+          </p>
+        ) : null}
       </Section>
 
       {/* ---- Replace ------------------------------------------------------ */}

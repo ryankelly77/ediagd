@@ -30,8 +30,8 @@
    consideration entirely rather than lowering its rank.
 
      A  exact    the normalized video string appears verbatim in the quote
-     B  strong   token containment >= 0.85
-     C  possible token containment 0.65 - 0.85, for Ryan's eyes only
+     B  strong   token containment >= 0.85, and the top score is UNIQUE
+     C  possible token containment 0.65 - 0.85, or a tie at the ceiling
         below 0.65, or voice disagrees: not a candidate
 
    CONTAINMENT, NOT JACCARD. The video string is short ("never lose money") and
@@ -158,6 +158,7 @@ const TIER_C = 0.65;
   type Result = {
     video: Row;
     best: { q: Row; score: number; tier: "A" | "B" | "C" } | null;
+    tiedAtCeiling: boolean;
     runnerUp: { q: Row; score: number } | null;
   };
 
@@ -188,9 +189,37 @@ const TIER_C = 0.65;
     }
 
     scored.sort((a, b) => b.score - a.score || a.tier.localeCompare(b.tier));
+
+    /*
+     * TIES AT THE CEILING ARE DEMOTED, NEVER AUTO-B.
+     *
+     * A genuine containment hit is nearly always unique. Two candidates both
+     * scoring 1.0 means one of two things, and both need a person:
+     *
+     *   * the tokens are too common to mean anything. "Day One or One Day"
+     *     reduces to ["day","one"] after stopwords, so every quote containing
+     *     those two words scores 1.0 — it tied with an unrelated line about
+     *     attitude, which is the tell that the number is measuring nothing.
+     *   * the quote library holds the same line twice. Q0063 "Work hard in the
+     *     dark to shine in the light" and Q0095 "You have to work hard in the
+     *     dark..." are one Kobe quote written down twice, and the matcher
+     *     cannot know which row the video belongs to.
+     *
+     * Catching a failure CLASS rather than a failure, the same way the voice
+     * gate does — and without a stoplist to maintain, which would need a new
+     * word every time a title happened to be made of common ones.
+     */
+    let best = scored[0] ?? null;
+    let tiedAtCeiling = false;
+    if (best && best.tier !== "A" && scored[1] && scored[1].score === best.score) {
+      tiedAtCeiling = true;
+      best = { ...best, tier: "C" };
+    }
+
     return {
       video: v,
-      best: scored[0] ?? null,
+      best,
+      tiedAtCeiling,
       runnerUp: scored[1] ? { q: scored[1].q, score: scored[1].score } : null,
     };
   });
@@ -233,7 +262,10 @@ const TIER_C = 0.65;
         r.best?.tier ?? "none",
         r.runnerUp?.q.quote_key ?? "",
         r.runnerUp ? r.runnerUp.score.toFixed(3) : "",
-        r.best && contested.has(r.best.q.id) ? "multi-video-quote" : "none",
+        [
+          r.best && contested.has(r.best.q.id) ? "multi-video-quote" : null,
+          r.tiedAtCeiling ? "tied-at-ceiling" : null,
+        ].filter(Boolean).join(" ") || "none",
         "", // decision — Ryan fills: link | skip | note
       ].map(esc).join(",")
     );
@@ -248,6 +280,11 @@ const TIER_C = 0.65;
   console.log(`    B strong      ${tally("B")}`);
   console.log(`    C possible    ${tally("C")}`);
   console.log(`    none          ${tally("none")}`);
+  const tied = results.filter((r) => r.tiedAtCeiling);
+  console.log(`\n  demoted for tying at the ceiling: ${tied.length}`);
+  tied.forEach((r) =>
+    console.log(`    ${r.video.title.slice(0, 42).padEnd(44)} ${r.best?.q.quote_key} vs ${r.runnerUp?.q.quote_key}`)
+  );
   console.log(`\n  quotes matched by more than one video: ${contested.size}`);
   for (const qid of contested) {
     const q = quotes.find((x) => x.id === qid)!;
