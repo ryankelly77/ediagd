@@ -78,13 +78,22 @@ export default async function TodayPage({
   // Both quotes together: 253 of the 484 are eligible for either slot, so
   // drawing them independently would eventually hand the same quote to both on
   // the same day. pickQuotesForDay makes slot 2 yield to slot 3 on a collision.
-  const [quotes, coaching, lifestyle] = await Promise.all([
-    pickQuotesForDay(supabase, today),
-    pickCoachingCue(supabase, today, focusService, cueTier),
+  /*
+   * THE VIDEO IS PICKED FIRST, ON PURPOSE.
+   *
+   * These used to run together, and they cannot any more: the day's quotes have
+   * to know which artifact the video belongs to so the same idea is not served
+   * twice in one loop — Mitch saying "never lose money" on step 4 and the words
+   * "never lose money" on step 1. The cue still runs in parallel; it has no such
+   * relationship.
+   */
+  const [lifestyle, coaching] = await Promise.all([
     // Signed playback is minted per view — never cached across users, because
     // the token IS the authorisation.
     pickLifestyleVideo(supabase, today, user.id),
+    pickCoachingCue(supabase, today, focusService, cueTier),
   ]);
+  const quotes = await pickQuotesForDay(supabase, today, lifestyle?.artifactId ?? null);
 
   // Which of the day's quotes this advisor has already kept. ONE query for
   // both, and it reads through the user's client so the policy in 0059 is what

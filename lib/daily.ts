@@ -198,7 +198,9 @@ export async function pickQuoteForSlot(
    * collision instead of preventing it. Excluding the id outright does prevent
    * it, and costs one step of the rotation on the days it fires.
    */
-  exclude?: string | null
+  exclude?: string | null,
+  /** The quote today's video is a filming of. See pickQuotesForDay. */
+  alsoExclude?: string | null
 ): Promise<QuoteRow | null> {
   const { data: pool, error } = await client
     .from("content")
@@ -213,7 +215,13 @@ export async function pickQuoteForSlot(
 
   const order = voiceDiverseOrder(pool as { id: string; voice: string | null }[]);
   let index = rotationIndex(date, order.length, 0);
-  if (exclude && order[index] === exclude) index = (index + 1) % order.length;
+  // Step past anything already covered today. Bounded by the pool size so a
+  // pathological case cannot loop; two exclusions can never consume a 300+ pool.
+  for (let i = 0; i < order.length; i++) {
+    const id = order[index];
+    if (id !== exclude && id !== alsoExclude) break;
+    index = (index + 1) % order.length;
+  }
 
   const { data } = await client
     .from("content")
@@ -231,10 +239,38 @@ export async function pickQuoteForSlot(
  */
 export async function pickQuotesForDay(
   client: Client,
-  date: IsoDate
+  date: IsoDate,
+  /**
+   * The artifact today's lifestyle video belongs to, when it has one.
+   *
+   * ONE IDEA IS ONE IDEA, WHATEVER FORMAT IT ARRIVES IN. If the video is Mitch
+   * saying "never lose money", the day's quote must not also be "never lose
+   * money" — the advisor would meet the same line twice in one three-minute
+   * ritual and it would read as the app repeating itself.
+   *
+   * THIS IS A SAME-DAY GUARANTEE BY DESIGN, NOT A WINDOW SOMEBODY FORGOT.
+   *
+   * There is no recency table in this system. The existing repeat-avoidance IS
+   * the deterministic rotation: each pool is walked in order, so an item recurs
+   * once per cycle and never sooner. A cross-day exclusion window would be
+   * redundant with the rotation itself — the only dedup that means anything
+   * here is "do not serve both formats of one idea on the same day", and that
+   * is exactly what this does.
+   *
+   * It reuses the exclusion the picker already has — the same one that stops a
+   * `both`-tagged quote filling slot 2 and slot 3 on one day — extended to
+   * cover the video's twin.
+   */
+  videoArtifactId?: string | null
 ): Promise<{ slot2: QuoteRow | null; slot3: QuoteRow | null }> {
-  const slot3 = await pickQuoteForSlot(client, date, "slot3");
-  const slot2 = await pickQuoteForSlot(client, date, "slot2", slot3?.id ?? null);
+  const slot3 = await pickQuoteForSlot(client, date, "slot3", videoArtifactId ?? null);
+  const slot2 = await pickQuoteForSlot(
+    client,
+    date,
+    "slot2",
+    slot3?.id ?? null,
+    videoArtifactId ?? null
+  );
   return { slot2, slot3 };
 }
 
@@ -527,7 +563,7 @@ export async function pickLifestyleVideo(
     .from("content")
     .select(
       "id, title, mux_playback_id, mux_playback_policy, " +
-        "vertical_playback_id, vertical_status"
+        "vertical_playback_id, vertical_status, artifact_id"
     )
     .eq("type", "advisor_video")
     .eq("placement", "daily_lifestyle")
@@ -554,6 +590,7 @@ export async function pickLifestyleVideo(
     id: string; title: string;
     mux_playback_id: string | null; mux_playback_policy: string | null;
     vertical_playback_id: string | null; vertical_status: string | null;
+    artifact_id: string | null;
   }[];
   if (!list.length) return null;
 
@@ -589,9 +626,26 @@ export async function pickLifestyleVideo(
     .eq("user_id", userId)
     .maybeSingle();
 
+  /* The words, when this video is a filming of a quote. One extra read only on
+     the days a linked video is served, which is a minority of them. */
+  let quoteText: string | null = null;
+  let quoteVoice: string | null = null;
+  if (row.artifact_id) {
+    const { data: twin } = await client
+      .from("content")
+      .select("body, voice")
+      .eq("id", row.artifact_id)
+      .maybeSingle();
+    quoteText = (twin?.body as string) ?? null;
+    quoteVoice = (twin?.voice as string) ?? null;
+  }
+
   return {
     contentId: row.id,
     title: row.title,
+    artifactId: row.artifact_id,
+    quoteText,
+    quoteVoice,
     playbackId: tokens.playbackId,
     token: tokens.token,
     thumbnailToken: tokens.thumbnailToken,
@@ -615,4 +669,15 @@ export type LifestyleVideoData = {
   positionSec: number | null;
   orientation: "vertical" | "landscape";
   cropToVertical: boolean;
+  /**
+   * The text row this video is a filming of, when the two are linked (0064).
+   *
+   * ONE IDEA, TWO FORMATS. The words exist as a quote and the video is Mitch
+   * saying them, so the player card can carry the attribution without a second
+   * lookup. Whether the UI shows it is a design call — the data is here either
+   * way, which is what the link was for.
+   */
+  artifactId: string | null;
+  quoteText: string | null;
+  quoteVoice: string | null;
 };
