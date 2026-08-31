@@ -108,12 +108,20 @@ export default async function ContentHomePage() {
 
   const { buckets, byType, totalDrafts, total } = await loadBuckets(supabase);
 
-  // The queue of things an import could not decide. Head-only count — the page
-  // itself does the reading.
-  const { count: needsYou } = await supabase
-    .from("content_review")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "open");
+  /*
+   * The queue of things an import could not decide. Head-only counts — the page
+   * itself does the reading.
+   *
+   * Duplicates are added to the SAME number rather than given a card of their
+   * own. They are the same job from Mitch's side — a question about words, in
+   * the admin, answerable in a minute — and a second badge would split one
+   * short list into two lists that each look ignorable.
+   */
+  const [{ count: openReviews }, { count: openDuplicates }] = await Promise.all([
+    supabase.from("content_review").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabase.from("quote_duplicate_group").select("id", { count: "exact", head: true }).eq("status", "open"),
+  ]);
+  const needsYou = (openReviews ?? 0) + (openDuplicates ?? 0);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -219,7 +227,8 @@ export default async function ContentHomePage() {
           </p>
           <p className="mt-2 text-sm text-white/80">
             Things the import couldn&apos;t decide — pick an ending, supply the
-            missing words, say who said it. →
+            missing words, say who said it, choose between two quotes that say
+            the same thing. →
           </p>
         </Link>
       )}

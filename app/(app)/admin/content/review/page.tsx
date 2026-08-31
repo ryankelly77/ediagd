@@ -4,6 +4,8 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { Card } from "@/components/brand/Card";
 import { ReviewItem, type ReviewRow } from "@/components/admin/content/ReviewItem";
+import { DuplicateGroupCard } from "@/components/admin/content/DuplicateGroupCard";
+import { loadDuplicateQueue } from "@/lib/duplicates";
 
 /* ============================================================================
    EDIAGD — Needs you
@@ -64,14 +66,17 @@ export default async function ContentReviewPage() {
    * thousands — it is bounded by how much a person can answer, which is the
    * point of it existing.
    */
-  const { data } = await supabase
-    .from("content_review")
-    .select(
-      "id, content_id, reason, detail, options, content:content_id(title, body, coaching_nugget, voice, source, type)"
-    )
-    .eq("status", "open")
-    .order("reason")
-    .limit(500);
+  const [{ data }, duplicates] = await Promise.all([
+    supabase
+      .from("content_review")
+      .select(
+        "id, content_id, reason, detail, options, content:content_id(title, body, coaching_nugget, voice, source, type)"
+      )
+      .eq("status", "open")
+      .order("reason")
+      .limit(500),
+    loadDuplicateQueue(supabase),
+  ]);
 
   const rows: ReviewRow[] = (data ?? []).map((r) => {
     // PostgREST returns an embedded to-one as an object, but types it as
@@ -103,7 +108,7 @@ export default async function ContentReviewPage() {
     };
   });
 
-  const total = rows.length;
+  const total = rows.length + duplicates.length;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -116,6 +121,31 @@ export default async function ContentReviewPage() {
             : `${total} ${total === 1 ? "item" : "items"} the imports could not decide on their own.`
         }
       />
+
+      {/* ---- Duplicates, first ---------------------------------------------
+          Above the word questions because every one of them is currently
+          serving BOTH versions to advisors. A missing coaching nugget is a
+          quote that reads thin; a live duplicate is the app repeating itself,
+          which is the thing an advisor notices. */}
+      {duplicates.length > 0 && (
+        <section id="duplicates" className="mt-4 scroll-mt-4">
+          <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
+            Duplicates
+            <span className="ml-2 text-clay">{duplicates.length}</span>
+          </h2>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink-soft">
+            Two ways of saying one thing, both live. Usually a short version that
+            fits on a card and a longer one that carries the coaching — you pick
+            which advisors get. The obvious repeats were already cleared; these
+            are the ones only you can call.
+          </p>
+          <div className="mt-3 space-y-3">
+            {duplicates.map((g) => (
+              <DuplicateGroupCard key={g.id} group={g} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {total === 0 ? (
         <Card className="mt-4 p-6">
