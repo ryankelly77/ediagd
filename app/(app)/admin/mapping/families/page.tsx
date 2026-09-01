@@ -28,6 +28,24 @@ type FamilyRow = {
  * reached: `high` means the name settled it, `ruled` means somebody decided.
  * The ones worth Mitch's attention are the ones that were judgement calls.
  */
+/**
+ * How many rows a note needs to be readable WITHOUT scrolling it sideways.
+ *
+ * These were single-line <input>s, which is fine for a name and wrong for a
+ * note: op_code_family notes run to 182 characters and the catalog's to 233,
+ * and a one-line field at 390px shows about forty. The rest existed but could
+ * only be read by arrowing through it a character at a time — which is the same
+ * as not being able to read it.
+ *
+ * ~44 characters per line is the observed wrap on a 390px card at this font
+ * size. Capped at 12 rows so one enormous note cannot push the Save button off
+ * the screen; past that it scrolls, which is the honest trade.
+ */
+function noteRows(text: string | null | undefined): number {
+  const len = (text ?? "").length;
+  return Math.min(12, Math.max(2, Math.ceil(len / 44) + 1));
+}
+
 export default async function FamiliesPage() {
   const supabase = await createClient();
   const {
@@ -74,7 +92,7 @@ export default async function FamiliesPage() {
   const coachable = map.filter((r) => r.coachable).length;
 
   return (
-    <>
+    <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin/mapping", label: "Mapping" }}
         trail={[{ href: "/admin", label: "Admin" }]}
@@ -82,7 +100,7 @@ export default async function FamiliesPage() {
         subtitle={`${map.length} codes across ${byFamily.size} families — ${coachable} coachable, ${map.length - coachable} mapped for reporting only.`}
       />
 
-      <Card className="mb-4 border-dashed">
+      <Card className="mt-4 border-dashed p-5">
         <p className="text-sm text-ink-soft">
           Moving a code between families moves the revenue it carries.{" "}
           <strong className="text-navy">Not coachable</strong> means map it for
@@ -99,12 +117,12 @@ export default async function FamiliesPage() {
         </p>
       </Card>
 
-      <div className="space-y-5">
+      <div className="mt-6 space-y-6">
         {[...byFamily].map(([family, list]) => {
           const cues = cuesBy.get(family) ?? 0;
           return (
             <div key={family}>
-              <div className="mb-2 flex items-baseline justify-between gap-3">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
                 <p className="text-sm font-bold uppercase tracking-[0.14em] text-ocean">
                   {family}
                 </p>
@@ -116,7 +134,7 @@ export default async function FamiliesPage() {
                 {list.map((r) => {
                   const cat = catalogBy.get(r.code);
                   return (
-                    <Card key={r.code}>
+                    <Card key={r.code} className="p-5">
                       <div className="flex items-baseline justify-between gap-3">
                         <p className="font-mono text-sm font-extrabold text-navy">
                           {r.code}
@@ -135,9 +153,6 @@ export default async function FamiliesPage() {
                         </p>
                       </div>
                       <p className="mt-0.5 text-sm text-ink">{cat?.name ?? "—"}</p>
-                      {r.note && (
-                        <p className="mt-1 text-xs text-ink-soft">{r.note}</p>
-                      )}
 
                       <form action={updateOpCodeFamily} className="mt-3 space-y-2">
                         <input type="hidden" name="code" value={r.code} />
@@ -165,12 +180,13 @@ export default async function FamiliesPage() {
                             Coachable
                           </label>
                         </div>
-                        <input
+                        <textarea
                           name="note"
                           defaultValue={r.note ?? ""}
+                          rows={noteRows(r.note)}
                           placeholder="Why this ruling?"
                           aria-label={`Note for ${r.code}`}
-                          className="w-full rounded-xl border border-line bg-surface-card px-3 py-2 text-sm text-ink"
+                          className="w-full resize-y rounded-xl border border-line bg-surface-card px-3 py-2 text-sm leading-relaxed text-ink"
                         />
                         <button
                           type="submit"
@@ -187,6 +203,6 @@ export default async function FamiliesPage() {
           );
         })}
       </div>
-    </>
+    </main>
   );
 }

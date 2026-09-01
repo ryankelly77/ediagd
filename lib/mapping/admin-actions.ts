@@ -55,6 +55,33 @@ function done() {
   MAPPING_PATHS.forEach((p) => revalidatePath(p));
 }
 
+/**
+ * Today, in the dealership's timezone — NOT in UTC.
+ *
+ * `effective_from` marks the day a mapping changed for MEASUREMENT, and the
+ * periods it will eventually be compared against are store-local. Stamping it
+ * from `new Date().toISOString()` makes every edit after ~7pm Central land on
+ * tomorrow's date, which would put an epoch boundary in the middle of a
+ * business day that had already been measured.
+ *
+ * This is not hypothetical: all 73 rows carry 2026-09-01 because the seed ran
+ * at 20:31 Central on 2026-08-31, and the column's `default current_date` is
+ * evaluated in UTC. The rows are a day ahead of the day the ruling was made.
+ *
+ * Every rooftop is America/Chicago today. When that stops being true this has
+ * to take a rooftop and use the `rooftop_today` RPC — but op_code_family is
+ * group-wide, so there is no rooftop to take, and pretending otherwise would be
+ * a worse lie than the timezone literal.
+ */
+function storeToday(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Chicago",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 /* ---------------------------------------------------------------------------
    Screen 1 · Op Codes
 --------------------------------------------------------------------------- */
@@ -160,7 +187,7 @@ export async function updateOpCodeFamily(formData: FormData): Promise<void> {
       note: note || null,
       /* A human has now ruled on it, whatever the seed's guess was. */
       confidence: "ruled",
-      effective_from: new Date().toISOString().slice(0, 10),
+      effective_from: storeToday(),
       updated_at: new Date().toISOString(),
     })
     .eq("code", code);

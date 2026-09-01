@@ -61,7 +61,7 @@ export default async function AliasesPage() {
   const waiting = aliases.filter((a) => !a.confirmed);
 
   return (
-    <>
+    <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin/mapping", label: "Mapping" }}
         trail={[{ href: "/admin", label: "Admin" }]}
@@ -69,7 +69,7 @@ export default async function AliasesPage() {
         subtitle={`${aliases.length} translations${waiting.length ? `, ${waiting.length} waiting on a ruling` : ""}.`}
       />
 
-      <Card className="mb-4 border-dashed">
+      <Card className="mt-4 border-dashed p-5">
         <p className="text-sm text-ink-soft">
           A <strong className="text-navy">proposed</strong> alias is visible and
           inert: the importer resolves confirmed rows only, so a guess cannot
@@ -85,9 +85,9 @@ export default async function AliasesPage() {
         )}
       </Card>
 
-      <div className="space-y-2">
+      <div className="mt-4 space-y-2">
         {aliases.map((a) => (
-          <Card key={a.id} className={a.confirmed ? undefined : "border-clay"}>
+          <Card key={a.id} className={`p-5 ${a.confirmed ? "" : "border-clay"}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-mono text-sm font-extrabold text-navy">
@@ -123,7 +123,7 @@ export default async function AliasesPage() {
         ))}
       </div>
 
-      <Card className="mt-4">
+      <Card className="mt-4 p-5">
         <p className="text-base font-extrabold text-navy">Add an alias</p>
         <p className="mt-1 text-sm text-ink-soft">
           Starts unconfirmed, whoever adds it. An op-code alias whose target is
@@ -172,6 +172,6 @@ export default async function AliasesPage() {
           </button>
         </form>
       </Card>
-    </>
+    </main>
   );
 }

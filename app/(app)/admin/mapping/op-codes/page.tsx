@@ -27,6 +27,24 @@ type CatalogRow = {
  * is the order Mitch's sheet is in and this screen is the thing he will check
  * against it.
  */
+/**
+ * How many rows a note needs to be readable WITHOUT scrolling it sideways.
+ *
+ * These were single-line <input>s, which is fine for a name and wrong for a
+ * note: op_code_family notes run to 182 characters and the catalog's to 233,
+ * and a one-line field at 390px shows about forty. The rest existed but could
+ * only be read by arrowing through it a character at a time — which is the same
+ * as not being able to read it.
+ *
+ * ~44 characters per line is the observed wrap on a 390px card at this font
+ * size. Capped at 12 rows so one enormous note cannot push the Save button off
+ * the screen; past that it scrolls, which is the honest trade.
+ */
+function noteRows(text: string | null | undefined): number {
+  const len = (text ?? "").length;
+  return Math.min(12, Math.max(2, Math.ceil(len / 44) + 1));
+}
+
 export default async function OpCodesPage() {
   const supabase = await createClient();
   const {
@@ -65,7 +83,7 @@ export default async function OpCodesPage() {
   const live = catalog.filter((r) => !r.retired_at).length;
 
   return (
-    <>
+    <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin/mapping", label: "Mapping" }}
         trail={[{ href: "/admin", label: "Admin" }]}
@@ -73,7 +91,7 @@ export default async function OpCodesPage() {
         subtitle={`${live} live of ${catalog.length}, across ${byCategory.size} categories. Seeded from data/op_code_seed.csv.`}
       />
 
-      <Card className="mb-4 border-dashed">
+      <Card className="mt-4 border-dashed p-5">
         <p className="text-sm text-ink-soft">
           A code can be <strong className="text-navy">retired</strong> but never
           deleted. Content filed under a retired code stays filed under it —
@@ -83,10 +101,10 @@ export default async function OpCodesPage() {
         </p>
       </Card>
 
-      <div className="space-y-5">
+      <div className="mt-6 space-y-6">
         {[...byCategory].map(([category, list]) => (
           <div key={category}>
-            <p className="mb-2 text-sm font-bold uppercase tracking-[0.14em] text-ocean">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-ocean">
               {category}
             </p>
             <div className="space-y-2">
@@ -95,7 +113,7 @@ export default async function OpCodesPage() {
                 return (
                   <Card
                     key={r.code}
-                    className={r.retired_at ? "opacity-60" : undefined}
+                    className={`p-5 ${r.retired_at ? "opacity-60" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -152,12 +170,13 @@ export default async function OpCodesPage() {
                           className="w-full rounded-xl border border-line bg-surface-card px-3 py-2 text-sm text-ink sm:max-w-[14rem]"
                         />
                       </div>
-                      <input
+                      <textarea
                         name="notes"
                         defaultValue={r.notes ?? ""}
+                        rows={noteRows(r.notes)}
                         placeholder="Notes"
                         aria-label={`Notes for ${r.code}`}
-                        className="w-full rounded-xl border border-line bg-surface-card px-3 py-2 text-sm text-ink"
+                        className="w-full resize-y rounded-xl border border-line bg-surface-card px-3 py-2 text-sm leading-relaxed text-ink"
                       />
                       <button
                         type="submit"
@@ -173,6 +192,6 @@ export default async function OpCodesPage() {
           </div>
         ))}
       </div>
-    </>
+    </main>
   );
 }

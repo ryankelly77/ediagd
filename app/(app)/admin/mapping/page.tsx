@@ -66,17 +66,17 @@ export default async function MappingHub() {
   ];
 
   return (
-    <>
+    <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/admin", label: "Admin" }}
         title="Mapping"
         subtitle="What Mitch coaches, what the DMS measures, and the bridges between them."
       />
 
-      <div className="space-y-3">
+      <div className="mt-4 space-y-2">
         {tools.map((t) => (
           <Link key={t.href} href={t.href} className="block">
-            <Card className="transition hover:border-teal">
+            <Card className="p-5 transition hover:border-teal">
               <p className="text-base font-extrabold text-navy">{t.label}</p>
               <p className="mt-1 text-sm text-ink-soft">{t.hint}</p>
             </Card>
@@ -91,7 +91,7 @@ export default async function MappingHub() {
         nothing reads. Leaving it off this page would make the set look
         complete, and the next person would have to rediscover the gap.
       */}
-      <Card className="mt-3 border-dashed">
+      <Card className="mt-2 border-dashed p-5">
         <p className="text-base font-extrabold text-navy">Dealer Codes</p>
         <p className="mt-1 text-sm text-ink-soft">
           Not built. The DMS emits 208 codes that share no namespace with the
@@ -99,6 +99,6 @@ export default async function MappingHub() {
           reaches op-code grain through the family map instead.
         </p>
       </Card>
-    </>
+    </main>
   );
 }
