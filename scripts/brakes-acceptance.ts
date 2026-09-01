@@ -196,6 +196,18 @@ const TODAY = "2026-08-31" as const;
     tier: "low" as const,
   };
 
+  /*
+   * WHICH RUNG FIRES DEPENDS ON WHICH CODE THE BLOCK LOCKED, and after the
+   * re-import that is no longer one answer. Brake Service has SEVEN coachable
+   * codes and the knowledge tabs produced content for exactly one of them —
+   * BFF-012, two rows, and only because an EV Hybrid row happens to be about
+   * brake fluid. So a block rotates onto op-code content roughly one day in
+   * seven and onto the family shelf the other six.
+   *
+   * Asserting only the rotated code would make this test pass or fail on the
+   * calendar, which is not a test. Both cases are asserted instead, and the
+   * op-code case is the one that proves the import changed anything.
+   */
   const coaching = await pickCoachingCueForBlock(sb, TODAY, block);
 
   /*
@@ -211,13 +223,33 @@ const TODAY = "2026-08-31" as const;
    * When the re-import lands this assertion is expected to CHANGE to
    * 'op_code_stage_tier'. It failing at that point is the test doing its job.
    */
-  check("the ladder lands on the family rung", coaching.matched, "family");
-  ok("a real cue came back", coaching.cue !== null, coaching.cue?.title ?? "none");
+  ok("a real cue came back", coaching.cue !== null, `${opCode} -> ${coaching.matched}`);
   check(
     "and it is a Brake Service cue",
     (coaching.cue as { service_family?: string } | null)?.service_family,
     "Brake Service"
   );
+
+  /*
+   * THE IMPORT'S SIGNAL. Before Phase 1 no content row carried an op code at
+   * all, so rungs 1-3 could not fire for anybody and this returned `family`.
+   * It now returns `op_code`, which is the whole point of the bridge.
+   *
+   * NOT `op_code_stage_tier`, and it never will be from this content: the
+   * knowledge workbook has no stage column on any of its 76 sheets, so rungs 1
+   * and 2 stay unreachable until the pitch videos are filmed and tagged.
+   */
+  const onBff = await pickCoachingCueForBlock(sb, TODAY, {
+    ...block,
+    opCode: "BFF-012",
+  });
+  check("a BFF-012 block now reaches op-code content", onBff.matched, "op_code");
+  ok("and the cue is about brake fluid", onBff.cue !== null, onBff.cue?.title?.slice(0, 60) ?? "none");
+
+  /* A Brake code the tabs produced nothing for still lands on the family shelf
+     rather than falling through to nothing — the bridge doing its job. */
+  const uncovered = await pickCoachingCueForBlock(sb, TODAY, { ...block, opCode: "BPR-029" });
+  check("a code with no content falls to the family rung", uncovered.matched, "family");
 
   /*
    * Step 3 is skipped and RECORDED as skipped. Nothing is in 'Pitches by Op

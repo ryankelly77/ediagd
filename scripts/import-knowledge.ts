@@ -63,6 +63,7 @@
 
 import ExcelJS from "exceljs";
 import { createClient } from "@supabase/supabase-js";
+import { writeFileSync } from "node:fs";
 
 const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
   auth: { persistSession: false },
@@ -131,7 +132,28 @@ const WANTED = [
   "Product Knowledge — Wipers",
   "MOC Warranty",
   "The 4-Step Close",
+  "MPI Setup & GYR System",
 ];
+
+/*
+ * PROCESS TABS, NOT PRODUCT KNOWLEDGE.
+ *
+ * These two are class-transcript sheets — Nugget Title · Full Coaching Nugget ·
+ * Direct Quote / Word Track — and their subject is HOW THE ADVISOR WORKS rather
+ * than what a part does. 'MPI Setup & GYR System' is the green/yellow/red
+ * grading system; 'The 4-Step Close' is what · how much · time · authorization.
+ *
+ * So they file as Craft and carry no op code: there is no op code that "sell at
+ * yellow, not at red" is about, and inventing one to satisfy a collection
+ * constraint would put process coaching on a parts shelf. Their `Best Applied
+ * To` column names op codes in prose ("BPF-028 Brakes · TRO-022 Tires") and that
+ * is a list of examples, not a subject.
+ *
+ * 'MPI Setup & GYR System' was outside the original nine. Three of the six
+ * orphan stumps came from it — words that exist in the workbook, which is a
+ * better answer than asking Mitch to retype them.
+ */
+const PROCESS_TABS = new Set(["The 4-Step Close", "MPI Setup & GYR System"]);
 
 const HEADER_START = /^(fact\s*\/\s*talking point|nugget title)/i;
 
@@ -210,12 +232,14 @@ function table(title: string, rows: [string, number][]) {
   console.log(`  ${known.size} catalog codes · ${familyOf.size} mapped to families · ${alias.size} confirmed aliases`);
 
   /* ---- The existing drafts ---------------------------------------------- */
-  const drafts: { id: string; title: string; source: string | null }[] = [];
+  const drafts: { id: string; title: string; source: string | null; source_tab: string | null }[] = [];
   for (let o = 0; ; o += 1000) {
     const { data, error } = await sb
       .from("content")
-      .select("id, title, source")
-      .eq("type", "cue").eq("status", "draft")
+      .select("id, title, source, source_tab")
+      // Retired rows are excluded: the 85 duplicates a previous run withdrew
+      // must not be reconsidered as stumps and retired a second time.
+      .eq("type", "cue").eq("status", "draft").is("retired_at", null)
       .order("id").range(o, o + 999);
     if (error) throw new Error(error.message);
     drafts.push(...((data ?? []) as typeof drafts));
@@ -224,6 +248,34 @@ function table(title: string, rows: [string, number][]) {
   const stumps = drafts.filter((d) => isStump(d.title));
   const written = drafts.filter((d) => !isStump(d.title));
   console.log(`  ${drafts.length} draft cues: ${stumps.length} stumps, ${written.length} written (untouched)\n`);
+
+  /*
+   * ---- Rows a previous run already wrote ---------------------------------
+   *
+   * THIS IS WHAT MAKES THE IMPORTER RE-RUNNABLE, WHICH IS THE WHOLE POINT.
+   * Mitch will revise the workbook and a re-run is how a revision lands. The
+   * unique index in 0068 turns a second blind INSERT into an error rather than
+   * a doubled library — but erroring is not the goal, updating is. Rows are
+   * matched on (source_tab, source_row), which is the only key that survives
+   * the text changing, since changed text is exactly what a re-import brings.
+   *
+   * Published rows are included on purpose: a correction to a live cue has to
+   * reach the live cue. `status` is never written here, so a re-run cannot
+   * un-publish anything.
+   */
+  const existing = new Map<string, string>();
+  for (let o = 0; ; o += 1000) {
+    const { data, error } = await sb
+      .from("content")
+      .select("id, source_tab, source_row")
+      .not("source_tab", "is", null)
+      .is("retired_at", null)
+      .order("id").range(o, o + 999);
+    if (error) throw new Error(error.message);
+    (data ?? []).forEach((r) => existing.set(`${r.source_tab} ${r.source_row}`, r.id as string));
+    if (!data || data.length < 1000) break;
+  }
+  console.log(`  ${existing.size} rows already carry a (source_tab, source_row) — a re-run updates these\n`);
 
   /* ---- The workbook ------------------------------------------------------ */
   const wb = new ExcelJS.Workbook();
@@ -234,7 +286,8 @@ function table(title: string, rows: [string, number][]) {
     tab: string; row: number; id: string | null; normFact: string;
     title: string; body: string; detail: string;
     tier: string; opCode: string | null; family: string | null;
-    needsOpCode: boolean;
+    collection: string | null; needsOpCode: boolean; unconfirmed: boolean;
+    inherited: boolean;
   };
 
   const planned: Planned[] = [];
@@ -265,28 +318,82 @@ function table(title: string, rows: [string, number][]) {
       }
       const uniq = [...new Set(resolved)];
 
-      const families = [...new Set(uniq.map((c) => familyOf.get(c)).filter(Boolean))] as string[];
-
       const title = firstSentence(r.fact);
       const body = zeroLowLine(r.tier) ?? title;
       const detail = squash(stripStars(r.fact));
       const tier = zeroLowLine(r.tier) ? "zero" : "generic";
 
+      const process = PROCESS_TABS.has(name);
+
+      /*
+       * THE PRIMARY IS THE FIRST RESOLVABLE CODE IN THE ROW, IN DOCUMENT ORDER.
+       *
+       * `op_code` is a single column and the `Op Code / Pairs With` cell often
+       * names several — the first is the subject and the rest are what it is
+       * sold alongside. Mitch writes them in that order.
+       *
+       * THE EXTRAS HAVE NOWHERE TO GO, AND DO NOT NEED ONE. There is no pairs
+       * column on `content`, and adding one would be a second copy of something
+       * that already exists: op_code_catalog.piggyback_partners records which
+       * codes pair with which, for all 73, and it is the seed file's own column.
+       * A per-row copy would drift from it the first time Mitch revised either.
+       */
+      /*
+       * AND WHEN THE CELL IS PROSE, THE TAB IS THE DECLARATION.
+       *
+       * 117 rows write notes where a code belongs — "All EV op codes",
+       * "Tesla 8yr/100-150K", "Ford EV POE CRITICAL". The tab they sit in DOES
+       * declare real codes in its `Op Codes:` header, and a row inside the EV
+       * Hybrid tab is an EV Hybrid row whatever its own cell says. The cell is
+       * a note; the header is the declaration.
+       *
+       * Inheriting is an inference, so it is recorded as one — `op_code_inherited`
+       * (0069) marks every row routed this way, because a row routed by its own
+       * code and a row routed by the tab it happened to sit in are not equally
+       * trustworthy and the difference vanishes once both just carry `op_code`.
+       */
+      const inherited = uniq.length === 0 && !process;
+      const fromTab = headerCodes.filter((c) => known.has(c) || alias.has(c))
+        .map((c) => (known.has(c) ? c : alias.get(c)!))
+        .filter((c) => known.has(c));
+      const effective = uniq.length > 0 ? uniq : fromTab;
+
+      const opCode = process ? null : (effective[0] ?? null);
+
       planned.push({
         tab: name, row: r.row, id: null, normFact: norm(r.fact),
         title, body, detail, tier,
+        opCode,
+        // Every row's codes resolve to exactly one family or none — verified
+        // across all 783 before this was written. No tie to break.
         /*
-         * ONE CODE OR NONE. `op_code` is a single column, and a knowledge row
-         * about serpentine belts naming five codes has no one code it is about.
-         * Picking the first would be arbitrary and would make rung 3 fire on a
-         * guess. Multi-code rows carry the FAMILY instead and are reached at
-         * rung 4, which is where family-grain coaching lives anyway.
+         * THE FAMILY FOLLOWS THE PRIMARY CODE, NOT THE WHOLE SET.
+         *
+         * Deriving it from every code on the row returns null whenever they
+         * span two families — and the EV Hybrid tab declares CPC-051, RDD-052
+         * AND BAT-033, so its header spans EV & Hybrid and Battery and every
+         * inherited row came out unrouted. The row is about its primary code;
+         * the rest are what it is sold alongside. One subject, one family.
          */
-        opCode: uniq.length === 1 ? uniq[0] : null,
-        // Every row resolves to exactly one family or none — verified across
-        // all 783 before this was written. No tie to break.
-        family: families.length === 1 ? families[0] : null,
-        needsOpCode: uniq.length === 0 && sawUnconfirmed,
+        family: opCode ? (familyOf.get(opCode) ?? null) : null,
+        /*
+         * Craft for process, 'Pitches by Op Code' for a knowledge row that has
+         * a subject, null for one that does not. The last case is what keeps
+         * 0063 satisfied: that collection REQUIRES an op code, so a row without
+         * one cannot claim it — and a row without one is going to review anyway.
+         */
+        inherited: inherited && Boolean(opCode),
+        collection: process ? "Craft" : opCode ? "Pitches by Op Code" : null,
+        // Only rows whose OWN cell and whose TAB both fail to name a code are
+        // still a question for Mitch. That is the handful, not the 117.
+        needsOpCode: !process && effective.length === 0,
+        /*
+         * Two different asks, and Mitch should not get the same card for both.
+         * `sawUnconfirmed` means the row DID name a code and it is sitting in
+         * mapping_alias unconfirmed — ACO-010, one line from him and it
+         * resolves. Without it, the row simply never named a code.
+         */
+        unconfirmed: sawUnconfirmed,
       });
     }
   }
@@ -308,6 +415,13 @@ function table(title: string, rows: [string, number][]) {
    * it. A stump is ~60 characters of the Fact, which is specific enough to be
    * unambiguous; the last word is dropped because the cut lands mid-word.
    */
+  /* A row this importer already created owns its content row outright — no
+     text matching needed, and none wanted: its text may have just changed. */
+  for (const p of planned) {
+    const id = existing.get(`${p.tab} ${p.row}`);
+    if (id) { p.id = id; matchedIds.add(id); }
+  }
+
   const byTab = new Map<string, Planned[]>();
   planned.forEach((p) => {
     const l = byTab.get(p.tab) ?? [];
@@ -318,6 +432,9 @@ function table(title: string, rows: [string, number][]) {
   let ambiguous = 0;
   let dbg = 0;
   for (const d of stumps) {
+    // Already repaired by a previous run — it carries the pair now, and the
+    // loop above has already claimed it.
+    if (d.source_tab) { matchedIds.add(d.id); continue; }
     const tab = (d.source ?? "").replace(/^Mitch import — /, "");
     const candidates = byTab.get(tab);
     if (!candidates) continue; // source label has no tab in scope — an orphan
@@ -387,12 +504,45 @@ function table(title: string, rows: [string, number][]) {
     (d) => inScope.has((d.source ?? "").replace(/^Mitch import — /, ""))
   );
 
+  /*
+   * WHICH ROW SURVIVES EACH DUPLICATE — needed before anything is retired.
+   *
+   * A duplicate's words are being repaired on the stump that claimed the source
+   * row, so anything ATTACHED to the duplicate has to move there first. Right
+   * now that means the review queue: 44 open items sit on draft cues, and
+   * retiring one out from under an open question would delete Mitch's question
+   * along with the row, silently. The unique index cannot catch that and
+   * nothing would ever report it.
+   */
+  const survivorOf = new Map<string, string>();
+  for (const d of duplicates) {
+    const tab = (d.source ?? "").replace(/^Mitch import — /, "");
+    const words = norm(d.title).split(" ");
+    const prefix = words.slice(0, Math.max(1, words.length - 1)).join(" ");
+    const hit = (byTab.get(tab) ?? []).find((c) => c.id && c.normFact.startsWith(prefix));
+    if (hit?.id) survivorOf.set(d.id, hit.id);
+  }
+
   console.log(`  ${planned.length} source rows planned`);
   table("UPDATE in place (stump repaired, id preserved)", [["rows", updates.length]]);
   table("INSERT as draft", [["rows", inserts.length]]);
   console.log(`\n  ${ambiguous} stumps had more than one candidate source row` +
     ` (shortest Fact wins — a longer Fact that merely opens the same way is not the source).`);
-  table("DUPLICATE STUMPS -> retire (their words are repaired on another row)", [["rows", duplicates.length]]);
+  /*
+   * A DUPLICATE WITH NO IDENTIFIED SURVIVOR IS NOT A DUPLICATE — it is a stump
+   * whose source row this pass could not name, and retiring it would withdraw
+   * words that exist nowhere else. One row falls here. It goes to Mitch with
+   * the genuine orphans rather than into the retire batch, because "probably a
+   * copy" is not good enough to withdraw content on.
+   */
+  const retiring = duplicates.filter((d) => survivorOf.has(d.id));
+  const unsure = duplicates.filter((d) => !survivorOf.has(d.id));
+
+  table("DUPLICATE STUMPS -> retire (their words are repaired on another row)", [
+    ["rows", retiring.length],
+  ]);
+  table("DUPLICATE-LOOKING, NO SURVIVOR FOUND -> review, not retired", [["rows", unsure.length]]);
+  unsure.forEach((o) => console.log(`         ${o.source ?? "?"} — ${o.title.slice(0, 58)}`));
   table("ORPHAN STUMPS -> review queue as 'truncated'", [["rows", orphans.length]]);
   orphans.forEach((o) => console.log(`         ${o.source ?? "?"} — ${o.title.slice(0, 58)}`));
   table("UNTOUCHED (Mitch's finished writing)", [["rows", written.length]]);
@@ -403,11 +553,19 @@ function table(title: string, rows: [string, number][]) {
 
   const withCode = planned.filter((p) => p.opCode).length;
   const review = planned.filter((p) => p.needsOpCode);
+  const craft = planned.filter((p) => p.collection === "Craft");
   table("op_code assigned", [
     ["rows with exactly one code", withCode],
     ["rows with none or several", planned.length - withCode],
   ]);
-  table("-> review as 'needs_op_code' (ACO-010 waiting on Mitch)", [["rows", review.length]]);
+  table("op_code INHERITED from the tab header (an inference, flagged)", [
+    ["rows", planned.filter((p) => p.inherited).length],
+  ]);
+  table("CRAFT (process tabs — no op code by design)", [["rows", craft.length]]);
+  table("-> review as 'needs_op_code'", [
+    ["named ACO-010, unconfirmed alias", review.filter((r) => r.unconfirmed).length],
+    ["never named a resolvable code", review.filter((r) => !r.unconfirmed).length],
+  ]);
 
   const starved = ["HVAC", "Belts & Cooling", "Wipers", "Lighting", "Suspension", "Inspections", "Oil Change", "Alignment"];
   table(
@@ -421,8 +579,35 @@ function table(title: string, rows: [string, number][]) {
   console.log(`  Brake Service rows: ${planned.filter((p) => p.family === "Brake Service").length}` +
     `  (with an op_code: ${planned.filter((p) => p.family === "Brake Service" && p.opCode).length})`);
 
+  /*
+   * THE REPORT CSV IS REGENERATED FROM THIS PLAN, NOT MAINTAINED ALONGSIDE IT.
+   *
+   * reports/knowledge-tabs.csv was written by the Phase 0 pass and carried a
+   * `matched_id` column produced by the map-direction bug — 138 matches where
+   * the report's own summary table said 223. A report that contradicts its own
+   * prose is a trap for whoever reads it next, and the durable fix is not to
+   * correct the number by hand but to stop having two sources for it. This is
+   * the same plan the importer applies, so they cannot drift again.
+   */
+  const esc = (v: unknown) => {
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [
+    ["tab", "src_row", "action", "matched_id", "title", "body", "tier", "op_code", "service_family", "collection", "needs_review"].join(","),
+    ...planned.map((p) =>
+      [
+        p.tab, p.row, p.id ? "update" : "insert", p.id ?? "",
+        p.title, p.body, p.tier, p.opCode ?? "", p.family ?? "", p.collection ?? "",
+        p.needsOpCode ? (p.unconfirmed ? "needs_op_code:ACO-010" : "needs_op_code:prose") : "",
+      ].map(esc).join(",")
+    ),
+  ].join("\n");
+  writeFileSync("reports/knowledge-tabs.csv", csv + "\n");
+  console.log(`\n  rewrote reports/knowledge-tabs.csv — ${planned.length} rows, ${updates.length} marked update`);
+
   if (DRY) {
-    console.log(`\n  --dry: nothing written.\n`);
+    console.log(`  --dry: nothing written to the database.\n`);
     return;
   }
 
@@ -434,7 +619,8 @@ function table(title: string, rows: [string, number][]) {
       .from("content")
       .update({
         title: p.title, body: p.body, detail: p.detail, tier: p.tier,
-        service_family: p.family, op_code: p.opCode,
+        service_family: p.family, op_code: p.opCode, collection: p.collection,
+        op_code_inherited: p.inherited,
         source_tab: p.tab, source_row: p.row,
         updated_at: new Date().toISOString(),
       })
@@ -454,7 +640,8 @@ function table(title: string, rows: [string, number][]) {
     const batch = inserts.slice(i, i + 200).map((p) => ({
       type: "cue", status: "draft", format: "cue",
       title: p.title, body: p.body, detail: p.detail, tier: p.tier,
-      service_family: p.family, op_code: p.opCode,
+      service_family: p.family, op_code: p.opCode, collection: p.collection,
+      op_code_inherited: p.inherited,
       source: `Mitch import — ${p.tab}`,
       source_tab: p.tab, source_row: p.row,
     }));
@@ -464,15 +651,67 @@ function table(title: string, rows: [string, number][]) {
   }
   console.log(`  inserted ${inserted}`);
 
+  /* ---- Retire the duplicates, moving anything attached to them first ----- */
+  /*
+   * ORDER MATTERS. The review items move BEFORE the retire, so a failure
+   * between the two leaves a question on a live row rather than on a withdrawn
+   * one. content_review has `unique (content_id, reason)`, so a move onto a row
+   * that already carries the same question would collide — those are dropped
+   * rather than duplicated, because the surviving row already asks it.
+   */
+  const { data: openReviews } = await sb
+    .from("content_review")
+    .select("id, content_id, reason")
+    .in("content_id", retiring.map((d) => d.id));
+
+  let moved = 0, dropped = 0;
+  for (const rv of openReviews ?? []) {
+    const survivor = survivorOf.get(rv.content_id as string);
+    if (!survivor) continue;
+    const { error } = await sb
+      .from("content_review")
+      .update({ content_id: survivor })
+      .eq("id", rv.id);
+    // 23505 = the survivor already carries this question. Nothing is lost.
+    if (error) {
+      if ((error as { code?: string }).code === "23505") { dropped++; continue; }
+      throw new Error(`move review ${rv.id}: ${error.message}`);
+    }
+    moved++;
+  }
+  if ((openReviews ?? []).length) {
+    console.log(`  moved ${moved} review items off duplicates (${dropped} already asked on the survivor)`);
+  }
+
+  /*
+   * RETIRED, NOT DELETED. 0062's retired_at is a soft delete precisely so
+   * lesson credit, saves, view history and completed-day records survive
+   * somebody tidying the CMS. These rows stay draft — they were never published
+   * — and a retired row is recoverable, which is what makes retiring 85 of them
+   * a safe action rather than an irreversible one.
+   */
+  let retired = 0;
+  for (let i = 0; i < retiring.length; i += 200) {
+    const batch = retiring.slice(i, i + 200).map((d) => d.id);
+    const { error } = await sb
+      .from("content")
+      .update({ retired_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .in("id", batch);
+    if (error) throw new Error(`retire batch ${i}: ${error.message}`);
+    retired += batch.length;
+  }
+  console.log(`  retired ${retired} duplicates`);
+
   /* ---- The review queue -------------------------------------------------- */
-  for (const o of orphans) {
+  for (const o of [...orphans, ...unsure]) {
     const { error } = await sb.from("content_review").upsert(
       {
         content_id: o.id,
         reason: "truncated",
         detail:
-          "This cue was cut at 60 characters on import and there is no row in " +
-          "the v2 workbook to recover it from. Please supply the missing words.",
+          "This cue was cut short on import and no row in the v2 workbook could " +
+          "be matched to it, so there is nothing to repair it from automatically. " +
+          "Please supply the missing words.",
       },
       { onConflict: "content_id,reason" }
     );
@@ -495,10 +734,13 @@ function table(title: string, rows: [string, number][]) {
         {
           content_id: id,
           reason: "needs_op_code",
-          detail:
-            "This row's only op code is ACO-010 (A/C Odor), which is not in the " +
-            "catalog. Evaporator cleaning IS the odor service, so ACE-053 is " +
-            "proposed — one line from you confirms it and the row resolves.",
+          detail: r.unconfirmed
+            ? "This row's only op code is ACO-010 (A/C Odor), which is not in " +
+              "the catalog. Evaporator cleaning IS the odor service, so ACE-053 " +
+              "is proposed — one line from you confirms it and the row resolves."
+            : "This row's Op Code column is prose rather than a code (\"All EV " +
+              "op codes\", \"Tesla 8yr/100-150K\"), so nothing routes it. Which " +
+              "op code is it about?",
         },
         { onConflict: "content_id,reason" }
       );
@@ -506,7 +748,21 @@ function table(title: string, rows: [string, number][]) {
       flagged++;
     }
   }
-  console.log(`  flagged ${flagged} for review\n`);
+  /*
+   * THE QUESTIONS THIS RUN ANSWERED CLOSE THEMSELVES.
+   *
+   * There is no resolve pass here, and there was one for about ten minutes.
+   * `content_review_autoclose()` (0061) is an AFTER UPDATE trigger on content
+   * that already resolves a `needs_op_code` item the moment op_code changes to
+   * a non-null value — so tab inheritance closed 64 cards before this script
+   * could look at them, and a second implementation would only be able to
+   * disagree with the first.
+   *
+   * Worth stating rather than deleting silently: the count below reads 0 not
+   * because nothing was answered but because the database answered it.
+   */
+
+  console.log(`  flagged ${flagged} for review (needs_op_code items close via the 0061 trigger)\n`);
 })().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
