@@ -1,0 +1,74 @@
+code,name,catalog_category,family,coachable,confidence,note
+EAF-001,Engine Air Filter,Filters,Filters,true,high,
+CAF-002,Cabin Air Filter,Filters,Filters,true,high,
+FF-003,Fuel Filter,Filters,Filters,true,medium,"Filed by part, not by system. Fuel System is arguable; kept with the other filters."
+TRF-004,Transmission Filter,Filters,Filters,true,medium,"Same split as FF-003: the filter is a Filters part, the fluid service (TRF-011) is Fluids."
+DFF-005,Differential Filter,Filters,Differential,true,ruled,"Never sold alone; follows its piggyback partner DFF-014 (Differential Fluid). Ryan's group-4 rule."
+PCV-006,PCV Valve,Filters,Filters,true,ruled,"Never sold alone; follows its piggyback partner EAF-001 (Engine Air Filter). Ryan's group-4 rule."
+BRF-007,Breather Filter,Filters,Filters,true,high,
+OF-008,Oil Filter,Filters,Oil Change,true,ruled,"Group 3 — coach the conversation, not the part. Moves with OIL-009, EFL-046, OAD-063."
+OIL-009,Engine Oil Service,Fluids,Oil Change,true,ruled,"Name over category. The catalog files this under Fluids; Oil Change is its own family and this is its code."
+CLF-010,Coolant Flush,Fluid Exchanges,Fluids,true,medium,"Belts & Cooling is the hardware — belts, hoses, water pump. This is the fluid."
+TRF-011,Transmission Fluid,Fluid Exchanges,Fluids,true,high,
+BFF-012,Brake Fluid Flush,Brakes,Brake Service,true,high,
+BFF-013,Brake Quiet,Brakes,Brake Service,true,high,"CATALOG FIX FOR MITCH: BFF-012 is Brake Fluid Flush and BFF-013 is Brake Quiet — two unrelated services one digit apart under a prefix that reads as 'brake fluid'."
+PSF-013,Power Steering Fluid,Fluid Exchanges,Fluids,true,high,
+DFF-014,Differential Fluid,Fluid Exchanges,Differential,true,high,"The fluid IS the service for this family."
+TCF-015,Transfer Case Fluid,Fluid Exchanges,Fluids,true,medium,"Driveline, so Differential is arguable. Filed with the other fluid exchanges."
+WWF-016,Washer Fluid Top-Off,Fluid Exchanges,Wipers,true,ruled,"CHANGED from my Fluids proposal. Follows its piggyback partner WBF-018 (Front Wiper Blades), and the Wipers family exists. Ryan's group-4 rule."
+FSC-017,Fuel System Cleaner,Fluid Exchanges,Fuel System,true,high,
+WBF-018,Front Wiper Blades,Wipers,Wipers,true,high,
+WBR-019,Rear Wiper Blade,Wipers,Wipers,true,high,"PIGGYBACK TYPO: references WTR-022, which does not exist."
+WBI-020,Wiper Inserts,Wipers,Wipers,true,high,"PIGGYBACK TYPO: references WTR-023, which does not exist."
+WTR-021,Windshield Treatment,Wipers,Wipers,true,high,"PIGGYBACK TYPOS: references WBF-019 and WBF-020, neither of which exists."
+TRO-022,Tire Rotation,Tires,Tires & Rotation,true,high,
+TBL-023,Tire Balance,Tires,Tires & Rotation,true,high,
+ALN-024,Wheel Alignment,Tires,Alignment,true,high,"Name over category: Alignment is its own coachable family."
+NIT-025,Nitrogen Inflation,Tires,Tires & Rotation,true,high,
+TPS-026,TPMS Service,Tires,Tires & Rotation,true,high,"CATALOG FIX FOR MITCH: collides with TPS-050 Tire Pressure Check."
+TSL-027,Tire Sealant,Tires,Tires & Rotation,true,high,
+BPF-028,Brake Pads Front,Brakes,Brake Service,true,high,
+BPR-029,Brake Pads Rear,Brakes,Brake Service,true,high,
+RTF-030,Rotors Front,Brakes,Brake Service,true,high,
+RTR-031,Rotors Rear,Brakes,Brake Service,true,high,
+BCS-032,Caliper Service,Brakes,Brake Service,true,high,
+BAT-033,Battery Replacement,Battery & Electrical,Battery,true,high,
+BTS-034,Battery Terminal Service,Battery & Electrical,Battery,true,high,
+BTT-035,Battery Test,Battery & Electrical,Battery,true,high,
+ATT-036,Alternator Test,Battery & Electrical,Battery,true,medium,"Charging system rather than the battery itself; Battery has no electrical sibling."
+BLB-037,Bulb Replacement,Battery & Electrical,Lighting,true,high,"Name over category: Lighting is its own family."
+SRP-038,Serpentine Belt,Belts & Hoses,Belts & Cooling,true,high,
+TMB-039,Timing Belt,Belts & Hoses,Belts & Cooling,true,high,
+WTP-040,Water Pump,Belts & Hoses,Belts & Cooling,true,high,
+IDP-041,Idler Pulley,Belts & Hoses,Belts & Cooling,true,high,
+CLH-042,Coolant Hoses,Belts & Hoses,Belts & Cooling,true,high,
+SPK-043,Spark Plugs,Engine & Performance,Spark Plugs,true,high,
+TBC-044,Throttle Body Clean,Engine & Performance,Fuel System,true,medium,"Air side rather than fuel side, but sold in the induction conversation with FIC-045."
+FIC-045,Fuel Injector Clean,Engine & Performance,Fuel System,true,high,
+EFL-046,Engine Flush,Engine & Performance,Oil Change,true,ruled,Group 3 — moves with the oil-change orbit.
+ACR-047,AC Recharge,Engine & Performance,HVAC,true,high,"HVAC is content-gated at zero cues today; the A/C HVAC re-import turns it on."
+ACS-048,AC System Check,Engine & Performance,HVAC,true,high,
+HLR-049,Headlight Restoration,Engine & Performance,Lighting,true,high,
+TPS-050,Tire Pressure Check,Engine & Performance,Tires & Rotation,true,high,"CATALOG FIX FOR MITCH: filed under Engine & Performance rather than Tires, and collides with TPS-026."
+CPC-051,Charge Port Cleaner,EV / Hybrid,EV & Hybrid,true,ruled,Group 1 — the 21st family.
+RDD-052,Rodent Deterrent,EV / Hybrid,EV & Hybrid,true,ruled,Group 1 — the 21st family.
+ACE-053,AC Evaporator Cleaning,Engine & Performance,HVAC,true,high,"Alias target for EVC-007 and (proposed) ACO-010."
+ABT-054,Arctic Blast,Engine & Performance,HVAC,true,high,Alias target for ABL-006.
+SUS-058,Suspension Service,Suspension,Suspension,true,high,"PIGGYBACK TYPOS: references TIR-022 and TRO-024, neither of which exists."
+DPF-059,Diesel Particulate Filter Service,Engine & Performance,Fuel System,true,ruled,"Group 1 — flagged. A one-code Emissions family is not worth its own shelf until Mitch adds more diesel content."
+ACC-060,Accessories,Accessories,Accessories,false,high,"Never coached, by design — see the note in lib/dms/mapping.ts."
+MPI-061,Multi-Point Inspection,Inspection,Inspections,false,ruled,"Group 4 — the process that generates the other sales, not a service sold against a benchmark. Its coaching is two of Mitch's six stages (MPI Setup, After-MPI). Never an Eddie's Pick."
+UCI-062,Used Car Inspection,Inspection,Inspections,true,high,
+OAD-063,Oil Additive,Fluids,Oil Change,true,ruled,Group 3 — moves with the oil-change orbit.
+HYB-064,Hybrid / EV Maintenance,EV / Hybrid,EV & Hybrid,true,ruled,"Group 1 — the 21st family. 89 EV/Hybrid cues are waiting on it."
+MNU-001,Oil Change Menu — Basic,Menus,Oil Change,false,ruled,"Group 2 — map for reporting, never coach. A bundle cannot be below benchmark on attach."
+MNU-002,Oil Change Menu — Preferred,Menus,Oil Change,false,ruled,Group 2 — map for reporting, never coach.
+MNU-003,Oil Change Menu — Premium,Menus,Oil Change,false,ruled,Group 2 — map for reporting, never coach.
+MNU-004,Tire & Brake Menu,Menus,Tires & Rotation,false,ruled,"Group 2 settles it. Spans Tires & Rotation and Brake Service; filed with what it leads with, and never coached, so the split does not matter."
+MNU-005,Engine Performance Menu,Menus,Fuel System,false,ruled,Group 2 — map for reporting, never coach.
+MNU-006,Cooling System Menu,Menus,Belts & Cooling,false,ruled,Group 2 — map for reporting, never coach.
+MNU-007,AC Service Menu,Menus,HVAC,false,ruled,Group 2 — map for reporting, never coach.
+MNU-008,Transmission Service Menu,Menus,Fluids,false,ruled,Group 2 — map for reporting, never coach.
+MNU-009,Seasonal Prep — Winter,Menus,Maintenance,false,ruled,Group 2 — map for reporting, never coach.
+MNU-010,Seasonal Prep — Summer,Menus,Maintenance,false,ruled,Group 2 — map for reporting, never coach.
+MNU-011,High Mileage Menu,Menus,Maintenance,false,ruled,Group 2 — map for reporting, never coach.

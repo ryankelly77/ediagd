@@ -32,6 +32,8 @@
     "match:quotes": "rm -rf .tmp-mq && tsc scripts/match-video-quotes.ts --outDir .tmp-mq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-mq/match-video-quotes.js",
     "link:artifacts": "rm -rf .tmp-la && tsc scripts/link-artifacts.ts --outDir .tmp-la --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-la/link-artifacts.js",
     "find:dupes": "rm -rf .tmp-fd && tsc scripts/find-quote-duplicates.ts --outDir .tmp-fd --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-fd/find-quote-duplicates.js",
+    "seed:op-family": "rm -rf .tmp-of && tsc scripts/seed-op-code-family.ts --outDir .tmp-of --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-of/scripts/seed-op-code-family.js",
+    "report:tabs": "rm -rf .tmp-kt && tsc scripts/knowledge-tabs-report.ts --outDir .tmp-kt --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-kt/knowledge-tabs-report.js",
     "dedupe:quotes": "rm -rf .tmp-dq && tsc scripts/dedupe-quotes.ts --outDir .tmp-dq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-dq/dedupe-quotes.js"
   },
   "dependencies": {

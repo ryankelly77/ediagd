@@ -16,8 +16,8 @@
    membership.op_code_id points at it. Putting service codes there would leave
    every advisor foreign-keyed to a catalog of engine air filters. See 0062.
 
-     npm run seed:op-codes -- --file="/path/to/op_code_seed.csv" --dry
-     npm run seed:op-codes -- --file="/path/to/op_code_seed.csv"
+     npm run seed:op-codes -- --file=data/op_code_seed.csv --dry
+     npm run seed:op-codes -- --file=data/op_code_seed.csv
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";

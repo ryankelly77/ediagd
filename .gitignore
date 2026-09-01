@@ -76,5 +76,7 @@ exports/
 .tmp-la/
 .tmp-fd/
 .tmp-dq/
+.tmp-kt/
+.tmp-of/
 .tmp-rc/
 .tmp-cq/
