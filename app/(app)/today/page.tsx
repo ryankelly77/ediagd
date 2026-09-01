@@ -12,6 +12,7 @@ import {
 } from "@/lib/daily";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ensureBlockForToday, loadBlockDays } from "@/lib/coaching-block";
+import { mintWatchTicket } from "@/lib/watch-ticket";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
@@ -280,6 +281,15 @@ export default async function TodayPage({
       cueMatch={coaching.matched}
       pitchVideo={pitchVideo}
       pitchVideoSkipped={pitchVideoSkipped}
+      /*
+       * Minted here, at the moment the step is actually served, and signed so
+       * the round trip through the client cannot alter it. This is the only
+       * trustworthy answer to "when did they first see this video", and the
+       * server's plausibility check is worthless without it — an unsigned
+       * timestamp could simply be moved backwards to widen the window.
+       */
+      pitchWatchTicket={mintWatchTicket(user.id, pitchVideo?.contentId ?? null)}
+      lifestyleWatchTicket={mintWatchTicket(user.id, lifestyle?.contentId ?? null)}
       totalRos={advisorDay?.totalRos ?? 0}
       badgeNames={badgeNames}
       badgeRewards={badgeRewards}

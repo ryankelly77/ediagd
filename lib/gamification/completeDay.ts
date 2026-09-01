@@ -39,6 +39,8 @@ import {
 import { loadScheduleContext } from "@/lib/work-schedule";
 import { readOpenBlock } from "@/lib/coaching-block";
 import type { CueMatch } from "@/lib/daily";
+import { readWatchTicket } from "@/lib/watch-ticket";
+import { clampWatchPct, isWatched, watchIsPlausible } from "@/lib/watch-coverage";
 
 export type CompleteDayInput = {
   /** Step 1 — the life quote. */
@@ -54,6 +56,16 @@ export type CompleteDayInput = {
   pitchVideoSkipped?: boolean | null;
   /** Which rung of the cue ladder fired. Null means no coaching was attempted. */
   cueMatch?: CueMatch | null;
+  /*
+   * MEASURED BY THE CLIENT, VERIFIED HERE. The percentages are what the player
+   * observed; the tickets are what this function needs to decide whether the
+   * observation was physically possible. Neither is trusted on its own.
+   */
+  pitchWatchPct?: number | null;
+  lifestyleWatchPct?: number | null;
+  watchError?: boolean | null;
+  pitchWatchTicket?: string | null;
+  lifestyleWatchTicket?: string | null;
 };
 
 export type CompleteDayResult = {
@@ -139,6 +151,25 @@ export async function completeDay(
    */
   const block = await readOpenBlock(supabase, userId);
 
+  /*
+   * ---- 1d. Is the claimed watch physically possible? ----------------------
+   *
+   * THE CLIENT REPORTS, THE SERVER VERIFIES — the same posture as the block
+   * above. A Server Action is reachable by direct POST, so a completion can
+   * arrive claiming a full watch of a twenty-minute video the instant the page
+   * loaded. What a forger cannot do is make time pass, and the signed ticket
+   * says exactly how much has.
+   *
+   * The duration comes from the DATABASE, never from the request: taking it
+   * from the client would let a forgery declare the video four seconds long and
+   * satisfy its own check.
+   *
+   * Only a claim AT OR ABOVE the bar is checked. A completion reporting 40% is
+   * not claiming credit, so there is nothing to forge and nothing to refuse —
+   * and refusing it would turn an honest partial watch into a lost day.
+   */
+  const watch = await verifyWatch(supabase, userId, today, content);
+
   // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
   const { data: completion, error: completionError } = await supabase
     .from("daily_completion")
@@ -160,6 +191,9 @@ export async function completeDay(
       stage: block?.opCode ? block.stage : null,
       cue_tier: block?.tier ?? null,
       cue_match: content.cueMatch ?? null,
+      pitch_video_watch_pct: watch.pitchPct,
+      lifestyle_video_watch_pct: watch.lifestylePct,
+      watch_error: watch.error,
       was_scheduled: wasScheduled,
     })
     .select("id")
@@ -443,6 +477,91 @@ export async function completeDay(
 }
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
+
+/**
+ * Check each video's claimed watch against the time that has actually passed.
+ *
+ * Returns the values to store. A claim that fails the check does not silently
+ * become a smaller number — it throws, because quietly storing 40% when the
+ * client said 100% would hide an attempted forgery in a column somebody later
+ * reads as a measurement.
+ *
+ * A MISSING TICKET IS NOT A REJECTION. Tickets are minted per video, so a step
+ * with no video has none, and a client that lost one has a completion worth
+ * saving. What it loses is the ability to claim a full watch: with nothing to
+ * check against, an at-or-above-bar claim is refused and anything below it is
+ * stored as reported.
+ */
+async function verifyWatch(
+  supabase: ServiceClient,
+  userId: string,
+  today: IsoDate,
+  content: CompleteDayInput
+): Promise<{ pitchPct: number | null; lifestylePct: number | null; error: boolean }> {
+  const one = async (
+    contentId: string | null | undefined,
+    rawPct: number | null | undefined,
+    ticket: string | null | undefined,
+    label: string
+  ): Promise<number | null> => {
+    // No video on this step: null means unmeasured, which is not zero.
+    if (!contentId) return null;
+    if (rawPct == null) return null;
+
+    const pct = clampWatchPct(rawPct);
+    if (!isWatched(pct)) return pct; // nothing is being claimed
+
+    const check = readWatchTicket(ticket, userId, contentId);
+    if (!check.ok) {
+      throw new CompleteDayError(
+        `Could not verify the ${label} video watch (${check.reason}). Reload the day and try again.`,
+        "watch.ticket"
+      );
+    }
+
+    /* Authoritative duration. Never the client's. */
+    const { data: row } = await supabase
+      .from("content")
+      .select("duration_sec")
+      .eq("id", contentId)
+      .maybeSingle();
+    const durationSec = row?.duration_sec == null ? null : Number(row.duration_sec);
+
+    if (!watchIsPlausible(pct, durationSec, check.elapsedSec)) {
+      throw new CompleteDayError(
+        `That ${label} video reports ${pct}% watched ${Math.round(check.elapsedSec)}s after it was opened, ` +
+          `which is less time than the video runs. Play it through and the day will save.`,
+        "watch.implausible"
+      );
+    }
+    return pct;
+  };
+
+  const pitchPct = await one(
+    content.pitchVideoId,
+    content.pitchWatchPct,
+    content.pitchWatchTicket,
+    "pitch"
+  );
+  const lifestylePct = await one(
+    content.videoId,
+    content.lifestyleWatchPct,
+    content.lifestyleWatchTicket,
+    "lifestyle"
+  );
+
+  /*
+   * `watch_error` is only meaningful where a video was actually served. A day
+   * with no videos at all has nothing that could have failed, and recording
+   * true there would put a broken-player marker on a day that had no player.
+   */
+  const served = Boolean(content.pitchVideoId || content.videoId);
+  return {
+    pitchPct,
+    lifestylePct,
+    error: served ? Boolean(content.watchError) : false,
+  };
+}
 
 async function readBalance(supabase: ServiceClient, userId: string): Promise<number> {
   const { data } = await supabase

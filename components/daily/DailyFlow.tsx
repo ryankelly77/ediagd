@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MuxVideo, VideoNotReady } from "@/components/video/MuxVideo";
+import { VideoNotReady } from "@/components/video/MuxVideo";
+import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { completeDayAction } from "@/app/(app)/daily/actions";
 import { BadgeCelebration } from "./BadgeCelebration";
 import { MILESTONES } from "@/lib/gamification/streak";
@@ -66,6 +67,8 @@ export function DailyFlow({
   cueMatch,
   pitchVideo,
   pitchVideoSkipped,
+  pitchWatchTicket,
+  lifestyleWatchTicket,
   totalRos,
   badgeNames,
   badgeRewards,
@@ -94,6 +97,14 @@ export function DailyFlow({
   pitchVideo: PitchVideo | null;
   /** True when a pitch video was looked for and not found; null when not looked for. */
   pitchVideoSkipped: boolean | null;
+  /*
+   * SIGNED "SERVED AT" STAMPS, minted by the page and handed straight back.
+   * The client never reads or alters them — it could not; they carry an HMAC.
+   * They are what lets the server refuse a completion claiming a full watch
+   * two seconds after the step appeared. See lib/watch-ticket.
+   */
+  pitchWatchTicket: string | null;
+  lifestyleWatchTicket: string | null;
   totalRos: number;
   badgeNames: Record<string, string>;
   /** Badge key -> Sand Dollars it pays, from game_settings / the catalog. */
@@ -128,6 +139,15 @@ export function DailyFlow({
 
   // Captured at mount, so a later server re-render can't turn this on.
   const [doneOnArrival] = useState(alreadyCompleteOnLoad);
+
+  /*
+   * WHAT WAS ACTUALLY WATCHED, held here rather than in the steps, because the
+   * step unmounts when the flow moves on and the celebration is what posts it.
+   * Null means "no video on this step" — distinct from 0, which means a video
+   * was served and none of it played.
+   */
+  const [pitchWatch, setPitchWatch] = useState<WatchState | null>(null);
+  const [lifestyleWatch, setLifestyleWatch] = useState<WatchState | null>(null);
 
   // Terminal screen: they've already done today. It WAITS — nothing here
   // navigates on its own.
@@ -211,6 +231,7 @@ export function DailyFlow({
             video={pitchVideo}
             focus={focus}
             threshold={videoThreshold}
+            onWatch={setPitchWatch}
             onNext={() => setStep(4)}
           />
         )}
@@ -219,6 +240,7 @@ export function DailyFlow({
           <LifestyleStep
             video={lifestyle}
             threshold={videoThreshold}
+            onWatch={setLifestyleWatch}
             onNext={() => {
               // Mark the ritual as ours BEFORE the mutation fires, so the
               // server re-render it triggers can't bounce us to /advisor.
@@ -246,6 +268,11 @@ export function DailyFlow({
             pitchVideoId={pitchVideo?.contentId ?? null}
             pitchVideoSkipped={pitchVideoSkipped}
             cueMatch={cueMatch}
+            pitchWatchPct={pitchWatch ? pitchWatch.pct : null}
+            lifestyleWatchPct={lifestyleWatch ? lifestyleWatch.pct : null}
+            watchError={Boolean(pitchWatch?.error || lifestyleWatch?.error)}
+            pitchWatchTicket={pitchWatchTicket}
+            lifestyleWatchTicket={lifestyleWatchTicket}
             badgeNames={badgeNames}
             badgeRewards={badgeRewards}
             today={today}
@@ -290,13 +317,15 @@ export type LifestyleVideo = {
 function LifestyleStep({
   video,
   threshold,
+  onWatch,
   onNext,
 }: {
   video: LifestyleVideo | null;
   threshold: number;
+  onWatch: (state: WatchState) => void;
   onNext: () => void;
 }) {
-  const [cleared, setCleared] = useState((video?.watchedPct ?? 0) >= threshold);
+  const [watch, setWatch] = useState<WatchState>({ pct: 0, met: false, error: false });
 
   return (
     <>
@@ -312,7 +341,8 @@ function LifestyleStep({
 
       <div className="flex flex-1 flex-col justify-center py-6">
         {video ? (
-          <MuxVideo
+          <TrackedVideo
+            policy="gate-continue"
             contentId={video.contentId}
             playbackId={video.playbackId}
             token={video.token}
@@ -324,7 +354,10 @@ function LifestyleStep({
             initialPositionSec={video.positionSec}
             orientation={video.orientation}
             cropToVertical={video.cropToVertical}
-            onReachedThreshold={() => setCleared(true)}
+            onWatchChange={(s) => {
+              setWatch(s);
+              onWatch(s);
+            }}
           />
         ) : (
           <VideoNotReady reason="The next one lands here as soon as it's cut." />
@@ -332,9 +365,23 @@ function LifestyleStep({
       </div>
       </PhoneScreen.Body>
       <PhoneScreen.Footer>
-        <PrimaryButton onClick={onNext}>
-        {cleared ? "Finish the day" : "Continue"}
-      </PrimaryButton>
+        {/*
+          NO VIDEO IS NOT A GATE. When nothing is published the step renders its
+          honest empty state, and holding the day shut behind a video that does
+          not exist would strand every advisor on step 4 — the exact "must never
+          cost an advisor their streak" case, arriving from the content side
+          rather than the network.
+        */}
+        <PrimaryButton
+          tone="clay"
+          disabled={Boolean(video) && !watch.met && !watch.error}
+          onClick={onNext}
+        >
+          {watch.met || !video ? "Finish the day" : "Continue"}
+        </PrimaryButton>
+        {video && !watch.met && !watch.error && (
+          <WatchGateLine pct={watch.pct} met={watch.met} />
+        )}
       </PhoneScreen.Footer>
     </>
   );
@@ -605,14 +652,16 @@ function PitchStep({
   video,
   focus,
   threshold,
+  onWatch,
   onNext,
 }: {
   video: PitchVideo;
   focus: Focus | null;
   threshold: number;
+  onWatch: (state: WatchState) => void;
   onNext: () => void;
 }) {
-  const [cleared, setCleared] = useState(video.watchedPct >= threshold);
+  const [watch, setWatch] = useState<WatchState>({ pct: 0, met: false, error: false });
 
   return (
     <>
@@ -628,7 +677,8 @@ function PitchStep({
       )}
 
       <div className="flex flex-1 flex-col justify-center py-6">
-        <MuxVideo
+        <TrackedVideo
+          policy="gate-continue"
           contentId={video.contentId}
           playbackId={video.playbackId}
           token={video.token}
@@ -640,14 +690,24 @@ function PitchStep({
           initialPositionSec={video.positionSec}
           orientation={video.orientation}
           cropToVertical={video.cropToVertical}
-          onReachedThreshold={() => setCleared(true)}
+          onWatchChange={(s) => {
+            setWatch(s);
+            onWatch(s);
+          }}
         />
       </div>
       </PhoneScreen.Body>
       <PhoneScreen.Footer>
-        <PrimaryButton onClick={onNext}>
-          {cleared ? "Got the pitch" : "Continue"}
+        <PrimaryButton
+          tone="clay"
+          disabled={!watch.met && !watch.error}
+          onClick={onNext}
+        >
+          {watch.met ? "Got the pitch" : "Continue"}
         </PrimaryButton>
+        {/* The line disappears once the gate is open — it has nothing left to
+            say, and a full bar under an enabled button is decoration. */}
+        {!watch.met && !watch.error && <WatchGateLine pct={watch.pct} met={watch.met} />}
       </PhoneScreen.Footer>
     </>
   );
@@ -694,6 +754,11 @@ function CelebrationStep({
   pitchVideoId,
   pitchVideoSkipped,
   cueMatch,
+  pitchWatchPct,
+  lifestyleWatchPct,
+  watchError,
+  pitchWatchTicket,
+  lifestyleWatchTicket,
   badgeNames,
   badgeRewards,
   today,
@@ -708,6 +773,11 @@ function CelebrationStep({
   pitchVideoId: string | null;
   pitchVideoSkipped: boolean | null;
   cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
+  pitchWatchPct: number | null;
+  lifestyleWatchPct: number | null;
+  watchError: boolean;
+  pitchWatchTicket: string | null;
+  lifestyleWatchTicket: string | null;
   badgeNames: Record<string, string>;
   badgeRewards: Record<string, number>;
   today: string;
@@ -747,6 +817,11 @@ function CelebrationStep({
         pitchVideoId,
         pitchVideoSkipped,
         cueMatch,
+        pitchWatchPct,
+        lifestyleWatchPct,
+        watchError,
+        pitchWatchTicket,
+        lifestyleWatchTicket,
       });
       if (!response.ok) {
         setError(response.error);
@@ -770,6 +845,11 @@ function CelebrationStep({
     pitchVideoId,
     pitchVideoSkipped,
     cueMatch,
+    pitchWatchPct,
+    lifestyleWatchPct,
+    watchError,
+    pitchWatchTicket,
+    lifestyleWatchTicket,
     result,
     today,
     previewResult,
@@ -1126,14 +1206,47 @@ function DoneForTodayScreen({ streak }: { streak: number }) {
 function PrimaryButton({
   onClick,
   children,
+  disabled = false,
+  tone = "gold",
 }: {
   onClick: () => void;
   children: React.ReactNode;
+  /**
+   * Muted and inert. The button keeps its words and its place — it does not
+   * vanish, shrink, or grow a countdown. An advisor who taps it early gets
+   * nothing and can see, from the line underneath, why.
+   */
+  disabled?: boolean;
+  /**
+   * `clay` on the two video steps, per the watch-gate spec. Gold is the
+   * loop's usual CTA and is documented in MuxVideo as reserved for exactly
+   * that, so this is a deliberate departure on the gated steps rather than a
+   * new default — worth confirming before it spreads.
+   */
+  tone?: "gold" | "clay";
 }) {
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        className="w-full cursor-not-allowed rounded-xl border border-line bg-cream-card p-4 text-lg font-extrabold text-ink-soft"
+      >
+        {children}
+      </button>
+    );
+  }
+  const clay = tone === "clay";
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+      className={`w-full rounded-xl p-4 text-lg font-extrabold transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+        clay
+          ? "bg-clay text-white focus-visible:ring-clay"
+          : "bg-gold text-navy focus-visible:ring-gold"
+      }`}
     >
       {children}
     </button>

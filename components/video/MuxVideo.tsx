@@ -53,7 +53,19 @@ export type MuxVideoProps = {
   /** Fired once, the first time the threshold is crossed in this session. */
   onReachedThreshold?: (pct: number) => void;
   /** Fired when playback ends, regardless of whether the bar was cleared. */
-  onEnded?: () => void;
+  onEnded?: (event: Event) => void;
+  /*
+   * PASSED THROUGH FOR THE COVERAGE TRACKER, which needs the raw media events
+   * this component already listens to. It keeps its own furthest-point
+   * recording either way — the two measurements answer different questions
+   * (see lib/watch-coverage) and both are wanted, so the internal handler runs
+   * first and then calls out. A tracker that replaced this handler would
+   * silently stop content_progress from ever being written.
+   */
+  onTimeUpdate?: (event: Event) => void;
+  onPlay?: (event: Event) => void;
+  onPause?: (event: Event) => void;
+  onError?: (event: Event) => void;
   /** Hide the built-in progress read-out when a parent draws its own. */
   showProgress?: boolean;
   /**
@@ -88,6 +100,10 @@ export function MuxVideo({
   initialPositionSec = null,
   onReachedThreshold,
   onEnded,
+  onTimeUpdate,
+  onPlay,
+  onPause,
+  onError,
   showProgress = true,
   orientation = "landscape",
   cropToVertical = false,
@@ -128,6 +144,15 @@ export function MuxVideo({
 
   const handleTimeUpdate = useCallback(
     (event: Event) => {
+      /*
+       * The tracker is notified FIRST and unconditionally. Every early return
+       * below is a reason this component has nothing to record — metadata not
+       * loaded, playhead moved backwards — and none of them is a reason to
+       * withhold the event from a coverage measurement that has its own rules
+       * about what counts.
+       */
+      onTimeUpdate?.(event);
+
       const el = event.currentTarget as HTMLVideoElement | null;
       if (!el || !el.duration || !Number.isFinite(el.duration)) return;
 
@@ -149,7 +174,7 @@ export function MuxVideo({
         onReachedThreshold?.(pct);
       }
     },
-    [persist, threshold, onReachedThreshold]
+    [persist, threshold, onReachedThreshold, onTimeUpdate]
   );
 
   /* One last write on unmount, so closing the screen keeps the position. */
@@ -192,6 +217,9 @@ export function MuxVideo({
           startTime={initialPositionSec ?? undefined}
           onTimeUpdate={handleTimeUpdate}
           onEnded={onEnded}
+          onPlay={onPlay}
+          onPause={onPause}
+          onError={onError}
           envKey={process.env.NEXT_PUBLIC_MUX_ENV_KEY}
           metadata={{
             video_id: contentId,
