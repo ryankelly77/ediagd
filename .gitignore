@@ -81,3 +81,6 @@ exports/
 .tmp-rc/
 .tmp-cq/
 .tmp-br/
+.tmp-ik/
+.tmp-pk/
+.tmp-dp/

@@ -38,6 +38,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { loadAdvisorDay } from "@/lib/advisor-data";
 import { COACHABLE_PENDING_CONTENT } from "@/lib/advisor";
+import { loadCueCounts } from "@/lib/coachable-families";
 import { cueTierForRate, pickCoachingCueForBlock, pickPitchVideo } from "@/lib/daily";
 import {
   loadCoachableCodes,
@@ -208,30 +209,33 @@ function report(title: string, outcomes: Outcome[]) {
  * section is empty, the gate is doing nothing and can be reconsidered.
  */
 async function reportSuppressed() {
-  const { data } = await sb
-    .from("service_family_cue_count")
-    .select("family, published_cues");
-  const cues = new Map(
-    (data ?? []).map((r) => [r.family as string, Number(r.published_cues ?? 0)])
-  );
+  const { counts, minCues } = await loadCueCounts(sb);
 
-  const starved = (COACHABLE_PENDING_CONTENT as readonly string[]).filter(
-    (f) => (cues.get(f) ?? 0) === 0
-  );
+  const starved = (COACHABLE_PENDING_CONTENT as readonly string[])
+    .map((f) => ({ family: f, have: counts.get(f) ?? 0 }))
+    .filter((r) => r.have < minCues)
+    .sort((a, b) => b.have - a.have);
 
-  console.log(`\n${"=".repeat(72)}\nSUPPRESSED — intended to be coached, nothing written\n${"=".repeat(72)}`);
+  console.log(`\n${"=".repeat(72)}\nSUPPRESSED — intended to be coached, not enough written\n${"=".repeat(72)}`);
+  console.log(
+    `\n  The bar is ${minCues} distinct cues — one per day of a block, from the same\n` +
+      `  setting the block length reads (game_settings.coaching_block_days). A\n` +
+      `  family below it would repeat itself inside a single block.\n`
+  );
   if (!starved.length) {
-    console.log("\n  None. Every family somebody intends to coach has cues.\n");
+    console.log("  None. Every family somebody intends to coach can fill a block.\n");
     return;
   }
   console.log(
-    `\n  ${starved.length} famil${starved.length === 1 ? "y" : "ies"} cannot be picked, so no advisor is told\n` +
-      `  this is their biggest gap. The gap does not stop existing.\n`
+    `  ${starved.length} famil${starved.length === 1 ? "y" : "ies"} cannot be picked, so no advisor is told this is\n` +
+      `  their biggest gap. The gap does not stop existing.\n`
   );
-  starved.forEach((f) => console.log(`    0 cues   ${f}`));
+  starved.forEach((r) =>
+    console.log(`    ${String(r.have).padStart(3)} of ${minCues}   ${r.family}${r.have === 0 ? "" : `   (${minCues - r.have} short)`}`)
+  );
   console.log(
-    `\n  Writing cues for any of these removes it from this list automatically —\n` +
-      `  the gate is loadFamiliesWithCues, not a hardcoded exclusion.\n`
+    `\n  Each is a number Mitch can act on. Writing the shortfall clears the\n` +
+      `  family automatically — the gate is loadFamiliesWithCues, not a list.\n`
   );
 }
 
