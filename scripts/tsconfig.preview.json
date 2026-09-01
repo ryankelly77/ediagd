@@ -1,0 +1,26 @@
+{
+  "//": "Standalone build for day-preview.ts. Imports the real picker through the @/ alias — the point of the preview is that it runs the SAME code the page runs, not a paraphrase of it.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-dp",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./day-preview.ts",
+    "../lib/daily.ts",
+    "../lib/advisor.ts",
+    "../lib/advisor-data.ts",
+    "../lib/coaching-block.ts",
+    "../lib/coachable-families.ts",
+    "../lib/family-labor.ts",
+    "../lib/mux/playback.ts"
+  ]
+}
