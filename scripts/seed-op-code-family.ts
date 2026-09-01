@@ -69,6 +69,41 @@ const clean = (v: string | undefined) => {
   return t ? t : null;
 };
 
+/*
+ * ---- WHAT A PERSON HAS EDITED IS NOT THE FILE'S TO OVERWRITE (0073) --------
+ *
+ * This used to upsert every row on `code`, which was right while this script
+ * was the only writer. The Mapping screens changed that: an upsert now reverts
+ * whatever an admin edited, silently, the next time somebody re-seeds from the
+ * CSV — the same trap 0071 closed on op_text_rule.
+ *
+ * So rows an admin has touched (origin='admin') are dropped from the payload
+ * and NAMED. Being told "3 rows kept their edits" is the difference between a
+ * seeder you can run without thinking and one that quietly costs somebody
+ * their afternoon.
+ */
+async function dropAdminEdited<T extends { code: string }>(
+  table: string,
+  payload: T[]
+): Promise<T[]> {
+  const { data, error } = await sb.from(table).select("code, origin");
+  if (error) throw new Error(`${table} origin read: ${error.message}`);
+  const edited = new Set(
+    ((data ?? []) as { code: string; origin: string }[])
+      .filter((r) => r.origin === "admin")
+      .map((r) => r.code)
+  );
+  if (edited.size === 0) return payload;
+
+  const kept = payload.filter((p) => !edited.has(p.code));
+  console.log(
+    `\n  ${edited.size} row(s) edited in the app are LEFT ALONE: ` +
+      `${[...edited].sort().join(", ")}`
+  );
+  console.log(`  (clear origin to 'file' on one you want the CSV to own again)`);
+  return kept;
+}
+
 (async () => {
   const rows = parseCsv(readFileSync(FROM, "utf8"));
   console.log(`\n  ${rows.length} rows in ${FROM.split("/").pop()}`);
@@ -132,13 +167,20 @@ const clean = (v: string | undefined) => {
     updated_at: new Date().toISOString(),
   }));
 
-  const { error } = await sb.from("op_code_family").upsert(payload, { onConflict: "code" });
+  const writable = await dropAdminEdited("op_code_family", payload);
+  if (writable.length === 0) {
+    console.log("\n  nothing to write — every row is admin-owned.\n");
+    return;
+  }
+  const { error } = await sb.from("op_code_family").upsert(writable, { onConflict: "code" });
   if (error) throw new Error(error.message);
 
   const { count } = await sb
     .from("op_code_family")
     .select("code", { count: "exact", head: true });
-  console.log(`\n  upserted ${payload.length}; table now holds ${count}.\n`);
+  /* writable, not payload: reporting the number we INTENDED to write while
+     leaving rows alone is how a guard becomes invisible again. */
+  console.log(`\n  upserted ${writable.length}; table now holds ${count}.\n`);
 })().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);

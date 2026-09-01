@@ -83,7 +83,12 @@ async function get(p: string) {
   for (const k of dbBy.keys()) if (!fileBy.has(k)) drift.push(`${k}: in the database, not in the rule file`);
   console.log(`\n  op_text_rule: ${dbRules.length} in database, ${OP_TEXT_RULES.length} in rule file`);
   if (drift.length) {
-    console.log("  DRIFT — run npm run remap:");
+    /*
+     * SINCE 0071 THE DATABASE WINS. This used to say "run npm run remap", which
+     * would have wiped the table back to the file — destroying the very edits
+     * it was reporting. A difference is now information, not a fault.
+     */
+    console.log("  DIFFERS FROM THE RULE FILE (the database is authoritative since 0071):");
     for (const d of drift) console.log(`     ${d}`);
   } else {
     console.log("  in sync");
