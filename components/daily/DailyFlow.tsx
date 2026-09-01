@@ -28,7 +28,23 @@ type Quote = {
   saved: boolean;
 };
 type Cue = { id: string; title: string; body: string | null };
-type Focus = { service: string; rate: number; storeAvg: number };
+type Focus = {
+  service: string;
+  /**
+   * Null when the block has outlived the pick that opened it — the advisor has
+   * since recovered on this family, so there is no gap to quote. The block runs
+   * to its end regardless; it just stops claiming a number it no longer has.
+   */
+  rate: number | null;
+  storeAvg: number | null;
+  /** Where in the six-stage pitch today sits. */
+  stage: string;
+  stageNumber: number;
+  stageCount: number;
+};
+
+/** Signed playback for step 3's pitch video. Same shape as the lifestyle slot. */
+type PitchVideo = LifestyleVideo & { stage: string | null };
 
 /**
  * The daily ritual: quote → focus → pitch → lifestyle video → celebration.
@@ -48,6 +64,8 @@ export function DailyFlow({
   focus,
   cue,
   cueMatch,
+  pitchVideo,
+  pitchVideoSkipped,
   totalRos,
   badgeNames,
   badgeRewards,
@@ -66,7 +84,16 @@ export function DailyFlow({
   salesQuote: Quote | null;
   focus: Focus | null;
   cue: Cue | null;
-  cueMatch: "service+tier" | "service" | "generic";
+  /**
+   * Which rung of the four-rung ladder produced the cue, or null when there was
+   * no block and so no coaching to attempt. 'none' means the ladder ran out —
+   * see the honest empty state in FocusStep.
+   */
+  cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
+  /** Step 3, or null when this stage has not been filmed. */
+  pitchVideo: PitchVideo | null;
+  /** True when a pitch video was looked for and not found; null when not looked for. */
+  pitchVideoSkipped: boolean | null;
   totalRos: number;
   badgeNames: Record<string, string>;
   /** Badge key -> Sand Dollars it pays, from game_settings / the catalog. */
@@ -127,7 +154,7 @@ export function DailyFlow({
           complete by then and it has its own way onward. */}
       <PhoneScreen.Rail>
         <div className="flex items-center justify-between gap-3">
-          <StepDots step={step} />
+          <StepDots step={step} total={pitchVideo ? 5 : 4} />
           {step < 5 && (
             <button
               type="button"
@@ -165,11 +192,28 @@ export function DailyFlow({
             cueMatch={cueMatch}
             salesQuote={salesQuote}
             totalRos={totalRos}
-            onNext={() => setStep(3)}
+            onNext={() => setStep(pitchVideo ? 3 : 4)}
           />
         )}
 
-        {step === 3 && <VideoStep focus={focus} onNext={() => setStep(4)} />}
+        {/*
+          STEP 3 IS SKIPPED WHEN THERE IS NO VIDEO, not rendered empty.
+
+          It used to be a permanent placeholder card explaining that filming was
+          underway — a beat of the ritual that never did anything, every day, for
+          every advisor. An advisor standing on a service drive does not need a
+          screen to tell them a video does not exist. The skip is recorded on the
+          completion row instead, which is where the unfilmed-library count comes
+          from. When the pitch library lands the step appears on its own.
+        */}
+        {step === 3 && pitchVideo && (
+          <PitchStep
+            video={pitchVideo}
+            focus={focus}
+            threshold={videoThreshold}
+            onNext={() => setStep(4)}
+          />
+        )}
 
         {step === 4 && (
           <LifestyleStep
@@ -196,8 +240,12 @@ export function DailyFlow({
             previewResult={previewResult}
             dailyLoopSand={dailyLoopSand}
             quoteId={quote?.id ?? null}
+            quote2Id={salesQuote?.id ?? null}
             cueId={cue?.id ?? null}
             videoId={lifestyle?.contentId ?? null}
+            pitchVideoId={pitchVideo?.contentId ?? null}
+            pitchVideoSkipped={pitchVideoSkipped}
+            cueMatch={cueMatch}
             badgeNames={badgeNames}
             badgeRewards={badgeRewards}
             today={today}
@@ -292,14 +340,23 @@ function LifestyleStep({
   );
 }
 
-function StepDots({ step }: { step: number }) {
+/**
+ * The dots count the steps the advisor will actually see.
+ *
+ * When step 3 has no video the day is four steps long, and showing five dots
+ * would promise a beat that never arrives — the rail would jump from dot 2 to
+ * dot 4 and read as a bug. `step` stays the real step number so the rest of the
+ * flow does not have to renumber itself; only the dot it lights up shifts down.
+ */
+function StepDots({ step, total }: { step: number; total: number }) {
+  const active = total === 4 && step >= 4 ? step - 1 : step;
   return (
     <div className="flex items-center justify-center gap-2" aria-hidden="true">
-      {[1, 2, 3, 4, 5].map((n) => (
+      {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
         <span
           key={n}
           className={`h-1.5 rounded-pill transition-all ${
-            n === step ? "w-8 bg-gold" : n < step ? "w-4 bg-teal" : "w-4 bg-line"
+            n === active ? "w-8 bg-gold" : n < active ? "w-4 bg-teal" : "w-4 bg-line"
           }`}
         />
       ))}
@@ -397,7 +454,7 @@ function FocusStep({
 }: {
   focus: Focus | null;
   cue: Cue | null;
-  cueMatch: "service+tier" | "service" | "generic";
+  cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
   /** Slot 2 — the selling quote that sits with the cue. */
   salesQuote: Quote | null;
   totalRos: number;
@@ -414,13 +471,29 @@ function FocusStep({
             Today&apos;s focus
           </p>
           <h1 className="mt-1 text-3xl font-extrabold text-navy">{focus.service}</h1>
-          <p className="mt-2 text-sm text-ink-soft">
-            You&apos;re at{" "}
-            <span className="font-extrabold text-navy">{formatPct(focus.rate)}</span> —
-            the store averages{" "}
-            <span className="font-extrabold text-navy">{formatPct(focus.storeAvg)}</span>
-            . One good conversation moves it.
+          {/* Where in the pitch today sits. The block is six days of one
+              conversation, and without this the advisor has no way to tell
+              day 4 from day 1. */}
+          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+            {focus.stage} · {focus.stageNumber} of {focus.stageCount}
           </p>
+          {focus.rate != null && focus.storeAvg != null ? (
+            <p className="mt-2 text-sm text-ink-soft">
+              You&apos;re at{" "}
+              <span className="font-extrabold text-navy">{formatPct(focus.rate)}</span> —
+              the store averages{" "}
+              <span className="font-extrabold text-navy">{formatPct(focus.storeAvg)}</span>
+              . One good conversation moves it.
+            </p>
+          ) : (
+            /* The block outlived the gap that opened it. Finishing the pitch is
+               still worth the three minutes; quoting a gap that has closed is
+               not. */
+            <p className="mt-2 text-sm text-ink-soft">
+              You&apos;ve pulled this one back up to the store average — let&apos;s
+              finish the pitch anyway.
+            </p>
+          )}
         </>
       ) : (
         <>
@@ -450,11 +523,27 @@ function FocusStep({
                   the case where a "Read the rest" tap buys nothing — the words
                   were the point of restoring them. */}
               {cue.body && <Prose text={cue.body} className="mt-3" />}
-              {focus && cueMatch === "generic" && (
-                <p className="mt-4 text-xs text-ink-soft">
-                  Service-specific cues for {focus.service} are on the way.
-                </p>
-              )}
+            </>
+          ) : cueMatch === "none" && focus ? (
+            /*
+             * THE EXPLICIT NO-CONTENT STATE.
+             *
+             * Every rung of the ladder came back empty for this family. The old
+             * loop served a generic passage here and recorded it as the coaching
+             * cue, which meant a family with nothing written for it was
+             * indistinguishable from one that was working — for as long as
+             * nobody happened to look. Saying so costs the advisor one card and
+             * buys a number somebody can act on.
+             */
+            <>
+              <p className="text-base font-extrabold text-navy">
+                Nothing written for this one yet
+              </p>
+              <p className="mt-3 text-[15px] leading-relaxed text-ink">
+                {focus.service} coaching for {focus.stage} hasn&apos;t been filmed
+                or written yet. It&apos;s on the list — take the line below onto
+                the drive today.
+              </p>
             </>
           ) : (
             <p className="text-base leading-relaxed text-ink">
@@ -498,50 +587,67 @@ function FocusStep({
   );
 }
 
-/* ---- Step 3: the pitch video (not built yet) ----------------------------- */
+/* ---- Step 3: the pitch video for today's stage --------------------------- */
+/**
+ * The op code's video for the stage the block is on.
+ *
+ * THIS COMPONENT ONLY RENDERS WHEN THERE IS A VIDEO. The null case is handled
+ * one level up by skipping the step entirely — there is deliberately no empty
+ * state here, because the empty state was the bug. For eleven months step 3 was
+ * a dashed box saying "filming's underway", shown to every advisor every day,
+ * and it taught them that one beat of the ritual is furniture.
+ *
+ * Watching is not gated, for the same reason as step 4: the ritual is three
+ * minutes on a service drive and a watch-gate turns a habit into a hurdle the
+ * first time somebody's signal drops. The watch is recorded, not enforced.
+ */
+function PitchStep({
+  video,
+  focus,
+  threshold,
+  onNext,
+}: {
+  video: PitchVideo;
+  focus: Focus | null;
+  threshold: number;
+  onNext: () => void;
+}) {
+  const [cleared, setCleared] = useState(video.watchedPct >= threshold);
 
-function VideoStep({ focus, onNext }: { focus: Focus | null; onNext: () => void }) {
   return (
     <>
-      {/* The CTA lives in the footer, not the flow: on a short screen it
-          was below the fold and on a long one it clipped. */}
       <PhoneScreen.Body>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-        The pitch
+        {video.stage ?? "The pitch"}
       </p>
-      <h1 className="mt-1 text-3xl font-extrabold text-navy">
-        {focus ? focus.service : "Coming soon"}
-      </h1>
+      <h1 className="mt-1 text-3xl font-extrabold text-navy">{video.title}</h1>
+      {focus && (
+        <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+          {focus.service}
+        </p>
+      )}
 
       <div className="flex flex-1 flex-col justify-center py-6">
-        {/* Deliberately NOT a fake player — there's no video to play yet. */}
-        <div className="rounded-card border border-dashed border-line bg-surface-card p-8 text-center">
-          <div
-            aria-hidden="true"
-            className="mx-auto flex h-16 w-16 items-center justify-center rounded-pill bg-teal-soft/40 text-2xl text-ocean"
-          >
-            ▶
-          </div>
-          <p className="mt-4 text-base font-extrabold text-navy">
-            {focus
-              ? `The ${focus.service} pitch video is coming soon`
-              : "Your pitch video is coming soon"}
-          </p>
-          <p className="mt-2 text-sm text-ink-soft">
-            Filming&apos;s underway. For now, take the cue onto the drive with you.
-          </p>
-          <button
-            type="button"
-            disabled
-            className="mt-5 cursor-not-allowed rounded-xl border border-line px-4 py-2 text-sm font-bold text-ink-soft opacity-60"
-          >
-            Play — coming soon
-          </button>
-        </div>
+        <MuxVideo
+          contentId={video.contentId}
+          playbackId={video.playbackId}
+          token={video.token}
+          thumbnailToken={video.thumbnailToken}
+          storyboardToken={video.storyboardToken}
+          title={video.title}
+          threshold={threshold}
+          initialWatchedPct={video.watchedPct}
+          initialPositionSec={video.positionSec}
+          orientation={video.orientation}
+          cropToVertical={video.cropToVertical}
+          onReachedThreshold={() => setCleared(true)}
+        />
       </div>
       </PhoneScreen.Body>
       <PhoneScreen.Footer>
-        <PrimaryButton onClick={onNext}>Continue</PrimaryButton>
+        <PrimaryButton onClick={onNext}>
+          {cleared ? "Got the pitch" : "Continue"}
+        </PrimaryButton>
       </PhoneScreen.Footer>
     </>
   );
@@ -582,8 +688,12 @@ function writeCachedResult(today: string, result: CompleteDayResult) {
 
 function CelebrationStep({
   quoteId,
+  quote2Id,
   cueId,
   videoId,
+  pitchVideoId,
+  pitchVideoSkipped,
+  cueMatch,
   badgeNames,
   badgeRewards,
   today,
@@ -592,8 +702,12 @@ function CelebrationStep({
   dailyLoopSand,
 }: {
   quoteId: string | null;
+  quote2Id: string | null;
   cueId: string | null;
   videoId: string | null;
+  pitchVideoId: string | null;
+  pitchVideoSkipped: boolean | null;
+  cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
   badgeNames: Record<string, string>;
   badgeRewards: Record<string, number>;
   today: string;
@@ -619,7 +733,21 @@ function CelebrationStep({
     fired.current = true;
 
     (async () => {
-      const response = await completeDayAction({ quoteId, cueId, videoId });
+      /*
+       * Provenance only. The op code, stage, tier and block id are NOT sent —
+       * completeDay reads them from the open block server-side, because a
+       * client that could name its own block could write a coaching history
+       * that never happened. See the note in completeDay.
+       */
+      const response = await completeDayAction({
+        quoteId,
+        quote2Id,
+        cueId,
+        videoId,
+        pitchVideoId,
+        pitchVideoSkipped,
+        cueMatch,
+      });
       if (!response.ok) {
         setError(response.error);
         return;
@@ -634,7 +762,18 @@ function CelebrationStep({
       writeCachedResult(today, response.result);
       setResult(response.result);
     })();
-  }, [quoteId, cueId, videoId, result, today, previewResult]);
+  }, [
+    quoteId,
+    quote2Id,
+    cueId,
+    videoId,
+    pitchVideoId,
+    pitchVideoSkipped,
+    cueMatch,
+    result,
+    today,
+    previewResult,
+  ]);
 
   if (alreadyDone) {
     return <DoneForTodayScreen streak={alreadyDone.streak || fallbackStreak} />;

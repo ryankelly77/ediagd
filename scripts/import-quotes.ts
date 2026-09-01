@@ -406,7 +406,7 @@ type Row = {
         `Quote Master — ${r.tab} r${r.srcRow || r.excelRow}` +
         (citation ? ` · cited as "${citation}"` : ""),
       // Quotes carry no service and no tier. Leaving tier null is what keeps
-      // them out of the cue pools that pickCoachingCue falls back through.
+      // them out of the cue pools that pickCoachingCueForBlock falls through.
       service_family: null,
       tier: null,
       status: "published" as const,

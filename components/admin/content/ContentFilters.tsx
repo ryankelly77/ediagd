@@ -39,7 +39,7 @@ export function ContentFilters({
 
   /*
    * Tier is inert for quotes — they carry no tier, by design, which is what
-   * keeps them out of the cue pools pickCoachingCue falls back through. Leaving
+   * keeps them out of the cue pools pickCoachingCueForBlock falls through. Leaving
    * the control on screen offers a filter that can only ever return nothing.
    */
   const showTier = type !== "quote";

@@ -1,0 +1,23 @@
+{
+  "//": "Standalone build for brakes-acceptance.ts. It imports lib/daily and lib/coaching-block through the @/ alias, which a bare `tsc file.ts` cannot resolve — same reason tsconfig.ingest.json exists. The point of the test is to run the REAL picker, so importing it rather than reimplementing it is the whole exercise.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-br",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./brakes-acceptance.ts",
+    "../lib/daily.ts",
+    "../lib/advisor.ts",
+    "../lib/coaching-block.ts",
+    "../lib/mux/playback.ts"
+  ]
+}

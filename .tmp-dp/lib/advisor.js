@@ -1,3 +1,4 @@
+"use strict";
 /* ============================================================================
    EDIAGD — advisor daily-view logic
    Pure functions over the performance views (advisor_period_totals,
@@ -9,24 +10,24 @@
    else pursue). It is re-exported here rather than redefined — one definition,
    so the dot on this screen can never drift from the dot anywhere else.
    ============================================================================ */
-
-import {
-  serviceStatus,
-  tierFromScore,
-  type ServiceStatus,
-  type Tier,
-} from "./brand";
-
-export { serviceStatus };
-export type { ServiceStatus, Tier };
-
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isCoachable = exports.COACHABLE_PENDING_CONTENT = exports.COACHABLE_FAMILIES = exports.MIN_ROS_FOR_COACHING = exports.serviceStatus = void 0;
+exports.buildServiceFamilies = buildServiceFamilies;
+exports.hasCoachingVolume = hasCoachingVolume;
+exports.eddiesPick = eddiesPick;
+exports.advisorTier = advisorTier;
+exports.formatCurrency = formatCurrency;
+exports.formatPct = formatPct;
+exports.formatFraction = formatFraction;
+exports.firstName = firstName;
+const brand_1 = require("./brand");
+Object.defineProperty(exports, "serviceStatus", { enumerable: true, get: function () { return brand_1.serviceStatus; } });
 /**
  * Below this many ROs in the period, attach rates are noise — a single extra
  * oil change swings a rate by whole points. We show a "building data" state
  * instead of status dots or a coaching pick.
  */
-export const MIN_ROS_FOR_COACHING = 20;
-
+exports.MIN_ROS_FOR_COACHING = 20;
 // The services EDIAGD coaches advisors on. The DMS also emits catch-all
 // buckets (Maintenance, Repair, Miscellaneous) that are not sellable services —
 // exclude them from all coaching logic. Keep this as the single source of truth.
@@ -43,16 +44,15 @@ export const MIN_ROS_FOR_COACHING = 20;
 // the coaching ladder stopped ending in a generic passage, the day preview put
 // a number on it — 3 of 60 measured advisors would have opened the app to
 // "nothing written for this one yet". They are content-gated below instead.
-export const COACHABLE_FAMILIES = [
-  "Brake Service",
-  "Differential",
-  "Spark Plugs",
-  "Filters",
-  "Tires & Rotation",
-  "Fuel System",
-  "Fluids",
-] as const;
-
+exports.COACHABLE_FAMILIES = [
+    "Brake Service",
+    "Differential",
+    "Spark Plugs",
+    "Filters",
+    "Tires & Rotation",
+    "Fuel System",
+    "Fluids",
+];
 /**
  * Intended to be coached, CONTENT-GATED until they have cues.
  *
@@ -88,19 +88,18 @@ export const COACHABLE_FAMILIES = [
  * reverse default would mean one forgotten argument quietly ships six empty
  * families to every advisor.
  */
-export const COACHABLE_PENDING_CONTENT = [
-  "HVAC",
-  "Belts & Cooling",
-  "Wipers",
-  "Lighting",
-  "Suspension",
-  "Inspections",
-  // Original families with no cues. See the header — these are the two the day
-  // preview caught, not new families waiting on a triage decision.
-  "Oil Change",
-  "Alignment",
-] as const;
-
+exports.COACHABLE_PENDING_CONTENT = [
+    "HVAC",
+    "Belts & Cooling",
+    "Wipers",
+    "Lighting",
+    "Suspension",
+    "Inspections",
+    // Original families with no cues. See the header — these are the two the day
+    // preview caught, not new families waiting on a triage decision.
+    "Oil Change",
+    "Alignment",
+];
 /**
  * Two gates, and both must pass for a pending family: somebody INTENDED it to be
  * coached, and somebody has WRITTEN something to coach with.
@@ -116,73 +115,23 @@ export const COACHABLE_PENDING_CONTENT = [
  * store at once. Failing closed is right for a family that might have nothing;
  * it is badly wrong for the seven that reliably have hundreds.
  */
-export const isCoachable = (
-  family: string,
-  familiesWithCues?: ReadonlySet<string>
-) => {
-  if ((COACHABLE_FAMILIES as readonly string[]).includes(family)) return true;
-  if (!(COACHABLE_PENDING_CONTENT as readonly string[]).includes(family)) return false;
-  return familiesWithCues?.has(family) ?? false;
+const isCoachable = (family, familiesWithCues) => {
+    if (exports.COACHABLE_FAMILIES.includes(family))
+        return true;
+    if (!exports.COACHABLE_PENDING_CONTENT.includes(family))
+        return false;
+    return familiesWithCues?.has(family) ?? false;
 };
-
-/* ---- Shapes coming out of the views -------------------------------------- */
-
-export type PeriodTotals = {
-  periodId: string;
-  rooftopId: string;
-  advisorOpId: string;
-  totalRos: number;
-  totalLaborSales: number;
-  blendedElr: number | null;
-  gpPctWeighted: number | null;
+exports.isCoachable = isCoachable;
+const STATUS_ORDER = {
+    pursue: 0,
+    close: 1,
+    "on-track": 2,
 };
-
-export type FamilyAttach = {
-  family: string;
-  famRos: number;
-  advisorRos: number;
-  attachRatePct: number | null;
-};
-
-export type FamilyBenchmark = {
-  family: string;
-  storeAvgPct: number | null;
-  storeBestPct: number | null;
-};
-
-/* ---- The joined, ranked row the UI renders ------------------------------- */
-
-export type ServiceFamily = {
-  family: string;
-  /** The advisor's attach rate, in percent. */
-  rate: number;
-  storeAvg: number;
-  storeBest: number;
-  status: ServiceStatus;
-  famRos: number;
-  /** Percentage points below store average; 0 when at or above. */
-  gapPp: number;
-  /** ROs the advisor would add by pulling this family up to store average. */
-  missedRos: number;
-  /**
-   * Estimated labor dollars behind `missedRos`. Null when per-family labor
-   * sales aren't readable (see `laborPerRoByFamily` below), in which case
-   * ranking falls back to `missedRos`.
-   */
-  opportunity: number | null;
-};
-
-const STATUS_ORDER: Record<ServiceStatus, number> = {
-  pursue: 0,
-  close: 1,
-  "on-track": 2,
-};
-
 /** Ranking weight: dollars when we have them, otherwise missed ROs. */
-function rank(f: ServiceFamily): number {
-  return f.opportunity ?? f.missedRos;
+function rank(f) {
+    return f.opportunity ?? f.missedRos;
 }
-
 /**
  * Join attach rates to store benchmarks and rank them.
  *
@@ -199,107 +148,88 @@ function rank(f: ServiceFamily): number {
  * score, and the manager's team priorities all correct together. Callers don't
  * need to know the list exists.
  */
-export function buildServiceFamilies(
-  attach: FamilyAttach[],
-  benchmarks: FamilyBenchmark[],
-  laborPerRoByFamily?: Record<string, number>,
-  familiesWithCues?: ReadonlySet<string>
-): ServiceFamily[] {
-  const byFamily = new Map(
-    benchmarks
-      .filter((b) => isCoachable(b.family, familiesWithCues))
-      .map((b) => [b.family, b])
-  );
-
-  return attach
-    .filter((a) => isCoachable(a.family, familiesWithCues))
-    .map<ServiceFamily | null>((a) => {
-      const bench = byFamily.get(a.family);
-      const rate = a.attachRatePct;
-      const storeAvg = bench?.storeAvgPct;
-      // A family with no rate or no benchmark can't be judged — drop it rather
-      // than render a dot we can't defend.
-      if (rate == null || storeAvg == null) return null;
-
-      const gapPp = Math.max(0, storeAvg - rate);
-      const missedRos = (gapPp / 100) * a.advisorRos;
-      const laborPerRo = laborPerRoByFamily?.[a.family];
-
-      return {
-        family: a.family,
-        rate,
-        storeAvg,
-        storeBest: bench?.storeBestPct ?? storeAvg,
-        status: serviceStatus(rate, storeAvg),
-        famRos: a.famRos,
-        gapPp,
-        missedRos,
-        opportunity: laborPerRo != null ? missedRos * laborPerRo : null,
-      };
+function buildServiceFamilies(attach, benchmarks, laborPerRoByFamily, familiesWithCues) {
+    const byFamily = new Map(benchmarks
+        .filter((b) => (0, exports.isCoachable)(b.family, familiesWithCues))
+        .map((b) => [b.family, b]));
+    return attach
+        .filter((a) => (0, exports.isCoachable)(a.family, familiesWithCues))
+        .map((a) => {
+        const bench = byFamily.get(a.family);
+        const rate = a.attachRatePct;
+        const storeAvg = bench?.storeAvgPct;
+        // A family with no rate or no benchmark can't be judged — drop it rather
+        // than render a dot we can't defend.
+        if (rate == null || storeAvg == null)
+            return null;
+        const gapPp = Math.max(0, storeAvg - rate);
+        const missedRos = (gapPp / 100) * a.advisorRos;
+        const laborPerRo = laborPerRoByFamily?.[a.family];
+        return {
+            family: a.family,
+            rate,
+            storeAvg,
+            storeBest: bench?.storeBestPct ?? storeAvg,
+            status: (0, brand_1.serviceStatus)(rate, storeAvg),
+            famRos: a.famRos,
+            gapPp,
+            missedRos,
+            opportunity: laborPerRo != null ? missedRos * laborPerRo : null,
+        };
     })
-    .filter((f): f is ServiceFamily => f !== null)
-    .sort(
-      (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || rank(b) - rank(a)
-    );
+        .filter((f) => f !== null)
+        .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || rank(b) - rank(a));
 }
-
 /** Do we have enough volume this period to coach on? */
-export function hasCoachingVolume(totalRos: number): boolean {
-  return totalRos >= MIN_ROS_FOR_COACHING;
+function hasCoachingVolume(totalRos) {
+    return totalRos >= exports.MIN_ROS_FOR_COACHING;
 }
-
 /**
  * Eddie's Pick — the single biggest opportunity: among families the advisor is
  * BELOW store average on, the largest revenue-weighted gap. Returns null when
  * volume is too thin to coach on, or when they're at/above average everywhere
  * (a good problem to have).
  */
-export function eddiesPick(
-  families: ServiceFamily[],
-  totalRos: number
-): ServiceFamily | null {
-  if (!hasCoachingVolume(totalRos)) return null;
-  const below = families.filter((f) => f.rate < f.storeAvg);
-  if (below.length === 0) return null;
-  return below.reduce((best, f) => (rank(f) > rank(best) ? f : best));
+function eddiesPick(families, totalRos) {
+    if (!hasCoachingVolume(totalRos))
+        return null;
+    const below = families.filter((f) => f.rate < f.storeAvg);
+    if (below.length === 0)
+        return null;
+    return below.reduce((best, f) => (rank(f) > rank(best) ? f : best));
 }
-
 /**
  * Tier from the share of the advisor's work that sits at or above store
  * average, weighted by that family's RO volume (brand.ts describes the tier as
  * revenue-weighted; RO volume is the closest weight the views expose).
  */
-export function advisorTier(families: ServiceFamily[]): Tier {
-  const total = families.reduce((sum, f) => sum + f.famRos, 0);
-  if (total <= 0) return "Zero";
-  const atOrAbove = families
-    .filter((f) => f.status === "on-track")
-    .reduce((sum, f) => sum + f.famRos, 0);
-  return tierFromScore(atOrAbove / total);
+function advisorTier(families) {
+    const total = families.reduce((sum, f) => sum + f.famRos, 0);
+    if (total <= 0)
+        return "Zero";
+    const atOrAbove = families
+        .filter((f) => f.status === "on-track")
+        .reduce((sum, f) => sum + f.famRos, 0);
+    return (0, brand_1.tierFromScore)(atOrAbove / total);
 }
-
 /* ---- Display helpers ----------------------------------------------------- */
-
-export function formatCurrency(value: number, withCents = false): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: withCents ? 2 : 0,
-    maximumFractionDigits: withCents ? 2 : 0,
-  });
+function formatCurrency(value, withCents = false) {
+    return value.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: withCents ? 2 : 0,
+        maximumFractionDigits: withCents ? 2 : 0,
+    });
 }
-
 /** Attach rates arrive as percentages already (38.4 -> "38.4%"). */
-export function formatPct(value: number, digits = 1): string {
-  return `${value.toFixed(digits)}%`;
+function formatPct(value, digits = 1) {
+    return `${value.toFixed(digits)}%`;
 }
-
 /** gp_pct_weighted is a 0-1 fraction (0.6492 -> "64.9%"). */
-export function formatFraction(value: number, digits = 1): string {
-  return `${(value * 100).toFixed(digits)}%`;
+function formatFraction(value, digits = 1) {
+    return `${(value * 100).toFixed(digits)}%`;
 }
-
 /** "Aloha, {firstName}" wants just the first token of a full name. */
-export function firstName(fullName: string): string {
-  return fullName.trim().split(/\s+/)[0] ?? fullName;
+function firstName(fullName) {
+    return fullName.trim().split(/\s+/)[0] ?? fullName;
 }
