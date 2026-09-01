@@ -75,6 +75,11 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     label: "DMS Upload",
     hint: "Load the monthly op-code workbook and map its sub-categories.",
   },
+  {
+    href: "/admin/mapping",
+    label: "Mapping",
+    hint: "Op codes, service families and aliases — what Mitch coaches against.",
+  },
 ] as const;
 
 /**
