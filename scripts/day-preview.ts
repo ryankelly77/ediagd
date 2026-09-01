@@ -37,6 +37,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { loadAdvisorDay } from "@/lib/advisor-data";
+import { COACHABLE_PENDING_CONTENT } from "@/lib/advisor";
 import { cueTierForRate, pickCoachingCueForBlock, pickPitchVideo } from "@/lib/daily";
 import {
   loadCoachableCodes,
@@ -191,6 +192,49 @@ function report(title: string, outcomes: Outcome[]) {
   }
 }
 
+/**
+ * Families somebody intends to coach that have nothing written for them.
+ *
+ * ---------------------------------------------------------------------------
+ * THIS SECTION IS THE PRICE OF CONTENT-GATING, PRINTED WHERE IT WILL BE READ
+ * ---------------------------------------------------------------------------
+ * Oil Change and Alignment were moved behind the content gate because three of
+ * sixty advisors would otherwise have met an empty card. Gating them fixes the
+ * card and hides the hole: those advisors are now coached on their SECOND
+ * biggest gap and nothing on their screen says the first was skipped.
+ *
+ * So the hole gets reported here instead — in the script somebody runs while
+ * deciding whether to deploy, rather than in a comment nobody opens. When this
+ * section is empty, the gate is doing nothing and can be reconsidered.
+ */
+async function reportSuppressed() {
+  const { data } = await sb
+    .from("service_family_cue_count")
+    .select("family, published_cues");
+  const cues = new Map(
+    (data ?? []).map((r) => [r.family as string, Number(r.published_cues ?? 0)])
+  );
+
+  const starved = (COACHABLE_PENDING_CONTENT as readonly string[]).filter(
+    (f) => (cues.get(f) ?? 0) === 0
+  );
+
+  console.log(`\n${"=".repeat(72)}\nSUPPRESSED — intended to be coached, nothing written\n${"=".repeat(72)}`);
+  if (!starved.length) {
+    console.log("\n  None. Every family somebody intends to coach has cues.\n");
+    return;
+  }
+  console.log(
+    `\n  ${starved.length} famil${starved.length === 1 ? "y" : "ies"} cannot be picked, so no advisor is told\n` +
+      `  this is their biggest gap. The gap does not stop existing.\n`
+  );
+  starved.forEach((f) => console.log(`    0 cues   ${f}`));
+  console.log(
+    `\n  Writing cues for any of these removes it from this list automatically —\n` +
+      `  the gate is loadFamiliesWithCues, not a hardcoded exclusion.\n`
+  );
+}
+
 (async () => {
   /* ---- Which rooftops, and what is "tomorrow" there? --------------------- */
   const { data: rooftops } = await sb
@@ -308,6 +352,8 @@ function report(title: string, outcomes: Outcome[]) {
       `  should match — but an entitlement change would show up here as a rung the\n` +
       `  advisor cannot actually reach.\n`
   );
+
+  await reportSuppressed();
 
   console.log("  Nothing was written. No block was opened.\n");
 })().catch((e) => {

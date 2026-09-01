@@ -37,10 +37,14 @@ export const MIN_ROS_FOR_COACHING = 20;
 // below. Turning it on changes Eddie's Pick for every advisor at every store on
 // the same day, which is a bigger change than applying a mapping sheet, so it is
 // left for its own call.
+// OIL CHANGE AND ALIGNMENT ARE NOT HERE ANY MORE. Both have ZERO published
+// cues and always have, and being on this list meant they could win Eddie's
+// Pick with nothing written for them. The old generic fallback hid that; once
+// the coaching ladder stopped ending in a generic passage, the day preview put
+// a number on it — 3 of 60 measured advisors would have opened the app to
+// "nothing written for this one yet". They are content-gated below instead.
 export const COACHABLE_FAMILIES = [
-  "Oil Change",
   "Brake Service",
-  "Alignment",
   "Differential",
   "Spark Plugs",
   "Filters",
@@ -50,8 +54,28 @@ export const COACHABLE_FAMILIES = [
 ] as const;
 
 /**
- * Mitch's six new families — intended to be coached, CONTENT-GATED until they
- * have cues. All six have zero today.
+ * Intended to be coached, CONTENT-GATED until they have cues.
+ *
+ * ---------------------------------------------------------------------------
+ * EIGHT FAMILIES, AND THEY GOT HERE TWO DIFFERENT WAYS
+ * ---------------------------------------------------------------------------
+ * Six are Mitch's new families, which have never had content (below). Two —
+ * OIL CHANGE and ALIGNMENT — are original coachable families that turn out to
+ * have zero published cues and always have. They were unconditionally coachable
+ * until the day preview showed what that costs: three of sixty measured
+ * advisors would have had their single biggest gap named and then met a card
+ * saying nothing had been written about it.
+ *
+ * THE COST OF GATING THEM IS REAL AND WAS ACCEPTED KNOWINGLY. An advisor whose
+ * worst family is Oil Change now gets coached on their SECOND biggest gap, and
+ * nothing on their screen says the first one was skipped. The gap does not stop
+ * existing; it stops being mentioned. That is the better of two bad options
+ * only until somebody writes the cues — the fix is content, not this list, and
+ * `npm run preview:day` prints a SUPPRESSED section naming every family in this
+ * state and how many advisors it rerouted, so the hole stays visible at the
+ * moment somebody is deciding whether to deploy.
+ *
+ * The six new ones:
  *
  * They exist because his triage routed $435K of Suspension, $540K of HVAC and
  * 1,611 wiper lines at families that did not exist. Mapping them is what makes
@@ -71,15 +95,26 @@ export const COACHABLE_PENDING_CONTENT = [
   "Lighting",
   "Suspension",
   "Inspections",
+  // Original families with no cues. See the header — these are the two the day
+  // preview caught, not new families waiting on a triage decision.
+  "Oil Change",
+  "Alignment",
 ] as const;
 
 /**
  * Two gates, and both must pass for a pending family: somebody INTENDED it to be
  * coached, and somebody has WRITTEN something to coach with.
  *
- * Cue count alone would be wrong in both directions — Battery has 56 published
- * cues and is deliberately not coached, while Oil Change and Alignment have one
- * apiece and always have been.
+ * Cue count alone is still not enough on its own: Battery has 56 published cues
+ * and is deliberately not coached, so a family having content never implies it
+ * should be. Intent is the first gate and content is the second, and BOTH
+ * directions have a live example.
+ *
+ * The seven in COACHABLE_FAMILIES stay unconditional on purpose. loadFamiliesWithCues
+ * returns an EMPTY SET on error — it fails closed — so gating all sixteen on it
+ * would mean one database hiccup blanks Eddie's Pick for every advisor at every
+ * store at once. Failing closed is right for a family that might have nothing;
+ * it is badly wrong for the seven that reliably have hundreds.
  */
 export const isCoachable = (
   family: string,
