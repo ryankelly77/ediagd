@@ -2,7 +2,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminViewer } from "@/lib/access";
 import { loadAdvisorDay } from "@/lib/advisor-data";
-import { ackLabel, cueTierForRate, pickCoachingCue, pickLifestyleVideo, pickQuotesForDay } from "@/lib/daily";
+import {
+  ackLabel,
+  cueTierForRate,
+  pickCoachingCueForBlock,
+  pickLifestyleVideo,
+  pickPitchVideo,
+  pickQuotesForDay,
+} from "@/lib/daily";
+import { createServiceClient } from "@/lib/supabase/service";
+import { ensureBlockForToday, loadBlockDays } from "@/lib/coaching-block";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
@@ -72,8 +81,39 @@ export default async function TodayPage({
     : null;
 
   const pick = advisorDay?.hasVolume ? advisorDay.pick : null;
-  const focusService = pick?.family ?? null;
-  const cueTier = pick ? cueTierForRate(pick.rate) : null;
+
+  /*
+   * ---- The block: one family, one op code, six stages ---------------------
+   *
+   * Eddie's Pick chooses the FAMILY and the block locks it, so the six stages
+   * of a pitch are six days of the same conversation rather than six unrelated
+   * mornings. A pick that changes mid-block does not steal the block — that is
+   * what locking means, and it is why the picker asks the block what today's
+   * focus is rather than asking the pick directly.
+   *
+   * The service client is required: 0067 gives coaching_block no user-facing
+   * insert policy on purpose, because an advisor who could open their own block
+   * could choose their own easiest family. See ensureBlockForToday.
+   */
+  const service = createServiceClient();
+  const blockDays = await loadBlockDays(supabase);
+  const block = await ensureBlockForToday(
+    service,
+    user.id,
+    rooftopId,
+    today,
+    pick ? { family: pick.family, tier: cueTierForRate(pick.rate) } : null,
+    blockDays
+  );
+
+  const focus = block
+    ? {
+        family: block.family,
+        opCode: block.opCode,
+        stage: block.stage,
+        tier: block.tier,
+      }
+    : null;
 
   // Both quotes together: 253 of the 484 are eligible for either slot, so
   // drawing them independently would eventually hand the same quote to both on
@@ -87,12 +127,26 @@ export default async function TodayPage({
    * "never lose money" on step 1. The cue still runs in parallel; it has no such
    * relationship.
    */
-  const [lifestyle, coaching] = await Promise.all([
+  const [lifestyle, coaching, pitchVideo] = await Promise.all([
     // Signed playback is minted per view — never cached across users, because
     // the token IS the authorisation.
     pickLifestyleVideo(supabase, today, user.id),
-    pickCoachingCue(supabase, today, focusService, cueTier),
+    pickCoachingCueForBlock(supabase, today, focus),
+    /*
+     * Step 3. Null means the stage has not been filmed, and the step is left
+     * OUT of the day rather than rendered as an empty player — see pickPitchVideo.
+     * Returns null for everyone today: nothing is in 'Pitches by Op Code' yet.
+     */
+    pickPitchVideo(supabase, today, user.id, focus),
   ]);
+
+  /*
+   * Recorded, not inferred. `false` would be a lie on a day with no block —
+   * nothing was looked up, so nothing was skipped. The count that matters is
+   * "days where we wanted a pitch video for a real stage and had none", which
+   * is what measures the unfilmed library.
+   */
+  const pitchVideoSkipped = focus?.opCode && focus.stage ? pitchVideo === null : null;
   const quotes = await pickQuotesForDay(supabase, today, lifestyle?.artifactId ?? null);
 
   // Which of the day's quotes this advisor has already kept. ONE query for
@@ -196,11 +250,21 @@ export default async function TodayPage({
       quote={shapeQuote(quotes.slot3)}
       salesQuote={shapeQuote(quotes.slot2)}
       focus={
-        pick
+        block
           ? {
-              service: pick.family,
-              rate: pick.rate,
-              storeAvg: pick.storeAvg,
+              // The BLOCK's family, not the pick's. They agree on day one and
+              // can diverge afterwards, and the block is what the advisor has
+              // actually been working — showing the pick would rename the
+              // conversation underneath them mid-pitch.
+              service: block.family,
+              // Rate and benchmark still come from the live pick when it is the
+              // same family; a locked block on a family the advisor has since
+              // recovered on shows no numbers rather than stale ones.
+              rate: pick && pick.family === block.family ? pick.rate : null,
+              storeAvg: pick && pick.family === block.family ? pick.storeAvg : null,
+              stage: block.stage,
+              stageNumber: block.served + 1,
+              stageCount: block.lengthDays,
             }
           : null
       }
@@ -214,6 +278,8 @@ export default async function TodayPage({
           : null
       }
       cueMatch={coaching.matched}
+      pitchVideo={pitchVideo}
+      pitchVideoSkipped={pitchVideoSkipped}
       totalRos={advisorDay?.totalRos ?? 0}
       badgeNames={badgeNames}
       badgeRewards={badgeRewards}

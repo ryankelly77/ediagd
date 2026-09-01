@@ -37,11 +37,23 @@ import {
   type SwellState,
 } from "./streak";
 import { loadScheduleContext } from "@/lib/work-schedule";
+import { readOpenBlock } from "@/lib/coaching-block";
+import type { CueMatch } from "@/lib/daily";
 
 export type CompleteDayInput = {
+  /** Step 1 — the life quote. */
   quoteId?: string | null;
+  /** Step 2 — the selling quote that sits with the cue. */
+  quote2Id?: string | null;
   cueId?: string | null;
+  /** Step 4 — the lifestyle video. */
   videoId?: string | null;
+  /** Step 3 — the op code's video for today's stage, when one exists. */
+  pitchVideoId?: string | null;
+  /** True when step 3 was looked up, found nothing, and was left out of the day. */
+  pitchVideoSkipped?: boolean | null;
+  /** Which rung of the cue ladder fired. Null means no coaching was attempted. */
+  cueMatch?: CueMatch | null;
 };
 
 export type CompleteDayResult = {
@@ -110,6 +122,23 @@ export async function completeDay(
   // now rather than derived later, so changing shifts can't rewrite history.
   const wasScheduled = scheduledOn(today, scheduleContext);
 
+  /*
+   * ---- 1c. The coaching block, READ SERVER-SIDE AND NOT TAKEN FROM THE CLIENT
+   *
+   * The block decides which family an advisor is coached on, which op code
+   * inside it, and where in the six stages they are. Accepting those from the
+   * request would let anyone POST themselves a block id — including someone
+   * else's — and write a coaching history that never happened. They are derived
+   * here from the same function the page rendered from, so the record and the
+   * screen agree without the screen being trusted.
+   *
+   * Read BEFORE the day is claimed, for the same reason as the schedule above:
+   * a failure here throws with nothing written. It also matters arithmetically —
+   * the block's stage cursor is a COUNT of completions against it, so reading it
+   * after the insert would report tomorrow's stage as today's.
+   */
+  const block = await readOpenBlock(supabase, userId);
+
   // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
   const { data: completion, error: completionError } = await supabase
     .from("daily_completion")
@@ -118,8 +147,19 @@ export async function completeDay(
       rooftop_id: rooftopId,
       completion_date: today,
       quote_content_id: content.quoteId ?? null,
+      quote2_content_id: content.quote2Id ?? null,
       cue_content_id: content.cueId ?? null,
       video_content_id: content.videoId ?? null,
+      pitch_video_content_id: content.pitchVideoId ?? null,
+      pitch_video_skipped: content.pitchVideoSkipped ?? null,
+      block_id: block?.id ?? null,
+      op_code: block?.opCode ?? null,
+      // A stage without an op code violates daily_completion_stage_needs_op_code
+      // (0067), and is meaningless anyway — a position in a pitch that isn't
+      // named is not a position.
+      stage: block?.opCode ? block.stage : null,
+      cue_tier: block?.tier ?? null,
+      cue_match: content.cueMatch ?? null,
       was_scheduled: wasScheduled,
     })
     .select("id")

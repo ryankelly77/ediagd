@@ -281,7 +281,7 @@ export async function pickQuotesForDay(
  * service_family IS NULL`, 404 rows of full coaching passages. There was no
  * quote pool to draw from, so step 1 borrowed the cue pool and rendered a
  * 600-character lesson as a pull quote. Those 404 rows are untouched and still
- * back the generic fallback in pickCoachingCue below; they are simply no longer
+ * back the no-block passage in pickCoachingCueForBlock; they are no longer
  * pretending to be quotes.
  */
 export async function pickQuoteOfDay(
@@ -291,50 +291,155 @@ export async function pickQuoteOfDay(
   return pickQuoteForSlot(client, date, "slot3");
 }
 
+/* ---------------------------------------------------------------------------
+   THE FOUR-RUNG LADDER — coaching at op-code grain, bridged to the family
+--------------------------------------------------------------------------- */
+
 /**
- * The coaching cue for the day's focus service.
+ * Which rung of the ladder actually produced today's cue.
  *
- * Fallback chain, because coverage is uneven — 'Oil Change' and 'Alignment'
- * currently have NO published cues at all, so an advisor whose weakest service
- * is one of those must still get something useful:
- *   1. service + the advisor's tier for that service
- *   2. service, any tier
- *   3. a generic cue (same pool as the quote, different offset so they differ)
+ * Recorded on daily_completion (0067) because Phase 0's finding was that the
+ * loop could not report how often it degrades: the old three-step chain always
+ * returned something and said nothing about where it came from, so a family
+ * with no cues looked exactly like a family that was working.
  */
-export async function pickCoachingCue(
+export type CueMatch =
+  | "op_code_stage_tier"
+  | "op_code_stage"
+  | "op_code"
+  | "family"
+  | "none";
+
+/** What the block hands the picker. Kept structural so scripts can build one. */
+export type BlockFocus = {
+  family: string;
+  opCode: string | null;
+  stage: string | null;
+  tier: "zero" | "low" | null;
+};
+
+/**
+ * The day's coaching cue for an advisor inside a block.
+ *
+ * ---------------------------------------------------------------------------
+ * FOUR RUNGS, THEN AN HONEST EMPTY
+ * ---------------------------------------------------------------------------
+ *   1  op code + stage + tier   the pitch, at this point in it, for this
+ *                               advisor's performance on it
+ *   2  op code + stage          the pitch, at this point in it
+ *   3  op code                  the pitch, anywhere in it
+ *   4  family                   the legacy family shelf, reached through
+ *                               op_code_family — this is the bridge, and today
+ *                               it is the rung that fires for everyone
+ *   -  none                     nothing published reaches this advisor
+ *
+ * THE GENERIC POOL IS NOT ON THIS LADDER, AND THAT IS THE POINT. The old chain
+ * ended in 404 rows of generic passage, so an advisor whose weakest family had
+ * no cues got a lesson about something else and no one could tell. A generic
+ * passage is not coaching about brakes; serving one and recording it as the
+ * brake cue is how a content gap stays invisible for a year. Rung 4 failing now
+ * returns null and says `none`, and the screen shows that.
+ *
+ * The tier preference inside rung 4 is an ORDERING, not a fifth rung: it tries
+ * the advisor's tier first and any tier second, and records `family` either
+ * way. Splitting it would make the ladder five rungs to record a distinction
+ * the family shelf does not really draw.
+ *
+ * Rungs 1-3 return nothing at all today — 0 content rows carry an op code until
+ * the knowledge re-import lands. That is expected, not broken: this is the
+ * ladder the re-import falls into, built before the content so the content has
+ * somewhere to land.
+ */
+export async function pickCoachingCueForBlock(
   client: Client,
   date: IsoDate,
-  service: string | null,
-  tier: "zero" | "low" | null
-): Promise<{ cue: ContentRow | null; matched: "service+tier" | "service" | "generic" }> {
-  if (service) {
-    if (tier) {
-      const exact = await pickByRotation(
+  block: BlockFocus | null
+): Promise<{ cue: ContentRow | null; matched: CueMatch | null }> {
+  /*
+   * NO BLOCK IS NOT THE SAME AS NO CONTENT, and the two must not be recorded
+   * the same way. An advisor with no block is at or above store average
+   * everywhere, or has fewer than 20 ROs — there is nothing to coach, so
+   * nothing failed. `matched: null` means "no coaching was attempted"; `none`
+   * means "we tried and the shelf was bare". Collapsing them would make a
+   * healthy advisor look like a content gap in the degradation report.
+   *
+   * They still get the generic passage, which is what they have always had and
+   * is honest here: it is not pretending to be about a service they are weak
+   * on, because there isn't one.
+   */
+  if (!block) {
+    const generic = await pickGenericPassage(client, date);
+    return { cue: generic, matched: null };
+  }
+
+  const base = (q: any) => q.eq("type", "cue").eq("status", "published"); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  if (block.opCode) {
+    if (block.stage && block.tier) {
+      const hit = await pickByRotation(
         client,
         (q) =>
-          q
-            .eq("type", "cue")
-            .eq("status", "published")
-            .eq("service_family", service)
-            .eq("tier", tier),
+          base(q).eq("op_code", block.opCode).eq("stage", block.stage).eq("tier", block.tier),
         date,
         1
       );
-      if (exact) return { cue: exact, matched: "service+tier" };
+      if (hit) return { cue: hit, matched: "op_code_stage_tier" };
     }
 
-    const anyTier = await pickByRotation(
+    if (block.stage) {
+      const hit = await pickByRotation(
+        client,
+        (q) => base(q).eq("op_code", block.opCode).eq("stage", block.stage),
+        date,
+        1
+      );
+      if (hit) return { cue: hit, matched: "op_code_stage" };
+    }
+
+    const hit = await pickByRotation(
       client,
-      (q) =>
-        q.eq("type", "cue").eq("status", "published").eq("service_family", service),
+      (q) => base(q).eq("op_code", block.opCode),
       date,
       1
     );
-    if (anyTier) return { cue: anyTier, matched: "service" };
+    if (hit) return { cue: hit, matched: "op_code" };
   }
 
-  // Offset 7 keeps the fallback cue from landing on the same row as the quote.
-  const generic = await pickByRotation(
+  // Rung 4 — the bridge. op_code_family put the block's code in this family, so
+  // the 1,695 cues Mitch already wrote against families are reachable from a
+  // pick that now names an op code.
+  if (block.tier) {
+    const hit = await pickByRotation(
+      client,
+      (q) => base(q).eq("service_family", block.family).eq("tier", block.tier),
+      date,
+      1
+    );
+    if (hit) return { cue: hit, matched: "family" };
+  }
+
+  const anyTier = await pickByRotation(
+    client,
+    (q) => base(q).eq("service_family", block.family),
+    date,
+    1
+  );
+  if (anyTier) return { cue: anyTier, matched: "family" };
+
+  return { cue: null, matched: "none" };
+}
+
+/**
+ * The 404-row generic pool. Offset 7 keeps it off the same row as the quote.
+ *
+ * Only reachable from the no-block path above. It is no longer the bottom of
+ * the coaching ladder — see pickCoachingCueForBlock.
+ */
+async function pickGenericPassage(
+  client: Client,
+  date: IsoDate
+): Promise<ContentRow | null> {
+  return pickByRotation(
     client,
     (q) =>
       q
@@ -345,7 +450,65 @@ export async function pickCoachingCue(
     date,
     7
   );
-  return { cue: generic, matched: "generic" };
+}
+
+/* ---------------------------------------------------------------------------
+   STEP 3 — the pitch video for today's stage
+--------------------------------------------------------------------------- */
+
+export type PitchVideoData = LifestyleVideoData & { stage: string | null };
+
+/**
+ * The op code's video for the stage the block is on, or null.
+ *
+ * ---------------------------------------------------------------------------
+ * NULL MEANS SKIP THE STEP. IT DOES NOT MEAN RENDER AN EMPTY PLAYER.
+ * ---------------------------------------------------------------------------
+ * Step 3 has been a placeholder since the loop shipped. The honest behaviour
+ * when a stage has not been filmed is to leave the step out of the day — an
+ * advisor on a service drive does not need a card explaining that a video does
+ * not exist — and to WRITE DOWN that it was skipped, so the count of unfilmed
+ * stages is recoverable later. daily_completion.pitch_video_skipped is that
+ * record; without it the gap is only visible by watching someone use the app.
+ *
+ * No stage and no op code means there is nothing to look up, which is a skip
+ * for the same reason and gets recorded the same way.
+ *
+ * Returns nothing at all today: 0 rows are in 'Pitches by Op Code'. Every day
+ * served before the re-import will record skipped=true, which is the correct
+ * measurement of a library that has not been filmed yet.
+ */
+export async function pickPitchVideo(
+  client: Client,
+  date: IsoDate,
+  userId: string,
+  block: BlockFocus | null
+): Promise<PitchVideoData | null> {
+  if (!block?.opCode || !block.stage) return null;
+
+  const { data: rows } = await client
+    .from("content")
+    .select(
+      "id, title, stage, mux_playback_id, mux_playback_policy, " +
+        "vertical_playback_id, vertical_status, artifact_id"
+    )
+    .eq("type", "advisor_video")
+    .eq("collection", "Pitches by Op Code")
+    .eq("status", "published")
+    .eq("op_code", block.opCode)
+    .eq("stage", block.stage)
+    .not("mux_playback_id", "is", null)
+    .order("id", { ascending: true })
+    .limit(1000);
+
+  const list = (rows ?? []) as VideoRow[];
+  if (!list.length) return null;
+
+  // Offset 5: distinct from the lifestyle video's 3, so a day that serves both
+  // does not walk the two pools in lockstep.
+  const row = list[rotationIndex(date, list.length, 5)];
+  const shaped = await shapeVideo(client, row, userId);
+  return shaped ? { ...shaped, stage: (row.stage as string | null) ?? null } : null;
 }
 
 /**
@@ -454,7 +617,7 @@ async function fetchCueIds(
  * generic cue isn't a next step for a particular service. Services with no
  * published cues (Oil Change and Alignment today) are simply absent.
  *
- * Each list LEADS with the cue pickCoachingCue would name today — same offset,
+ * Each list LEADS with the cue the daily ladder would name today — same offset,
  * same id ordering — so the ritual, the service dialog and the pitch dialog all
  * agree. The rest follow as a preview of the library: the advisor's own tier
  * first, then the other tier. Sorting uuid text ascending equals Postgres's
@@ -543,6 +706,35 @@ function rotate<T>(list: T[], start: number): T[] {
    ============================================================================ */
 
 /**
+ * The two shelves the lifestyle slot draws from, alternating by day.
+ *
+ * ---------------------------------------------------------------------------
+ * CRAFT IS EMPTY TODAY, AND THE ROTATION IS STILL RIGHT
+ * ---------------------------------------------------------------------------
+ * All 56 published daily_lifestyle videos are 'Mindset'. So this rotation makes
+ * no visible difference until Craft videos are published — every day falls back
+ * to Mindset, which is what the advisor already sees.
+ *
+ * It is built now anyway because the alternative is discovering on the day the
+ * first Craft video lands that nothing serves it. The fallback below is what
+ * makes that safe: an empty shelf yields to the other one rather than costing
+ * the advisor their step.
+ */
+const LIFESTYLE_COLLECTIONS = ["Mindset", "Craft"] as const;
+
+type VideoRow = {
+  id: string;
+  title: string;
+  stage?: string | null;
+  collection?: string | null;
+  mux_playback_id: string | null;
+  mux_playback_policy: string | null;
+  vertical_playback_id: string | null;
+  vertical_status: string | null;
+  artifact_id: string | null;
+};
+
+/**
  * The video for the daily loop's lifestyle slot, signed and ready to play.
  *
  * PLACEMENT, NOT TYPE. content_type says who may see a thing and RLS is built
@@ -562,7 +754,7 @@ export async function pickLifestyleVideo(
   const { data: rows } = await client
     .from("content")
     .select(
-      "id, title, mux_playback_id, mux_playback_policy, " +
+      "id, title, collection, mux_playback_id, mux_playback_policy, " +
         "vertical_playback_id, vertical_status, artifact_id"
     )
     .eq("type", "advisor_video")
@@ -586,19 +778,42 @@ export async function pickLifestyleVideo(
     .order("id", { ascending: true })
     .limit(1000);
 
-  const list = (rows ?? []) as {
-    id: string; title: string;
-    mux_playback_id: string | null; mux_playback_policy: string | null;
-    vertical_playback_id: string | null; vertical_status: string | null;
-    artifact_id: string | null;
-  }[];
-  if (!list.length) return null;
+  const all = (rows ?? []) as VideoRow[];
+  if (!all.length) return null;
+
+  /*
+   * MINDSET ONE DAY, CRAFT THE NEXT — a lesson in who you are, then a lesson in
+   * how you work. Alternating on the epoch day rather than tracking a cursor
+   * keeps it stateless, the same way every other pool in this file rotates, and
+   * means two advisors at one store still see the same shelf on the same day.
+   *
+   * The empty-shelf fallback is not defensive clutter: with Craft unpublished
+   * it is the branch that runs every other day, and without it half the year
+   * would render step 4 empty.
+   */
+  const wanted = LIFESTYLE_COLLECTIONS[epochDay(today) % LIFESTYLE_COLLECTIONS.length];
+  const shelf = all.filter((r) => r.collection === wanted);
+  const list = shelf.length > 0 ? shelf : all;
 
   /* Same deterministic day-rotation the quotes and cues use, so the loop feels
      composed rather than shuffled, and two advisors at one store see the same
      thing on the same day. */
   const row = list[rotationIndex(today, list.length, 3)];
+  return shapeVideo(client, row, userId);
+}
 
+/**
+ * Sign a video row and read the viewer's progress against it.
+ *
+ * Shared by the lifestyle slot and the pitch slot, which need identical
+ * treatment — vertical preferred, progress read, linked quote resolved — and
+ * differ only in how the row was chosen.
+ */
+async function shapeVideo(
+  client: Client,
+  row: VideoRow,
+  userId: string
+): Promise<LifestyleVideoData | null> {
   /*
    * THE APP PLAYS VERTICAL. The daily loop is a phone held upright on a service
    * drive, so a derived 9:16 crop is the right picture and the 16:9 master is
