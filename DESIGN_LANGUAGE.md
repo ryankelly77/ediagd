@@ -19,7 +19,9 @@ Today the app screens are flat cream with floating white cards and lots of empty
 - **Ocean** `#2C6E8A` — mid blue, accents
 - **Reef / Teal** `#4AA8B0` — the interactive accent (active states, links, eyebrows)
 - **Seafoam** `#7EC8CD` — light teal, soft accents, "close" tier
-- **Sunrise Gold** `#E8B44C` — RESERVED for celebration, the Swell, milestones, and primary CTAs. Per brand: "if every ping glows gold, none of them do." Gold is special; don't spend it on ordinary chrome.
+- **Sunrise Gold** `#E8B44C` — RESERVED for **wins, and the single primary action on a screen**: celebration, the Swell, milestones, and the one button that is the point of the screen. Per brand: "if every ping glows gold, none of them do." Gold is special; don't spend it on ordinary chrome.
+  - *"The single primary action"* is the operative half. Scarcity comes from **one gold thing per screen**, not from withholding gold across a flow — the daily loop's Continue is gold on all five steps, and the admin's Save works the same way. A flow that switches primary colour partway reads as a bug, not as a distinction.
+  - Corollary: a **disabled** primary is not clay or red, it is muted — border, cream fill, soft ink. It keeps its words and its place. See the watch gate on daily-loop steps 3 and 4.
 - **Sand / Cream** `#F4F0E4` — the warm base surface
 - **Mist** `#D9ECEE` — palest tint, subtle fills
 - Status: **palm/green** = on track, **gold** = close, **clay** `#C9762F` = pursue. **Never red.**
