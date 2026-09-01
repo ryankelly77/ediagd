@@ -24,9 +24,11 @@
    CHROME, PER DESIGN_LANGUAGE
    ---------------------------------------------------------------------------
    Reef teal is the interactive accent, so it is the scrubber and the controls.
-   Gold is RESERVED — "if every ping glows gold, none of them do" — for the
-   Swell, celebration, and the primary CTA that sits below the player, never for
-   ordinary chrome. The surface is navy: letterboxing a 16:9 video on cream
+   Gold is RESERVED — "if every ping glows gold, none of them do" — for wins and
+   for the SINGLE primary action on a screen, which below a player is the CTA
+   that carries the day forward. Never for ordinary chrome, and never split
+   across a flow: the loop's Continue is gold on every step, disabled or not.
+   See DESIGN_LANGUAGE. The surface is navy: letterboxing a 16:9 video on cream
    leaves grey bars that look like a rendering fault.
 
    16px radius and the warm navy-tinted shadow are the standard card treatment,

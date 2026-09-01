@@ -373,7 +373,6 @@ function LifestyleStep({
           rather than the network.
         */}
         <PrimaryButton
-          tone="clay"
           disabled={Boolean(video) && !watch.met && !watch.error}
           onClick={onNext}
         >
@@ -698,11 +697,7 @@ function PitchStep({
       </div>
       </PhoneScreen.Body>
       <PhoneScreen.Footer>
-        <PrimaryButton
-          tone="clay"
-          disabled={!watch.met && !watch.error}
-          onClick={onNext}
-        >
+        <PrimaryButton disabled={!watch.met && !watch.error} onClick={onNext}>
           {watch.met ? "Got the pitch" : "Continue"}
         </PrimaryButton>
         {/* The line disappears once the gate is open — it has nothing left to
@@ -1207,7 +1202,6 @@ function PrimaryButton({
   onClick,
   children,
   disabled = false,
-  tone = "gold",
 }: {
   onClick: () => void;
   children: React.ReactNode;
@@ -1217,13 +1211,6 @@ function PrimaryButton({
    * nothing and can see, from the line underneath, why.
    */
   disabled?: boolean;
-  /**
-   * `clay` on the two video steps, per the watch-gate spec. Gold is the
-   * loop's usual CTA and is documented in MuxVideo as reserved for exactly
-   * that, so this is a deliberate departure on the gated steps rather than a
-   * new default — worth confirming before it spreads.
-   */
-  tone?: "gold" | "clay";
 }) {
   if (disabled) {
     return (
@@ -1237,16 +1224,26 @@ function PrimaryButton({
       </button>
     );
   }
-  const clay = tone === "clay";
+  /*
+   * ONE FLOW, ONE PRIMARY COLOUR.
+   *
+   * The watch-gate spec asked for clay on the two video steps, on the brand
+   * rule "gold only for wins". It was built that way and then unified back:
+   * steps 1, 2 and 5 of this same ritual use gold, so a clay Continue on steps
+   * 3 and 4 read as a mistake rather than as a distinction — the advisor sees
+   * one flow, not five screens with their own rules.
+   *
+   * Gold is not an exception here, it is the rule catching up to practice:
+   * DESIGN_LANGUAGE has always granted gold to primary CTAs, and the admin's
+   * Save button already works this way. The refinement is "the SINGLE primary
+   * action on a screen", which is what keeps gold scarce without splitting a
+   * flow down the middle.
+   */
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-xl p-4 text-lg font-extrabold transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-        clay
-          ? "bg-clay text-white focus-visible:ring-clay"
-          : "bg-gold text-navy focus-visible:ring-gold"
-      }`}
+      className="w-full rounded-xl bg-gold p-4 text-lg font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
     >
       {children}
     </button>
