@@ -90,3 +90,6 @@ exports/
 .tmp-rp/
 .tmp-ep/
 .tmp-dt/
+
+# Pre-migration pg_dumps. Production data — never commit these.
+.backups/
