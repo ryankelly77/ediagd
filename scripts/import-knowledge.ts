@@ -200,19 +200,97 @@ function table(title: string, rows: [string, number][]) {
 }
 
 /**
- * Is the incoming text plausibly a revision of the stored text, or a different
- * row that has slid into this position?
+ * What is the incoming text, relative to what is already stored?
  *
- * Deliberately generous: a revision can rewrite a Fact completely and must
- * still apply, so this is not a similarity threshold, it is a "these have
- * nothing whatever to do with each other" test. Three ways to pass, cheapest
- * first — containment either way (the same containment the quote matcher uses),
- * a shared opening, or a third of the words in common.
+ * ---------------------------------------------------------------------------
+ * CONTAINMENT IS NOT SYMMETRIC, AND TREATING IT AS THOUGH IT WERE COST US 15 ROWS
+ * ---------------------------------------------------------------------------
+ * The first version of this guard passed a row whenever either string was a
+ * prefix of the other. One of those directions is the repair this importer
+ * exists to do; the other is the damage it exists to prevent.
  *
- * A stored body that is empty passes: there is nothing to compare against, and
- * refusing to fill in a blank row would block the repair this importer exists
- * to do.
+ *   stored is a prefix of incoming   a 60-character stump growing into the full
+ *                                    Fact. This is the repair. Apply it.
+ *
+ *   incoming is a prefix of stored   the WORKBOOK knows less than the app does.
+ *                                    That is never a revision — nobody edits a
+ *                                    Fact by deleting its second half and
+ *                                    leaving the first half byte-identical.
+ *
+ * The second is exactly what the accidental run in Round D did to 15 cue
+ * bodies: "DISCLOSE THE WAITING PERIOD UP FRONT  (60 days AND 750 Mile Waiting
+ * Period)…" became "DISCLOSE THE WAITING PERIOD UP FRONT". Those rows were
+ * restored from content_text_version, so the master and the database now
+ * disagree in precisely the direction the old guard called benign — meaning the
+ * next DELIBERATE import would have truncated the same 15 again, quietly.
  */
+export type RowVerdict =
+  /** Apply it: same row, and the incoming text is not poorer. */
+  | "revision"
+  /** Skip: the workbook is behind the app. Never overwrite words with fewer. */
+  | "master-behind"
+  /** Skip: this looks like a different row that slid into the position. */
+  | "moved";
+
+export function classifyIncoming(stored: string, incoming: string): RowVerdict {
+  const a = (stored ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+  const b = (incoming ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+
+  /* Nothing stored: there is nothing to lose and a blank to fill. */
+  if (!a) return "revision";
+  /* Nothing incoming, something stored: the master has lost the words. */
+  if (!b) return "master-behind";
+  if (a === b) return "revision";
+
+  /* The two containment directions, before any fuzzy test can blur them. */
+  if (a.startsWith(b)) return "master-behind";
+  if (b.startsWith(a)) return "revision";
+
+  /*
+   * Neither contains the other. Are these the same row at all?
+   */
+  const wordsA = new Set(a.split(" ").filter((w) => w.length > 3));
+  const wordsB = new Set(b.split(" ").filter((w) => w.length > 3));
+  let shared = 0;
+  for (const w of wordsA) if (wordsB.has(w)) shared++;
+  const related =
+    a.slice(0, 40) === b.slice(0, 40) ||
+    wordsA.size === 0 ||
+    wordsB.size === 0 ||
+    shared / Math.min(wordsA.size, wordsB.size) >= 0.34;
+
+  if (!related) return "moved";
+
+  /*
+   * ---- SAME ROW, AND THE WORKBOOK HAS MUCH LESS OF IT ---------------------
+   *
+   * A strict prefix is the clean case and is caught above. The messy one is a
+   * master that lost the body AND changed something small in the opening — a
+   * straight quote for a curly one, "…CLOSE" where the app has "…At active
+   * Delivery". Four of the fifteen rows Round D truncated look like this: the
+   * first characters differ, so no prefix test sees them, and they are 22-30%
+   * the length of what is stored.
+   *
+   * The asymmetry decides the threshold. A false "master-behind" costs a
+   * skipped row and a line in a report somebody reads. A false "revision"
+   * silently deletes two thirds of a Fact. So a related row under 60% the
+   * length of what is stored is refused, and a genuine tightening edit of that
+   * severity is something Mitch can wave through by pasting it back.
+   */
+  if (b.length < a.length * 0.6) return "master-behind";
+  return "revision";
+}
+
+/**
+ * Kept as the plain question the tab-abort arithmetic asks: is this row one the
+ * importer may write? Both refusals answer no, and only "moved" counts toward
+ * the shift threshold — a stale master is not a shifted tab, and aborting the
+ * whole tab for it would block the rows that ARE revisions.
+ */
+export function looksLikeSameRow(stored: string, incoming: string): boolean {
+  return classifyIncoming(stored, incoming) === "revision";
+}
+
 /**
  * One refusal is a rewrite somebody made deliberately. Several in one tab is
  * the signature of an insertion, because an insertion shifts every row below it
@@ -233,21 +311,6 @@ export function tabsToAbort(
   return new Set(
     [...refusalsByTab.entries()].filter(([, n]) => n >= threshold).map(([t]) => t)
   );
-}
-
-export function looksLikeSameRow(stored: string, incoming: string): boolean {
-  const a = (stored ?? "").replace(/\s+/g, " ").trim().toLowerCase();
-  const b = (incoming ?? "").replace(/\s+/g, " ").trim().toLowerCase();
-  if (!a || !b) return true;
-  if (a.startsWith(b) || b.startsWith(a)) return true;
-  if (a.slice(0, 40) === b.slice(0, 40)) return true;
-
-  const wordsA = new Set(a.split(" ").filter((w) => w.length > 3));
-  const wordsB = new Set(b.split(" ").filter((w) => w.length > 3));
-  if (wordsA.size === 0 || wordsB.size === 0) return true;
-  let shared = 0;
-  for (const w of wordsA) if (wordsB.has(w)) shared++;
-  return shared / Math.min(wordsA.size, wordsB.size) >= 0.34;
 }
 
 /*
@@ -512,11 +575,17 @@ const RUN_AS_SCRIPT = require.main === module;
    * harder to unpick.
    */
   const suspect: { tab: string; row: number; stored: string; incoming: string }[] = [];
+  const masterBehind: { tab: string; row: number; stored: string; incoming: string }[] = [];
   for (const p of planned) {
     const prior = existing.get(`${p.tab} ${p.row}`);
     if (!prior) continue;
-    if (prior.body && !looksLikeSameRow(prior.body, p.body)) {
+    const verdict = classifyIncoming(prior.body, p.body);
+    if (verdict === "moved") {
       suspect.push({ tab: p.tab, row: p.row, stored: prior.body, incoming: p.body });
+      continue;
+    }
+    if (verdict === "master-behind") {
+      masterBehind.push({ tab: p.tab, row: p.row, stored: prior.body, incoming: p.body });
       continue;
     }
     p.id = prior.id;
@@ -524,7 +593,10 @@ const RUN_AS_SCRIPT = require.main === module;
   }
 
   /* Tabs over the threshold are dropped entirely — every row of them, update
-     and insert alike, because an insertion shifts the whole tab. */
+     and insert alike, because an insertion shifts the whole tab. ONLY "moved"
+     rows count: a master that is behind on fifteen rows is a stale workbook,
+     not a shifted tab, and aborting the tab for it would block the rows that
+     really are revisions. */
   const refusalsByTab = countByTab(suspect);
   const abortedTabs = tabsToAbort(refusalsByTab);
 
@@ -583,8 +655,23 @@ const RUN_AS_SCRIPT = require.main === module;
   }
 
   /* ---- What the plan does ------------------------------------------------ */
+  /*
+   * A REFUSED ROW IS NOT A NEW ROW.
+   *
+   * Refusing to update leaves `p.id` unset, and without this it would fall
+   * straight into `inserts` — asking the database to create a second content
+   * row for a (source_tab, source_row) that already has one. 0068's unique
+   * index turns that into a mid-run error rather than a duplicate, which is the
+   * right failure and still the wrong outcome: the refusal is meant to leave
+   * the row exactly as it is, not to take the import down.
+   */
+  const refusedKeys = new Set(
+    [...suspect, ...masterBehind].map((r) => `${r.tab} ${r.row}`)
+  );
   const updates = planned.filter((p) => p.id && !abortedTabs.has(p.tab));
-  const inserts = planned.filter((p) => !p.id && !abortedTabs.has(p.tab));
+  const inserts = planned.filter(
+    (p) => !p.id && !abortedTabs.has(p.tab) && !refusedKeys.has(`${p.tab} ${p.row}`)
+  );
   /*
    * THE UNMATCHED STUMPS ARE TWO DIFFERENT PROBLEMS, AND CONFLATING THEM WOULD
    * HAVE SENT 85 ROWS TO MITCH THAT HE DOES NOT NEED TO LOOK AT.
@@ -645,6 +732,22 @@ const RUN_AS_SCRIPT = require.main === module;
       console.log(`      incoming: ${sIt.incoming.replace(/\s+/g, " ").slice(0, 96)}`);
     }
     if (suspect.length > 12) console.log(`    …and ${suspect.length - 12} more`);
+  }
+  if (masterBehind.length) {
+    console.log(
+      `\n  MASTER IS MISSING WORDS THE APP HAS: ${masterBehind.length} row(s).` +
+        ` NOT updated — the workbook has materially less text than the app does.`
+    );
+    for (const m of masterBehind.slice(0, 20)) {
+      console.log(`    ${m.tab} row ${m.row}`);
+      console.log(`      app has:  ${m.stored.replace(/\s+/g, " ").slice(0, 104)}`);
+      console.log(`      workbook: ${m.incoming.replace(/\s+/g, " ").slice(0, 104)}`);
+    }
+    if (masterBehind.length > 20) console.log(`    …and ${masterBehind.length - 20} more`);
+    console.log(
+      `    Nobody edits a Fact by deleting its second half. Update the master` +
+        ` from the app, or paste the app's text back into these cells.`
+    );
   }
   if (abortedTabs.size) {
     console.log(

@@ -15,6 +15,7 @@
    ============================================================================ */
 
 import {
+  classifyIncoming,
   looksLikeSameRow,
   countByTab,
   tabsToAbort,
@@ -85,6 +86,58 @@ check(
     "Rotating your tires every visit keeps the wear even across all four corners of the car."
   ),
   false
+);
+
+/* ---- 2b · The workbook knowing LESS is never a revision ----------------- */
+section("2b · A master that is behind never overwrites the app");
+
+const full =
+  "DISCLOSE THE WAITING PERIOD UP FRONT  (60 days AND 750 Mile Waiting Period)\n\nThis is a tip about the MOC Warranty that an advisor should disclose early.";
+const truncated = "DISCLOSE THE WAITING PERIOD UP FRONT";
+
+check(
+  "a strict prefix of the stored text is the master being behind",
+  classifyIncoming(full, truncated),
+  "master-behind"
+);
+check(
+  "and the other direction is still the stump repair",
+  classifyIncoming(truncated, full),
+  "revision"
+);
+check(
+  "the same row with the body dropped and the opening reworded",
+  classifyIncoming(
+    "EVERY MOC SERVICE RO INCLUDES THE WARRANTY At active Delivery the advisor confirms coverage, mileage and the waiting period with the customer before they leave.",
+    "EVERY MOC SERVICE RO INCLUDES THE WARRANTY CLOSE"
+  ),
+  "master-behind"
+);
+check(
+  "a quote-style change that also loses the body",
+  classifyIncoming(
+    "UNDERSTANDING: \"Is this an extended warranty?\" MOC Warranty Series — no, it is a maintenance plan, and here is how to say so.",
+    "UNDERSTANDING: 'Is this an extended warranty?'"
+  ),
+  "master-behind"
+);
+check(
+  "an emptied cell against stored words",
+  classifyIncoming(full, ""),
+  "master-behind"
+);
+check(
+  "a real tightening edit that keeps most of the length still applies",
+  classifyIncoming(
+    "Your fuel filter has done its job catching debris and contaminants before they ever reach your fuel injectors.",
+    "Your fuel filter has done its job catching debris and contaminants before reaching your injectors."
+  ),
+  "revision"
+);
+check(
+  "and looksLikeSameRow still answers the write question",
+  [looksLikeSameRow(full, truncated), looksLikeSameRow(truncated, full)],
+  [false, true]
 );
 
 /* ---- 3 · One refusal is an edit, several are an insertion --------------- */
