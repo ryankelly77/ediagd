@@ -164,7 +164,6 @@ async function dropAdminEdited<T extends { code: string }>(
     coachable: r.coachable !== "false",
     confidence: ["high", "medium", "ruled"].includes(r.confidence) ? r.confidence : "high",
     note: clean(r.note),
-    updated_at: new Date().toISOString(),
   }));
 
   const writable = await dropAdminEdited("op_code_family", payload);
@@ -172,7 +171,21 @@ async function dropAdminEdited<T extends { code: string }>(
     console.log("\n  nothing to write — every row is admin-owned.\n");
     return;
   }
-  const { error } = await sb.from("op_code_family").upsert(writable, { onConflict: "code" });
+
+  /*
+   * ---- THE WRITE LIVES IN THE DATABASE NOW (0077) --------------------------
+   *
+   * This used to be `.upsert(writable, { onConflict: "code" })`. 0074 replaced
+   * op_code_family's primary key with a PARTIAL unique index over the live rows
+   * only, and PostgREST cannot express a partial index's predicate — its
+   * on_conflict parameter takes column names and nothing else — so the upsert
+   * raised 42P10 and this seeder stopped working the day the epochs landed.
+   *
+   * seed_op_code_family() is where the `where retired_at is null` clause can be
+   * written. It also restates the 0073 guard in SQL, so a future caller that
+   * skips dropAdminEdited() still cannot revert somebody's edit.
+   */
+  const { error } = await sb.rpc("seed_op_code_family", { _rows: writable });
   if (error) throw new Error(error.message);
 
   const { count } = await sb
