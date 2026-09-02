@@ -15,6 +15,21 @@
    instead so RLS still applies.
    ============================================================================ */
 
+/*
+ * BUILD-TIME GUARD, ahead of the runtime one below.
+ *
+ * `server-only` makes an import of this module from a Client Component a BUILD
+ * FAILURE naming the file, rather than a thrown error the first time somebody
+ * loads the page it is on. lib/supabase/server.ts and lib/watch-ticket.ts have
+ * carried it since they were written; this file — the one that actually holds
+ * the key that bypasses RLS — did not.
+ *
+ * No script needs a stub for it: the scripts build their own service client
+ * from SB_URL/SB_KEY and none of the scripts/tsconfig.*.json files pull this
+ * module in.
+ */
+import "server-only";
+
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export function createServiceClient() {
