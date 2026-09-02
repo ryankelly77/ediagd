@@ -918,10 +918,25 @@ async function shapeVideo(
   let quoteText: string | null = null;
   let quoteVoice: string | null = null;
   if (row.artifact_id) {
+    /*
+     * THE SAME TWO FILTERS EVERY OTHER POOL IN THIS FILE APPLIES.
+     *
+     * This lookup had neither, and it was the only one. Retiring a quote
+     * withdraws it from both quote slots and leaves it here: the video that
+     * films those words keeps rendering them, so the one place nobody thinks to
+     * look is the one place the withdrawn text still reaches an advisor. Same
+     * for a quote pulled back to draft.
+     *
+     * A missing twin falls back to no quote text rather than to stale text. The
+     * video is still the day's video and still plays; what it loses is a caption
+     * that is no longer true.
+     */
     const { data: twin } = await client
       .from("content")
       .select("body, voice")
       .eq("id", row.artifact_id)
+      .is("retired_at", null)
+      .eq("status", "published")
       .maybeSingle();
     quoteText = (twin?.body as string) ?? null;
     quoteVoice = (twin?.voice as string) ?? null;
