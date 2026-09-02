@@ -32,6 +32,25 @@ export type VersionRow = {
   superseded_at: string | null;
 };
 
+/**
+ * A previous set of words, written by the 0083 trigger.
+ *
+ * Distinct from VersionRow above, which is a video TAKE — Mux ids and the file
+ * they came from. These two histories answer different questions and are kept
+ * apart on the screen for the same reason: "which cut of the film is live" and
+ * "what did this used to say" are not the same question.
+ */
+export type TextVersionRow = {
+  seq: number;
+  title: string | null;
+  body: string | null;
+  detail: string | null;
+  title_changed: boolean;
+  body_changed: boolean;
+  detail_changed: boolean;
+  changed_at: string;
+};
+
 export type LinkedFormat = {
   id: string;
   title: string;
@@ -100,6 +119,7 @@ export async function loadContentDetail(client: Client, id: string) {
     { data: voiceRows },
     { data: opCodes },
     { data: versions },
+    { data: textVersions },
     { data: saves },
     { data: served },
   ] = await Promise.all([
@@ -112,6 +132,11 @@ export async function loadContentDetail(client: Client, id: string) {
       .select("version, mux_playback_id, source_filename, created_at, superseded_at")
       .eq("content_id", id)
       .order("version", { ascending: false }),
+    client
+      .from("content_text_version")
+      .select("seq, title, body, detail, title_changed, body_changed, detail_changed, changed_at")
+      .eq("content_id", id)
+      .order("seq", { ascending: false }),
     client.from("saved_content").select("id", { count: "exact", head: true }).eq("content_id", id),
     client
       .from("daily_completion")
@@ -203,6 +228,7 @@ export async function loadContentDetail(client: Client, id: string) {
     voices,
     opCodes: (opCodes ?? []) as OpCode[],
     versions: (versions ?? []) as VersionRow[],
+    textVersions: (textVersions ?? []) as TextVersionRow[],
     linked,
     mux,
     structure: {

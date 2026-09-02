@@ -25,7 +25,7 @@ export default async function ContentItemPage({
   const detail = await loadContentDetail(supabase, id);
   if (!detail) notFound();
 
-  const { row, voices, opCodes, versions, linked, mux, structure } = detail;
+  const { row, voices, opCodes, versions, textVersions, linked, mux, structure } = detail;
   const collection = row.collection as string | null;
 
   return (
@@ -43,6 +43,7 @@ export default async function ContentItemPage({
         voices={voices}
         opCodes={opCodes}
         versions={versions}
+        textVersions={textVersions}
         linked={linked}
         mux={mux}
         structure={structure}

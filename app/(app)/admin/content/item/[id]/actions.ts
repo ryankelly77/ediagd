@@ -132,6 +132,50 @@ export async function retireContent(id: string, retire: boolean): Promise<Detail
 }
 
 /**
+ * Put an older set of words back.
+ *
+ * ---------------------------------------------------------------------------
+ * THROUGH THE NORMAL UPDATE PATH, WHICH IS WHAT MAKES IT UNDOABLE
+ * ---------------------------------------------------------------------------
+ * This does not touch content_text_version and it does not delete anything. It
+ * writes the old title/body/detail back onto `content` like any other edit, so
+ * the 0083 trigger fires and versions whatever is currently live. A restore is
+ * therefore itself restorable — which matters, because the most likely reason
+ * to restore is a mistake, and the second most likely is realising the restore
+ * was the mistake.
+ *
+ * All three fields move together. A version row is a SNAPSHOT of the three, not
+ * a diff, so putting back only the body would produce a row that never existed:
+ * yesterday's body under today's title.
+ */
+export async function restoreText(id: string, seq: number): Promise<DetailResult> {
+  const { ctx, error } = await requireAdmin();
+  if (!ctx) return { ok: false, error: error! };
+
+  const { data: target } = await ctx.supabase
+    .from("content_text_version")
+    .select("seq, title, body, detail")
+    .eq("content_id", id)
+    .eq("seq", seq)
+    .maybeSingle();
+  if (!target) return { ok: false, error: `No text version ${seq} on record.` };
+
+  const { error: writeError } = await ctx.supabase
+    .from("content")
+    .update({
+      title: target.title,
+      body: target.body,
+      detail: target.detail,
+    })
+    .eq("id", id);
+  if (writeError) return { ok: false, error: writeError.message };
+
+  revalidatePath(`/admin/content/item/${id}`);
+  revalidatePath("/admin/content");
+  return { ok: true };
+}
+
+/**
  * Make an older take the live one.
  *
  * SWAPS THE POINTER, DELETES NOTHING. The Mux assets for every version stay

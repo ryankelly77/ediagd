@@ -45,15 +45,30 @@ begin
     raise exception 'Refusing to run: the real account matches the demo email pattern.';
   end if;
 
-  -- A demo login must never hold a membership at a rooftop that is not a demo
-  -- rooftop. If one does, something outside SECTION 5 has been attached to it
-  -- and deleting the user would take that with it.
+  /*
+   * A demo login must never hold a membership at a rooftop that is not a demo
+   * rooftop. If one does, something outside SECTION 5 has been attached to it
+   * and deleting the user would take that with it.
+   *
+   * ONE EXEMPTION, NAMED. demo.advisor@ediagd.test is the standing smoke
+   * account: it holds an advisor membership at a REAL rooftop on purpose,
+   * because that is the only way to exercise the advisor screens against real
+   * data — Doggett CDJR is the only rooftop that owns advisor_base, so an
+   * account anywhere else sees no content at all and proves nothing.
+   *
+   * Its attachment is deliberate and its data is disposable: a handful of
+   * completions and progress rows made by driving the app. That is exactly what
+   * this guard is NOT protecting — it exists to stop a REAL person's history
+   * being cascaded away by a pattern match. So the account is skipped by the
+   * check and still removed by the delete below.
+   */
   if exists (
     select 1
       from auth.users u
       join membership m on m.user_id = u.id
       join rooftop r on r.id = m.rooftop_id
      where u.email like 'demo.%@ediagd.test'
+       and u.email <> 'demo.advisor@ediagd.test'
        and r.name not like '[DEMO]%'
   ) then
     raise exception 'Refusing to run: a demo account holds a membership at a real rooftop.';

@@ -39,6 +39,7 @@ import {
   setPublished,
   retireContent,
   restoreVersion,
+  restoreText,
   linkArtifact,
   searchLinkTargets,
   type DetailDraft,
@@ -69,6 +70,18 @@ type VersionRow = {
   source_filename: string | null;
   created_at: string;
   superseded_at: string | null;
+};
+/* The words as they were, from the 0083 trigger. Distinct from VersionRow
+   above, which is a video take. */
+type TextVersionRow = {
+  seq: number;
+  title: string | null;
+  body: string | null;
+  detail: string | null;
+  title_changed: boolean;
+  body_changed: boolean;
+  detail_changed: boolean;
+  changed_at: string;
 };
 type Linked = { id: string; title: string; format: string | null; status: string };
 type Mux = {
@@ -159,12 +172,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 /* ---- The screen ---------------------------------------------------------- */
 
 export function ContentDetail({
-  item, voices, opCodes, versions, linked, mux, structure,
+  item, voices, opCodes, versions, textVersions, linked, mux, structure,
 }: {
   item: Record<string, unknown>;
   voices: string[];
   opCodes: OpCode[];
   versions: VersionRow[];
+  textVersions: TextVersionRow[];
   linked: Linked[];
   mux: Mux;
   structure: Structure;
@@ -525,6 +539,65 @@ export function ContentDetail({
             This is the live text an advisor sees in the daily loop. Editing it changes the quote.
           </p>
         ) : null}
+
+        {/*
+          PREVIOUS TEXT — the words as they were before somebody replaced them.
+          Collapsed, same weight as the take history in the Mux section, and in
+          this section rather than its own because it is about these words.
+        */}
+        {textVersions.length > 0 && (
+          <details className="mt-4 rounded-xl border border-line p-3">
+            <summary className="cursor-pointer text-sm font-bold text-navy">
+              Previous text — {textVersions.length} version
+              {textVersions.length === 1 ? "" : "s"}
+            </summary>
+            <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+              Kept automatically whenever the title, body or detail changes.
+              Restoring writes the old words back as a normal edit, so the
+              current text is kept too and a restore can itself be undone.
+            </p>
+            <ul className="mt-3 space-y-3">
+              {textVersions.map((v) => (
+                <li key={v.seq} className="border-t border-line pt-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="min-w-0 text-xs">
+                      <span className="font-bold text-navy">v{v.seq}</span>
+                      <span className="ml-2 text-ink-soft">
+                        {new Date(v.changed_at).toLocaleString()}
+                      </span>
+                      <span className="ml-2 text-ink-soft">
+                        {[
+                          v.title_changed ? "title" : null,
+                          v.body_changed ? "body" : null,
+                          v.detail_changed ? "detail" : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}{" "}
+                        replaced
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        run(() => restoreText(id, v.seq), `v${v.seq} restored.`)
+                      }
+                      className="shrink-0 text-xs font-bold text-teal underline"
+                    >
+                      restore
+                    </button>
+                  </div>
+                  {v.title_changed && (
+                    <p className="mt-1 text-xs font-bold text-navy">{v.title ?? "—"}</p>
+                  )}
+                  <p className="mt-1 whitespace-pre-wrap rounded-xl bg-cream-card p-2 text-xs leading-relaxed text-ink-soft">
+                    {v.body ?? "—"}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </Section>
 
       {/* ---- Replace ------------------------------------------------------ */}
