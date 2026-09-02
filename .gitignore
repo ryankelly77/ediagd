@@ -85,3 +85,6 @@ exports/
 .tmp-pk/
 .tmp-dp/
 .tmp-w/
+.tmp-sn/
+.metric-snapshots/
+.tmp-rp/

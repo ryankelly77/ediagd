@@ -10,6 +10,8 @@
     "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js",
     "test:watch": "rm -rf .tmp-w && tsc scripts/watch-scenarios.ts --outDir .tmp-w --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-w/scripts/watch-scenarios.js",
     "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js",
+    "rebuild:periods": "rm -rf .tmp-rp && tsc scripts/rebuild-periods.ts --outDir .tmp-rp --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-rp/rebuild-periods.js",
+    "snapshot:metrics": "rm -rf .tmp-sn && tsc scripts/metric-snapshot.ts --outDir .tmp-sn --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-sn/metric-snapshot.js",
     "verify:dms": "rm -rf .tmp-dms && tsc scripts/dms-verify.ts --outDir .tmp-dms --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dms/scripts/dms-verify.js",
     "remap": "rm -rf .tmp-remap && tsc scripts/remap.ts --outDir .tmp-remap --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-remap/scripts/remap.js",
     "checkmap": "rm -rf .tmp-cm && tsc scripts/checkmap.ts --outDir .tmp-cm --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-cm/scripts/checkmap.js",
