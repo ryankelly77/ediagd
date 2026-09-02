@@ -69,7 +69,7 @@ export default async function AdvisorPage() {
   let rooftopName: string | null = null;
   if (rooftopId) {
     const [period, { data: rt }] = await Promise.all([
-      loadMeasurementPeriod(supabase, rooftopId, PERIOD_COLUMNS),
+      loadMeasurementPeriod(supabase, rooftopId, PERIOD_COLUMNS, opCodeId),
       supabase.from("rooftop").select("name").eq("id", rooftopId).maybeSingle(),
     ]);
     periodId = period?.id ?? null;

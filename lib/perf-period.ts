@@ -56,7 +56,29 @@ export type MeasurementPeriod = {
 export async function loadMeasurementPeriod(
   client: Client,
   rooftopId: string,
-  columns = "id, starts_on, ends_on, is_partial"
+  columns = "id, starts_on, ends_on, is_partial",
+  /**
+   * The advisor's operator id, when the caller has one.
+   *
+   * ---------------------------------------------------------------------------
+   * WHY THE ROOFTOP'S ANSWER IS NOT ALWAYS THE ADVISOR'S
+   * ---------------------------------------------------------------------------
+   * "Latest complete period at this rooftop" is the right rule and the wrong
+   * grain. An operator who only appears in a newer PARTIAL file has no rows in
+   * the store's latest complete month, so the screens resolve a period, find
+   * nothing in it, and render "no performance period" — while labelled partial
+   * data for that person sits one month later.
+   *
+   * That is not hypothetical: operator 671 exists only in the part-month August
+   * file, so Mitch's own account reads as unmeasured. Every mid-month hire has
+   * the same first few weeks.
+   *
+   * So the preference is unchanged — complete beats partial — and it is applied
+   * to the periods THIS ADVISOR HAS ROWS IN. Without an operator id the
+   * behaviour is exactly as before, which is what the manager and admin screens
+   * want.
+   */
+  advisorOpId?: string | null
 ): Promise<MeasurementPeriod | null> {
   const base = () =>
     client
@@ -67,16 +89,53 @@ export async function loadMeasurementPeriod(
       .order("ends_on", { ascending: false })
       .limit(1);
 
-  const { data: complete } = await base().eq("is_partial", false).maybeSingle();
-  if (complete) {
+  /* No operator: the rooftop's own latest, as before. */
+  if (!advisorOpId) {
+    const { data: complete } = await base().eq("is_partial", false).maybeSingle();
+    if (complete) {
+      return { id: complete.id as string, row: complete as Record<string, unknown>, isPartial: false };
+    }
+    const { data: partial } = await base().maybeSingle();
+    if (!partial) return null;
     return {
-      id: complete.id as string,
-      row: complete as Record<string, unknown>,
-      isPartial: false,
+      id: partial.id as string,
+      row: partial as Record<string, unknown>,
+      isPartial: Boolean(partial.is_partial),
     };
   }
 
-  const { data: partial } = await base().maybeSingle();
+  /*
+   * The periods this operator actually has totals in. One round trip, then the
+   * same preference applied to that set — rather than asking the rooftop for a
+   * period and hoping the advisor is in it.
+   */
+  const { data: mine } = await client
+    .from("advisor_period_totals")
+    .select("period_id")
+    .eq("rooftop_id", rooftopId)
+    .eq("advisor_op_id", advisorOpId);
+
+  const myPeriodIds = [
+    ...new Set(((mine ?? []) as { period_id: string }[]).map((r) => r.period_id)),
+  ];
+  if (myPeriodIds.length === 0) return null;
+
+  const scoped = () =>
+    client
+      .from("perf_period")
+      .select(columns)
+      .eq("rooftop_id", rooftopId)
+      .is("superseded_at", null)
+      .in("id", myPeriodIds)
+      .order("ends_on", { ascending: false })
+      .limit(1);
+
+  const { data: complete } = await scoped().eq("is_partial", false).maybeSingle();
+  if (complete) {
+    return { id: complete.id as string, row: complete as Record<string, unknown>, isPartial: false };
+  }
+
+  const { data: partial } = await scoped().maybeSingle();
   if (!partial) return null;
 
   return {

@@ -65,7 +65,9 @@ export async function loadAdvisorDay(
    */
   if (!rooftopId) return null;
 
-  const period = await loadMeasurementPeriod(client, rooftopId);
+  /* Advisor-grained: their own latest complete period, else their own latest
+     partial. See lib/perf-period.ts. */
+  const period = await loadMeasurementPeriod(client, rooftopId, undefined, opCodeId);
   if (!period) return null;
 
   const { data: totals } = await client
