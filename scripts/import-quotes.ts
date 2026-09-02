@@ -450,21 +450,86 @@ type Row = {
   const keptKeys = new Set(payload.map((p) => p.quote_key));
   const orphanKeys = [...inFile].filter((k) => !keptKeys.has(k));
 
-  let pruned = 0;
+  let retired = 0;
+  const refusedForLinks: { key: string; pointedAtBy: string }[] = [];
   if (orphanKeys.length) {
     const { data: present } = await sb
       .from("content")
-      .select("quote_key")
+      .select("id, quote_key")
       .eq("type", "quote")
+      .is("retired_at", null)
       .in("quote_key", orphanKeys);
-    const toDelete = (present ?? []).map((r) => r.quote_key as string);
-    if (toDelete.length && !DRY) {
-      const { error } = await sb.from("content").delete().eq("type", "quote").in("quote_key", toDelete);
-      if (error) throw new Error(`prune: ${error.message}`);
+    const candidates = (present ?? []) as { id: string; quote_key: string }[];
+
+    /*
+     * ---- A LINKED ROW IS NEVER WITHDRAWN BY A SCRIPT ------------------------
+     *
+     * The same check duplicate-actions.ts makes before retiring a duplicate,
+     * for the same reason: `content.artifact_id` is ON DELETE SET NULL and has
+     * no equivalent for a retire, so withdrawing a quote that a video points at
+     * leaves the video pointing at words an advisor can no longer be shown. The
+     * video was matched to THOSE words; whether it should now point somewhere
+     * else is Mitch's call on the detail screen, not a batch job's.
+     *
+     * Reported rather than skipped silently — a count of what was refused and
+     * why is the whole difference between a guard and a gap.
+     */
+    const { data: links } = candidates.length
+      ? await sb
+          .from("content")
+          .select("id, title, artifact_id")
+          .in("artifact_id", candidates.map((c) => c.id))
+      : { data: [] };
+    const inbound = new Map<string, string>();
+    for (const v of (links ?? []) as { title: string; artifact_id: string }[]) {
+      if (!inbound.has(v.artifact_id)) inbound.set(v.artifact_id, v.title);
     }
-    pruned = toDelete.length;
+
+    const toRetire = candidates.filter((c) => {
+      const pointedBy = inbound.get(c.id);
+      if (pointedBy) {
+        refusedForLinks.push({ key: c.quote_key, pointedAtBy: pointedBy });
+        return false;
+      }
+      return true;
+    });
+
+    /*
+     * ---- RETIRE, NEVER DELETE ----------------------------------------------
+     *
+     * This was `.delete()`, and it was the last hard delete of a content row
+     * anywhere in the system. What went with it: saved_content, content_progress,
+     * content_review, content_version and the duplicate rulings all CASCADE, and
+     * daily_completion's five foreign keys are NO ACTION — so pruning a quote
+     * that had ever been served threw a constraint error instead, making the
+     * outcome a coin flip between destroying somebody's saves and failing the
+     * import mid-run.
+     *
+     * Retiring is the same withdrawal with none of that: the row stops being
+     * served, every foreign key survives, and it is reversible by clearing the
+     * date. `status = 'draft'` matches what retireContent() does in the app, so
+     * a row withdrawn by the script and one withdrawn by a person look the same.
+     */
+    if (toRetire.length && !DRY) {
+      const { error } = await sb
+        .from("content")
+        .update({ retired_at: new Date().toISOString(), status: "draft" })
+        .in("id", toRetire.map((c) => c.id));
+      if (error) throw new Error(`retire: ${error.message}`);
+    }
+    retired = toRetire.length;
   }
-  console.log(`  deduped rows removed from a previous import: ${pruned}`);
+  console.log(
+    `  deduped rows retired from a previous import: ${retired}${DRY ? " (dry run — nothing written)" : ""}`
+  );
+  if (refusedForLinks.length) {
+    console.log(
+      `  ${refusedForLinks.length} NOT retired — a video points at them; move the link first:`
+    );
+    for (const r of refusedForLinks.slice(0, 10)) {
+      console.log(`     ${r.key}  <-  "${r.pointedAtBy.slice(0, 56)}"`);
+    }
+  }
 
   /* ---- 5c. Put the open questions in front of a person -------------------- */
   /*
