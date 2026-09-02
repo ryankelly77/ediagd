@@ -171,3 +171,107 @@ export function clampWatchPct(pct: unknown): number {
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.round(Math.min(100, n) * 100) / 100;
 }
+
+/* ---------------------------------------------------------------------------
+   The session accumulator
+--------------------------------------------------------------------------- */
+
+/**
+ * Everything one viewing of one video has established so far.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS HERE AND NOT IN THE PLAYER
+ * ---------------------------------------------------------------------------
+ * It used to live inside TrackedVideo as three refs and twenty lines of
+ * handleTimeUpdate, which meant the one question anybody ever asks of it —
+ * "does scrubbing break it?" — could only be answered by loading a page and
+ * dragging a scrubber. Ryan reported a gate that would not open after a scrub
+ * and there was no way to test the accumulator without a browser.
+ *
+ * It is pure, so now there is. The player owns the media events; this owns the
+ * arithmetic.
+ */
+export type WatchSession = {
+  /** Spans credited by the delta accumulator — the floor under `played`. */
+  ranges: Range[];
+  /** Where the playhead was at the previous sample, for the delta. */
+  lastTime: number | null;
+  /** The asset's duration, once the player has reported one. */
+  duration: number;
+  /** Coverage so far, 0-100. NEVER GOES DOWN — see observeWatch. */
+  pct: number;
+};
+
+export function newWatchSession(): WatchSession {
+  return { ranges: [], lastTime: null, duration: 0, pct: 0 };
+}
+
+/** One media sample: what the element reported at this timeupdate. */
+export type WatchSample = {
+  currentTime: number;
+  duration: number;
+  /** The element's own `played` TimeRanges, flattened. Authoritative when present. */
+  played?: Range[];
+};
+
+/**
+ * Fold one sample into the session.
+ *
+ * ---------------------------------------------------------------------------
+ * A SEEK COSTS THE SKIPPED SECONDS AND NOTHING ELSE
+ * ---------------------------------------------------------------------------
+ * This is the property the whole feature turns on, so it is worth being exact
+ * about the three ways a seek touches this function, and none of them is
+ * destructive:
+ *
+ *   THE JUMP ITSELF adds nothing. stepToRange refuses a delta larger than a
+ *   step of continuous play, so the span dragged over is never credited — which
+ *   is the rule, and it stands.
+ *
+ *   WHAT FOLLOWS accumulates normally. `lastTime` is set to wherever the
+ *   playhead landed, so the very next sample is an ordinary quarter-second step
+ *   from there. There is no "seeked" flag, no penalty, nothing carried forward;
+ *   the accumulator does not remember that a seek happened, because nothing
+ *   about it should change what happens next.
+ *
+ *   SEEKING BACKWARDS gives a negative delta, which is also refused — and then
+ *   the re-watched span is credited by the samples that follow it. mergeRanges
+ *   folds it into what was already there rather than counting it twice.
+ *
+ * So: scrub anywhere, any number of times, then play the video through, and the
+ * ranges merge into one span and coverage reaches 100. What a scrub cannot do
+ * is poison the rest of the session — and what it never buys is credit for the
+ * seconds it skipped.
+ *
+ * MONOTONIC. `pct` is the high-water mark, never the latest reading. A webview
+ * that reports an empty `played` for one sample, or a duration that arrives
+ * late, must not walk a real watch backwards — and a gate that could close
+ * again after opening is a gate that opens at random.
+ */
+export function observeWatch(session: WatchSession, sample: WatchSample): WatchSession {
+  const duration =
+    Number.isFinite(sample.duration) && sample.duration > 0
+      ? sample.duration
+      : session.duration;
+
+  const step = stepToRange(session.lastTime ?? sample.currentTime, sample.currentTime);
+  const ranges = step ? mergeRanges([...session.ranges, step]) : session.ranges;
+
+  let pct = coveragePct(ranges, duration);
+  /*
+   * `played` is authoritative where the browser provides it: it is the decoder's
+   * own record and already excludes everything seeked past. The delta
+   * accumulator stays as a floor under it, because a quirky webview that returns
+   * an empty TimeRanges would otherwise drag a real watch to zero.
+   */
+  if (sample.played && sample.played.length > 0) {
+    pct = Math.max(pct, coveragePct(sample.played, duration));
+  }
+
+  return {
+    ranges,
+    lastTime: sample.currentTime,
+    duration,
+    pct: Math.max(session.pct, pct),
+  };
+}

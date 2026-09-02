@@ -118,9 +118,34 @@ export function mintWatchTicket(
   return `${payload}.${sign(payload)}`;
 }
 
+/**
+ * Why a ticket did not verify — as a value, not as a sentence.
+ *
+ * The sentence is for the advisor and will be rewritten; the code is for the
+ * completion path, which has to tell two very different things apart:
+ *
+ *   FORGED     wrong signature, another user, another video, another day. A
+ *              ticket that was made up. The completion is refused.
+ *   EXPIRED    a real ticket, minted for this viewer and this video, that has
+ *              simply gone stale. Somebody got stuck, or set the phone down.
+ *              The completion goes through UNCREDITED — see completeDay.
+ *
+ * Matching on the sentence would have worked until somebody improved the
+ * wording, and the failure would have been a locked day.
+ */
+export type TicketFailure =
+  | "no-video"
+  | "missing"
+  | "malformed"
+  | "forged"
+  | "wrong-user"
+  | "wrong-content"
+  | "wrong-day"
+  | "expired";
+
 export type TicketCheck =
   | { ok: true; openedAt: number; elapsedSec: number }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; code: TicketFailure };
 
 /**
  * Verify a ticket and say how long the player has been open.
@@ -138,11 +163,11 @@ export function readWatchTicket(
   durationSec: number | null | undefined,
   now: number = Date.now()
 ): TicketCheck {
-  if (!contentId) return { ok: false, reason: "no video on this step" };
-  if (!ticket) return { ok: false, reason: "no watch ticket" };
+  if (!contentId) return { ok: false, reason: "no video on this step", code: "no-video" };
+  if (!ticket) return { ok: false, reason: "no watch ticket", code: "missing" };
 
   const parts = ticket.split(".");
-  if (parts.length !== 5) return { ok: false, reason: "malformed watch ticket" };
+  if (parts.length !== 5) return { ok: false, reason: "malformed watch ticket", code: "malformed" };
 
   const [tUser, tContent, tDate, tTime, mac] = parts;
   const expected = sign(`${tUser}.${tContent}.${tDate}.${tTime}`);
@@ -155,17 +180,21 @@ export function readWatchTicket(
   const a = Buffer.from(mac);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    return { ok: false, reason: "bad watch ticket signature" };
+    return { ok: false, reason: "bad watch ticket signature", code: "forged" };
   }
 
-  if (tUser !== userId) return { ok: false, reason: "watch ticket belongs to another user" };
-  if (tContent !== contentId) return { ok: false, reason: "watch ticket is for another video" };
-  if (tDate !== storeDate) return { ok: false, reason: "watch ticket is from another day" };
+  if (tUser !== userId) return { ok: false, reason: "watch ticket belongs to another user", code: "wrong-user" };
+  if (tContent !== contentId) return { ok: false, reason: "watch ticket is for another video", code: "wrong-content" };
+  if (tDate !== storeDate) return { ok: false, reason: "watch ticket is from another day", code: "wrong-day" };
 
   const openedAt = Number(tTime);
-  if (!Number.isFinite(openedAt)) return { ok: false, reason: "malformed watch ticket time" };
+  if (!Number.isFinite(openedAt)) return { ok: false, reason: "malformed watch ticket time", code: "malformed" };
   if (now - openedAt > ticketTtlMs(durationSec)) {
-    return { ok: false, reason: "watch ticket expired — open the video again" };
+    return {
+      ok: false,
+      reason: "watch ticket expired — open the video again",
+      code: "expired",
+    };
   }
 
   /*

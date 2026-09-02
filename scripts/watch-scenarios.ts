@@ -18,9 +18,12 @@ import {
   coveredSeconds,
   isWatched,
   mergeRanges,
+  newWatchSession,
+  observeWatch,
   stepToRange,
   watchIsPlausible,
   type Range,
+  type WatchSession,
 } from "../lib/watch-coverage";
 
 let passed = 0;
@@ -224,6 +227,116 @@ const D = 29;
   check("null becomes 0", clampWatchPct(null), 0);
   check("the stored value is a number, not a verdict", typeof clampWatchPct(95), "number");
   check("the default bar is 95", WATCHED_PCT, 95);
+
+
+  /* =======================================================================
+     7 · Ryan's bug: scrubbing must not poison the session
+     =======================================================================
+
+     Reported on /today: scrub the timeline and Continue never enables, even
+     after playing to the end, and a refresh does not clear it. Two things were
+     true, and only one of them was this file's business.
+
+     The LOCKOUT was the resume point: a scrub wrote position_sec through
+     record_watch_progress, so every subsequent load started the player four
+     seconds from the end and there was nothing left to cover. That is fixed in
+     MuxVideo — a gated player always starts at zero.
+
+     THE ACCUMULATOR was not at fault, and these are the cases that say so. They
+     are worth keeping anyway, because "seeking poisons the rest of the session"
+     is the shape of bug this design could plausibly have had, and nobody could
+     have ruled it out without loading a page and dragging a scrubber.
+     ======================================================================= */
+  section("7 · A scrub costs the seconds it skipped, and nothing else");
+
+  /** Drive the real accumulator the way the player does. */
+  const watch = (
+    from: WatchSession,
+    a: number,
+    b: number,
+    step = 0.25,
+    duration = D
+  ): WatchSession => {
+    let s = from;
+    for (let t = a; t < b; t = Math.min(b, t + step)) {
+      const next = Math.min(b, t + step);
+      s = observeWatch(s, { currentTime: next, duration });
+      if (next >= b) break;
+    }
+    return s;
+  };
+  /** A seek: the playhead moves with no playback in between. */
+  const seek = (from: WatchSession, to: number, duration = D): WatchSession =>
+    observeWatch(from, { currentTime: to, duration });
+
+  /* The exact gesture Ryan made: drag to near the end of a 29s video. */
+  let s = watch(newWatchSession(), 0, 2);
+  s = seek(s, 27);
+  s = watch(s, 27, D);
+  ok("dragging to the end and playing out the tail is not a watch",
+     !isWatched(s.pct), `${s.pct.toFixed(1)}%`);
+  check("and it credits only the seconds actually played",
+        Math.round(coveredSeconds(s.ranges)), 4);
+
+  /* THE FIX'S ACCEPTANCE CASE. Having scrubbed, play the whole thing. */
+  s = watch(s, 0, D);
+  ok("then playing it through clears the bar", isWatched(s.pct), `${s.pct.toFixed(1)}%`);
+  check("the ranges merged into one span", s.ranges.length, 1);
+
+  /* Scrubbing repeatedly, forwards and backwards, then playing through. */
+  let t = newWatchSession();
+  t = watch(t, 0, 3);
+  t = seek(t, 20);
+  t = watch(t, 20, 22);
+  t = seek(t, 5);
+  t = watch(t, 5, 6);
+  t = seek(t, 0);
+  t = watch(t, 0, D);
+  ok("four seeks, then a full play-through, still clears",
+     isWatched(t.pct), `${t.pct.toFixed(1)}%`);
+
+  /* The seek itself must never add anything, in either direction. */
+  const before = watch(newWatchSession(), 0, 5);
+  check("a forward seek adds no coverage",
+        Math.round(coveredSeconds(seek(before, 25).ranges) * 100) / 100,
+        Math.round(coveredSeconds(before.ranges) * 100) / 100);
+  check("nor does a backward one",
+        Math.round(coveredSeconds(seek(before, 1).ranges) * 100) / 100,
+        Math.round(coveredSeconds(before.ranges) * 100) / 100);
+
+  /* And the sample AFTER a seek is an ordinary step, not a penalty. */
+  const landed = seek(before, 25);
+  const resumed = observeWatch(landed, { currentTime: 25.25, duration: D });
+  check("accumulation resumes immediately at the new position",
+        Math.round((coveredSeconds(resumed.ranges) - coveredSeconds(landed.ranges)) * 100) / 100,
+        0.25);
+
+  /* Re-watching a span already covered must not count it twice. */
+  let u = watch(newWatchSession(), 0, 10);
+  u = seek(u, 0);
+  u = watch(u, 0, 10);
+  check("re-watching the same ten seconds still counts ten",
+        Math.round(coveredSeconds(u.ranges)), 10);
+
+  /* `played` is authoritative, and the delta accumulator is the floor. */
+  const withPlayed = observeWatch(newWatchSession(), {
+    currentTime: 1,
+    duration: D,
+    played: [{ start: 0, end: D }],
+  });
+  ok("the element's own played record can clear the bar on its own",
+     isWatched(withPlayed.pct), `${withPlayed.pct.toFixed(1)}%`);
+  const thenEmpty = observeWatch(withPlayed, { currentTime: 1.25, duration: D, played: [] });
+  ok("and a webview that then reports an empty one cannot take it back",
+     isWatched(thenEmpty.pct), `${thenEmpty.pct.toFixed(1)}%`);
+
+  /* Duration arriving late must not zero what came before it. */
+  let late = observeWatch(newWatchSession(), { currentTime: 0.25, duration: NaN });
+  late = observeWatch(late, { currentTime: 0.5, duration: NaN });
+  check("no duration yet means no percentage yet", late.pct, 0);
+  late = watch(late, 0.5, D);
+  ok("and once it arrives the earlier seconds still count",
+     isWatched(late.pct), `${late.pct.toFixed(1)}%`);
 
   console.log(`\n  ${passed} passed, ${failed} failed`);
   if (failures.length) {

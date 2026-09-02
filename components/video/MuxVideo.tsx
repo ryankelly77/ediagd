@@ -37,6 +37,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
+import type MuxPlayerElement from "@mux/mux-player";
 import { createClient } from "@/lib/supabase/client";
 import type { VideoRenditions } from "@/lib/mux/playback";
 import { pickRendition, type Viewport } from "@/lib/video-rendition";
@@ -88,6 +89,31 @@ export type MuxVideoProps = {
   onError?: (event: Event) => void;
   /** Hide the built-in progress read-out when a parent draws its own. */
   showProgress?: boolean;
+  /**
+   * This player stands in front of a gate, so it is a player you cannot skip.
+   *
+   * ---------------------------------------------------------------------------
+   * WHAT A GATED PLAYER GIVES UP, AND WHY EACH ONE
+   * ---------------------------------------------------------------------------
+   *   the timeline      the only control whose entire purpose is to not watch
+   *   arrow-key seeking the same thing without the timeline
+   *   the speed menu    2x playback covers the same seconds in half the time,
+   *                     and coverage counts seconds, so it is a half-price watch
+   *   the resume point  see below — this is the one that was trapping people
+   *
+   * Play and pause stay. Space and K still work; only the arrows are taken.
+   *
+   * NOT A SECURITY BOUNDARY, and not pretending to be one. Anyone with a
+   * console can seek. The coverage rule is what makes seeking unprofitable —
+   * skipped seconds are never credited — and this only removes the invitation,
+   * so that an advisor who scrubs out of habit does not end up fighting a
+   * button that will not open.
+   *
+   * `credit-only` and `none` players (the LMS, the library) keep everything.
+   * Nothing is gated there, so there is nothing to protect and a lesson you
+   * cannot scrub is just a worse lesson.
+   */
+  gated?: boolean;
   className?: string;
 };
 
@@ -105,6 +131,7 @@ export function MuxVideo({
   onPause,
   onError,
   showProgress = true,
+  gated = false,
   className,
 }: MuxVideoProps) {
   const [watched, setWatched] = useState(initialWatchedPct);
@@ -280,6 +307,42 @@ export function MuxVideo({
     [onPlay]
   );
 
+  /*
+   * ---- hotkeys IS AN ATTRIBUTE, NOT A PROP --------------------------------
+   *
+   * `<MuxPlayer hotkeys="noarrowleft noarrowright">` typechecks and then throws
+   * at runtime: React sets props on a custom element by ASSIGNING to the
+   * property, and mux-player's `hotkeys` is getter-only — it returns a token
+   * list. The assignment raises "Cannot set property hotkeys of #<Fe> which has
+   * only a getter", React unwinds, and /today renders "This page couldn't
+   * load". A change meant to stop people getting stuck on the video step would
+   * have stopped them getting to it.
+   *
+   * So it is set as an attribute, which is what the element actually reads.
+   *
+   * Arrow keys are a seek bar with no bar. Space and K are left alone: they
+   * play and pause, which a gated player still does.
+   */
+  const playerRef = useCallback(
+    (el: MuxPlayerElement | null) => {
+      if (!el) return;
+      if (gated) el.setAttribute("hotkeys", "noarrowleft noarrowright");
+      else el.removeAttribute("hotkeys");
+    },
+    [gated]
+  );
+
+  /*
+   * Put the rate back. Hiding the menu removes the button, not the ability —
+   * a browser extension, a remembered preference, or a media-key can all still
+   * set playbackRate, and each one would buy a full watch for half the seconds.
+   */
+  const handleRateChange = useCallback((event: Event) => {
+    if (!gated) return;
+    const el = event.currentTarget as HTMLMediaElement | null;
+    if (el && el.playbackRate !== 1) el.playbackRate = 1;
+  }, [gated]);
+
   return (
     <div className={className}>
       <div
@@ -301,6 +364,7 @@ export function MuxVideo({
           <div style={{ aspectRatio: "16 / 9", width: "100%" }} />
         ) : (
         <MuxPlayer
+          ref={playerRef}
           playbackId={rendition.playbackId}
           tokens={{
             playback: rendition.token,
@@ -312,7 +376,34 @@ export function MuxVideo({
           /* See the note at the top — this is the Capacitor-critical one. */
           playsInline
           preload="metadata"
-          startTime={initialPositionSec ?? undefined}
+          /*
+           * ---- THE LOCKOUT LIVED ON THIS LINE ------------------------------
+           *
+           * A gated player ALWAYS starts at zero. It used to resume wherever
+           * content_progress last left the playhead, and that is what trapped
+           * Ryan: one drag of the scrubber to 48s of a 52s video wrote
+           * position_sec = 48 through record_watch_progress, and from then on
+           * every load of /today — every refresh, every new day — started him
+           * four seconds from the end. Coverage counts seconds decoded, so the
+           * most he could ever reach was those four seconds, and Continue could
+           * never open. A refresh did not clear it because the position was in
+           * Postgres, not in the tab.
+           *
+           * Resuming was never worth anything here anyway: coverage does not
+           * survive a reload, so a gated video has to be covered in one sitting
+           * whatever the playhead does. Resume stays for the LMS and the
+           * library, where picking up a twelve-minute lesson where you left it
+           * is the whole point and nothing is gated on it.
+           */
+          startTime={gated ? undefined : initialPositionSec ?? undefined}
+          /*
+           * LOCKED TO 1, AND PUT BACK IF ANYTHING MOVES IT. Coverage counts
+           * media seconds, so 2x is a full watch for half the sitting — the
+           * menu is hidden below, and this catches whatever sets the property
+           * some other way.
+           */
+          playbackRate={gated ? 1 : undefined}
+          onRateChange={handleRateChange}
           onTimeUpdate={handleTimeUpdate}
           onEnded={onEnded}
           onPlay={handlePlay}
@@ -337,6 +428,20 @@ export function MuxVideo({
              * Bars on navy read as a frame; a beheaded presenter reads as a bug.
              */
             "--media-object-fit": "contain",
+            /*
+             * The controls a gated player does not get. mux-player hides a
+             * control when its variable is `none`; the seek buttons go with the
+             * bar because they are the same affordance with a different shape.
+             */
+            ...(gated
+              ? {
+                  "--time-range": "none",
+                  "--seek-backward-button": "none",
+                  "--seek-forward-button": "none",
+                  "--playback-rate-button": "none",
+                  "--playback-rate-menu-button": "none",
+                }
+              : null),
           }}
         />
         )}

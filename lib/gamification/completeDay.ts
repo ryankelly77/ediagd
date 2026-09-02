@@ -534,7 +534,18 @@ type ServiceClient = ReturnType<typeof createServiceClient>;
  * with no video has none, and a client that lost one has a completion worth
  * saving. What it loses is the ability to claim a full watch: with nothing to
  * check against, an at-or-above-bar claim is refused and anything below it is
- * stored as reported.
+ * stored as reported. The client downgrades such a claim to null before it ever
+ * gets here — see the `verifiable` helper in DailyFlow.
+ *
+ * NEITHER IS AN EXPIRED ONE. Same treatment, for the same reason, and it is the
+ * case an honest advisor actually reaches: see the note at the check below.
+ *
+ * MINTING IS UNLIMITED; SPENDING IS ONCE. A ticket may be minted as often as a
+ * player is opened — every refresh mints another, and it has to, or a reload
+ * would leave the viewer with no way to prove anything for the rest of the day.
+ * What is single-use is CONSUMPTION: a ticket whose hash already sits on a
+ * completion cannot be spent again. That check is below, against
+ * daily_completion, which is the only place a ticket is ever spent.
  */
 async function verifyWatch(
   supabase: ServiceClient,
@@ -554,7 +565,7 @@ async function verifyWatch(
     rawPct: number | null | undefined,
     ticket: string | null | undefined,
     label: string
-  ): Promise<{ pct: number | null; ref: string | null }> => {
+  ): Promise<{ pct: number | null; ref: string | null; degraded?: boolean }> => {
     // No video on this step: null means unmeasured, which is not zero.
     if (!contentId) return { pct: null, ref: null };
     if (rawPct == null) return { pct: null, ref: null };
@@ -574,6 +585,25 @@ async function verifyWatch(
 
     const check = readWatchTicket(ticket, userId, contentId, today, durationSec);
     if (!check.ok) {
+      /*
+       * ---- AN EXPIRED TICKET IS NOT A FORGERY, AND MUST NOT LOCK THE DAY ---
+       *
+       * The TTL is three times the video plus five minutes, measured from the
+       * moment the player opened. That is generous to a service drive and it is
+       * not generous to somebody who got stuck: fight a gate for eight minutes
+       * on a fifty-second video and the ticket you are holding is stale before
+       * you ever clear it. Refusing there means our own clock costs a streak.
+       *
+       * So it degrades exactly like a missing one: null percentage — we cannot
+       * say what they watched — and watch_error, and the DAY SAVES. Nothing is
+       * gained by sending a stale ticket, because nothing is credited for it.
+       *
+       * Everything else here is a ticket that was made up rather than one that
+       * went stale: a bad signature, another user's, another video's, another
+       * day's. Those are still refused.
+       */
+      if (check.code === "expired") return { pct: null, ref: null, degraded: true };
+
       throw new CompleteDayError(
         `Could not verify the ${label} video watch (${check.reason}). Reload the day and try again.`,
         "watch.ticket"
@@ -636,10 +666,13 @@ async function verifyWatch(
    * true there would put a broken-player marker on a day that had no player.
    */
   const wasServed = Boolean(served.pitch || served.vid);
+  /* A watch we could not verify is a watch we could not measure, and that is
+     what watch_error records — the same marker a broken player leaves. */
+  const degraded = Boolean(pitch.degraded || lifestyle.degraded);
   return {
     pitchPct: pitch.pct,
     lifestylePct: lifestyle.pct,
-    error: wasServed ? Boolean(content.watchError) : false,
+    error: wasServed ? Boolean(content.watchError) || degraded : false,
     pitchTicketRef: pitch.ref,
     lifestyleTicketRef: lifestyle.ref,
   };

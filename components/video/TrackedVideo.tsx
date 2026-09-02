@@ -35,11 +35,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MuxVideo, type MuxVideoProps } from "@/components/video/MuxVideo";
 import {
   WATCHED_PCT,
-  coveragePct,
   isWatched,
-  mergeRanges,
-  stepToRange,
+  newWatchSession,
+  observeWatch,
   type Range,
+  type WatchSession,
 } from "@/lib/watch-coverage";
 
 export type WatchPolicy = "gate-continue" | "credit-only" | "none";
@@ -83,9 +83,9 @@ export function TrackedVideo({
   threshold?: number;
   onWatchChange?: (state: WatchState) => void;
 }) {
-  const ranges = useRef<Range[]>([]);
-  const lastTime = useRef<number | null>(null);
-  const duration = useRef<number>(0);
+  /* All of the arithmetic lives in lib/watch-coverage now, so "does a scrub
+     break this" is a test rather than a page you have to load and drag. */
+  const session = useRef<WatchSession>(newWatchSession());
 
   const [pct, setPct] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -149,28 +149,21 @@ export function TrackedVideo({
          after this, the advisor is not stuck behind the timeout. */
       clearTimer();
 
-      if (Number.isFinite(el.duration) && el.duration > 0) duration.current = el.duration;
-
-      // The accumulator floor: only steps small enough to be continuous play.
-      const step = stepToRange(lastTime.current ?? el.currentTime, el.currentTime);
-      if (step) ranges.current = mergeRanges([...ranges.current, step]);
-      lastTime.current = el.currentTime;
-
-      /*
-       * `played` is authoritative where the browser provides it — it already
-       * excludes everything that was seeked past. Math.max keeps the
-       * accumulator as a floor rather than letting an empty TimeRanges from a
-       * quirky webview drag a real watch back to zero.
-       */
-      let next = coveragePct(ranges.current, duration.current);
+      /* The element's own record of what went through the decoder. */
       const playedRanges: Range[] = [];
       const p = el.played;
-      if (p && p.length > 0) {
+      if (p) {
         for (let i = 0; i < p.length; i++) {
           playedRanges.push({ start: p.start(i), end: p.end(i) });
         }
-        next = Math.max(next, coveragePct(playedRanges, duration.current));
       }
+
+      session.current = observeWatch(session.current, {
+        currentTime: el.currentTime,
+        duration: el.duration,
+        played: playedRanges,
+      });
+      const next = session.current.pct;
 
       if (next <= pct) return; // no new ground covered
       setPct(next);
@@ -240,6 +233,17 @@ export function TrackedVideo({
            two different numbers (furthest-reached and coverage) disagreeing in
            public. */
         showProgress={player.showProgress ?? !tracking}
+        /*
+         * ONLY `gate-continue` LOSES CONTROLS. The policy already says whether
+         * a button is waiting on this video, and that is precisely the question
+         * "should this be skippable" is asking — so it is answered here rather
+         * than by a second flag every caller would have to remember to set in
+         * agreement with the policy it already passed.
+         *
+         * `credit-only` (the LMS) and `none` (the library) keep the timeline,
+         * the speed menu and the resume point. Nothing is held shut there.
+         */
+        gated={player.gated ?? policy === "gate-continue"}
         onTimeUpdate={tracking ? handleTimeUpdate : undefined}
         onPlay={tracking ? handlePlay : undefined}
         onPause={tracking ? handlePause : undefined}

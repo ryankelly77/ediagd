@@ -117,12 +117,12 @@ check(
 check(
   "a ticket for another video is refused",
   readWatchTicket(ticket, USER, CUE, DAY, THREE_MIN, opened),
-  { ok: false, reason: "watch ticket is for another video" }
+  { ok: false, reason: "watch ticket is for another video", code: "wrong-content" }
 );
 check(
   "and one carried across midnight is refused",
   readWatchTicket(ticket, USER, VIDEO, "2026-09-03", THREE_MIN, opened),
-  { ok: false, reason: "watch ticket is from another day" }
+  { ok: false, reason: "watch ticket is from another day", code: "wrong-day" }
 );
 
 /*
@@ -139,7 +139,11 @@ check(
 check(
   "expired after fifteen",
   readWatchTicket(ticket, USER, VIDEO, DAY, THREE_MIN, opened + 900_000),
-  { ok: false, reason: "watch ticket expired — open the video again" }
+  {
+    ok: false,
+    reason: "watch ticket expired — open the video again",
+    code: "expired",
+  }
 );
 check(
   "and the twelve-hour window the old ticket allowed is long gone",
@@ -185,6 +189,95 @@ check(
   "a different ticket hashes differently",
   watchTicketRef(ticket) === watchTicketRef(mintWatchTicket(USER, VIDEO, DAY, opened + 1)!),
   false
+);
+
+
+/* ---- 5 · Minting is unlimited; spending is once --------------------------- */
+section("5 · A refresh must always be able to mint another ticket");
+
+/*
+ * THE LOCKOUT THIS RULES OUT. If minting refused a second ticket for the same
+ * (user, content, day) once one had been issued, then a viewer who opened the
+ * player and then reloaded the page — for any reason, including the resume-point
+ * bug that started all this — would have no way to prove a watch for the rest of
+ * the day. The gate could never be satisfied again.
+ *
+ * So minting is free and repeatable. Single use is enforced at CONSUMPTION, in
+ * completeDay, against the ticket hashes already sitting on daily_completion —
+ * which is the only place a ticket is ever actually spent.
+ */
+const first = mintWatchTicket(USER, VIDEO, DAY, opened)!;
+const second = mintWatchTicket(USER, VIDEO, DAY, opened + 30_000)!;
+
+check("a second ticket for the same video, same day, is issued", typeof second, "string");
+check("and it is a different ticket", first === second, false);
+check(
+  "the first still verifies",
+  readWatchTicket(first, USER, VIDEO, DAY, THREE_MIN, opened + 30_000).ok,
+  true
+);
+check(
+  "and so does the second",
+  readWatchTicket(second, USER, VIDEO, DAY, THREE_MIN, opened + 30_000).ok,
+  true
+);
+check(
+  "they hash differently, so consuming one cannot consume the other",
+  watchTicketRef(first) === watchTicketRef(second),
+  false
+);
+
+/*
+ * A ticket minted after a reload measures from the RELOAD, which is the point.
+ * The window starts when this player opened, not when some earlier one did.
+ */
+check(
+  "the fresh ticket's window starts at its own minting",
+  readWatchTicket(second, USER, VIDEO, DAY, THREE_MIN, opened + 30_000),
+  { ok: true, openedAt: opened + 30_000, elapsedSec: 0 }
+);
+
+/* ---- 6 · Expired is not forged ------------------------------------------- */
+section("6 · Stale and made-up are told apart, because they end differently");
+
+/*
+ * completeDay branches on the CODE, not the sentence: an expired ticket lets the
+ * day save uncredited, and a forged one is refused. Matching on wording would
+ * have survived exactly until somebody improved the wording, and the failure
+ * would have been a locked day.
+ */
+check(
+  "a stale ticket reports expired",
+  readWatchTicket(first, USER, VIDEO, DAY, THREE_MIN, opened + 900_000).ok ||
+    (readWatchTicket(first, USER, VIDEO, DAY, THREE_MIN, opened + 900_000) as { code: string }).code,
+  "expired"
+);
+check(
+  "a tampered one reports forged",
+  (readWatchTicket(
+    `${mintWatchTicket(USER, CUE, DAY, opened)!.split(".").slice(0, 4).join(".")}.${first.split(".")[4]}`,
+    USER,
+    CUE,
+    DAY,
+    THREE_MIN,
+    opened
+  ) as { code: string }).code,
+  "forged"
+);
+check(
+  "another user's reports wrong-user, which is also a refusal",
+  (readWatchTicket(first, OTHER, VIDEO, DAY, THREE_MIN, opened) as { code: string }).code,
+  "wrong-user"
+);
+check(
+  "a missing one reports missing",
+  (readWatchTicket(null, USER, VIDEO, DAY, THREE_MIN, opened) as { code: string }).code,
+  "missing"
+);
+check(
+  "and garbage reports malformed, not a crash",
+  (readWatchTicket("garbage", USER, VIDEO, DAY, THREE_MIN, opened) as { code: string }).code,
+  "malformed"
 );
 
 console.log(`\n  ${passed} passed, ${failed} failed`);
