@@ -45,6 +45,7 @@ import { createClient } from "@supabase/supabase-js";
 import { readdir, stat, readFile, copyFile, rm, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { createDirectUpload } from "../lib/mux/upload";
 
 const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
@@ -167,6 +168,27 @@ function parseName(file: string): Parsed | null {
 }
 
 /**
+ * The same IDEA, ignoring which take it is.
+ *
+ * canonicalName() answers "is this the same take"; this answers "is this the
+ * same thing, re-shot" — the canonical name with its version suffix removed.
+ * Collection and voice stay part of it because a title alone is not unique:
+ * CRAFT and MINDSET can both hold a "Walk-Around", and the old bare-title key
+ * collapsed them into one.
+ */
+function identityOf(canonical: string): string {
+  return canonical.replace(/\s*—\s*v\d+\.[a-z0-9]+$/i, "").trim().toLowerCase();
+}
+
+/** Run a child command, inheriting stdio so its own reporting is the reporting. */
+function run(cmd: string, argv: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const c = spawn(cmd, argv, { stdio: "inherit", env: process.env });
+    c.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));
+  });
+}
+
+/**
  * What the file SHOULD have been called. Stored as canonical_filename so a
  * re-drop of the same idea under a different working name still matches.
  */
@@ -275,11 +297,119 @@ async function putFile(url: string, filePath: string, bytes: number) {
     console.log(`    Known: ${Object.keys(ROUTES).join(", ")}`);
   }
 
+  /*
+   * ---- WHAT COUNTS AS "ALREADY HERE" -------------------------------------
+   *
+   * This used to be a Set of bare titles, and parseName() strips the version
+   * token BEFORE the title is formed — so `… — v2.mov` produced the same title
+   * as v1, matched, and was filtered out. A re-shoot never reached Mux, the run
+   * printed "skipping 1 already uploaded", and the library kept the old take
+   * while Mitch believed the new one had landed.
+   *
+   * canonicalName() has encoded the right key all along — COLLECTION, title,
+   * voice and version — and the comment above it says "the canonical name is
+   * what a re-drop is matched against". It was computed, stored, and never
+   * matched on.
+   *
+   * READ FROM `content`, NOT FROM mux_upload.draft. The 56 drafts already in
+   * production predate this shape entirely: they carry `series`, no version, no
+   * voice (it is prose inside `body` — the mistake the Phase 3 backfill undid)
+   * and no canonical_filename. The content rows the webhook built from them
+   * carry all four. `content` is also where the id a replacement needs lives.
+   *
+   * BOTH KEYS COME OFF ONE STRING. The identity is the canonical name with its
+   * ` — vN.ext` suffix removed, so the two grains cannot disagree about what
+   * makes a video the same idea — and neither has to reconcile the filename's
+   * "(Buffett)" with the row's resolved "Warren Buffett".
+   */
+  const { data: priorRows } = await sb
+    .from("content")
+    .select("id, canonical_filename, version")
+    .not("mux_asset_id", "is", null)
+    .not("canonical_filename", "is", null);
+
+  type Prior = { version: number; contentId: string; canonical: string };
+  const byCanonical = new Map<string, Prior>();
+  const byIdentity = new Map<string, Prior>();
+  for (const r of (priorRows ?? []) as { id: string; canonical_filename: string; version: number | null }[]) {
+    const prior: Prior = {
+      version: Number(r.version ?? 1),
+      contentId: r.id,
+      canonical: r.canonical_filename,
+    };
+    byCanonical.set(r.canonical_filename, prior);
+    const identity = identityOf(r.canonical_filename);
+    const seen = byIdentity.get(identity);
+    if (!seen || prior.version > seen.version) byIdentity.set(identity, prior);
+  }
+
+  const done: { file: string; uploadId: string }[] = [];
+  const failed: { file: string; error: string }[] = [];
+  const skipped: { file: string; because: string }[] = [];
+  const replacements: { file: string; contentId: string; from: number; to: number }[] = [];
+  const pending: Parsed[] = [];
+
+  for (const p of parsed) {
+    const route = ROUTES[p.collection];
+    const canonical = canonicalName(p, route?.collection ?? p.collection);
+    if (byCanonical.has(canonical)) {
+      skipped.push({ file: p.file, because: `already ingested as ${canonical}` });
+      continue;
+    }
+    const prior = byIdentity.get(identityOf(canonical));
+    if (prior && p.version > prior.version) {
+      replacements.push({
+        file: p.file,
+        contentId: prior.contentId,
+        from: prior.version,
+        to: p.version,
+      });
+      continue;
+    }
+    if (prior && p.version <= prior.version) {
+      skipped.push({ file: p.file, because: `v${prior.version} is already the live take` });
+      continue;
+    }
+    pending.push(p);
+  }
+
+  if (skipped.length) {
+    console.log(`  skipping ${skipped.length}:`);
+    for (const s of skipped) console.log(`     ${s.file}  —  ${s.because}`);
+    console.log("");
+  }
+
+  /*
+   * ---- A HIGHER VERSION IS A REPLACEMENT, NOT AN INGEST -------------------
+   *
+   * Shelling out to replace:video rather than reimplementing the swap: that
+   * script already enforces the order that matters (upload -> optional trim ->
+   * swap the master -> derive the vertical), archives the old asset id, and
+   * lets 0058 mark the stale vertical. Two implementations of that sequence is
+   * how one of them ends up skipping the derive. Same reasoning replace-video
+   * itself gives for shelling out to derive:vertical.
+   */
+  for (const r of replacements) {
+    console.log(`  REPLACE  ${r.file}  v${r.from} -> v${r.to}  (content ${r.contentId.slice(0, 8)})`);
+    if (DRY) continue;
+    try {
+      await run("npm", [
+        "run", "replace:video", "--",
+        `--id=${r.contentId}`,
+        `--file=${path.join(SRC, r.file)}`,
+      ]);
+      done.push({ file: r.file, uploadId: `replaced:${r.contentId}` });
+    } catch (e) {
+      failed.push({ file: r.file, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
   if (DRY) {
-    console.log(`\n  --dry: nothing uploaded.\n`);
-    parsed.slice(0, LIMIT || parsed.length).forEach((p) =>
+    console.log(`\n  --dry: nothing uploaded, nothing replaced.\n`);
+    console.log(`    ${replacements.length} would REPLACE an existing take, ${pending.length} would ingest fresh, ${skipped.length} skipped\n`);
+    pending.slice(0, LIMIT || pending.length).forEach((p) =>
       console.log(
-        `    ${p.collection.padEnd(11)} ${p.title.slice(0, 52).padEnd(54)}${(p.voice ?? "—").padEnd(14)}${(p.bytes / 1e6).toFixed(0)}MB`
+        `    new      ${p.collection.padEnd(11)} ${p.title.slice(0, 46).padEnd(48)}${(p.voice ?? "—").padEnd(14)}${(p.bytes / 1e6).toFixed(0)}MB`
       )
     );
     return;
@@ -305,21 +435,6 @@ async function putFile(url: string, filePath: string, bytes: number) {
    * every retry step over exactly the files that need retrying. An asset_id is
    * the only proof Mux actually received something.
    */
-  const { data: already } = await sb
-    .from("mux_upload")
-    .select("draft, asset_id")
-    .not("asset_id", "is", null);
-  const seen = new Set(
-    (already ?? [])
-      .map((r) => (r.draft as { title?: string } | null)?.title)
-      .filter(Boolean) as string[]
-  );
-  const done: { file: string; uploadId: string }[] = [];
-  const failed: { file: string; error: string }[] = [];
-  const pending = parsed.filter((p) => !seen.has(p.title));
-  if (parsed.length !== pending.length) {
-    console.log(`  skipping ${parsed.length - pending.length} already uploaded\n`);
-  }
   const queue = LIMIT ? pending.slice(0, LIMIT) : pending;
 
   for (const [i, p] of queue.entries()) {
