@@ -421,9 +421,35 @@ export async function commitImport(importId: string): Promise<CommitResult> {
     { _import_id: importId }
   );
   if (buildErr) throw new Error(`Rebuild failed: ${buildErr.message}`);
-  const periodsRebuilt = Number(
-    (built as Record<string, number> | null)?.scopes_rebuilt ?? 0
-  );
+
+  /*
+   * A SCOPE THAT FAILED IS NAMED, NOT COUNTED AWAY.
+   *
+   * 0079 stopped one month's failure aborting all eleven stores — each
+   * rebuild_dms_periods call rewrites only its own month, so carrying on is
+   * right. What must not happen is carrying on QUIETLY: the import would report
+   * success while a store had no period for the month it just uploaded, which
+   * is the screens showing the previous month with nothing saying why.
+   *
+   * The run is recorded in rebuild_run either way and shown on /admin/dms; this
+   * throw is so the person who pressed Commit hears it now.
+   */
+  const buildResult = (built ?? {}) as {
+    scopes_rebuilt?: number;
+    scopes_attempted?: number;
+    failed?: { rooftop?: string; month?: string; error?: string }[];
+  };
+  const buildFailures = buildResult.failed ?? [];
+  if (buildFailures.length > 0) {
+    throw new Error(
+      `The import committed, but ${buildFailures.length} of ` +
+        `${buildResult.scopes_attempted ?? "?"} rooftop-months did not rebuild ` +
+        `(first: ${buildFailures[0].month ?? "?"} — ${buildFailures[0].error ?? "unknown"}). ` +
+        `The data is stored; run npm run rebuild:periods to finish. ` +
+        `See the rebuild status on this page.`
+    );
+  }
+  const periodsRebuilt = Number(buildResult.scopes_rebuilt ?? 0);
 
   // The unmapped figure the RESULT reports is read back from the database, so
   // it is the same measurement the preview projected rather than a second,

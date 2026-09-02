@@ -26,8 +26,12 @@ export default async function DmsPage() {
 
   const service = createServiceClient();
 
-  const [{ data: imports }, { data: unmapped }, { count: metricRows, error: metricErr }] =
-    await Promise.all([
+  const [
+    { data: imports },
+    { data: unmapped },
+    { count: metricRows, error: metricErr },
+    { data: rebuild },
+  ] = await Promise.all([
       service
         .from("dms_import")
         .select("id, file_name, status, covers_from, covers_to, created_at, committed_at")
@@ -43,6 +47,8 @@ export default async function DmsPage() {
       // null — the screen then renders a confident "0 daily rows stored" for a
       // table that does not exist. limit(0) costs the same and returns a body.
       service.from("dms_daily_metric").select("rooftop_id", { count: "exact" }).limit(0),
+      // One row, always — rebuild_status is built to have no empty case.
+      service.from("rebuild_status").select("*").maybeSingle(),
     ]);
 
   const gaps = (unmapped ?? []) as { sub_category: string; rows: number }[];
@@ -82,6 +88,8 @@ export default async function DmsPage() {
           </p>
         </Card>
       )}
+
+      <RebuildStatus row={rebuild as RebuildRow | null} />
 
       <DmsUploader />
 
@@ -149,5 +157,120 @@ export default async function DmsPage() {
         )}
       </Card>
     </main>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Was the last rebuild any good, and is one outstanding?
+--------------------------------------------------------------------------- */
+
+type RebuildRow = {
+  run_id: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  scope: string | null;
+  periods_attempted: number | null;
+  periods_succeeded: number | null;
+  failed: { rooftop?: string; month?: string; error?: string }[] | null;
+  initiated_by: string | null;
+  failed_count: number | null;
+  unfinished: boolean | null;
+  last_full_rebuild_at: string | null;
+  mapping_changed_at: string | null;
+  mapping_ahead_of_rebuild: boolean | null;
+};
+
+const stamp = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+/**
+ * READ-ONLY, AND IT NEVER SAYS "APPLIED" WITH CHUNKS OUTSTANDING.
+ *
+ * The rebuild is chunked per (rooftop, month) because one call over 220 periods
+ * exceeds the statement timeout — so a half-rebuilt library is a real state.
+ * Until 0079 nothing recorded that it had happened: the script exited 0 whether
+ * it failed one period or two hundred, and perf_period.rules_as_of is constant
+ * across every rebuild after the first, so it could not tell you either.
+ *
+ * Three things worth saying, in the order they matter:
+ *   * a run that started and never reported — the failure mode with no other
+ *     symptom at all
+ *   * a run that finished with failures, naming which months
+ *   * a mapping edited since the last FULL clean rebuild
+ *
+ * The third is the one to read carefully. op_text_rule is baked into
+ * advisor_op_metric at rebuild time while sub_category_map is read live, so
+ * between an edit and a rebuild the two halves of the mapping disagree with each
+ * other. This banner does not fix that; it is the honest signal that it is
+ * currently true.
+ */
+function RebuildStatus({ row }: { row: RebuildRow | null }) {
+  if (!row || !row.run_id) {
+    return (
+      <Card className="mt-4 p-5">
+        <p className="ediagd-eyebrow">Period rebuild</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+          No rebuild has been recorded yet. Runs from{" "}
+          <code>npm run rebuild:periods</code> and from a committed import are
+          logged here from 0079 onward.
+        </p>
+      </Card>
+    );
+  }
+
+  const failedCount = Number(row.failed_count ?? 0);
+  const unfinished = Boolean(row.unfinished);
+  const stale = Boolean(row.mapping_ahead_of_rebuild);
+  const problem = unfinished || failedCount > 0 || stale;
+
+  return (
+    <Card className="mt-4 p-5">
+      <p className="ediagd-eyebrow">Period rebuild</p>
+      <p className="mt-1 text-sm text-ink">
+        {unfinished ? (
+          <strong className="text-navy">
+            {`A rebuild started ${stamp(row.started_at)} and never reported.`}
+          </strong>
+        ) : (
+          `${row.periods_succeeded ?? 0} of ${row.periods_attempted ?? 0} periods rebuilt · ${stamp(row.finished_at)}`
+        )}
+      </p>
+      <p className="ediagd-numeral mt-0.5 text-[11px] text-ink-soft">
+        {`scope ${row.scope ?? "—"} · started by ${row.initiated_by ?? "—"}`}
+      </p>
+
+      {failedCount > 0 && (
+        <div className="mt-3">
+          <p
+            className="text-sm font-extrabold"
+            style={{ color: "rgb(var(--ediagd-clay))" }}
+          >
+            {`${failedCount} period${failedCount === 1 ? "" : "s"} did not rebuild`}
+          </p>
+          <ul className="ediagd-numeral mt-1 space-y-0.5 text-[11px] text-ink-soft">
+            {(row.failed ?? []).slice(0, 5).map((f, i) => (
+              <li key={i}>
+                {`${f.month ?? "?"} · ${String(f.rooftop ?? "?").slice(0, 8)} — ${String(f.error ?? "").slice(0, 90)}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {stale && (
+        <p
+          className="mt-3 text-sm leading-relaxed"
+          style={{ color: "rgb(var(--ediagd-clay))" }}
+        >
+          {`A mapping was edited ${stamp(row.mapping_changed_at)}, after the last full clean rebuild (${stamp(row.last_full_rebuild_at)}). Sub-category corrections are already live on every screen; op-text rules are baked into the metrics and are not, until a rebuild runs. Run npm run rebuild:periods.`}
+        </p>
+      )}
+
+      {!problem && (
+        <p className="mt-2 text-sm text-ink-soft">
+          Every period is on the current rule set.
+        </p>
+      )}
+    </Card>
   );
 }

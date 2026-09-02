@@ -24,6 +24,21 @@
    and some on the old. Re-running is safe and idempotent — each month deletes
    and rewrites its own metrics — so the recovery is "run it again", but a
    half-rebuilt library is a state that can now exist and could not before.
+
+   ---------------------------------------------------------------------------
+   AND SO IT HAS TO BE POSSIBLE TO FIND OUT THAT YOU ARE IN ONE
+   ---------------------------------------------------------------------------
+   The paragraph above was written and then not acted on. This script counted
+   failures, printed them, and exited 0 — so a run that failed 200 of 220
+   periods was indistinguishable from a clean one to anything downstream. The
+   only artefact was stdout on whichever laptop ran it, and
+   perf_period.rules_as_of cannot help: it is always the period's own start, so
+   it is constant across every rebuild after the first.
+
+   Two changes. The exit code tells the truth, and every run opens a
+   `rebuild_run` row (0079) before the work and closes it after — so a run that
+   dies without reporting leaves an OPEN row, which is the state that used to be
+   invisible. /admin/dms reads it.
    ============================================================================ */
 
 import { createClient } from "@supabase/supabase-js";
@@ -62,8 +77,23 @@ const ONLY_ROOFTOP = args.find((a) => a.startsWith("--rooftop="))?.split("=")[1]
     return;
   }
 
+  /*
+   * SCOPE, NAMED. A --rooftop run is not a full rebuild and must never be read
+   * as one: rebuild_status only clears its "mapping has moved since the last
+   * rebuild" warning on a scope of 'all', because a scoped run leaves every
+   * other rooftop exactly as stale as it was.
+   */
+  const scope = ONLY_ROOFTOP ? `rooftop:${ONLY_ROOFTOP}` : "all";
+  const { data: runId, error: runErr } = await sb.rpc("rebuild_run_start", {
+    _scope: scope,
+    _attempted: work.length,
+    _initiated_by: "script",
+  });
+  if (runErr) throw new Error(`could not open a rebuild_run row: ${runErr.message}`);
+
   const t0 = Date.now();
   let done = 0, metrics = 0, failed = 0;
+  const failures: { rooftop: string; month: string; error: string }[] = [];
   const slowest: { label: string; ms: number }[] = [];
 
   for (const p of work) {
@@ -78,6 +108,11 @@ const ONLY_ROOFTOP = args.find((a) => a.startsWith("--rooftop="))?.split("=")[1]
 
     if (e) {
       failed++;
+      failures.push({
+        rooftop: p.rooftop_id as string,
+        month: p.starts_on as string,
+        error: e.message.slice(0, 300),
+      });
       console.log(`  FAILED  ${label}  ${e.message.slice(0, 90)}`);
       continue;
     }
@@ -88,11 +123,42 @@ const ONLY_ROOFTOP = args.find((a) => a.startsWith("--rooftop="))?.split("=")[1]
     }
   }
 
+  const { error: finishErr } = await sb.rpc("rebuild_run_finish", {
+    _id: runId,
+    _succeeded: done,
+    _failed: failures,
+  });
+  if (finishErr) {
+    // Not fatal to the rebuild, which has already happened — but the record of
+    // it is now wrong, and that is worse than a noisy line.
+    console.log(`\n  WARNING: could not close the rebuild_run row: ${finishErr.message}`);
+  }
+
   const total = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`\n  rebuilt ${done} periods, ${failed} failed, ${metrics.toLocaleString()} metric rows`);
   console.log(`  wall clock: ${total}s`);
   slowest.sort((a, b) => b.ms - a.ms);
-  console.log(`  slowest month: ${slowest[0]?.label} at ${slowest[0]?.ms}ms\n`);
+  console.log(`  slowest month: ${slowest[0]?.label} at ${slowest[0]?.ms}ms`);
+
+  /*
+   * THE EXIT CODE IS PART OF THE REPORT.
+   *
+   * This used to exit 0 whatever happened, so a run that failed 200 of 220
+   * periods looked like a success to CI, to a wrapper script, and to anybody
+   * who did not read the scrollback. A partial rebuild is a real state and it
+   * has to be loud at the only place a caller reliably looks.
+   */
+  if (failed > 0) {
+    console.log(
+      `\n  PARTIAL REBUILD — ${failed} of ${work.length} period(s) did not rebuild:`
+    );
+    for (const f of failures.slice(0, 10)) {
+      console.log(`     ${nameOf.get(f.rooftop) ?? f.rooftop} ${f.month} — ${f.error.slice(0, 80)}`);
+    }
+    console.log(`  Re-run to finish; each month deletes and rewrites its own metrics.\n`);
+    process.exit(1);
+  }
+  console.log("");
 })().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
