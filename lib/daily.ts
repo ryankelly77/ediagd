@@ -345,10 +345,11 @@ export type BlockFocus = {
  * way. Splitting it would make the ladder five rungs to record a distinction
  * the family shelf does not really draw.
  *
- * Rungs 1-3 return nothing at all today — 0 content rows carry an op code until
- * the knowledge re-import lands. That is expected, not broken: this is the
- * ladder the re-import falls into, built before the content so the content has
- * somewhere to land.
+ * RUNG 3 IS LIVE. This used to say rungs 1-3 return nothing "until the
+ * knowledge re-import lands". It has landed: 714 published cues carry an op
+ * code. Rungs 1 and 2 are still empty because no cue carries a STAGE yet, so
+ * the ladder in practice runs 3 → 4 — and rung 3 is now gated on the op code
+ * having enough cues to fill a block, see opCodeHasBlockDepth below.
  */
 export async function pickCoachingCueForBlock(
   client: Client,
@@ -373,6 +374,29 @@ export async function pickCoachingCueForBlock(
   }
 
   const base = (q: any) => q.eq("type", "cue").eq("status", "published"); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  /*
+   * ---- THE CONTENT GATE, AT OP-CODE GRAIN --------------------------------
+   *
+   * lib/coachable-families.ts gates a FAMILY on having at least
+   * coaching_block_days published cues, and its header says why: the knowledge
+   * re-import published a single Oil Change cue, which would have given an
+   * advisor a six-day block with one cue behind it — "the same passage every
+   * morning for a week, which reads worse than the honest empty card the gate
+   * exists to prevent."
+   *
+   * Rungs 1-3 select at op-code grain, and nothing gated that. The header below
+   * used to say they "return nothing at all today — 0 content rows carry an op
+   * code until the knowledge re-import lands." It has landed: 714 published cues
+   * carry one, across 22 codes, and 14 of those codes have fewer than six. So
+   * the failure the family gate was written to prevent came back one level down.
+   *
+   * Same rule, same setting, same direction of failure: not enough depth means
+   * fall through to the family shelf, which has hundreds.
+   */
+  if (block.opCode && !(await opCodeHasBlockDepth(client, block.opCode))) {
+    return pickFamilyRung(client, date, block, base);
+  }
 
   if (block.opCode) {
     if (block.stage && block.tier) {
@@ -405,9 +429,25 @@ export async function pickCoachingCueForBlock(
     if (hit) return { cue: hit, matched: "op_code" };
   }
 
-  // Rung 4 — the bridge. op_code_family put the block's code in this family, so
-  // the 1,695 cues Mitch already wrote against families are reachable from a
-  // pick that now names an op code.
+  return pickFamilyRung(client, date, block, base);
+}
+
+/**
+ * Rung 4 — the bridge. op_code_family put the block's code in this family, so
+ * the 1,695 cues Mitch already wrote against families are reachable from a pick
+ * that now names an op code.
+ *
+ * Extracted because there are two ways down to it: falling off the bottom of
+ * rungs 1-3, and being sent here by the depth gate above. Both must land on the
+ * same rung and record the same `family`, and two copies of it would eventually
+ * not.
+ */
+async function pickFamilyRung(
+  client: Client,
+  date: IsoDate,
+  block: BlockFocus,
+  base: Filters
+): Promise<{ cue: ContentRow | null; matched: CueMatch | null }> {
   if (block.tier) {
     const hit = await pickByRotation(
       client,
@@ -427,6 +467,38 @@ export async function pickCoachingCueForBlock(
   if (anyTier) return { cue: anyTier, matched: "family" };
 
   return { cue: null, matched: "none" };
+}
+
+/**
+ * Does this op code have enough published cues to fill a block without
+ * repeating?
+ *
+ * A HEAD COUNT, NOT A GROUP-BY. lib/coachable-families.ts reads a view because
+ * it needs every family's count at once and doing that in JS meant 1,257 rows
+ * through PostgREST's 1,000-row cap. This wants one number for one code, which
+ * `count: exact, head: true` answers without returning a row.
+ *
+ * FAILS TOWARDS THE FAMILY SHELF. A count that cannot be read returns false and
+ * the day serves a family cue — the same direction the family gate fails in,
+ * and the same reasoning: a shelf with hundreds on it is never the wrong
+ * fallback, and a repeated cue is a bad morning that looks like a bug.
+ */
+async function opCodeHasBlockDepth(client: Client, opCode: string): Promise<boolean> {
+  const [{ count, error }, { data: settings }] = await Promise.all([
+    client
+      .from("content")
+      .select("id", { count: "exact", head: true })
+      .eq("type", "cue")
+      .eq("status", "published")
+      .eq("op_code", opCode),
+    client.from("game_settings").select("coaching_block_days").limit(1).maybeSingle(),
+  ]);
+
+  if (error) return false;
+  // The migration's default, not a number invented here — same fallback as
+  // loadBlockDays and loadFamiliesWithCues. Zero would turn the gate off.
+  const minCues = Number(settings?.coaching_block_days ?? 0) || 6;
+  return Number(count ?? 0) >= minCues;
 }
 
 /**

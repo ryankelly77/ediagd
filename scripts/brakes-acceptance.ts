@@ -231,20 +231,46 @@ const TODAY = "2026-08-31" as const;
   );
 
   /*
-   * THE IMPORT'S SIGNAL. Before Phase 1 no content row carried an op code at
-   * all, so rungs 1-3 could not fire for anybody and this returned `family`.
-   * It now returns `op_code`, which is the whole point of the bridge.
+   * THE IMPORT'S SIGNAL, AND THE GATE THAT NOW SITS IN FRONT OF IT.
    *
-   * NOT `op_code_stage_tier`, and it never will be from this content: the
-   * knowledge workbook has no stage column on any of its 76 sheets, so rungs 1
-   * and 2 stay unreachable until the pitch videos are filmed and tagged.
+   * Before Phase 1 no content row carried an op code at all, so rungs 1-3 could
+   * not fire for anybody. 714 published cues carry one now — but rung 3 is
+   * gated on the code having enough cues to fill a block, and BFF-012 has two.
+   * Two cues over six days is each one three times, which is the failure the
+   * family gate in lib/coachable-families.ts was written to prevent, one level
+   * down. So a Brake block correctly lands on the family shelf, which has
+   * hundreds.
+   *
+   * This assertion is expected to CHANGE to 'op_code' when Mitch writes four
+   * more BFF-012 cues, and to 'op_code_stage_tier' when the pitch videos are
+   * filmed and tagged with a stage — the knowledge workbook has no stage column
+   * on any of its 76 sheets, so rungs 1 and 2 stay unreachable until then. It
+   * failing at either point is the test doing its job.
    */
   const onBff = await pickCoachingCueForBlock(sb, TODAY, {
     ...block,
     opCode: "BFF-012",
   });
-  check("a BFF-012 block now reaches op-code content", onBff.matched, "op_code");
-  ok("and the cue is about brake fluid", onBff.cue !== null, onBff.cue?.title?.slice(0, 60) ?? "none");
+  check(
+    "BFF-012 has too few cues for a block, so it falls to the family rung",
+    onBff.matched,
+    "family"
+  );
+  ok("and the cue is about brakes", onBff.cue !== null, onBff.cue?.title?.slice(0, 60) ?? "none");
+
+  /*
+   * THE OTHER SIDE OF THE GATE. A code with real depth still reaches rung 3, so
+   * this proves the gate is a threshold and not an off switch. TMB-039 is not a
+   * Brake code — no Brake code has six cues yet — and using it here is the
+   * honest way to assert the positive case rather than asserting nothing.
+   */
+  const deep = await pickCoachingCueForBlock(sb, TODAY, {
+    family: "Belts & Cooling",
+    opCode: "TMB-039",
+    stage: block.stage,
+    tier: block.tier,
+  });
+  check("a code with enough cues reaches op-code content", deep.matched, "op_code");
 
   /* A Brake code the tabs produced nothing for still lands on the family shelf
      rather than falling through to nothing — the bridge doing its job. */

@@ -170,6 +170,22 @@ export async function completeDay(
    */
   const watch = await verifyWatch(supabase, userId, today, content);
 
+  /*
+   * ---- 1e. Did the cue that was served actually carry this stage? ---------
+   *
+   * The block's cursor says which of the six stages today is, and that is the
+   * right thing to serve FROM. It is not evidence that the cue served was
+   * written for that stage — no published cue carries a stage at all today, so
+   * every completion was recording "At the Kiosk" for a passage that has no
+   * position in the pitch. A column read later as a measurement of where an
+   * advisor has been coached would have been reading a fiction.
+   *
+   * So the stage is written only when the served cue agrees with it. The rung
+   * is still recorded in `cue_match`, which is where "we wanted a stage and
+   * dropped to the family shelf" already lives.
+   */
+  const stage = await servedStage(supabase, content.cueId, block);
+
   // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
   const { data: completion, error: completionError } = await supabase
     .from("daily_completion")
@@ -187,8 +203,9 @@ export async function completeDay(
       op_code: block?.opCode ?? null,
       // A stage without an op code violates daily_completion_stage_needs_op_code
       // (0067), and is meaningless anyway — a position in a pitch that isn't
-      // named is not a position.
-      stage: block?.opCode ? block.stage : null,
+      // named is not a position. Null too when the cue served carried no stage
+      // of its own; see servedStage().
+      stage,
       cue_tier: block?.tier ?? null,
       cue_match: content.cueMatch ?? null,
       pitch_video_watch_pct: watch.pitchPct,
@@ -561,6 +578,41 @@ async function verifyWatch(
     lifestylePct,
     error: served ? Boolean(content.watchError) : false,
   };
+}
+
+/**
+ * The stage to record: the block's, but only if the cue served carries it.
+ *
+ * `stage` on daily_completion is meant to say where in the pitch this advisor
+ * was coached, and the six stages are a sequence a certification will be
+ * credited from. The block's cursor is the right thing to SERVE from; it is not
+ * on its own evidence about the content that came back.
+ *
+ * The cue id is the client's claim about what it rendered, and everything the
+ * server derives here is checked against the database rather than taken from
+ * it — the content row's own `stage` is what decides. A cue that carries no
+ * stage, or a different one, records null: the block still says which stage was
+ * intended, and `cue_match` says which rung actually fired.
+ *
+ * NULL ON ANY DOUBT. A missing block, a missing op code, a cue id that does not
+ * resolve, a read that fails — all of them mean "we cannot say", and a column
+ * somebody later reads as a measurement must not hold a guess.
+ */
+async function servedStage(
+  supabase: ServiceClient,
+  cueId: string | null | undefined,
+  block: { opCode: string | null; stage: string } | null
+): Promise<string | null> {
+  if (!block?.opCode || !block.stage || !cueId) return null;
+
+  const { data, error } = await supabase
+    .from("content")
+    .select("stage")
+    .eq("id", cueId)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  return data.stage === block.stage ? block.stage : null;
 }
 
 async function readBalance(supabase: ServiceClient, userId: string): Promise<number> {
