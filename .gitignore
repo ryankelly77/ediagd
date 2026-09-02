@@ -93,3 +93,5 @@ exports/
 
 # Pre-migration pg_dumps. Production data — never commit these.
 .backups/
+
+.tmp-ig/

@@ -199,7 +199,75 @@ function table(title: string, rows: [string, number][]) {
   rows.forEach(([k, v]) => console.log(`   ${pad(v)}  ${k}`));
 }
 
+/**
+ * Is the incoming text plausibly a revision of the stored text, or a different
+ * row that has slid into this position?
+ *
+ * Deliberately generous: a revision can rewrite a Fact completely and must
+ * still apply, so this is not a similarity threshold, it is a "these have
+ * nothing whatever to do with each other" test. Three ways to pass, cheapest
+ * first — containment either way (the same containment the quote matcher uses),
+ * a shared opening, or a third of the words in common.
+ *
+ * A stored body that is empty passes: there is nothing to compare against, and
+ * refusing to fill in a blank row would block the repair this importer exists
+ * to do.
+ */
+/**
+ * One refusal is a rewrite somebody made deliberately. Several in one tab is
+ * the signature of an insertion, because an insertion shifts every row below it
+ * — so the tab is dropped whole rather than half-applied.
+ */
+export const REFUSALS_PER_TAB_BEFORE_ABORT = 5;
+
+export function countByTab(rows: { tab: string }[]): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const r of rows) m.set(r.tab, (m.get(r.tab) ?? 0) + 1);
+  return m;
+}
+
+export function tabsToAbort(
+  refusalsByTab: Map<string, number>,
+  threshold = REFUSALS_PER_TAB_BEFORE_ABORT
+): Set<string> {
+  return new Set(
+    [...refusalsByTab.entries()].filter(([, n]) => n >= threshold).map(([t]) => t)
+  );
+}
+
+export function looksLikeSameRow(stored: string, incoming: string): boolean {
+  const a = (stored ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+  const b = (incoming ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+  if (!a || !b) return true;
+  if (a.startsWith(b) || b.startsWith(a)) return true;
+  if (a.slice(0, 40) === b.slice(0, 40)) return true;
+
+  const wordsA = new Set(a.split(" ").filter((w) => w.length > 3));
+  const wordsB = new Set(b.split(" ").filter((w) => w.length > 3));
+  if (wordsA.size === 0 || wordsB.size === 0) return true;
+  let shared = 0;
+  for (const w of wordsA) if (wordsB.has(w)) shared++;
+  return shared / Math.min(wordsA.size, wordsB.size) >= 0.34;
+}
+
+/*
+ * ---- THIS FILE DOES ITS WORK ON IMPORT, AND THAT WAS A LOADED GUN ---------
+ *
+ * The body below used to be a bare IIFE, so `import { … } from
+ * "./import-knowledge"` RAN A FULL IMPORT against whatever SB_URL pointed at.
+ * That is exactly what happened the first time a test reached in for the
+ * refusal helpers: 797 rows updated, 15 cue bodies truncated to their first
+ * line, against production. content_text_version (0083) is the only reason the
+ * words came back.
+ *
+ * `require.main === module` makes importing this file inert: it runs when it is
+ * the entry point and does nothing when something merely reads a function out
+ * of it.
+ */
+const RUN_AS_SCRIPT = require.main === module;
+
 (async () => {
+  if (!RUN_AS_SCRIPT) return;
   console.log(`\n  ${DRY ? "DRY RUN — nothing will be written" : "APPLYING"}`);
   console.log(`  book: ${BOOK}\n`);
 
@@ -264,16 +332,21 @@ function table(title: string, rows: [string, number][]) {
    * reach the live cue. `status` is never written here, so a re-run cannot
    * un-publish anything.
    */
-  const existing = new Map<string, string>();
+  const existing = new Map<string, { id: string; body: string }>();
   for (let o = 0; ; o += 1000) {
     const { data, error } = await sb
       .from("content")
-      .select("id, source_tab, source_row")
+      .select("id, source_tab, source_row, body")
       .not("source_tab", "is", null)
       .is("retired_at", null)
       .order("id").range(o, o + 999);
     if (error) throw new Error(error.message);
-    (data ?? []).forEach((r) => existing.set(`${r.source_tab} ${r.source_row}`, r.id as string));
+    (data ?? []).forEach((r) =>
+      existing.set(`${r.source_tab} ${r.source_row}`, {
+        id: r.id as string,
+        body: (r.body as string | null) ?? "",
+      })
+    );
     if (!data || data.length < 1000) break;
   }
   console.log(`  ${existing.size} rows already carry a (source_tab, source_row) — a re-run updates these\n`);
@@ -416,12 +489,44 @@ function table(title: string, rows: [string, number][]) {
    * it. A stump is ~60 characters of the Fact, which is specific enough to be
    * unambiguous; the last word is dropped because the cut lands mid-word.
    */
-  /* A row this importer already created owns its content row outright — no
-     text matching needed, and none wanted: its text may have just changed. */
+  /*
+   * ---- THE POSITIONAL KEY, AND THE THING IT CANNOT SURVIVE ----------------
+   *
+   * (source_tab, source_row) is the only key that survives the TEXT changing,
+   * which is what a re-import brings — so it is the right key for a revision
+   * and the wrong one for an INSERTION. Insert a row at position 50 of a
+   * 200-row tab and every key below it shifts by one: row 50 overwrites the old
+   * row 50 with the new row's words, 51 takes 50's, and 151 published cues each
+   * receive their neighbour's text. Nothing is deleted, nothing errors, and the
+   * run reports "updated 151" — indistinguishable from a normal revision.
+   *
+   * The real fix is a stable id column in the workbook's knowledge tabs and in
+   * the intake template, and that is waiting on Mitch. Until then the failure
+   * stops being silent: a row whose stored text and incoming text have nothing
+   * in common is NOT updated. It goes to the report as a question.
+   *
+   * AND A TAB WITH SEVERAL OF THEM IS NOT UPDATED AT ALL. One refusal is a
+   * rewrite somebody made deliberately. Five in one tab is the signature of an
+   * insertion, and applying the four rows above the shift while refusing the
+   * rest would leave the tab half-migrated — worse than not touching it, and
+   * harder to unpick.
+   */
+  const suspect: { tab: string; row: number; stored: string; incoming: string }[] = [];
   for (const p of planned) {
-    const id = existing.get(`${p.tab} ${p.row}`);
-    if (id) { p.id = id; matchedIds.add(id); }
+    const prior = existing.get(`${p.tab} ${p.row}`);
+    if (!prior) continue;
+    if (prior.body && !looksLikeSameRow(prior.body, p.body)) {
+      suspect.push({ tab: p.tab, row: p.row, stored: prior.body, incoming: p.body });
+      continue;
+    }
+    p.id = prior.id;
+    matchedIds.add(prior.id);
   }
+
+  /* Tabs over the threshold are dropped entirely — every row of them, update
+     and insert alike, because an insertion shifts the whole tab. */
+  const refusalsByTab = countByTab(suspect);
+  const abortedTabs = tabsToAbort(refusalsByTab);
 
   const byTab = new Map<string, Planned[]>();
   planned.forEach((p) => {
@@ -478,8 +583,8 @@ function table(title: string, rows: [string, number][]) {
   }
 
   /* ---- What the plan does ------------------------------------------------ */
-  const updates = planned.filter((p) => p.id);
-  const inserts = planned.filter((p) => !p.id);
+  const updates = planned.filter((p) => p.id && !abortedTabs.has(p.tab));
+  const inserts = planned.filter((p) => !p.id && !abortedTabs.has(p.tab));
   /*
    * THE UNMATCHED STUMPS ARE TWO DIFFERENT PROBLEMS, AND CONFLATING THEM WOULD
    * HAVE SENT 85 ROWS TO MITCH THAT HE DOES NOT NEED TO LOOK AT.
@@ -527,6 +632,51 @@ function table(title: string, rows: [string, number][]) {
   console.log(`  ${planned.length} source rows planned`);
   table("UPDATE in place (stump repaired, id preserved)", [["rows", updates.length]]);
   table("INSERT as draft", [["rows", inserts.length]]);
+
+  /* ---- Rows the positional key could not vouch for ----------------------- */
+  if (suspect.length) {
+    console.log(
+      `\n  ROW MOVED? — NEEDS A HUMAN: ${suspect.length} row(s) whose stored text and` +
+        ` incoming text have nothing in common. NOT updated.`
+    );
+    for (const sIt of suspect.slice(0, 12)) {
+      console.log(`    ${sIt.tab} row ${sIt.row}`);
+      console.log(`      stored:   ${sIt.stored.replace(/\s+/g, " ").slice(0, 96)}`);
+      console.log(`      incoming: ${sIt.incoming.replace(/\s+/g, " ").slice(0, 96)}`);
+    }
+    if (suspect.length > 12) console.log(`    …and ${suspect.length - 12} more`);
+  }
+  if (abortedTabs.size) {
+    console.log(
+      `\n  TABS NOT APPLIED — their rows appear to have SHIFTED: ${abortedTabs.size}`
+    );
+    for (const t of abortedTabs) {
+      console.log(`    ${t} — ${refusalsByTab.get(t)} refusals; no changes applied to this tab`);
+    }
+    console.log(
+      `    An insertion mid-tab moves every row below it. Add a stable id column` +
+        ` to the workbook, or re-export the tab, and run again.`
+    );
+  }
+
+  /*
+   * ---- Rows in the library that this workbook no longer contains ----------
+   *
+   * COUNTED, NOT PRUNED AND NOT FLAGGED. The importer only ever visits rows the
+   * workbook holds, so an absent row is untouched — which is the safe direction
+   * and stays that way. But "untouched" and "nobody noticed it went" are the
+   * same thing without a number, and a row that quietly left the master is
+   * exactly what somebody should look at.
+   */
+  const inWorkbook = new Set(planned.map((p) => `${p.tab} ${p.row}`));
+  const absent = [...existing.keys()].filter((k) => !inWorkbook.has(k));
+  console.log(
+    `\n  in the library but not in this workbook: ${absent.length} row(s) — left alone, not pruned`
+  );
+  if (absent.length) {
+    for (const k of absent.slice(0, 10)) console.log(`    ${k}`);
+    if (absent.length > 10) console.log(`    …and ${absent.length - 10} more`);
+  }
   console.log(`\n  ${ambiguous} stumps had more than one candidate source row` +
     ` (shortest Fact wins — a longer Fact that merely opens the same way is not the source).`);
   /*
@@ -723,7 +873,7 @@ function table(title: string, rows: [string, number][]) {
   if (review.length) {
     const { data: ids } = await sb
       .from("content")
-      .select("id, source_tab, source_row")
+      .select("id, source_tab, source_row, body")
       .in("source_tab", [...new Set(review.map((r) => r.tab))]);
     const byKey = new Map(
       (ids ?? []).map((r) => [`${r.source_tab} ${r.source_row}`, r.id as string])
