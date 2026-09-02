@@ -104,7 +104,9 @@ export default async function TodayPage({
     rooftopId,
     today,
     pick ? { family: pick.family, tier: cueTierForRate(pick.rate) } : null,
-    blockDays
+    blockDays,
+    // No block is opened from a part-month. An open one keeps running.
+    advisorDay?.fromPartialPeriod ?? false
   );
 
   const focus = block

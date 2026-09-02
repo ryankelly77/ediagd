@@ -5,6 +5,7 @@ import { PeriodChip, PeriodStamp } from "@/components/brand/PeriodStamp";
 import { TrendAndHistory } from "@/components/advisor/TrendAndHistory";
 import { loadAdvisorTrend } from "@/lib/advisor-trend";
 import { formatPeriod, PERIOD_COLUMNS, toPeriodInfo } from "@/lib/period-label";
+import { loadMeasurementPeriod } from "@/lib/perf-period";
 import { formatRosterName } from "@/lib/manager";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
@@ -57,25 +58,21 @@ export default async function AdvisorPage() {
   const firstName = fullName?.trim().split(/\s+/)[0] ?? null;
 
   // ---- Current period ------------------------------------------------------
-  // With a real membership the rooftop's latest period wins. Under the dev
-  // fallback perf_period is RLS-blocked, so we fall back to whichever period
-  // the advisor's own totals expose.
+  // The rooftop's latest COMPLETE period wins; a part-month is used only when
+  // there is no complete one, and carries its "(partial) — 8 of 31 days"
+  // qualifier through PERIOD_COLUMNS into the label. Shared with the daily flow
+  // (lib/perf-period.ts) so the dashboard and /today cannot be measuring
+  // different months.
   let periodId: string | null = null;
   let periodRow: Record<string, unknown> | null = null;
   let rooftopName: string | null = null;
   if (rooftopId) {
-    const [{ data: period }, { data: rt }] = await Promise.all([
-      supabase
-        .from("perf_period")
-        .select(PERIOD_COLUMNS)
-        .eq("rooftop_id", rooftopId)
-        .order("ends_on", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+    const [period, { data: rt }] = await Promise.all([
+      loadMeasurementPeriod(supabase, rooftopId, PERIOD_COLUMNS),
       supabase.from("rooftop").select("name").eq("id", rooftopId).maybeSingle(),
     ]);
-    periodId = (period?.id as string | undefined) ?? null;
-    periodRow = (period as Record<string, unknown> | null) ?? null;
+    periodId = period?.id ?? null;
+    periodRow = period?.row ?? null;
     rooftopName = (rt?.name as string | undefined) ?? null;
   }
 

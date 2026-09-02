@@ -116,7 +116,9 @@ async function previewOne(
    * and throws it away.
    */
   let block: CoachingBlock | null = existingBlock;
-  if (!block && pick) {
+  // The refusal in ensureBlockForToday, mirrored: no block is opened from a
+  // part-month, so the preview must not invent one either.
+  if (!block && pick && !advisorDay.fromPartialPeriod) {
     const codes = await loadCoachableCodes(sb, pick.family);
     block = {
       id: "(simulated)",
@@ -304,13 +306,27 @@ async function reportSuppressed() {
    */
   const { data: periods } = await sb
     .from("perf_period")
-    .select("id, rooftop_id, ends_on")
+    .select("id, rooftop_id, ends_on, is_partial, superseded_at")
     .in("rooftop_id", rooftopIds)
     .order("ends_on", { ascending: false })
     .limit(5000);
 
+  /*
+   * COMPLETE BEFORE PARTIAL, matching loadMeasurementPeriod. The rows arrive
+   * newest-first, so taking the first COMPLETE one per rooftop and only then
+   * falling back to the first row of any kind is the same preference the page
+   * applies — and a preview measuring a different month from the screen is a
+   * preview of nothing.
+   */
+  const live = (periods ?? []).filter((p) => p.superseded_at == null);
   const latestPerRooftop = new Map<string, { id: string; ends_on: string }>();
-  for (const p of periods ?? []) {
+  for (const p of live.filter((p) => p.is_partial === false)) {
+    const rid = p.rooftop_id as string;
+    if (!latestPerRooftop.has(rid)) {
+      latestPerRooftop.set(rid, { id: p.id as string, ends_on: p.ends_on as string });
+    }
+  }
+  for (const p of live) {
     const rid = p.rooftop_id as string;
     if (!latestPerRooftop.has(rid)) {
       latestPerRooftop.set(rid, { id: p.id as string, ends_on: p.ends_on as string });

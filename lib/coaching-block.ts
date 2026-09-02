@@ -165,7 +165,14 @@ export async function ensureBlockForToday(
   /** Eddie's Pick for this advisor, or null when there is nothing to coach. */
   pick: { family: string; tier: "zero" | "low" } | null,
   /** game_settings.coaching_block_days. */
-  blockDays: number
+  blockDays: number,
+  /**
+   * True when the pick came from a part-month. A block MUST NOT be opened from
+   * one — see the refusal below. Required rather than optional: a caller that
+   * forgets would silently reintroduce the defect, and every caller already
+   * knows the answer.
+   */
+  fromPartialPeriod: boolean
 ): Promise<CoachingBlock | null> {
   const open = await readOpenBlock(service, userId);
 
@@ -189,6 +196,24 @@ export async function ensureBlockForToday(
   // Nothing to coach: no volume, or at/above store average everywhere. No
   // block, and the loop says so rather than inventing a focus.
   if (!pick) return null;
+
+  /*
+   * ---- A PART-MONTH DOES NOT GET TO CHOOSE SIX DAYS OF COACHING -----------
+   *
+   * A block is a six-day commitment to one family, and it outlives the arrival
+   * of the complete file: locking is the point, so a pick that changes mid-block
+   * does not steal it. That is right when the pick was made on a month and wrong
+   * when it was made on eight days of one — at Doggett CDJR those eight days
+   * average 18 ROs against the previous month's 139, and the ranking between
+   * families at that volume is noise.
+   *
+   * An OPEN block is left alone above, because it was opened from a complete
+   * period and finishing it is the correct behaviour. What is refused is
+   * starting a new one. The day still renders: the advisor gets the quote, the
+   * lifestyle video and the honest no-pick state, which is what they already
+   * get when they are at or above store average everywhere.
+   */
+  if (fromPartialPeriod) return null;
 
   const codes = await loadCoachableCodes(service, pick.family);
   const opCode = opCodeForBlock(codes, today);

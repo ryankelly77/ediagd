@@ -6,7 +6,9 @@
    NOTE: app/(app)/advisor/page.tsx still does its own equivalent queries inline.
    It should adopt this helper so the dashboard and the daily flow can never
    disagree about Eddie's Pick — left alone here to avoid touching a working
-   screen in this task.
+   screen in this task. The one rule they DO now share is which period to
+   measure on: both call loadMeasurementPeriod, because the two screens
+   disagreeing about that is not a cosmetic difference.
    ============================================================================ */
 
 import {
@@ -19,6 +21,7 @@ import {
 } from "@/lib/advisor";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
+import { loadMeasurementPeriod } from "@/lib/perf-period";
 
 type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -32,6 +35,13 @@ export type AdvisorDay = {
   families: ServiceFamily[];
   pick: ServiceFamily | null;
   hasVolume: boolean;
+  /**
+   * True when the only period available is a part-month. The pick is still
+   * computed and still rendered — a rooftop's first month is a real state — but
+   * NO COACHING BLOCK MAY BE OPENED FROM IT. Eight days of data is not six days
+   * of conversation, and the block outlives the complete file's arrival.
+   */
+  fromPartialPeriod: boolean;
 };
 
 /**
@@ -44,25 +54,26 @@ export async function loadAdvisorDay(
   opCodeId: string,
   rooftopId: string | null
 ): Promise<AdvisorDay | null> {
-  let periodId: string | null = null;
-  if (rooftopId) {
-    const { data: period } = await client
-      .from("perf_period")
-      .select("id")
-      .eq("rooftop_id", rooftopId)
-      .order("ends_on", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    periodId = (period?.id as string | undefined) ?? null;
-  }
+  /*
+   * NO ROOFTOP IS A REFUSAL, NOT A GUESS.
+   *
+   * This used to fall through to `advisor_period_totals` with no period filter,
+   * no ordering, and limit(1) — Postgres returning whichever row it liked. An
+   * advisor whose membership carries no rooftop was measured against a random
+   * historical month, and differently on different page loads. There is no
+   * honest answer here, so there is no answer.
+   */
+  if (!rooftopId) return null;
 
-  let totalsQuery = client
+  const period = await loadMeasurementPeriod(client, rooftopId);
+  if (!period) return null;
+
+  const { data: totals } = await client
     .from("advisor_period_totals")
     .select("period_id, rooftop_id, total_ros, total_labor_sales")
-    .eq("advisor_op_id", opCodeId);
-  if (periodId) totalsQuery = totalsQuery.eq("period_id", periodId);
-
-  const { data: totals } = await totalsQuery.limit(1).maybeSingle();
+    .eq("advisor_op_id", opCodeId)
+    .eq("period_id", period.id)
+    .maybeSingle();
   if (!totals) return null;
 
   const resolvedPeriodId = totals.period_id as string;
@@ -122,5 +133,6 @@ export async function loadAdvisorDay(
     families,
     pick: eddiesPick(families, totalRos),
     hasVolume: hasCoachingVolume(totalRos),
+    fromPartialPeriod: period.isPartial,
   };
 }
