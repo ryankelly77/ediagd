@@ -6,6 +6,7 @@ import { TrendAndHistory } from "@/components/advisor/TrendAndHistory";
 import { loadAdvisorTrend } from "@/lib/advisor-trend";
 import { formatPeriod, PERIOD_COLUMNS, toPeriodInfo } from "@/lib/period-label";
 import { loadMeasurementPeriod } from "@/lib/perf-period";
+import { storeToday } from "@/lib/mapping/epoch";
 import { formatRosterName } from "@/lib/manager";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
@@ -201,9 +202,30 @@ export default async function AdvisorPage() {
   // Cues for every service, resolved HERE rather than fetched by the dialog on
   // open — two queries for the whole set instead of a round-trip per tap.
   // Lists, not singles: the pitch dialog previews several per service.
+  /*
+   * THE STORE'S DATE, NOT UTC.
+   *
+   * This date is not decoration: listCuesForServices feeds it to
+   * rotationIndex(), and its own comment says each list is "rotated so its head
+   * IS today's cue". /today resolves today through rooftop_today(), which is
+   * `now() at time zone <rooftop timezone>`. This page used
+   * `new Date().toISOString()`, so from about 7pm Central until midnight the two
+   * screens named different cues as today's — /today serving cue N while the
+   * pitch dialog here led with N+1.
+   *
+   * The fallback is storeToday() rather than the UTC date: every rooftop is
+   * America/Chicago, which is the same assumption lib/mapping/epoch.ts already
+   * documents and stamps mapping edits with. A rooftop we cannot resolve is
+   * still a dealership, not a server in London.
+   */
+  const { data: cueDateRaw } = rooftopId
+    ? await supabase.rpc("rooftop_today", { _rooftop: rooftopId })
+    : { data: null };
+  const cueDate = (cueDateRaw as string | null) ?? storeToday();
+
   const serviceCues = await listCuesForServices(
     supabase,
-    new Date().toISOString().slice(0, 10),
+    cueDate,
     families.map((f) => ({ family: f.family, tier: cueTierForRate(f.rate) }))
   );
   const canCoach = hasCoachingVolume(coachingRos);

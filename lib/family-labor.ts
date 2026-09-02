@@ -32,12 +32,31 @@ type LaborRow = {
   labor_per_ro: number | string | null;
 };
 
+/*
+ * ---- ZERO IS NOT AN AMOUNT OF MONEY, IT IS THE ABSENCE OF A FIGURE ---------
+ *
+ * `labor_per_ro = 0` means the DMS recorded ROs in that family and no labor
+ * dollars against them — warranty and internal work, or sales landing under a
+ * different op code. 540 of 16,379 rows are in that state today.
+ *
+ * Copying the 0 through was the bug. rank() in lib/advisor.ts is
+ * `opportunity ?? missedRos`, so a family with a NUMBER gets ranked on
+ * `missedRos * 0` and a family with no number falls back to missedRos — which
+ * means a real gap scores 0 and is beaten by any family with a dollar to its
+ * name. Wipers is 4,263 ROs behind store average across 27 advisor-periods and
+ * could never win the pick.
+ *
+ * The header above already draws this distinction for the map as a whole:
+ * undefined rather than {} so buildServiceFamilies falls back rather than
+ * asserting every family earned zero. This is the same sentence one level down,
+ * per family.
+ */
 function toMap(rows: LaborRow[]): Record<string, number> | undefined {
   const perRo: Record<string, number> = {};
   for (const r of rows) {
     if (r.labor_per_ro == null) continue;
     const v = Number(r.labor_per_ro);
-    if (Number.isFinite(v)) perRo[String(r.family)] = v;
+    if (Number.isFinite(v) && v > 0) perRo[String(r.family)] = v;
   }
   return Object.keys(perRo).length > 0 ? perRo : undefined;
 }

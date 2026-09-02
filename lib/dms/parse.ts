@@ -159,18 +159,71 @@ export function advisorOpId(raw: string): string | null {
   return m ? m[1]! : null;
 }
 
-/** ISO date from an Index cell, or from a tab name like "Jul 01". */
-function isoDate(value: ExcelJS.CellValue, fallbackYear: number): string | null {
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+const MONTH_ABBR = [
+  "jan", "feb", "mar", "apr", "may", "jun",
+  "jul", "aug", "sep", "oct", "nov", "dec",
+];
+
+const iso = (y: number, m: number, d: number) =>
+  `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+/**
+ * ISO date from an Index cell, or from a tab name like "Jul 01".
+ *
+ * ---------------------------------------------------------------------------
+ * NOTHING ROUND-TRIPS THROUGH new Date(string).toISOString()
+ * ---------------------------------------------------------------------------
+ * That pair is a timezone conversion wearing a date parser's clothes.
+ * `new Date("Jul 1, 2026")` is LOCAL midnight and `.toISOString()` renders in
+ * UTC, so the day survives only while the machine sits at or behind UTC — which
+ * Vercel and a Central-time laptop both do, and which is exactly why it has
+ * never misfired and would misfire silently the first time it ran anywhere
+ * else. report_date decides which month a row's revenue lands in, so an
+ * off-by-one at a month boundary moves a whole day of a store's numbers into
+ * the wrong period.
+ *
+ * Every branch below reads the parts and formats them. The Date branch uses the
+ * UTC accessors because that is how ExcelJS materialises a date cell — at UTC
+ * midnight — so the parts are the ones the spreadsheet holds.
+ *
+ * `fallbackYear` is NULLABLE now, and null means "the file never said". A tab
+ * called "Jul 01" carries no year, and inventing one from the clock is how a
+ * December workbook imported in January files twelve months into the wrong one.
+ * Returning null makes the caller refuse and name the tab.
+ */
+function isoDate(
+  value: ExcelJS.CellValue,
+  fallbackYear: number | null
+): string | null {
+  if (value instanceof Date) {
+    return iso(value.getUTCFullYear(), value.getUTCMonth() + 1, value.getUTCDate());
+  }
+
   const s = text(value);
   if (!s) return null;
-  const direct = new Date(s);
-  if (!Number.isNaN(direct.valueOf())) return direct.toISOString().slice(0, 10);
-  const m = s.match(/^([A-Za-z]{3})\s*(\d{1,2})$/);
-  if (m) {
-    const d = new Date(`${m[1]} ${m[2]}, ${fallbackYear}`);
-    if (!Number.isNaN(d.valueOf())) return d.toISOString().slice(0, 10);
+
+  // Already ISO: take the parts as written.
+  const isoMatch = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) {
+    return iso(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
   }
+
+  // US-style, which is what a hand-typed Index cell looks like.
+  const usMatch = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (usMatch) {
+    return iso(Number(usMatch[3]), Number(usMatch[1]), Number(usMatch[2]));
+  }
+
+  // A tab name: "Jul 01", "Jul 1". Needs a year from somewhere that is not the
+  // clock.
+  const tabMatch = s.match(/^([A-Za-z]{3})\s*(\d{1,2})$/);
+  if (tabMatch) {
+    if (fallbackYear == null) return null;
+    const month = MONTH_ABBR.indexOf(tabMatch[1].toLowerCase()) + 1;
+    if (month === 0) return null;
+    return iso(fallbackYear, month, Number(tabMatch[2]));
+  }
+
   return null;
 }
 
@@ -185,16 +238,28 @@ export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
   // with a missing Index row must not silently drop that whole day.
   const dateByTab = new Map<string, string>();
   const index = wb.getWorksheet("Index");
-  let year = new Date().getUTCFullYear();
+  /*
+   * THE YEAR COMES FROM THE FILE OR IT DOES NOT COME.
+   *
+   * This was `new Date().getUTCFullYear()` — the year the import happened to
+   * run. A tab called "Jul 01" carries no year, so a December 2025 workbook
+   * imported in January 2026 resolved every tab to 2026: twelve months of a
+   * store's revenue filed under months that do not exist, December left empty,
+   * and nothing in the output saying a year had been guessed.
+   *
+   * Null until an Index row supplies one. If no tab can be dated, the parse
+   * refuses and names the tabs rather than importing a plausible fiction.
+   */
+  let year: number | null = null;
   if (index) {
     index.eachRow((row) => {
       const d = row.getCell(1).value;
       const tab = text(row.getCell(2).value);
       if (!tab) return;
-      const iso = isoDate(d, year);
-      if (iso) {
-        dateByTab.set(tab, iso);
-        year = Number(iso.slice(0, 4));
+      const resolved = isoDate(d, year);
+      if (resolved) {
+        dateByTab.set(tab, resolved);
+        year = Number(resolved.slice(0, 4));
       }
     });
   } else {
@@ -212,10 +277,18 @@ export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
   let rollupRows = 0;
   let sheetsRead = 0;
 
+  /* Tabs whose name IS a date but which have no year to attach it to. Collected
+     rather than skipped: see the refusal after the loop. */
+  const yearless: string[] = [];
+
   for (const ws of wb.worksheets) {
     if (SKIP_SHEETS.has(ws.name)) continue;
     const reportDate = dateByTab.get(ws.name) ?? isoDate(ws.name, year);
     if (!reportDate) {
+      if (year == null && /^[A-Za-z]{3}\s*\d{1,2}$/.test(ws.name.trim())) {
+        yearless.push(ws.name);
+        continue;
+      }
       warnings.push(`Tab "${ws.name}" has no readable date — skipped entirely.`);
       continue;
     }
@@ -300,6 +373,31 @@ export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
         gpPct: num(row.getCell(COL.gpPct).value),
       });
     });
+  }
+
+  /*
+   * ---- REFUSE RATHER THAN GUESS THE YEAR ----------------------------------
+   *
+   * These tabs are named like dates — "Jul 01" — and the workbook never said
+   * which year. The old code answered with the year the import happened to run,
+   * which is right almost always and catastrophically wrong at the turn of one:
+   * a December file imported in January lands twelve months of revenue in the
+   * wrong year, creates perf_periods for months that do not exist, and leaves
+   * the real month empty. Nothing about the output looks unusual.
+   *
+   * A whole-file refusal rather than skipping the tabs, because a partial
+   * import of a monthly report is a month with days missing from it — and that
+   * silently changes every attach rate for the month.
+   */
+  if (yearless.length > 0) {
+    throw new Error(
+      `This workbook has no Index sheet, and ${yearless.length} tab(s) are named ` +
+        `with a month and day but no year: ${yearless.slice(0, 8).join(", ")}` +
+        `${yearless.length > 8 ? ", …" : ""}. ` +
+        `Nothing was imported. Add the Index sheet, or rename the tabs to include ` +
+        `the year — the year is not something this importer will guess from the ` +
+        `date it happens to run.`
+    );
   }
 
   // A day with detail but no advisor totals means unique RO counts are missing

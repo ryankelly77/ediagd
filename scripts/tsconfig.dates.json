@@ -1,0 +1,23 @@
+{
+  "//": "Standalone build for date-scenarios.ts. It reaches the REAL epochDay in lib/daily.ts and the REAL parseWorkbook in lib/dms/parse.ts through the @/ alias — a paraphrase of either would prove nothing about the code that runs.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-dt",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./date-scenarios.ts",
+    "../lib/daily.ts",
+    "../lib/dms/parse.ts",
+    "../lib/mapping/epoch.ts",
+    "../lib/mux/playback.ts"
+  ]
+}
