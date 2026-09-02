@@ -32,7 +32,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { GENESIS, effectiveFromFor, type EditMode } from "@/lib/mapping/epoch";
+import { applyMappingEdit } from "@/lib/mapping/edit";
+import type { EditMode } from "@/lib/mapping/epoch";
 
 const MAPPING_PATHS = [
   "/admin/mapping",
@@ -69,7 +70,7 @@ function done() {
  * the database. Name and category are labels and are safe.
  */
 export async function updateOpCode(formData: FormData): Promise<void> {
-  await requireOwner();
+  const user = await requireOwner();
   const code = String(formData.get("code") ?? "").trim();
   if (!code) return;
 
@@ -81,7 +82,28 @@ export async function updateOpCode(formData: FormData): Promise<void> {
   const service = createServiceClient();
   await service
     .from("op_code_catalog")
-    .update({ name, category, notes: notes || null, updated_at: new Date().toISOString() })
+    .update({
+      name,
+      category,
+      notes: notes || null,
+      /*
+       * STAMPED HERE, NOT BY THE TRIGGER (0073).
+       *
+       * mapping_stamp_admin sets origin='admin' when auth.uid() is not null,
+       * which is exactly right for a write carrying a session — and this write
+       * does not carry one. It goes through the service client, so auth.uid()
+       * is null and the trigger takes the same branch it takes for the seeder,
+       * leaving the row marked 'file'. The next `npm run seed:op-codes` then
+       * reverts the edit silently, which is the failure 0073 was written to
+       * prevent, defeated by the client the action happens to use.
+       *
+       * updateOpCodeFamily has always set it by hand for the same reason. This
+       * is the other screen catching up.
+       */
+      origin: "admin",
+      updated_by: user.id,
+      updated_at: new Date().toISOString(),
+    })
     .eq("code", code);
   done();
 }
@@ -95,7 +117,7 @@ export async function updateOpCode(formData: FormData): Promise<void> {
  * the alternative is untagging work nobody asked to lose.
  */
 export async function setOpCodeRetired(formData: FormData): Promise<void> {
-  await requireOwner();
+  const user = await requireOwner();
   const code = String(formData.get("code") ?? "").trim();
   if (!code) return;
   const retire = String(formData.get("retire") ?? "") === "1";
@@ -105,6 +127,13 @@ export async function setOpCodeRetired(formData: FormData): Promise<void> {
     .from("op_code_catalog")
     .update({
       retired_at: retire ? new Date().toISOString() : null,
+      /* Same reason as updateOpCode: the service client carries no session, so
+         the trigger cannot stamp this and a re-seed would not know a person had
+         been here. 0073 notes that `retired_at` itself survives a re-seed
+         because the seeders never write it — `name`, `category` and `notes` do
+         not, and this row has now been touched by hand. */
+      origin: "admin",
+      updated_by: user.id,
       updated_at: new Date().toISOString(),
     })
     .eq("code", code);
@@ -125,14 +154,13 @@ export async function setOpCodeRetired(formData: FormData): Promise<void> {
  * moves to op-code grain, and `coachable` decides whether Eddie's Pick can land
  * on it at all. Both are edits with consequences beyond this screen.
  *
- * `effective_from` is stamped to today on every change. It is read by nothing
- * yet — rebuild_dms_periods is still all-or-nothing and cannot honour a date
- * floor, which is the next piece of foundation work — but the column has to
- * carry a true date from the first edit or the epoch can never be reconstructed
- * afterwards. Writing it now costs nothing; not writing it is unrecoverable.
+ * `effective_from` is stamped by mapping_edit(): genesis for a correction, the
+ * chosen date for a change. It is no longer written-but-unread — 0075 taught
+ * rebuild_dms_periods and advisor_family_attach the interval test, and this
+ * table joins them the day the pick moves to op-code grain.
  */
 export async function updateOpCodeFamily(formData: FormData): Promise<void> {
-  await requireOwner();
+  const user = await requireOwner();
   const code = String(formData.get("code") ?? "").trim();
   if (!code) return;
 
@@ -142,8 +170,6 @@ export async function updateOpCodeFamily(formData: FormData): Promise<void> {
   const mode = String(formData.get("mode") ?? "") as EditMode;
   if (!family) return;
   if (mode !== "correction" && mode !== "change") return;
-
-  const effectiveFrom = effectiveFromFor(mode, String(formData.get("effective_from") ?? ""));
 
   const service = createServiceClient();
 
@@ -156,16 +182,8 @@ export async function updateOpCodeFamily(formData: FormData): Promise<void> {
     .maybeSingle();
   if (!known) return;
 
-  const { data: current } = await service
-    .from("op_code_family")
-    .select("id, family, coachable, note, effective_from")
-    .eq("code", code)
-    .is("retired_at", null)
-    .maybeSingle();
-  if (!current) return;
-
   /*
-   * ---- APPEND-ONLY: RETIRE, THEN INSERT ----------------------------------
+   * ---- APPEND-ONLY: RETIRE, THEN INSERT, IN ONE STATEMENT ----------------
    *
    * Point-in-time rule selection only works if the OLD VALUE SURVIVES. An
    * in-place update would leave the interval test reading the new family for
@@ -173,42 +191,29 @@ export async function updateOpCodeFamily(formData: FormData): Promise<void> {
    * exact bug this whole piece of work exists to close, reintroduced at the
    * last step.
    *
-   * A CORRECTION IS THE ONE CASE THAT REPLACES RATHER THAN APPENDS. "This was
-   * always wrong" means no period should ever have been measured under the old
-   * value, so keeping it as a historical version would preserve a fiction and
-   * make the interval test hand it back. The old row is retired at genesis —
-   * retired before it began, which is precisely what "never should have
-   * existed" means — and the new row starts at genesis.
+   * This used to be an update, an insert, and a compensating update if the
+   * insert failed. The compensation is itself a network call and can fail, and
+   * a process death between the first two leaves a code with NO LIVE ROW: it
+   * drops out of op_code_family_live, loadCoachableCodes stops offering it, and
+   * the advisor's block silently falls back to family grain with nothing
+   * recording why. mapping_edit() (0078) makes the pair one statement, and
+   * mapping_edit is the same call sub_category_map now goes through — the shape
+   * of an epoch edit is written down once. See lib/mapping/edit.ts.
    */
-  const retiredAt = mode === "correction" ? GENESIS : effectiveFrom;
-
-  const { error: retireError } = await service
-    .from("op_code_family")
-    .update({ retired_at: retiredAt, updated_at: new Date().toISOString() })
-    .eq("id", current.id);
-  if (retireError) throw new Error(`retiring the old mapping: ${retireError.message}`);
-
-  const { error: insertError } = await service.from("op_code_family").insert({
-    code,
-    family,
-    coachable,
-    note: note || null,
-    confidence: "ruled",
-    effective_from: effectiveFrom,
-    origin: "admin",
+  const result = await applyMappingEdit({
+    table: "op_code_family",
+    key: { code },
+    values: {
+      family,
+      coachable,
+      note: note || null,
+      confidence: "ruled",
+      updated_by: user.id,
+    },
+    mode,
+    effectiveFrom: String(formData.get("effective_from") ?? ""),
   });
-  if (insertError) {
-    /*
-     * Put the old row back. There is no transaction across two PostgREST calls,
-     * and a retired row with no replacement is a code that has silently fallen
-     * out of every family — worse than the edit not happening.
-     */
-    await service
-      .from("op_code_family")
-      .update({ retired_at: null })
-      .eq("id", current.id);
-    throw new Error(`inserting the new mapping: ${insertError.message}`);
-  }
+  if (!result.ok) throw new Error(result.error);
 
   done();
 }

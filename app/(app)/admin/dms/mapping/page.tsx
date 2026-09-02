@@ -227,9 +227,26 @@ function MapRow({
         )}
       </div>
 
-      <form action={setSubCategoryFamily} className="mt-3 flex gap-2">
+      {/*
+        TWO ROUTES OUT OF THE SAME CONTROL, AND THE ROW DECIDES WHICH.
+
+        A row with NO family has never had one, so there is no prior value for
+        history to keep and nothing to choose between: it posts straight through
+        as a correction and the queue stays a queue. A row that already carries
+        a family has been feeding advisor_family_attach for every period it
+        covers, so changing it either rewrites measured numbers or does not —
+        that one goes to the confirm screen to be told which. Same reasoning,
+        and the same two words, as /admin/mapping/families.
+      */}
+      <form
+        {...(row.family
+          ? { method: "get" as const, action: "/admin/dms/mapping/confirm" }
+          : { action: setSubCategoryFamily })}
+        className="mt-3 flex gap-2"
+      >
         <input type="hidden" name="rooftopId" value={row.rooftopId} />
         <input type="hidden" name="subCategory" value={row.subCategory} />
+        {!row.family && <input type="hidden" name="mode" value="correction" />}
         <select
           name="family"
           defaultValue={row.family ?? ""}
@@ -251,7 +268,7 @@ function MapRow({
           type="submit"
           className="min-h-[2.75rem] shrink-0 rounded-xl bg-gold px-4 text-sm font-extrabold text-navy transition hover:brightness-95"
         >
-          Save
+          {row.family ? "Review" : "Save"}
         </button>
       </form>
 

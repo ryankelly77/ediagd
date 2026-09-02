@@ -69,7 +69,12 @@ async function get(p: string) {
   }
 
   // ---- Has the rule file drifted from the database? -------------------------
-  const dbRules = await get("op_text_rule?select=sub_category,family,include_pattern,exclude_pattern");
+  // LIVE ROWS ONLY (0074). The table keeps every historical version now, and
+  // comparing those against the file would report each retired version as
+  // "in the database, not in the rule file" — drift that is really history.
+  const dbRules = await get(
+    "op_text_rule?select=sub_category,family,include_pattern,exclude_pattern&retired_at=is.null"
+  );
   const fileBy = new Map(OP_TEXT_RULES.map((r) => [r.subCategory, r]));
   const dbBy = new Map(dbRules.map((r) => [String(r.sub_category), r]));
   const drift: string[] = [];
@@ -138,6 +143,54 @@ async function get(p: string) {
       console.log(
         `     ${String(o.rooftop_name).slice(0, 28).padEnd(30)} ${String(o.family).padEnd(18)}` +
         ` ${o.fam_ros_raw}/${o.advisor_ros} = ${o.uncapped_pct}% -> capped at 100%`
+      );
+    }
+  }
+
+  // ---- EXACTLY ONE LIVE ROW PER KEY -----------------------------------------
+  /*
+   * The partial unique indexes 0074 created stop a key having TWO live rows.
+   * Nothing stopped it having NONE, and that is the state a crash between a
+   * retire and an insert used to leave behind: the key vanishes from
+   * <table>_live, loadCoachableCodes stops offering the code, and the advisor's
+   * block quietly drops to family grain. No error, no row, nothing to notice.
+   *
+   * 0078 made the retire and the insert one statement, so this should now be
+   * unreachable. That is exactly why it is worth asserting — a guarantee nobody
+   * checks is a guarantee until the day it isn't. A HARD FAILURE, because a
+   * mapping with no current version is a hole in the measurement.
+   */
+  const liveness: { table: string; key: (r: Record<string, unknown>) => string }[] = [
+    { table: "sub_category_map", key: (r) => `${r.rooftop_id}|${r.sub_category}` },
+    { table: "op_text_rule", key: (r) => String(r.sub_category) },
+    { table: "op_code_family", key: (r) => String(r.code) },
+  ];
+  console.log("");
+  for (const { table, key } of liveness) {
+    const cols =
+      table === "sub_category_map"
+        ? "rooftop_id,sub_category,retired_at"
+        : table === "op_text_rule"
+          ? "sub_category,retired_at"
+          : "code,retired_at";
+    const rows = await get(`${table}?select=${cols}`);
+    const live = new Map<string, number>();
+    const keys = new Set<string>();
+    for (const r of rows) {
+      const k = key(r);
+      keys.add(k);
+      if (r.retired_at == null) live.set(k, (live.get(k) ?? 0) + 1);
+    }
+    const orphaned = [...keys].filter((k) => (live.get(k) ?? 0) === 0);
+    if (orphaned.length) {
+      fail(
+        `${table}: ${orphaned.length} key(s) have every version retired and no live row — ` +
+          `they have fallen out of ${table}_live entirely.`
+      );
+      for (const k of orphaned.slice(0, 10)) console.log(`     ${k}`);
+    } else {
+      console.log(
+        `  ${table}: ${keys.size} keys, one live row each (${rows.length} versions total)`
       );
     }
   }

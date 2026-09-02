@@ -12,11 +12,48 @@
    Scoped per rooftop, deliberately. "Tune Up" at a Honda store and at a BMW
    store are not obliged to bundle the same work, and a group-wide mapping would
    make one store's correction silently move another store's numbers.
+
+   ---------------------------------------------------------------------------
+   EVERY EDIT HERE IS APPEND-ONLY NOW
+   ---------------------------------------------------------------------------
+   All four functions below used to UPDATE the live row. 0075's header names
+   what that costs, about this exact table: it "rewrote every historical attach
+   rate the instant it was saved — no rebuild required, no trace that anything
+   happened. 815 rows behave this way against op_text_rule's 9." 0074 gave the
+   table somewhere to keep the old version and 0075 taught the attach view to
+   respect it; this is the half that stopped writing over history.
+
+   Every write goes through applyMappingEdit → mapping_edit() (0078), which
+   retires and inserts in one statement. Nothing here touches the table
+   directly.
+
+   ---------------------------------------------------------------------------
+   WHICH OF THESE ASK, AND WHICH ANSWER FOR THEMSELVES
+   ---------------------------------------------------------------------------
+   A mapping edit is a Correction or a Change and the difference matters to
+   history — but only when there is an old value to preserve. Three of the four
+   actions below have none:
+
+     * setting a family on an UNMAPPED row is the first thing anybody ever said
+       about it. There is no prior mapping for history to keep, so it is a
+       correction and the queue stays a queue rather than routing 60 rows
+       through a confirm screen each.
+     * "not a coachable service" and putting one back are statements about the
+       WORK — a state inspection was never a thing an advisor sells, in any
+       month. Both skip rows somebody confirmed by hand.
+     * "apply everywhere" only touches rooftops that have not confirmed one, so
+       again there is no human decision being overwritten.
+
+   Re-mapping a row that ALREADY carries a family is the case with a real prior
+   value, and that one goes through /admin/dms/mapping/confirm to be told which
+   kind of edit it is — the same shape the families screen uses.
    ============================================================================ */
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { applyMappingEdit, applyMappingEditEverywhere } from "@/lib/mapping/edit";
+import type { EditMode } from "@/lib/mapping/epoch";
 
 async function requireOwner() {
   const supabase = await createClient();
@@ -29,11 +66,30 @@ async function requireOwner() {
   return user;
 }
 
+function done() {
+  revalidatePath("/admin/dms/mapping");
+  revalidatePath("/admin/dms");
+}
+
+/** A family must be one the rest of the app knows about. */
+async function requireKnownFamily(family: string): Promise<void> {
+  const service = createServiceClient();
+  const { data: known } = await service
+    .from("service_family")
+    .select("name")
+    .eq("name", family)
+    .maybeSingle();
+  if (!known) throw new Error(`"${family}" is not a service family.`);
+}
+
 /**
  * Set (or clear) the family for one sub-category at one rooftop.
  *
  * An empty family is a legitimate answer: it puts the row back in the queue
  * rather than pretending a decision was made.
+ *
+ * `mode` comes from the form. The queue posts 'correction' for a row that has
+ * no family yet; the confirm screen posts whichever the person chose.
  */
 export async function setSubCategoryFamily(formData: FormData): Promise<void> {
   const user = await requireOwner();
@@ -41,37 +97,30 @@ export async function setSubCategoryFamily(formData: FormData): Promise<void> {
   const rooftopId = String(formData.get("rooftopId") ?? "");
   const subCategory = String(formData.get("subCategory") ?? "");
   const familyRaw = String(formData.get("family") ?? "").trim();
+  const mode = String(formData.get("mode") ?? "correction") as EditMode;
+  const effectiveFrom = String(formData.get("effective_from") ?? "");
   if (!rooftopId || !subCategory) return;
+  if (mode !== "correction" && mode !== "change") return;
 
   const family = familyRaw === "" ? null : familyRaw;
-  const service = createServiceClient();
+  if (family) await requireKnownFamily(family);
 
-  // The family must be one we actually have. A free-text value here would
-  // create a family that exists in exactly one mapping row and nowhere else.
-  if (family) {
-    const { data: known } = await service
-      .from("service_family")
-      .select("name")
-      .eq("name", family)
-      .maybeSingle();
-    if (!known) throw new Error(`"${family}" is not a service family.`);
-  }
-
-  const { error } = await service.from("sub_category_map").upsert(
-    {
-      rooftop_id: rooftopId,
-      sub_category: subCategory,
+  const result = await applyMappingEdit({
+    table: "sub_category_map",
+    key: { rooftop_id: rooftopId, sub_category: subCategory },
+    values: {
       family,
       status: family ? "confirmed" : "unmapped",
       confirmed_by: family ? user.id : null,
       confirmed_at: family ? new Date().toISOString() : null,
+      updated_by: user.id,
     },
-    { onConflict: "rooftop_id,sub_category" }
-  );
-  if (error) throw new Error(error.message);
+    mode,
+    effectiveFrom,
+  });
+  if (!result.ok) throw new Error(result.error);
 
-  revalidatePath("/admin/dms/mapping");
-  revalidatePath("/admin/dms");
+  done();
 }
 
 /**
@@ -86,7 +135,8 @@ export async function setSubCategoryFamily(formData: FormData): Promise<void> {
  * Distinct from unmapped: this is a DECISION, so the rows stop reappearing in
  * the queue, and distinct from mapped: the rows are stored but never counted.
  * Applied at every rooftop at once, because whether a thing is coachable is a
- * property of the work, not of the store.
+ * property of the work, not of the store — and as a CORRECTION, because it was
+ * never coachable in any month either.
  */
 export async function markNotCoachable(formData: FormData): Promise<void> {
   const user = await requireOwner();
@@ -95,35 +145,70 @@ export async function markNotCoachable(formData: FormData): Promise<void> {
   if (!subCategory) return;
 
   const service = createServiceClient();
-  const { error } = await service
-    .from("sub_category_map")
-    .update({
-      family: null,
-      status: "not_coachable",
-      confirmed_by: user.id,
-      confirmed_at: new Date().toISOString(),
-    })
+  // A deliberate mapping still wins — the same guard the in-place update had.
+  const { data: rows, error } = await service
+    .from("sub_category_map_live")
+    .select("rooftop_id")
     .eq("sub_category", subCategory)
-    .neq("status", "confirmed"); // a deliberate mapping still wins
+    .neq("status", "confirmed");
   if (error) throw new Error(error.message);
 
-  revalidatePath("/admin/dms/mapping");
-  revalidatePath("/admin/dms");
+  const { failed } = await applyMappingEditEverywhere(
+    ((rows ?? []) as { rooftop_id: string }[]).map((r) => ({
+      table: "sub_category_map" as const,
+      key: { rooftop_id: r.rooftop_id, sub_category: subCategory },
+      values: {
+        family: null,
+        status: "not_coachable",
+        confirmed_by: user.id,
+        confirmed_at: new Date().toISOString(),
+        updated_by: user.id,
+      },
+      mode: "correction" as const,
+    }))
+  );
+  if (failed.length > 0) {
+    throw new Error(
+      `${failed.length} of ${rows?.length ?? 0} rooftops did not apply: ${failed[0].error}`
+    );
+  }
+
+  done();
 }
 
 /** Put a not-coachable sub-category back in the queue. */
 export async function clearNotCoachable(formData: FormData): Promise<void> {
-  await requireOwner();
+  const user = await requireOwner();
   const subCategory = String(formData.get("subCategory") ?? "");
   if (!subCategory) return;
 
   const service = createServiceClient();
-  const { error } = await service
-    .from("sub_category_map")
-    .update({ status: "unmapped", family: null, confirmed_by: null, confirmed_at: null })
+  const { data: rows, error } = await service
+    .from("sub_category_map_live")
+    .select("rooftop_id")
     .eq("sub_category", subCategory)
     .eq("status", "not_coachable");
   if (error) throw new Error(error.message);
+
+  const { failed } = await applyMappingEditEverywhere(
+    ((rows ?? []) as { rooftop_id: string }[]).map((r) => ({
+      table: "sub_category_map" as const,
+      key: { rooftop_id: r.rooftop_id, sub_category: subCategory },
+      values: {
+        family: null,
+        status: "unmapped",
+        confirmed_by: null,
+        confirmed_at: null,
+        updated_by: user.id,
+      },
+      mode: "correction" as const,
+    }))
+  );
+  if (failed.length > 0) {
+    throw new Error(
+      `${failed.length} of ${rows?.length ?? 0} rooftops did not apply: ${failed[0].error}`
+    );
+  }
 
   revalidatePath("/admin/dms/mapping");
 }
@@ -145,27 +230,35 @@ export async function setFamilyEverywhere(formData: FormData): Promise<void> {
   const subCategory = String(formData.get("subCategory") ?? "");
   const family = String(formData.get("family") ?? "").trim();
   if (!subCategory || !family) return;
+  await requireKnownFamily(family);
 
   const service = createServiceClient();
-  const { data: known } = await service
-    .from("service_family")
-    .select("name")
-    .eq("name", family)
-    .maybeSingle();
-  if (!known) throw new Error(`"${family}" is not a service family.`);
-
-  const { error } = await service
-    .from("sub_category_map")
-    .update({
-      family,
-      status: "confirmed",
-      confirmed_by: user.id,
-      confirmed_at: new Date().toISOString(),
-    })
+  const { data: rows, error } = await service
+    .from("sub_category_map_live")
+    .select("rooftop_id")
     .eq("sub_category", subCategory)
     .neq("status", "confirmed");
   if (error) throw new Error(error.message);
 
-  revalidatePath("/admin/dms/mapping");
-  revalidatePath("/admin/dms");
+  const { failed } = await applyMappingEditEverywhere(
+    ((rows ?? []) as { rooftop_id: string }[]).map((r) => ({
+      table: "sub_category_map" as const,
+      key: { rooftop_id: r.rooftop_id, sub_category: subCategory },
+      values: {
+        family,
+        status: "confirmed",
+        confirmed_by: user.id,
+        confirmed_at: new Date().toISOString(),
+        updated_by: user.id,
+      },
+      mode: "correction" as const,
+    }))
+  );
+  if (failed.length > 0) {
+    throw new Error(
+      `${failed.length} of ${rows?.length ?? 0} rooftops did not apply: ${failed[0].error}`
+    );
+  }
+
+  done();
 }
