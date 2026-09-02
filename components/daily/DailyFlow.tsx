@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VideoNotReady } from "@/components/video/MuxVideo";
+import type { VideoRenditions } from "@/lib/mux/playback";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { WATCHED_PCT } from "@/lib/watch-coverage";
 import { completeDayAction, openWatchTicketAction } from "@/app/(app)/daily/actions";
@@ -309,18 +310,19 @@ export function DailyFlow({
 /* ---- Progress ------------------------------------------------------------ */
 
 
-/** Signed playback for the lifestyle slot, minted per view on the server. */
+/**
+ * Signed playback for the lifestyle slot, minted per view on the server.
+ *
+ * BOTH CUTS, and the player chooses between them from a measured viewport —
+ * see lib/video-rendition.ts. This type used to carry one pre-chosen playback
+ * id, which is how desktops ended up playing the phone crop.
+ */
 export type LifestyleVideo = {
   contentId: string;
   title: string;
-  playbackId: string;
-  token: string;
-  thumbnailToken: string;
-  storyboardToken: string;
+  renditions: VideoRenditions;
   watchedPct: number;
   positionSec: number | null;
-  orientation: "vertical" | "landscape";
-  cropToVertical: boolean;
 };
 
 /* ---- Step 4: the lifestyle / sales-skill video --------------------------- */
@@ -370,16 +372,11 @@ function LifestyleStep({
             policy="gate-continue"
             onFirstPlay={onFirstPlay}
             contentId={video.contentId}
-            playbackId={video.playbackId}
-            token={video.token}
-            thumbnailToken={video.thumbnailToken}
-            storyboardToken={video.storyboardToken}
+            renditions={video.renditions}
             title={video.title}
             threshold={threshold}
             initialWatchedPct={video.watchedPct}
             initialPositionSec={video.positionSec}
-            orientation={video.orientation}
-            cropToVertical={video.cropToVertical}
             onWatchChange={(s) => {
               setWatch(s);
               onWatch(s);
@@ -708,16 +705,11 @@ function PitchStep({
           policy="gate-continue"
           onFirstPlay={onFirstPlay}
           contentId={video.contentId}
-          playbackId={video.playbackId}
-          token={video.token}
-          thumbnailToken={video.thumbnailToken}
-          storyboardToken={video.storyboardToken}
+          renditions={video.renditions}
           title={video.title}
           threshold={threshold}
           initialWatchedPct={video.watchedPct}
           initialPositionSec={video.positionSec}
-          orientation={video.orientation}
-          cropToVertical={video.cropToVertical}
           onWatchChange={(s) => {
             setWatch(s);
             onWatch(s);

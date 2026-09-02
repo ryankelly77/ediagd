@@ -1,0 +1,17 @@
+{
+  "//": "Standalone build for rendition-scenarios.ts. It reaches the REAL pickRendition in lib/video-rendition.ts through the @/ alias — a paraphrase would prove nothing about the rule the player actually applies.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "outDir": "../.tmp-rn",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./rendition-scenarios.ts", "../lib/video-rendition.ts", "../lib/mux/playback.ts"]
+}

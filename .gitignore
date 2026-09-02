@@ -97,3 +97,6 @@ exports/
 .tmp-ig/
 
 .tmp-dtk/
+
+# tsc scratch output from npm run test:rendition
+.tmp-rn/

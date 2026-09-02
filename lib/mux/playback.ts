@@ -157,3 +157,63 @@ export async function playbackFor(row: {
 }
 
 export { muxClient };
+
+/* ---------------------------------------------------------------------------
+   Both renditions, both signed
+--------------------------------------------------------------------------- */
+
+/** One playable rendition and the three tokens its player needs. */
+export type Rendition = {
+  playbackId: string;
+  token: string;
+  thumbnailToken: string;
+  storyboardToken: string;
+};
+
+export type VideoRenditions = {
+  /** The 16:9 master. Always present — a row without one is not playable. */
+  landscape: Rendition;
+  /** The derived 9:16 crop, or null when there isn't a usable one. */
+  vertical: Rendition | null;
+};
+
+/**
+ * Mint tokens for BOTH renditions so the client can choose by container size.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY BOTH, RATHER THAN THE SERVER PICKING ONE
+ * ---------------------------------------------------------------------------
+ * A Mux token is scoped to a single playback id, so choosing the rendition and
+ * signing it are the same decision — and the server cannot make it. These are
+ * server components: there is no viewport at render time, and guessing from a
+ * user-agent is how a rotated tablet gets the wrong picture.
+ *
+ * So both are signed and the player picks. That is a second mint, not a client
+ * swapping URLs: each token is a real credential for a real rendition this
+ * viewer is entitled to, and neither can be pointed at anything else.
+ *
+ * A STALE VERTICAL IS ABSENT. `stale` means the master was replaced or trimmed
+ * after the crop was cut, so the vertical is a different take — or the same one
+ * a second out of step. Treating it as missing everywhere means the master
+ * serves until somebody re-cuts it, which is the honest picture.
+ */
+export async function renditionsFor(row: {
+  mux_playback_id?: string | null;
+  mux_playback_policy?: string | null;
+  vertical_playback_id?: string | null;
+  vertical_status?: string | null;
+}): Promise<VideoRenditions | null> {
+  const landscape = await playbackFor(row);
+  if (!landscape) return null;
+
+  const hasVertical =
+    row.vertical_status === "ready" && Boolean(row.vertical_playback_id);
+  const vertical = hasVertical
+    ? await playbackFor({
+        mux_playback_id: row.vertical_playback_id,
+        mux_playback_policy: "signed",
+      })
+    : null;
+
+  return { landscape, vertical };
+}

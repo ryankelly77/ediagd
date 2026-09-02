@@ -35,16 +35,34 @@
    so a video reads as a card with media in it rather than a hole in the page.
    ============================================================================ */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import { createClient } from "@/lib/supabase/client";
+import type { VideoRenditions } from "@/lib/mux/playback";
+import { pickRendition, type Viewport } from "@/lib/video-rendition";
+
+/*
+ * useLayoutEffect on the client, useEffect on the server.
+ *
+ * The measurement below has to happen BEFORE the browser paints, or the frame
+ * flashes at the wrong aspect ratio. React warns about useLayoutEffect during
+ * SSR — correctly, since it never runs there — so the standard swap is made
+ * once, here, rather than suppressed at the call site.
+ */
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export type MuxVideoProps = {
   contentId: string;
-  playbackId: string;
-  token: string;
-  thumbnailToken: string;
-  storyboardToken: string;
+  /**
+   * BOTH cuts, signed. The player picks; the server cannot.
+   *
+   * This used to be a single playbackId chosen in shapeVideo(), and the choice
+   * had no viewport to consult — so the 9:16 phone crop went to desktops and
+   * Mitch reported, correctly, that the video was blurry. See
+   * lib/video-rendition.ts for the rule and the reasoning.
+   */
+  renditions: VideoRenditions;
   title: string;
   /** 0-100. Server setting (game_settings.video_complete_pct), default 90. */
   threshold?: number;
@@ -70,32 +88,12 @@ export type MuxVideoProps = {
   onError?: (event: Event) => void;
   /** Hide the built-in progress read-out when a parent draws its own. */
   showProgress?: boolean;
-  /**
-   * What shape the playback id actually is.
-   *
-   * "vertical"  a derived 9:16 crop — played full-bleed, no letterbox.
-   * "landscape" the 16:9 master — played inline in its own frame.
-   */
-  orientation?: "vertical" | "landscape";
-  /**
-   * Present a LANDSCAPE source inside a 9:16 frame by cropping it in CSS.
-   *
-   * The fallback for a video whose vertical rendition does not exist yet, or
-   * has gone stale after a trim. It throws away two thirds of the frame width
-   * and can cut hands and heads, so it is deliberately not the default — a
-   * derived crop is centre-framed by policy and checked; this one is not
-   * checked by anybody.
-   */
-  cropToVertical?: boolean;
   className?: string;
 };
 
 export function MuxVideo({
   contentId,
-  playbackId,
-  token,
-  thumbnailToken,
-  storyboardToken,
+  renditions,
   title,
   threshold = 90,
   initialWatchedPct = 0,
@@ -107,8 +105,6 @@ export function MuxVideo({
   onPause,
   onError,
   showProgress = true,
-  orientation = "landscape",
-  cropToVertical = false,
   className,
 }: MuxVideoProps) {
   const [watched, setWatched] = useState(initialWatchedPct);
@@ -190,26 +186,126 @@ export function MuxVideo({
 
   const cleared = watched >= threshold;
 
-  /* A real vertical rendition, or a landscape one being squeezed into the same
-     frame. Both present as 9:16; only the second one loses picture. */
-  const vertical = orientation === "vertical" || cropToVertical;
-  const ratio = vertical ? "9 / 16" : "16 / 9";
-  /* contain would letterbox a 16:9 source inside a 9:16 box — pillar bars top
-     and bottom, which is worse than the crop it is standing in for. */
-  const objectFit = cropToVertical ? "cover" : "contain";
+  /* --------------------------------------------------------------------------
+     WHICH CUT PLAYS
+
+     Two measurements, because they answer different questions. The VIEWPORT
+     says which way the device is being held — the thing that decides whether a
+     9:16 cut is the designed picture or a mistake. The FRAME says how much
+     width the player was actually given, which is what the vertical's native
+     1080 has to be compared against: /today can draw a 480px player inside a
+     1600px window, and the window is not what the viewer is looking at.
+
+     Both are client facts. That is the whole reason the choice lives here and
+     not in shapeVideo(), where it used to be and where it was always wrong.
+  -------------------------------------------------------------------------- */
+  const frame = useRef<HTMLDivElement | null>(null);
+  const [view, setView] = useState<Viewport | null>(null);
+
+  /*
+   * FROZEN ONCE PLAYING. Changing playbackId swaps the source, and mux-player
+   * responds by tearing down the media element and buffering the new one — mid
+   * video that is a visible stall and a lost position, which is a worse trade
+   * than a slightly letterboxed picture for someone who rotated a tablet.
+   *
+   * SO: the frame is re-measured and the cut re-picked freely up to the moment
+   * of first play, and held from then on. Rotate before you press play and you
+   * get the right cut; rotate during and you keep watching the one you started.
+   */
+  const playing = useRef(false);
+
+  /*
+   * MEASURED BEFORE THE PLAYER IS MOUNTED, NOT AFTER.
+   *
+   * The first version of this rendered the player immediately with the master
+   * and swapped the source once the measurement arrived. On a phone that swap
+   * lands milliseconds into loading the first one, and mux-player reports the
+   * abandoned load as an error — which the daily loop correctly treats as "this
+   * video is broken" and releases the gate for. A correct rendition choice that
+   * announces "Couldn't play this one" is not a fix.
+   *
+   * So the frame renders empty for one layout pass, the measurement is taken
+   * in it, and the player mounts once, already holding the id it will keep.
+   * useLayoutEffect, so that pass never reaches the screen.
+   */
+  useIsomorphicLayoutEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+
+    const measure = () => {
+      if (playing.current) return;
+      const next: Viewport = {
+        frameWidth: el.getBoundingClientRect().width,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+      /* Same numbers, same object — a ResizeObserver fires on every reflow and
+         a new object each time would re-render the player on each one. */
+      setView((prev) =>
+        prev &&
+        Math.round(prev.frameWidth) === Math.round(next.frameWidth) &&
+        prev.viewportWidth === next.viewportWidth &&
+        prev.viewportHeight === next.viewportHeight
+          ? prev
+          : next
+      );
+    };
+
+    measure();
+
+    /* Rotation is not a resize of the frame — a phone turned sideways can leave
+       a full-width player exactly as wide as it was. The viewport listener is
+       what catches it. */
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(el);
+
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      observer?.disconnect();
+    };
+  }, []);
+
+  const { rendition, shape } = pickRendition(renditions, view);
+
+  const handlePlay = useCallback(
+    (event: Event) => {
+      playing.current = true;
+      onPlay?.(event);
+    },
+    [onPlay]
+  );
 
   return (
     <div className={className}>
       <div
+        ref={frame}
         className="overflow-hidden rounded-card bg-navy"
         style={{ boxShadow: "0 4px 16px rgba(12,28,44,0.08)" }}
       >
+        {/*
+          NOT RENDERED UNTIL THE FRAME HAS BEEN MEASURED. One layout pass with
+          an empty navy box — invisible, because the measurement runs before
+          paint — and then the player mounts holding its final id. Rendering it
+          first and correcting the source afterwards is what made a phone say
+          "Couldn't play this one" about a video that was fine.
+
+          The box keeps a 16:9 reservation in the meantime so the page does not
+          jump; on a phone it grows into 9:16 on the very next pass.
+        */}
+        {view === null ? (
+          <div style={{ aspectRatio: "16 / 9", width: "100%" }} />
+        ) : (
         <MuxPlayer
-          playbackId={playbackId}
+          playbackId={rendition.playbackId}
           tokens={{
-            playback: token,
-            thumbnail: thumbnailToken,
-            storyboard: storyboardToken,
+            playback: rendition.token,
+            thumbnail: rendition.thumbnailToken,
+            storyboard: rendition.storyboardToken,
           }}
           streamType="on-demand"
           title={title}
@@ -219,7 +315,7 @@ export function MuxVideo({
           startTime={initialPositionSec ?? undefined}
           onTimeUpdate={handleTimeUpdate}
           onEnded={onEnded}
-          onPlay={onPlay}
+          onPlay={handlePlay}
           onPause={onPause}
           onError={onError}
           envKey={process.env.NEXT_PUBLIC_MUX_ENV_KEY}
@@ -229,13 +325,21 @@ export function MuxVideo({
           }}
           accentColor="#4AA8B0"
           style={{
-            aspectRatio: ratio,
+            aspectRatio: shape === "vertical" ? "9 / 16" : "16 / 9",
             width: "100%",
             display: "block",
             "--controls-backdrop-color": "rgba(12,28,44,0.55)",
-            "--media-object-fit": objectFit,
+            /*
+             * `contain` in both shapes now. A 16:9 master shown in a narrow
+             * frame is LETTERBOXED rather than centre-cropped: the crop threw
+             * away two thirds of the width and cut hands and heads, which is
+             * exactly why derive-vertical exists to cut a checked one instead.
+             * Bars on navy read as a frame; a beheaded presenter reads as a bug.
+             */
+            "--media-object-fit": "contain",
           }}
         />
+        )}
       </div>
 
       {showProgress && (

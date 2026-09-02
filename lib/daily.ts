@@ -10,7 +10,7 @@
 
 import type { ContentRow } from "@/lib/content";
 import type { IsoDate } from "@/lib/gamification/streak";
-import { playbackFor } from "@/lib/mux/playback";
+import { renditionsFor, type VideoRenditions } from "@/lib/mux/playback";
 
 type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -887,24 +887,25 @@ async function shapeVideo(
   userId: string
 ): Promise<LifestyleVideoData | null> {
   /*
-   * THE APP PLAYS VERTICAL. The daily loop is a phone held upright on a service
-   * drive, so a derived 9:16 crop is the right picture and the 16:9 master is
-   * the fallback, not the other way round.
+   * BOTH CUTS GO DOWN, SIGNED. THE PLAYER PICKS.
    *
-   * 'stale' is deliberately NOT used: it means the master was trimmed after the
-   * crop was made, so the vertical is a second out of step with its own
-   * captions. Falling back to a CSS-cropped master is a worse picture but an
-   * honest one.
+   * This is where the desktop-blur bug lived. The rule used to be
+   *
+   *     useVertical = vertical_status === 'ready' && vertical_playback_id
+   *
+   * and it had no viewport to consult, because a server component has none —
+   * so the 9:16 phone crop was served to laptops, where a 1080-wide portrait
+   * slice got stretched across a landscape frame. Every video in the library is
+   * 'ready', so this was every video on every desktop.
+   *
+   * The choice moved to lib/video-rendition.ts, which runs on the client and
+   * can measure. What is left here is the part only the server can do: minting
+   * a token for each cut. A stale vertical yields no token at all, which is how
+   * 'the master was trimmed after the crop was made' reaches the player as
+   * 'there is no vertical' — the one state it needs to know about it.
    */
-  const useVertical =
-    row.vertical_status === "ready" && Boolean(row.vertical_playback_id);
-
-  const tokens = await playbackFor(
-    useVertical
-      ? { mux_playback_id: row.vertical_playback_id, mux_playback_policy: "signed" }
-      : row
-  );
-  if (!tokens) return null;
+  const renditions = await renditionsFor(row);
+  if (!renditions) return null;
 
   const { data: progress } = await client
     .from("content_progress")
@@ -948,29 +949,19 @@ async function shapeVideo(
     artifactId: row.artifact_id,
     quoteText,
     quoteVoice,
-    playbackId: tokens.playbackId,
-    token: tokens.token,
-    thumbnailToken: tokens.thumbnailToken,
-    storyboardToken: tokens.storyboardToken,
+    renditions,
     watchedPct: Number(progress?.watched_pct ?? 0),
     positionSec: progress?.position_sec == null ? null : Number(progress.position_sec),
-    orientation: useVertical ? ("vertical" as const) : ("landscape" as const),
-    // No derived vertical yet: squeeze the master rather than letterbox it.
-    cropToVertical: !useVertical,
   };
 }
 
 export type LifestyleVideoData = {
   contentId: string;
   title: string;
-  playbackId: string;
-  token: string;
-  thumbnailToken: string;
-  storyboardToken: string;
+  /** The master and, when there is a usable one, the 9:16 cut. Both signed. */
+  renditions: VideoRenditions;
   watchedPct: number;
   positionSec: number | null;
-  orientation: "vertical" | "landscape";
-  cropToVertical: boolean;
   /**
    * The text row this video is a filming of, when the two are linked (0064).
    *

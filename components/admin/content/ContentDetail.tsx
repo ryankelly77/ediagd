@@ -90,6 +90,8 @@ type Mux = {
   durationSec: number | null; width: number | null; height: number | null;
   quality: string | null; dashboardBase: string | null;
   token: string | null; thumbnailToken: string | null; verticalToken: string | null;
+  /** Which cut each device gets, in a sentence. See lib/video-rendition.ts. */
+  renditionNote: string;
 };
 type Structure = {
   dailyLoopEligible: boolean; dailyLoopReason: string;
@@ -280,6 +282,21 @@ export function ContentDetail({
               <IdRow label="Playback" value={mux.playbackId} />
               <IdRow label="Vertical asset" value={mux.verticalAssetId} href={mux.dashboardBase && mux.verticalAssetId ? `${mux.dashboardBase}/${mux.verticalAssetId}` : null} />
               <IdRow label="Vertical playback" value={mux.verticalPlaybackId} />
+              {/*
+                WHAT PLAYS WHERE. The rows above are ids; this is the rule they
+                feed. It is here because "why is this blurry on my laptop" was a
+                real question with no answer on this screen — the preview player
+                above always shows the master, so the admin's own eyes could not
+                catch a video the app was serving as a phone crop to everyone.
+              */}
+              <div className="py-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                  Renditions
+                </span>
+                <p className="mt-0.5 text-xs leading-relaxed text-ink">
+                  {mux.renditionNote}
+                </p>
+              </div>
               <div className="flex items-baseline justify-between gap-3 py-1.5">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">Format</span>
                 <span className="text-xs text-ink">

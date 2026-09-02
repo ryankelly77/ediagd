@@ -13,6 +13,7 @@ import "server-only";
    ============================================================================ */
 
 import { playbackFor } from "@/lib/mux/playback";
+import { describeRenditions } from "@/lib/video-rendition";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Client = { from: (t: string) => any };
@@ -83,6 +84,15 @@ export type MuxFacts = {
   token: string | null;
   thumbnailToken: string | null;
   verticalToken: string | null;
+  /**
+   * WHICH CUT EACH DEVICE ACTUALLY GETS, in a sentence.
+   *
+   * The ids above say what exists; this says what plays, which is a different
+   * question and the one that gets asked. Read-only, and computed by the same
+   * module the player selects with, so the screen cannot describe a rule the
+   * app has stopped following. See lib/video-rendition.ts.
+   */
+  renditionNote: string;
 };
 
 /**
@@ -203,6 +213,7 @@ export async function loadContentDetail(client: Client, id: string) {
     token: null,
     thumbnailToken: null,
     verticalToken: null,
+    renditionNote: describeRenditions(row),
   };
 
   if (row.mux_playback_id) {
