@@ -50,6 +50,7 @@ async function rpc(fn: string, body: unknown) {
 }
 
 const SEED = process.argv.includes("--seed-rules");
+const DRY = process.argv.includes("--dry-run");
 
 async function get(path: string) {
   const res = await fetch(`${URL}/rest/v1/${path}`, { headers: H });
@@ -130,6 +131,8 @@ async function main() {
   let total = 0;
   let totalFamily = 0;
   let totalNotCoachable = 0;
+  let elapsedMs = 0;
+  let serverMs = 0;
 
   for (const imp of imports) {
     const subs = (await rpc("import_sub_categories", { _import_id: imp.id })) as
@@ -146,7 +149,18 @@ async function main() {
 
     const fam = rules.filter((r) => r.family).length;
     const nc = rules.filter((r) => r.not_coachable).length;
-    const n = await rpc("apply_sub_category_automap", { _import_id: imp.id, _rules: rules });
+    /*
+     * --dry-run does the REAL update inside a savepoint and rolls it back
+     * (0076), so the row count and the duration below are measured on the
+     * statement that would actually run — not on a SELECT modelling it.
+     */
+    const t0 = Date.now();
+    const res = DRY
+      ? await rpc("apply_sub_category_automap_dry", { _import_id: imp.id, _rules: rules })
+      : await rpc("apply_sub_category_automap", { _import_id: imp.id, _rules: rules });
+    elapsedMs += Date.now() - t0;
+    const n = DRY ? (res as { rows: number }).rows : res;
+    if (DRY) serverMs += Number((res as { ms: number }).ms ?? 0);
     total += Number(n ?? 0);
     totalFamily += fam;
     totalNotCoachable += nc;
@@ -158,11 +172,22 @@ async function main() {
     );
   }
 
-  console.log(`\n  total rows newly written: ${total}`);
+  console.log(
+    `\n  total rows ${DRY ? "that WOULD be written" : "newly written"}: ${total}`
+  );
+  if (DRY) {
+    console.log(
+      `  timing: ${(elapsedMs / 1000).toFixed(1)}s wall clock across ${imports.length} imports,` +
+      ` ${(serverMs / 1000).toFixed(1)}s of it inside the database`
+    );
+    console.log(`  NOTHING WAS WRITTEN — every update was rolled back.`);
+  }
   console.log(`  (rule-matched per import: ${totalFamily} family, ${totalNotCoachable} not coachable)`);
   console.log(
     `\n  NEXT: the op-code text verdict is stored, not computed at read time.\n` +
-    `  Run rebuild_dms_periods(null, null) or nothing above takes effect.`
+    `  Run \`npm run rebuild:periods\` or nothing above takes effect —\n` +
+    `  rebuild_dms_periods(null, null) exceeds the statement timeout, so the\n` +
+    `  rebuild is chunked per (rooftop, month).`
   );
 }
 main().catch((e) => { console.error(e); process.exit(1); });
