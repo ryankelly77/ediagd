@@ -120,7 +120,14 @@ export async function loadCoachableCodes(
   family: string
 ): Promise<string[]> {
   const { data, error } = await client
-    .from("op_code_family")
+      /*
+       * THE LIVE VIEW, NOT THE TABLE (0074). op_code_family is append-only now:
+       * an edit retires the old row and inserts a new one, so the table holds
+       * every version and a raw read would return two answers for one code the
+       * first time somebody edits a mapping. This is a ROUTING reader — it wants
+       * today's answer, which is what `_live` means.
+       */
+    .from("op_code_family_live")
     .select("code")
     .eq("family", family)
     .eq("coachable", true);

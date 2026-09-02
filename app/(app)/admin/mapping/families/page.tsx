@@ -60,7 +60,8 @@ export default async function FamiliesPage() {
   const [{ data: rows }, { data: families }, { data: catalog }, { data: cueCounts }] =
     await Promise.all([
       service
-        .from("op_code_family")
+        // Live rows only — retired versions are history, not the map.
+        .from("op_code_family_live")
         .select("code, family, coachable, confidence, note, effective_from")
         .order("family"),
       service.from("service_family").select("name").order("sort_order"),

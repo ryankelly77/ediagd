@@ -197,7 +197,8 @@ export async function previewImport(formData: FormData): Promise<ImportPreview> 
   // Existing confirmed mappings win over the auto-matcher, always. That is the
   // point of confirming one: the next upload must not quietly revert it.
   const { data: existingMaps } = await service
-    .from("sub_category_map")
+    // Live view (0074): a retired mapping must not win over the automatcher.
+    .from("sub_category_map_live")
     .select("rooftop_id, sub_category, family, status");
 
   // Projected at the SAME grain the database uses — (rooftop, sub-category) —

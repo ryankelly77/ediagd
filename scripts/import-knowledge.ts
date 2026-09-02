@@ -211,7 +211,8 @@ function table(title: string, rows: [string, number][]) {
   const known = new Set((catalogRows ?? []).map((c) => c.code as string));
 
   const { data: famRows, error: famErr } = await sb
-    .from("op_code_family")
+    // Live view (0074): the table is append-only, this reader wants today.
+    .from("op_code_family_live")
     .select("code, family");
   if (famErr) throw new Error(`op_code_family: ${famErr.message}`);
   const familyOf = new Map((famRows ?? []).map((r) => [r.code as string, r.family as string]));

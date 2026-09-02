@@ -45,7 +45,8 @@ export default async function MappingPage({
     await Promise.all([
       service.from("service_family").select("name").order("sort_order"),
       service
-        .from("sub_category_map")
+        // Live rows only (0074) — the table now keeps retired versions too.
+        .from("sub_category_map_live")
         .select("rooftop_id, sub_category, family, status"),
       service
         .from("dms_daily_metric")

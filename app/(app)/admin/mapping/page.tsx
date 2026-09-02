@@ -35,7 +35,7 @@ export default async function MappingHub() {
       .from("op_code_catalog")
       .select("code", { count: "exact", head: true })
       .not("retired_at", "is", null),
-    service.from("op_code_family").select("code", { count: "exact", head: true }),
+    service.from("op_code_family_live").select("code", { count: "exact", head: true }),
     service.from("mapping_alias").select("id", { count: "exact", head: true }),
     service
       .from("mapping_alias")
