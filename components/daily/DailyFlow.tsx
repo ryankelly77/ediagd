@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VideoNotReady } from "@/components/video/MuxVideo";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
-import { completeDayAction } from "@/app/(app)/daily/actions";
+import { WATCHED_PCT } from "@/lib/watch-coverage";
+import { completeDayAction, openWatchTicketAction } from "@/app/(app)/daily/actions";
 import { BadgeCelebration } from "./BadgeCelebration";
 import { MILESTONES } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
@@ -66,9 +67,7 @@ export function DailyFlow({
   cue,
   cueMatch,
   pitchVideo,
-  pitchVideoSkipped,
-  pitchWatchTicket,
-  lifestyleWatchTicket,
+  dayStamp,
   totalRos,
   badgeNames,
   badgeRewards,
@@ -96,15 +95,13 @@ export function DailyFlow({
   /** Step 3, or null when this stage has not been filmed. */
   pitchVideo: PitchVideo | null;
   /** True when a pitch video was looked for and not found; null when not looked for. */
-  pitchVideoSkipped: boolean | null;
   /*
    * SIGNED "SERVED AT" STAMPS, minted by the page and handed straight back.
    * The client never reads or alters them — it could not; they carry an HMAC.
    * They are what lets the server refuse a completion claiming a full watch
    * two seconds after the step appeared. See lib/watch-ticket.
    */
-  pitchWatchTicket: string | null;
-  lifestyleWatchTicket: string | null;
+  dayStamp: string;
   totalRos: number;
   badgeNames: Record<string, string>;
   /** Badge key -> Sand Dollars it pays, from game_settings / the catalog. */
@@ -148,6 +145,36 @@ export function DailyFlow({
    */
   const [pitchWatch, setPitchWatch] = useState<WatchState | null>(null);
   const [lifestyleWatch, setLifestyleWatch] = useState<WatchState | null>(null);
+
+  /*
+   * ---- THE WATCH TICKETS, MINTED WHEN A PLAYER IS OPENED -----------------
+   *
+   * Not at page render. A ticket minted then says when the PAGE opened, which
+   * is a fact about the page and almost nothing about the video — waiting five
+   * minutes with the app in a pocket used to satisfy a three-minute video's
+   * plausibility check.
+   *
+   * IF MINTING FAILS, THE GATE OPENS. The action never throws and returns null
+   * on any failure; a null ticket then makes an at-or-above-bar claim
+   * unverifiable, so the day is recorded with watch_error and a zero
+   * percentage — exactly what a broken player does. Nobody is held behind our
+   * own machinery.
+   */
+  const pitchTicket = useRef<string | null>(null);
+  const lifestyleTicket = useRef<string | null>(null);
+  const mintTicket = useCallback(
+    (contentId: string | null, into: React.RefObject<string | null>) => {
+      void (async () => {
+        try {
+          const { ticket } = await openWatchTicketAction(contentId);
+          into.current = ticket;
+        } catch {
+          into.current = null;
+        }
+      })();
+    },
+    []
+  );
 
   // Terminal screen: they've already done today. It WAITS — nothing here
   // navigates on its own.
@@ -232,6 +259,7 @@ export function DailyFlow({
             focus={focus}
             threshold={videoThreshold}
             onWatch={setPitchWatch}
+            onFirstPlay={() => mintTicket(pitchVideo?.contentId ?? null, pitchTicket)}
             onNext={() => setStep(4)}
           />
         )}
@@ -241,6 +269,7 @@ export function DailyFlow({
             video={lifestyle}
             threshold={videoThreshold}
             onWatch={setLifestyleWatch}
+            onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
             onNext={() => {
               // Mark the ritual as ours BEFORE the mutation fires, so the
               // server re-render it triggers can't bounce us to /advisor.
@@ -261,18 +290,12 @@ export function DailyFlow({
           <CelebrationStep
             previewResult={previewResult}
             dailyLoopSand={dailyLoopSand}
-            quoteId={quote?.id ?? null}
-            quote2Id={salesQuote?.id ?? null}
-            cueId={cue?.id ?? null}
-            videoId={lifestyle?.contentId ?? null}
-            pitchVideoId={pitchVideo?.contentId ?? null}
-            pitchVideoSkipped={pitchVideoSkipped}
-            cueMatch={cueMatch}
+            dayStamp={dayStamp}
             pitchWatchPct={pitchWatch ? pitchWatch.pct : null}
             lifestyleWatchPct={lifestyleWatch ? lifestyleWatch.pct : null}
             watchError={Boolean(pitchWatch?.error || lifestyleWatch?.error)}
-            pitchWatchTicket={pitchWatchTicket}
-            lifestyleWatchTicket={lifestyleWatchTicket}
+            pitchWatchTicket={pitchTicket}
+            lifestyleWatchTicket={lifestyleTicket}
             badgeNames={badgeNames}
             badgeRewards={badgeRewards}
             today={today}
@@ -318,11 +341,13 @@ function LifestyleStep({
   video,
   threshold,
   onWatch,
+  onFirstPlay,
   onNext,
 }: {
   video: LifestyleVideo | null;
   threshold: number;
   onWatch: (state: WatchState) => void;
+  onFirstPlay: () => void;
   onNext: () => void;
 }) {
   const [watch, setWatch] = useState<WatchState>({ pct: 0, met: false, error: false });
@@ -343,6 +368,7 @@ function LifestyleStep({
         {video ? (
           <TrackedVideo
             policy="gate-continue"
+            onFirstPlay={onFirstPlay}
             contentId={video.contentId}
             playbackId={video.playbackId}
             token={video.token}
@@ -652,12 +678,14 @@ function PitchStep({
   focus,
   threshold,
   onWatch,
+  onFirstPlay,
   onNext,
 }: {
   video: PitchVideo;
   focus: Focus | null;
   threshold: number;
   onWatch: (state: WatchState) => void;
+  onFirstPlay: () => void;
   onNext: () => void;
 }) {
   const [watch, setWatch] = useState<WatchState>({ pct: 0, met: false, error: false });
@@ -678,6 +706,7 @@ function PitchStep({
       <div className="flex flex-1 flex-col justify-center py-6">
         <TrackedVideo
           policy="gate-continue"
+          onFirstPlay={onFirstPlay}
           contentId={video.contentId}
           playbackId={video.playbackId}
           token={video.token}
@@ -742,13 +771,7 @@ function writeCachedResult(today: string, result: CompleteDayResult) {
 }
 
 function CelebrationStep({
-  quoteId,
-  quote2Id,
-  cueId,
-  videoId,
-  pitchVideoId,
-  pitchVideoSkipped,
-  cueMatch,
+  dayStamp,
   pitchWatchPct,
   lifestyleWatchPct,
   watchError,
@@ -761,18 +784,12 @@ function CelebrationStep({
   previewResult = null,
   dailyLoopSand,
 }: {
-  quoteId: string | null;
-  quote2Id: string | null;
-  cueId: string | null;
-  videoId: string | null;
-  pitchVideoId: string | null;
-  pitchVideoSkipped: boolean | null;
-  cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
+  dayStamp: string;
   pitchWatchPct: number | null;
   lifestyleWatchPct: number | null;
   watchError: boolean;
-  pitchWatchTicket: string | null;
-  lifestyleWatchTicket: string | null;
+  pitchWatchTicket: React.RefObject<string | null>;
+  lifestyleWatchTicket: React.RefObject<string | null>;
   badgeNames: Record<string, string>;
   badgeRewards: Record<string, number>;
   today: string;
@@ -799,24 +816,41 @@ function CelebrationStep({
 
     (async () => {
       /*
-       * Provenance only. The op code, stage, tier and block id are NOT sent —
-       * completeDay reads them from the open block server-side, because a
-       * client that could name its own block could write a coaching history
-       * that never happened. See the note in completeDay.
+       * THE CLIENT NO LONGER SENDS THE DAY AS DATA.
+       *
+       * It sends back the stamp /today signed, which carries the five content
+       * ids, the rung, the tier and the skipped flag. completeDay verifies it
+       * and writes what it verified — a forged cue id fails the signature
+       * rather than landing in the ROI figure. The op code, stage and block are
+       * still read from the open block server-side.
        */
+      /*
+       * ---- A MISSING TICKET RELEASES, IT DOES NOT TRAP ----------------------
+       *
+       * If the mint action failed there is no way to VERIFY a full watch, and
+       * completeDay refuses claims it cannot verify — correctly. Sending the
+       * claim anyway would refuse the day of somebody who actually watched,
+       * which is our machinery costing them a streak.
+       *
+       * So an unverifiable claim is downgraded here instead: the percentage
+       * goes as null and watch_error goes true. NULL, NOT ZERO — the 0070
+       * convention. Zero would assert they watched none of it, which is not
+       * what happened; null says we cannot say, which is exactly what happened.
+       * A below-the-bar figure is not a claim and travels as measured.
+       */
+      const verifiable = (pct: number | null, ticket: string | null) =>
+        pct != null && pct >= WATCHED_PCT && !ticket ? null : pct;
+      const pitchSend = verifiable(pitchWatchPct, pitchWatchTicket.current);
+      const lifeSend = verifiable(lifestyleWatchPct, lifestyleWatchTicket.current);
+      const unverifiable = pitchSend !== pitchWatchPct || lifeSend !== lifestyleWatchPct;
+
       const response = await completeDayAction({
-        quoteId,
-        quote2Id,
-        cueId,
-        videoId,
-        pitchVideoId,
-        pitchVideoSkipped,
-        cueMatch,
-        pitchWatchPct,
-        lifestyleWatchPct,
-        watchError,
-        pitchWatchTicket,
-        lifestyleWatchTicket,
+        dayStamp,
+        pitchWatchPct: pitchSend,
+        lifestyleWatchPct: lifeSend,
+        watchError: watchError || unverifiable,
+        pitchWatchTicket: pitchWatchTicket.current,
+        lifestyleWatchTicket: lifestyleWatchTicket.current,
       });
       if (!response.ok) {
         setError(response.error);
@@ -833,13 +867,7 @@ function CelebrationStep({
       setResult(response.result);
     })();
   }, [
-    quoteId,
-    quote2Id,
-    cueId,
-    videoId,
-    pitchVideoId,
-    pitchVideoSkipped,
-    cueMatch,
+    dayStamp,
     pitchWatchPct,
     lifestyleWatchPct,
     watchError,

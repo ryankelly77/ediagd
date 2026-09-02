@@ -95,3 +95,5 @@ exports/
 .backups/
 
 .tmp-ig/
+
+.tmp-dtk/

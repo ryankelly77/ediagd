@@ -12,7 +12,7 @@ import {
 } from "@/lib/daily";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ensureBlockForToday, loadBlockDays } from "@/lib/coaching-block";
-import { mintWatchTicket } from "@/lib/watch-ticket";
+import { mintDayStamp } from "@/lib/day-stamp";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
@@ -282,16 +282,32 @@ export default async function TodayPage({
       }
       cueMatch={coaching.matched}
       pitchVideo={pitchVideo}
-      pitchVideoSkipped={pitchVideoSkipped}
       /*
-       * Minted here, at the moment the step is actually served, and signed so
-       * the round trip through the client cannot alter it. This is the only
-       * trustworthy answer to "when did they first see this video", and the
-       * server's plausibility check is worthless without it — an unsigned
-       * timestamp could simply be moved backwards to widen the window.
+       * THE DAY, SIGNED WHERE IT WAS ASSEMBLED.
+       *
+       * This page is the only thing that knows what it actually served, so it
+       * says so once and signs it. The client carries the stamp back untouched
+       * and completeDay writes what it verified — the ids stop being data the
+       * request supplies and become a payload it cannot alter.
+       *
+       * The watch tickets are NOT minted here any more. A ticket minted at
+       * render says when the page opened, which is a fact about the page and
+       * almost nothing about the video; they are minted when a player is
+       * actually opened. See lib/watch-ticket.ts.
        */
-      pitchWatchTicket={mintWatchTicket(user.id, pitchVideo?.contentId ?? null)}
-      lifestyleWatchTicket={mintWatchTicket(user.id, lifestyle?.contentId ?? null)}
+      dayStamp={mintDayStamp({
+        u: user.id,
+        d: today,
+        b: block?.id ?? null,
+        q1: quotes.slot3?.id ?? null,
+        q2: quotes.slot2?.id ?? null,
+        cue: coaching.cue?.id ?? null,
+        vid: lifestyle?.contentId ?? null,
+        pitch: pitchVideo?.contentId ?? null,
+        skipped: pitchVideoSkipped,
+        match: coaching.matched,
+        tier: block?.tier ?? null,
+      })}
       totalRos={advisorDay?.totalRos ?? 0}
       badgeNames={badgeNames}
       badgeRewards={badgeRewards}

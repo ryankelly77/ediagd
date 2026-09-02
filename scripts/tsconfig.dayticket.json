@@ -1,0 +1,15 @@
+{
+  "//": "Standalone build for day-ticket-scenarios.ts. Reaches the REAL signing and verification code — a paraphrase of an HMAC proves nothing about the one that runs.",
+  "compilerOptions": {
+    "target": "ES2022", "module": "commonjs", "moduleResolution": "node",
+    "esModuleInterop": true, "skipLibCheck": true, "resolveJsonModule": true,
+    "outDir": "../.tmp-dtk", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": [
+    "./day-ticket-scenarios.ts",
+    "../lib/day-stamp.ts",
+    "../lib/watch-ticket.ts",
+    "../lib/watch-coverage.ts"
+  ]
+}

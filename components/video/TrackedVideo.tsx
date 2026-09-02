@@ -67,8 +67,18 @@ export function TrackedVideo({
   policy = "credit-only",
   threshold = WATCHED_PCT,
   onWatchChange,
+  onFirstPlay,
   ...player
 }: Omit<MuxVideoProps, "onEnded"> & {
+  /**
+   * Fired ONCE, the first time this viewer intends to play.
+   *
+   * This is where the watch ticket is minted, because it is the first moment
+   * there is anything to time. Fired on the play INTENT rather than on the
+   * first timeupdate so a slow first segment does not shorten the window the
+   * advisor gets — and once only, so pausing and resuming does not re-open it.
+   */
+  onFirstPlay?: () => void;
   policy?: WatchPolicy;
   threshold?: number;
   onWatchChange?: (state: WatchState) => void;
@@ -193,10 +203,15 @@ export function TrackedVideo({
    */
   const handlePause = useCallback(() => clearTimer(), [clearTimer]);
 
+  const firstPlayFired = useRef(false);
   const handlePlay = useCallback(() => {
     if (policy === "none") return;
+    if (!firstPlayFired.current) {
+      firstPlayFired.current = true;
+      onFirstPlay?.();
+    }
     armTimeout();
-  }, [policy, armTimeout]);
+  }, [policy, armTimeout, onFirstPlay]);
 
   const handleError = useCallback(() => release(), [release]);
 

@@ -39,27 +39,29 @@ import {
 import { loadScheduleContext } from "@/lib/work-schedule";
 import { readOpenBlock } from "@/lib/coaching-block";
 import type { CueMatch } from "@/lib/daily";
-import { readWatchTicket } from "@/lib/watch-ticket";
+import { readWatchTicket, watchTicketRef } from "@/lib/watch-ticket";
+import { readDayStamp, type ServedDay } from "@/lib/day-stamp";
 import { clampWatchPct, isWatched, watchIsPlausible } from "@/lib/watch-coverage";
 
 export type CompleteDayInput = {
-  /** Step 1 — the life quote. */
-  quoteId?: string | null;
-  /** Step 2 — the selling quote that sits with the cue. */
-  quote2Id?: string | null;
-  cueId?: string | null;
-  /** Step 4 — the lifestyle video. */
-  videoId?: string | null;
-  /** Step 3 — the op code's video for today's stage, when one exists. */
-  pitchVideoId?: string | null;
-  /** True when step 3 was looked up, found nothing, and was left out of the day. */
-  pitchVideoSkipped?: boolean | null;
-  /** Which rung of the cue ladder fired. Null means no coaching was attempted. */
-  cueMatch?: CueMatch | null;
+  /**
+   * THE DAY THAT WAS SERVED, SIGNED BY THE PAGE THAT SERVED IT.
+   *
+   * The five content ids, the cue rung, the tier and the skipped flag used to
+   * arrive here as loose fields, described as "just provenance". They are not:
+   * impact_coaching joins cue_content_id to content.service_family to decide
+   * whether an advisor was coached on a family, and that feeds the ROI figure a
+   * dealer principal reads. A client could post any published cue id and
+   * manufacture coverage in the number the product is sold on.
+   *
+   * Now the client carries a stamp it cannot alter and this function writes
+   * what it VERIFIES. See lib/day-stamp.ts.
+   */
+  dayStamp?: string | null;
   /*
    * MEASURED BY THE CLIENT, VERIFIED HERE. The percentages are what the player
-   * observed; the tickets are what this function needs to decide whether the
-   * observation was physically possible. Neither is trusted on its own.
+   * observed; the tickets say when each player was OPENED, which is what makes
+   * the observation checkable. Neither is trusted on its own.
    */
   pitchWatchPct?: number | null;
   lifestyleWatchPct?: number | null;
@@ -152,23 +154,44 @@ export async function completeDay(
   const block = await readOpenBlock(supabase, userId);
 
   /*
-   * ---- 1d. Is the claimed watch physically possible? ----------------------
+   * ---- 1d. WHAT WAS ACTUALLY SERVED --------------------------------------
    *
-   * THE CLIENT REPORTS, THE SERVER VERIFIES — the same posture as the block
-   * above. A Server Action is reachable by direct POST, so a completion can
-   * arrive claiming a full watch of a twenty-minute video the instant the page
-   * loaded. What a forger cannot do is make time pass, and the signed ticket
-   * says exactly how much has.
+   * The stamp is checked against this session's user and the rooftop's today,
+   * so a valid stamp for yesterday or for somebody else is still not this
+   * completion. Everything the row records as provenance comes out of it.
    *
-   * The duration comes from the DATABASE, never from the request: taking it
-   * from the client would let a forgery declare the video four seconds long and
-   * satisfy its own check.
-   *
-   * Only a claim AT OR ABOVE the bar is checked. A completion reporting 40% is
-   * not claiming credit, so there is nothing to forge and nothing to refuse —
-   * and refusing it would turn an honest partial watch into a lost day.
+   * A MISSING OR BAD STAMP IS A REFUSAL, NOT A DEGRADED WRITE. Recording the
+   * day with null ids would look like a day with no content served, which is a
+   * different and untrue statement — and it is the shape a forger would aim
+   * for. The advisor is told to reload, which re-mints the stamp.
    */
-  const watch = await verifyWatch(supabase, userId, today, content);
+  const stampCheck = readDayStamp(content.dayStamp, userId, today);
+  if (!stampCheck.ok) {
+    throw new CompleteDayError(
+      `Could not verify today's screen (${stampCheck.reason}). Reload the day and try again.`,
+      "day.stamp"
+    );
+  }
+  const served: ServedDay = stampCheck.day;
+
+  /*
+   * THE STAMP AND THE OPEN BLOCK HAVE TO BE THE SAME DAY.
+   *
+   * The block is read server-side and is the authority on the coaching
+   * position; the stamp is the authority on what content was put in front of
+   * the advisor. If they disagree, the day being submitted is not the day that
+   * is open — a block closed in another tab, or a stamp held over from an
+   * earlier render — and writing either version would record a conversation
+   * that did not happen in the order it claims.
+   */
+  if ((served.b ?? null) !== (block?.id ?? null)) {
+    throw new CompleteDayError(
+      "This day was served against a different coaching block. Reload the day and try again.",
+      "day.block"
+    );
+  }
+
+  const watch = await verifyWatch(supabase, userId, today, content, served);
 
   /*
    * ---- 1e. Did the cue that was served actually carry this stage? ---------
@@ -184,7 +207,7 @@ export async function completeDay(
    * is still recorded in `cue_match`, which is where "we wanted a stage and
    * dropped to the family shelf" already lives.
    */
-  const stage = await servedStage(supabase, content.cueId, block);
+  const stage = await servedStage(supabase, served.cue, block);
 
   // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
   const { data: completion, error: completionError } = await supabase
@@ -193,12 +216,13 @@ export async function completeDay(
       user_id: userId,
       rooftop_id: rooftopId,
       completion_date: today,
-      quote_content_id: content.quoteId ?? null,
-      quote2_content_id: content.quote2Id ?? null,
-      cue_content_id: content.cueId ?? null,
-      video_content_id: content.videoId ?? null,
-      pitch_video_content_id: content.pitchVideoId ?? null,
-      pitch_video_skipped: content.pitchVideoSkipped ?? null,
+      /* From the stamp, never from the request body. */
+      quote_content_id: served.q1,
+      quote2_content_id: served.q2,
+      cue_content_id: served.cue,
+      video_content_id: served.vid,
+      pitch_video_content_id: served.pitch,
+      pitch_video_skipped: served.skipped,
       block_id: block?.id ?? null,
       op_code: block?.opCode ?? null,
       // A stage without an op code violates daily_completion_stage_needs_op_code
@@ -207,10 +231,13 @@ export async function completeDay(
       // of its own; see servedStage().
       stage,
       cue_tier: block?.tier ?? null,
-      cue_match: content.cueMatch ?? null,
+      cue_match: (served.match as CueMatch | null) ?? null,
       pitch_video_watch_pct: watch.pitchPct,
       lifestyle_video_watch_pct: watch.lifestylePct,
       watch_error: watch.error,
+      /* Which tickets this day spent, so neither can be spent again. */
+      pitch_watch_ticket: watch.pitchTicketRef,
+      lifestyle_watch_ticket: watch.lifestyleTicketRef,
       was_scheduled: wasScheduled,
     })
     .select("id")
@@ -513,30 +540,31 @@ async function verifyWatch(
   supabase: ServiceClient,
   userId: string,
   today: IsoDate,
-  content: CompleteDayInput
-): Promise<{ pitchPct: number | null; lifestylePct: number | null; error: boolean }> {
+  content: CompleteDayInput,
+  served: ServedDay
+): Promise<{
+  pitchPct: number | null;
+  lifestylePct: number | null;
+  error: boolean;
+  pitchTicketRef: string | null;
+  lifestyleTicketRef: string | null;
+}> {
   const one = async (
-    contentId: string | null | undefined,
+    contentId: string | null,
     rawPct: number | null | undefined,
     ticket: string | null | undefined,
     label: string
-  ): Promise<number | null> => {
+  ): Promise<{ pct: number | null; ref: string | null }> => {
     // No video on this step: null means unmeasured, which is not zero.
-    if (!contentId) return null;
-    if (rawPct == null) return null;
+    if (!contentId) return { pct: null, ref: null };
+    if (rawPct == null) return { pct: null, ref: null };
 
     const pct = clampWatchPct(rawPct);
-    if (!isWatched(pct)) return pct; // nothing is being claimed
+    if (!isWatched(pct)) return { pct, ref: null }; // nothing is being claimed
 
-    const check = readWatchTicket(ticket, userId, contentId);
-    if (!check.ok) {
-      throw new CompleteDayError(
-        `Could not verify the ${label} video watch (${check.reason}). Reload the day and try again.`,
-        "watch.ticket"
-      );
-    }
-
-    /* Authoritative duration. Never the client's. */
+    /* Authoritative duration. Never the client's — a forgery that could declare
+       the video four seconds long would satisfy its own check. It also sets the
+       ticket's TTL, so both halves of the test read the same number. */
     const { data: row } = await supabase
       .from("content")
       .select("duration_sec")
@@ -544,6 +572,49 @@ async function verifyWatch(
       .maybeSingle();
     const durationSec = row?.duration_sec == null ? null : Number(row.duration_sec);
 
+    const check = readWatchTicket(ticket, userId, contentId, today, durationSec);
+    if (!check.ok) {
+      throw new CompleteDayError(
+        `Could not verify the ${label} video watch (${check.reason}). Reload the day and try again.`,
+        "watch.ticket"
+      );
+    }
+
+    /*
+     * ---- SINGLE USE ------------------------------------------------------
+     *
+     * The ticket is bound to the store-local date and there is one completion
+     * per user per day, so the unique index is already a backstop. This is the
+     * explicit refusal in front of it, and it is not redundant: it names the
+     * failure ("already been used") instead of surfacing a 23505, and it holds
+     * if the day ever stops being the unit of completion.
+     *
+     * A rollback DELETES the completion, so a retry after a failed payout finds
+     * no spent ticket and proceeds — which is the behaviour that matters most,
+     * because that is the path an honest advisor actually hits.
+     */
+    const ref = watchTicketRef(ticket!);
+    const column = label === "pitch" ? "pitch_watch_ticket" : "lifestyle_watch_ticket";
+    const { count: spent } = await supabase
+      .from("daily_completion")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq(column, ref);
+    if (Number(spent ?? 0) > 0) {
+      throw new CompleteDayError(
+        `That ${label} video watch has already been counted. Open the video again to record a new one.`,
+        "watch.replay"
+      );
+    }
+
+    /*
+     * THE WALL CLOCK, FROM WHEN THE PLAYER OPENED.
+     *
+     * `check.elapsedSec` is time since the ticket was minted, and the ticket is
+     * minted on first play intent — so this asks "has the video been open long
+     * enough to have played through", not "has the page been open long enough",
+     * which was the question that made the old check almost free to pass.
+     */
     if (!watchIsPlausible(pct, durationSec, check.elapsedSec)) {
       throw new CompleteDayError(
         `That ${label} video reports ${pct}% watched ${Math.round(check.elapsedSec)}s after it was opened, ` +
@@ -551,32 +622,26 @@ async function verifyWatch(
         "watch.implausible"
       );
     }
-    return pct;
+    return { pct, ref };
   };
 
-  const pitchPct = await one(
-    content.pitchVideoId,
-    content.pitchWatchPct,
-    content.pitchWatchTicket,
-    "pitch"
-  );
-  const lifestylePct = await one(
-    content.videoId,
-    content.lifestyleWatchPct,
-    content.lifestyleWatchTicket,
-    "lifestyle"
-  );
+  /* The ids come from the STAMP, not the request — a watch can only be claimed
+     against a video that was actually served today. */
+  const pitch = await one(served.pitch, content.pitchWatchPct, content.pitchWatchTicket, "pitch");
+  const lifestyle = await one(served.vid, content.lifestyleWatchPct, content.lifestyleWatchTicket, "lifestyle");
 
   /*
    * `watch_error` is only meaningful where a video was actually served. A day
    * with no videos at all has nothing that could have failed, and recording
    * true there would put a broken-player marker on a day that had no player.
    */
-  const served = Boolean(content.pitchVideoId || content.videoId);
+  const wasServed = Boolean(served.pitch || served.vid);
   return {
-    pitchPct,
-    lifestylePct,
-    error: served ? Boolean(content.watchError) : false,
+    pitchPct: pitch.pct,
+    lifestylePct: lifestyle.pct,
+    error: wasServed ? Boolean(content.watchError) : false,
+    pitchTicketRef: pitch.ref,
+    lifestyleTicketRef: lifestyle.ref,
   };
 }
 
