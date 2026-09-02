@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { updateOpCodeFamily } from "@/lib/mapping/admin-actions";
 
 type FamilyRow = {
   code: string;
@@ -155,7 +154,19 @@ export default async function FamiliesPage() {
                       </div>
                       <p className="mt-0.5 text-sm text-ink">{cat?.name ?? "—"}</p>
 
-                      <form action={updateOpCodeFamily} className="mt-3 space-y-2">
+                      {/*
+                        SAVE GOES TO THE CONFIRM STEP, NOT TO THE DATABASE.
+                        Every edit here has to declare whether it is a
+                        correction or a change — that word is what decides
+                        whether history is rewritten — and a form that wrote
+                        straight through would be making that decision by
+                        default, silently, on Mitch's behalf.
+                      */}
+                      <form
+                        method="GET"
+                        action="/admin/mapping/families/confirm"
+                        className="mt-3 space-y-2"
+                      >
                         <input type="hidden" name="code" value={r.code} />
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                           <select

@@ -32,6 +32,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { GENESIS, effectiveFromFor, type EditMode } from "@/lib/mapping/epoch";
 
 const MAPPING_PATHS = [
   "/admin/mapping",
@@ -53,33 +54,6 @@ async function requireOwner() {
 
 function done() {
   MAPPING_PATHS.forEach((p) => revalidatePath(p));
-}
-
-/**
- * Today, in the dealership's timezone — NOT in UTC.
- *
- * `effective_from` marks the day a mapping changed for MEASUREMENT, and the
- * periods it will eventually be compared against are store-local. Stamping it
- * from `new Date().toISOString()` makes every edit after ~7pm Central land on
- * tomorrow's date, which would put an epoch boundary in the middle of a
- * business day that had already been measured.
- *
- * This is not hypothetical: all 73 rows carry 2026-09-01 because the seed ran
- * at 20:31 Central on 2026-08-31, and the column's `default current_date` is
- * evaluated in UTC. The rows are a day ahead of the day the ruling was made.
- *
- * Every rooftop is America/Chicago today. When that stops being true this has
- * to take a rooftop and use the `rooftop_today` RPC — but op_code_family is
- * group-wide, so there is no rooftop to take, and pretending otherwise would be
- * a worse lie than the timezone literal.
- */
-function storeToday(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Chicago",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
 
 /* ---------------------------------------------------------------------------
@@ -165,13 +139,16 @@ export async function updateOpCodeFamily(formData: FormData): Promise<void> {
   const family = String(formData.get("family") ?? "").trim();
   const coachable = String(formData.get("coachable") ?? "") === "1";
   const note = String(formData.get("note") ?? "").trim();
+  const mode = String(formData.get("mode") ?? "") as EditMode;
   if (!family) return;
+  if (mode !== "correction" && mode !== "change") return;
+
+  const effectiveFrom = effectiveFromFor(mode, String(formData.get("effective_from") ?? ""));
 
   const service = createServiceClient();
 
-  /* The family must be one the rest of the app knows about. A free-text family
-     here would create a bucket no benchmark, view or cue pool has ever heard
-     of, and the code would vanish from coaching without appearing to. */
+  /* The family must be one the rest of the app knows about. Free text here
+     would create a bucket no benchmark, view or cue pool has heard of. */
   const { data: known } = await service
     .from("service_family")
     .select("name")
@@ -179,18 +156,60 @@ export async function updateOpCodeFamily(formData: FormData): Promise<void> {
     .maybeSingle();
   if (!known) return;
 
-  await service
+  const { data: current } = await service
     .from("op_code_family")
-    .update({
-      family,
-      coachable,
-      note: note || null,
-      /* A human has now ruled on it, whatever the seed's guess was. */
-      confidence: "ruled",
-      effective_from: storeToday(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("code", code);
+    .select("id, family, coachable, note, effective_from")
+    .eq("code", code)
+    .is("retired_at", null)
+    .maybeSingle();
+  if (!current) return;
+
+  /*
+   * ---- APPEND-ONLY: RETIRE, THEN INSERT ----------------------------------
+   *
+   * Point-in-time rule selection only works if the OLD VALUE SURVIVES. An
+   * in-place update would leave the interval test reading the new family for
+   * every period including the ones measured under the old one — which is the
+   * exact bug this whole piece of work exists to close, reintroduced at the
+   * last step.
+   *
+   * A CORRECTION IS THE ONE CASE THAT REPLACES RATHER THAN APPENDS. "This was
+   * always wrong" means no period should ever have been measured under the old
+   * value, so keeping it as a historical version would preserve a fiction and
+   * make the interval test hand it back. The old row is retired at genesis —
+   * retired before it began, which is precisely what "never should have
+   * existed" means — and the new row starts at genesis.
+   */
+  const retiredAt = mode === "correction" ? GENESIS : effectiveFrom;
+
+  const { error: retireError } = await service
+    .from("op_code_family")
+    .update({ retired_at: retiredAt, updated_at: new Date().toISOString() })
+    .eq("id", current.id);
+  if (retireError) throw new Error(`retiring the old mapping: ${retireError.message}`);
+
+  const { error: insertError } = await service.from("op_code_family").insert({
+    code,
+    family,
+    coachable,
+    note: note || null,
+    confidence: "ruled",
+    effective_from: effectiveFrom,
+    origin: "admin",
+  });
+  if (insertError) {
+    /*
+     * Put the old row back. There is no transaction across two PostgREST calls,
+     * and a retired row with no replacement is a code that has silently fallen
+     * out of every family — worse than the edit not happening.
+     */
+    await service
+      .from("op_code_family")
+      .update({ retired_at: null })
+      .eq("id", current.id);
+    throw new Error(`inserting the new mapping: ${insertError.message}`);
+  }
+
   done();
 }
 
