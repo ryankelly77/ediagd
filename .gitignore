@@ -103,3 +103,6 @@ exports/
 
 # tsc scratch output from npm run import:quiz
 .tmp-iqz/
+
+# tsc scratch output from npm run import:deck-map
+.tmp-idm/
