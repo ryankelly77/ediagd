@@ -100,3 +100,6 @@ exports/
 
 # tsc scratch output from npm run test:rendition
 .tmp-rn/
+
+# tsc scratch output from npm run import:quiz
+.tmp-iqz/
