@@ -275,3 +275,36 @@ export function observeWatch(session: WatchSession, sample: WatchSample): WatchS
     pct: Math.max(session.pct, pct),
   };
 }
+
+/**
+ * Is a "the gate is met" claim possible this soon after the player opened?
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS NOT watchIsPlausible
+ * ---------------------------------------------------------------------------
+ * watchIsPlausible has a deliberate escape hatch: a claim BELOW the bar is not
+ * a claim at all, so it is never challenged. An honest 40% is not a forgery and
+ * refusing it would cost streaks over nothing.
+ *
+ * That hatch cannot be carried into the gate record. The gate opens at
+ * game_settings.video_complete_pct — 90 by default — while credit needs 95, and
+ * that early-gold margin is by design. Reuse watchIsPlausible here and posting
+ * `pct: 90` one second after minting a ticket would sail through, because 90 is
+ * "not a claim": one request, and the gate is open for the rest of the day.
+ *
+ * A met gate IS a claim, whatever number came with it. So the test is the wall
+ * clock alone: saying you watched it takes as long as watching it.
+ *
+ * The same 0.9 slack as everywhere else — playback can outrun the clock a
+ * little, and the ticket is minted a beat before the first frame decodes.
+ * An unknown duration cannot be tested, and an untestable claim is not evidence
+ * of forgery: it passes, exactly as it does for a completion.
+ */
+export function gateMetIsPlausible(
+  durationSec: number | null | undefined,
+  elapsedSec: number
+): boolean {
+  if (!durationSec || !Number.isFinite(durationSec) || durationSec <= 0) return true;
+  if (!Number.isFinite(elapsedSec) || elapsedSec < 0) return false;
+  return elapsedSec >= 0.9 * durationSec;
+}

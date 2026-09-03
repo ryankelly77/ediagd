@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { mintWatchTicket } from "@/lib/watch-ticket";
 import { storeToday } from "@/lib/mapping/epoch";
+import { createServiceClient } from "@/lib/supabase/service";
+import { recordGateMet } from "@/lib/watch-gate";
+import type { IsoDate } from "@/lib/gamification/streak";
 import {
   completeDay,
   type CompleteDayInput,
@@ -116,5 +119,86 @@ export async function openWatchTicketAction(
     return { ticket: mintWatchTicket(user.id, contentId, today) };
   } catch {
     return { ticket: null };
+  }
+}
+
+/**
+ * Write down that a watch gate opened, so a refresh does not shut it again.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS EXISTS
+ * ---------------------------------------------------------------------------
+ * The gate's contract is that it never resets once met for the day, and a
+ * reload broke it: coverage is a ref and a gated player starts at zero, so
+ * refreshing /today asked an advisor who had just watched the whole video to
+ * watch it again. Neither of those two properties may be relaxed — they are the
+ * anti-assembly rule and the scrub-lockout fix — so the FACT is persisted
+ * instead of the position. See lib/watch-gate.ts.
+ *
+ * SECURITY: user and rooftop come from the SESSION, and the store-local date
+ * from the rooftop, never from the caller. What the caller supplies is the
+ * content id, the measured percentage and the ticket — and none of the three is
+ * trusted on its own: the ticket has to be signed for this user, this video and
+ * this day, and enough wall clock has to have passed since it was minted for
+ * the video to have played. A claim that fails either is not written.
+ *
+ * NEVER THROWS AND NEVER BLOCKS. It returns a flag the caller ignores. Somebody
+ * standing in front of a video they have just watched must not meet an error
+ * because our clock disagreed; they keep the gate they earned in this session
+ * and finish the day. What a refused claim loses is only its persistence.
+ */
+export async function recordGateMetAction(input: {
+  contentId: string | null;
+  pct: number | null;
+  watchError: boolean;
+  ticket: string | null;
+}): Promise<{ persisted: boolean }> {
+  try {
+    if (!input.contentId) return { persisted: false };
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { persisted: false };
+
+    const { data: memberships } = await supabase
+      .from("membership")
+      .select("rooftop_id, role")
+      .eq("user_id", user.id)
+      .eq("active", true);
+
+    /* The same preference order completeDayAction uses, so the day this is
+       filed against is the day that will be completed. */
+    const chosen =
+      memberships?.find((m) => m.role === "advisor") ??
+      memberships?.find((m) => m.role === "technician") ??
+      memberships?.[0];
+    const rooftopId = chosen?.rooftop_id as string | undefined;
+    if (!rooftopId) return { persisted: false };
+
+    const { data: todayRaw } = await supabase.rpc("rooftop_today", {
+      _rooftop: rooftopId,
+    });
+    const today = ((todayRaw as string | null) ?? storeToday()) as IsoDate;
+
+    /*
+     * The SERVICE client writes. 0086 gives watch_gate no insert policy on
+     * purpose — a row here opens a gate, and an advisor who could write their
+     * own would open every gate in the app from a console.
+     */
+    const outcome = await recordGateMet(createServiceClient(), {
+      userId: user.id,
+      rooftopId,
+      contentId: input.contentId,
+      storeDate: today,
+      pct: input.pct,
+      watchError: input.watchError,
+      ticket: input.ticket,
+    });
+
+    return { persisted: outcome.persisted };
+  } catch {
+    return { persisted: false };
   }
 }

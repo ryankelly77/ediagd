@@ -40,6 +40,7 @@ import { loadScheduleContext } from "@/lib/work-schedule";
 import { readOpenBlock } from "@/lib/coaching-block";
 import type { CueMatch } from "@/lib/daily";
 import { readWatchTicket, watchTicketRef } from "@/lib/watch-ticket";
+import { readGate } from "@/lib/watch-gate";
 import { readDayStamp, type ServedDay } from "@/lib/day-stamp";
 import { clampWatchPct, isWatched, watchIsPlausible } from "@/lib/watch-coverage";
 
@@ -568,10 +569,36 @@ async function verifyWatch(
   ): Promise<{ pct: number | null; ref: string | null; degraded?: boolean }> => {
     // No video on this step: null means unmeasured, which is not zero.
     if (!contentId) return { pct: null, ref: null };
-    if (rawPct == null) return { pct: null, ref: null };
+
+    /*
+     * ---- THE GATE THIS ADVISOR ALREADY MET TODAY -------------------------
+     *
+     * Written when the gate opened, after the same ticket and wall-clock checks
+     * this function makes — so it is a measurement this server already stood
+     * behind, not a claim arriving from a browser.
+     *
+     * It is what makes a completion after a RELOAD honest. Coverage is
+     * session-only and the ticket was minted in the tab that has since gone, so
+     * the client comes back with nothing to claim: without this the day would
+     * record a null percentage for a video that was demonstrably watched.
+     */
+    const gate = await readGate(supabase, userId, contentId, today);
+
+    if (rawPct == null) {
+      if (gate) return { pct: gate.pct, ref: null, degraded: gate.error };
+      return { pct: null, ref: null };
+    }
 
     const pct = clampWatchPct(rawPct);
-    if (!isWatched(pct)) return { pct, ref: null }; // nothing is being claimed
+    if (!isWatched(pct)) {
+      /* Below the bar this session. If the gate was met earlier today the
+         recorded figure is the better measurement of the two — it is the one
+         that was checked. */
+      if (gate && gate.pct != null && gate.pct > pct) {
+        return { pct: gate.pct, ref: null, degraded: gate.error };
+      }
+      return { pct, ref: null, degraded: gate?.error };
+    }
 
     /* Authoritative duration. Never the client's — a forgery that could declare
        the video four seconds long would satisfy its own check. It also sets the

@@ -4,9 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VideoNotReady } from "@/components/video/MuxVideo";
 import type { VideoRenditions } from "@/lib/mux/playback";
+import type { GateRecord } from "@/lib/watch-gate";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { WATCHED_PCT } from "@/lib/watch-coverage";
-import { completeDayAction, openWatchTicketAction } from "@/app/(app)/daily/actions";
+import {
+  completeDayAction,
+  openWatchTicketAction,
+  recordGateMetAction,
+} from "@/app/(app)/daily/actions";
 import { BadgeCelebration } from "./BadgeCelebration";
 import { MILESTONES } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
@@ -144,8 +149,51 @@ export function DailyFlow({
    * Null means "no video on this step" — distinct from 0, which means a video
    * was served and none of it played.
    */
+  /*
+   * ---- NOT SEEDED FROM THE GATE RECORD, AND THAT IS THE POINT -------------
+   *
+   * This is what the celebration POSTS, and the client may only ever claim what
+   * it measured in this session. Seeding it from the record would have the
+   * client assert 97% for a video it has not played in this tab — and if the
+   * viewer then merely opened the player, a fresh ticket minted seconds ago
+   * would arrive alongside that 97 and the completion's own plausibility check
+   * would refuse the day. A fix for a locked gate that locks the day instead.
+   *
+   * So the client stays honest and the SERVER remembers: completeDay reads the
+   * gate record itself and carries the recorded percentage into the completion.
+   * See verifyWatch. What the record seeds on this side is only the button —
+   * each step's own `watch` state, below.
+   */
   const [pitchWatch, setPitchWatch] = useState<WatchState | null>(null);
   const [lifestyleWatch, setLifestyleWatch] = useState<WatchState | null>(null);
+
+  /*
+   * ---- WRITING THE GATE DOWN ----------------------------------------------
+   *
+   * Fired once per video, the moment its gate opens. The action re-checks the
+   * ticket and the wall clock and quietly declines anything it cannot stand
+   * behind — a refusal is never surfaced, because somebody who has genuinely
+   * just watched the video must not meet an error over our clock. They keep the
+   * gate they earned in this session; what a refused claim loses is only its
+   * survival of a refresh.
+   */
+  const fileGate = useCallback(
+    (contentId: string | null, ticket: React.RefObject<string | null>, state: WatchState) => {
+      void (async () => {
+        try {
+          await recordGateMetAction({
+            contentId,
+            pct: state.error ? null : state.pct,
+            watchError: state.error,
+            ticket: ticket.current,
+          });
+        } catch {
+          /* Deliberately silent — see above. */
+        }
+      })();
+    },
+    []
+  );
 
   /*
    * ---- THE WATCH TICKETS, MINTED WHEN A PLAYER IS OPENED -----------------
@@ -261,6 +309,7 @@ export function DailyFlow({
             threshold={videoThreshold}
             onWatch={setPitchWatch}
             onFirstPlay={() => mintTicket(pitchVideo?.contentId ?? null, pitchTicket)}
+            onGateMet={(s) => fileGate(pitchVideo.contentId, pitchTicket, s)}
             onNext={() => setStep(4)}
           />
         )}
@@ -271,6 +320,7 @@ export function DailyFlow({
             threshold={videoThreshold}
             onWatch={setLifestyleWatch}
             onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
+            onGateMet={(s) => fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s)}
             onNext={() => {
               // Mark the ritual as ours BEFORE the mutation fires, so the
               // server re-render it triggers can't bounce us to /advisor.
@@ -323,6 +373,9 @@ export type LifestyleVideo = {
   renditions: VideoRenditions;
   watchedPct: number;
   positionSec: number | null;
+  /** Already met today, from the server. The only watch state that survives a
+      reload — see lib/watch-gate.ts. */
+  gate: GateRecord | null;
 };
 
 /* ---- Step 4: the lifestyle / sales-skill video --------------------------- */
@@ -344,15 +397,23 @@ function LifestyleStep({
   threshold,
   onWatch,
   onFirstPlay,
+  onGateMet,
   onNext,
 }: {
   video: LifestyleVideo | null;
   threshold: number;
   onWatch: (state: WatchState) => void;
   onFirstPlay: () => void;
+  onGateMet: (state: WatchState) => void;
   onNext: () => void;
 }) {
-  const [watch, setWatch] = useState<WatchState>({ pct: 0, met: false, error: false });
+  /* Seeded from the server, so Continue is gold on the first paint after a
+     reload rather than opening a beat later. */
+  const [watch, setWatch] = useState<WatchState>(() =>
+    video?.gate
+      ? { pct: video.gate.pct ?? 0, met: !video.gate.error, error: video.gate.error }
+      : { pct: 0, met: false, error: false }
+  );
 
   return (
     <>
@@ -377,6 +438,8 @@ function LifestyleStep({
             threshold={threshold}
             initialWatchedPct={video.watchedPct}
             initialPositionSec={video.positionSec}
+            initialMet={video.gate}
+            onGateMet={onGateMet}
             onWatchChange={(s) => {
               setWatch(s);
               onWatch(s);
@@ -676,6 +739,7 @@ function PitchStep({
   threshold,
   onWatch,
   onFirstPlay,
+  onGateMet,
   onNext,
 }: {
   video: PitchVideo;
@@ -683,9 +747,14 @@ function PitchStep({
   threshold: number;
   onWatch: (state: WatchState) => void;
   onFirstPlay: () => void;
+  onGateMet: (state: WatchState) => void;
   onNext: () => void;
 }) {
-  const [watch, setWatch] = useState<WatchState>({ pct: 0, met: false, error: false });
+  const [watch, setWatch] = useState<WatchState>(() =>
+    video.gate
+      ? { pct: video.gate.pct ?? 0, met: !video.gate.error, error: video.gate.error }
+      : { pct: 0, met: false, error: false }
+  );
 
   return (
     <>
@@ -710,6 +779,8 @@ function PitchStep({
           threshold={threshold}
           initialWatchedPct={video.watchedPct}
           initialPositionSec={video.positionSec}
+          initialMet={video.gate}
+          onGateMet={onGateMet}
           onWatchChange={(s) => {
             setWatch(s);
             onWatch(s);

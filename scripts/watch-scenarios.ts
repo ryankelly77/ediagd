@@ -18,6 +18,7 @@ import {
   coveredSeconds,
   isWatched,
   mergeRanges,
+  gateMetIsPlausible,
   newWatchSession,
   observeWatch,
   stepToRange,
@@ -337,6 +338,47 @@ const D = 29;
   late = watch(late, 0.5, D);
   ok("and once it arrives the earlier seconds still count",
      isWatched(late.pct), `${late.pct.toFixed(1)}%`);
+
+
+  /* =======================================================================
+     8 · A met gate is written down, and the claim is checked first
+     ======================================================================= */
+  section("8 · Persisting a met gate costs the video's length");
+
+  /*
+   * WHY THIS IS NOT watchIsPlausible. That one deliberately waves through
+   * anything below the bar — an honest 40% is not a forgery. The gate opens at
+   * game_settings.video_complete_pct (90 by default) while credit needs 95, so
+   * reusing it here would let `pct: 90` posted one second after minting a
+   * ticket sail straight through as "not a claim", and the gate would be open
+   * for the rest of the day off one request.
+   *
+   * A met gate is a claim whatever number comes with it, so the wall clock is
+   * the whole test.
+   */
+  check("a full 29s watch is plausible after 29s", gateMetIsPlausible(D, D), true);
+  check("and after the 0.9 slack", gateMetIsPlausible(D, 0.9 * D), true);
+  ok("but not ten seconds in", !gateMetIsPlausible(D, 10));
+
+  /* The forgery from the acceptance list: a met claim on a three-minute video
+     ten seconds after the player opened. */
+  ok("nor ten seconds into a three-minute video", !gateMetIsPlausible(180, 10));
+  check("which needs 162s", gateMetIsPlausible(180, 162), true);
+
+  /*
+   * THE HOLE THIS CLOSES. 90 is below the 95 credit bar, so watchIsPlausible
+   * treats it as nothing being claimed and passes it instantly. The gate rule
+   * does not care what number was claimed.
+   */
+  check("watchIsPlausible waves a 90% claim through at once", watchIsPlausible(90, 180, 1), true);
+  ok("the gate rule does not", !gateMetIsPlausible(180, 1));
+
+  /* An untestable claim is not evidence of forgery — same posture as the
+     completion path, for the same reason: a missing duration must not cost a
+     streak. */
+  check("unknown duration cannot refuse", gateMetIsPlausible(null, 1), true);
+  check("zero duration cannot refuse", gateMetIsPlausible(0, 1), true);
+  check("a negative elapsed is refused", gateMetIsPlausible(D, -1), false);
 
   console.log(`\n  ${passed} passed, ${failed} failed`);
   if (failures.length) {

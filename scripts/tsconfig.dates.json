@@ -1,10 +1,12 @@
 {
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow, and lib/daily.ts now reaches watch-gate -> watch-ticket.",
   "//": "Standalone build for date-scenarios.ts. It reaches the REAL epochDay in lib/daily.ts and the REAL parseWorkbook in lib/dms/parse.ts through the @/ alias — a paraphrase of either would prove nothing about the code that runs.",
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "outDir": "../.tmp-dt",

@@ -11,6 +11,7 @@
 import type { ContentRow } from "@/lib/content";
 import type { IsoDate } from "@/lib/gamification/streak";
 import { renditionsFor, type VideoRenditions } from "@/lib/mux/playback";
+import { readGate, type GateRecord } from "@/lib/watch-gate";
 
 type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -579,7 +580,7 @@ export async function pickPitchVideo(
   // Offset 5: distinct from the lifestyle video's 3, so a day that serves both
   // does not walk the two pools in lockstep.
   const row = list[rotationIndex(date, list.length, 5)];
-  const shaped = await shapeVideo(client, row, userId);
+  const shaped = await shapeVideo(client, row, userId, date);
   return shaped ? { ...shaped, stage: (row.stage as string | null) ?? null } : null;
 }
 
@@ -871,7 +872,7 @@ export async function pickLifestyleVideo(
      composed rather than shuffled, and two advisors at one store see the same
      thing on the same day. */
   const row = list[rotationIndex(today, list.length, 3)];
-  return shapeVideo(client, row, userId);
+  return shapeVideo(client, row, userId, today);
 }
 
 /**
@@ -884,7 +885,8 @@ export async function pickLifestyleVideo(
 async function shapeVideo(
   client: Client,
   row: VideoRow,
-  userId: string
+  userId: string,
+  storeDate: IsoDate
 ): Promise<LifestyleVideoData | null> {
   /*
    * BOTH CUTS GO DOWN, SIGNED. THE PLAYER PICKS.
@@ -943,6 +945,16 @@ async function shapeVideo(
     quoteVoice = (twin?.voice as string) ?? null;
   }
 
+  /*
+   * HAS THIS GATE ALREADY OPENED TODAY?
+   *
+   * Read here so the step can render with Continue already gold rather than
+   * flashing shut and then opening once an effect lands. It is the whole point
+   * of the record: coverage does not survive a reload, so without this the loop
+   * asks somebody who just watched the video to watch it again. See 0086.
+   */
+  const gate = await readGate(client, userId, row.id, storeDate);
+
   return {
     contentId: row.id,
     title: row.title,
@@ -950,6 +962,7 @@ async function shapeVideo(
     quoteText,
     quoteVoice,
     renditions,
+    gate,
     watchedPct: Number(progress?.watched_pct ?? 0),
     positionSec: progress?.position_sec == null ? null : Number(progress.position_sec),
   };
@@ -962,6 +975,14 @@ export type LifestyleVideoData = {
   renditions: VideoRenditions;
   watchedPct: number;
   positionSec: number | null;
+  /**
+   * This gate was already met today, or null if it has not been.
+   *
+   * NOT the same thing as watchedPct, which is furthest-reached and survives
+   * forever. This is coverage that cleared the bar on THIS store-local day, and
+   * it is the only watch state that crosses a reload. See lib/watch-gate.ts.
+   */
+  gate: GateRecord | null;
   /**
    * The text row this video is a filming of, when the two are linked (0064).
    *

@@ -68,6 +68,8 @@ export function TrackedVideo({
   threshold = WATCHED_PCT,
   onWatchChange,
   onFirstPlay,
+  initialMet = null,
+  onGateMet,
   ...player
 }: Omit<MuxVideoProps, "onEnded"> & {
   /**
@@ -79,6 +81,27 @@ export function TrackedVideo({
    * advisor gets — and once only, so pausing and resuming does not re-open it.
    */
   onFirstPlay?: () => void;
+  /**
+   * This gate was already met earlier today, and the server says so.
+   *
+   * Coverage is session-only by design, so a reload starts the measurement at
+   * zero — which used to mean a reload shut a gate the advisor had already
+   * opened. The FACT is persisted instead of the position (see 0086), and this
+   * is that fact arriving back.
+   *
+   * It seeds `met` and the reported percentage. It does NOT seed the coverage
+   * accumulator: nothing has been decoded in this session and pretending
+   * otherwise would let a later partial watch resume from a full one.
+   */
+  initialMet?: { pct: number | null; error: boolean } | null;
+  /**
+   * Fired ONCE, the moment the gate opens — by watching or by failing.
+   *
+   * This is where the fact gets written down. It carries the measurement, not
+   * a verdict: the server re-checks the ticket and the wall clock before it
+   * believes any of it.
+   */
+  onGateMet?: (state: WatchState) => void;
   policy?: WatchPolicy;
   threshold?: number;
   onWatchChange?: (state: WatchState) => void;
@@ -87,15 +110,39 @@ export function TrackedVideo({
      break this" is a test rather than a page you have to load and drag. */
   const session = useRef<WatchSession>(newWatchSession());
 
-  const [pct, setPct] = useState(0);
-  const [failed, setFailed] = useState(false);
+  /*
+   * ---- A GATE MET EARLIER TODAY STARTS OPEN -------------------------------
+   *
+   * Seeded from the server record, at first render rather than in an effect, so
+   * Continue is gold on the first paint instead of flashing shut and opening a
+   * beat later.
+   *
+   * The COVERAGE is not seeded — `session` still starts empty. Nothing has been
+   * decoded in this tab, and claiming otherwise would let a fresh half-watch
+   * inherit a full one's ranges. What is inherited is the verdict, which is the
+   * only thing that was ever persisted.
+   */
+  const [pct, setPct] = useState(initialMet?.pct ?? 0);
+  const [failed, setFailed] = useState(Boolean(initialMet?.error));
 
   /* Kept in refs as well as state: the timeout callback and the media handlers
      close over them, and a stale `met` there would re-release a gate that has
      already been met and re-report it as an error. */
-  const metRef = useRef(false);
-  const failedRef = useRef(false);
+  const metRef = useRef(Boolean(initialMet) && !initialMet?.error);
+  const failedRef = useRef(Boolean(initialMet?.error));
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Written down once per session. A gate restored from the server is already
+     recorded, so it does not get filed again. */
+  const gateFiled = useRef(Boolean(initialMet));
+  const fileGate = useCallback(
+    (state: WatchState) => {
+      if (gateFiled.current) return;
+      gateFiled.current = true;
+      onGateMet?.(state);
+    },
+    [onGateMet]
+  );
 
   const report = useCallback(
     (next: Partial<WatchState>) => {
@@ -129,7 +176,10 @@ export function TrackedVideo({
     failedRef.current = true;
     setFailed(true);
     report({ error: true, pct: 0 });
-  }, [clearTimer, report]);
+    /* The valve counts as the gate opening, and it persists the same way: a
+       refresh after a broken video must not demand the broken video again. */
+    fileGate({ pct: 0, met: false, error: true });
+  }, [clearTimer, report, fileGate]);
 
   const armTimeout = useCallback(() => {
     if (metRef.current || failedRef.current) return;
@@ -174,11 +224,12 @@ export function TrackedVideo({
       if (!metRef.current && isWatched(next, threshold)) {
         metRef.current = true;
         report({ pct: next, met: true });
+        fileGate({ pct: next, met: true, error: false });
         return;
       }
       report({ pct: next });
     },
-    [policy, threshold, pct, report, clearTimer]
+    [policy, threshold, pct, report, clearTimer, fileGate]
   );
 
   /*
