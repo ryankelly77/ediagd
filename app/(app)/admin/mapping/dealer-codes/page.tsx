@@ -7,6 +7,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
 import { ruleOpCode, setDealerLock } from "@/lib/mapping/dealer-code-actions";
 import { appliesLabel, plainDate } from "@/lib/mapping/epoch";
+import { opCodeRowAction, subCategoryRowAction } from "@/lib/mapping/dealer-codes";
 import {
   loadDealers,
   loadOpCodes,
@@ -405,10 +406,10 @@ function SubCategoryRowView({
   row: SubCategoryRow;
   locked: boolean;
 }) {
-  const weight = weightOf(row);
-  /* Locked turns everything into a review: after the table is ruled complete,
-     even agreeing with a guess is an edit to a finished table. */
-  const canConfirm = weight === "confirmable" && !locked;
+  /* Same function section 2 uses, so both grains obey one rule. */
+  const action = subCategoryRowAction(row, locked);
+  const weight = action.weight;
+  const canConfirm = action.kind === "write";
 
   const reviewHref = `/admin/mapping/dealer-codes/confirm?dealer=${dealer.id}&subCategory=${encodeURIComponent(row.subCategory)}`;
 
@@ -459,7 +460,7 @@ function SubCategoryRowView({
           {canConfirm && (
             <form action={setFamilyEverywhere}>
               <input type="hidden" name="subCategory" value={row.subCategory} />
-              <input type="hidden" name="family" value={row.family ?? ""} />
+              <input type="hidden" name="family" value={action.kind === "write" ? action.value : ""} />
               <button
                 type="submit"
                 className="rounded-pill border border-navy bg-navy px-3 py-1 text-xs font-bold text-white"
@@ -473,7 +474,7 @@ function SubCategoryRowView({
             href={reviewHref}
             className={`rounded-pill border px-3 py-1 text-xs font-bold ${reviewClass}`}
           >
-            {weight === "needs-ruling" ? "Rule it…" : "Review…"}
+            {canConfirm ? "Review…" : action.label}
           </Link>
         </div>
 
@@ -631,7 +632,25 @@ function OpCodeRowView({
   row: OpCodeRow;
   locked: boolean;
 }) {
-  const weight = opWeight(r);
+  /*
+   * THE BUTTON'S JOB IS DECIDED IN lib/mapping/dealer-codes, not here.
+   *
+   * This row used to render an editable text box with a "no match" placeholder
+   * above a submit button, for every state including "nothing suggested". Two
+   * codes were ruled by somebody clicking that button over a field they had
+   * never touched. The rule — a one-tap write only where the value shown IS the
+   * value recorded — now lives in a function with a test around it.
+   */
+  const action = opCodeRowAction(r, locked);
+  const href = `/admin/mapping/dealer-codes/op-code?dealer=${dealer.id}&code=${encodeURIComponent(r.dmsOpCode)}`;
+
+  const weightClass =
+    action.weight === "needs-ruling"
+      ? "border-gold bg-gold text-navy hover:brightness-95"
+      : action.weight === "confirmable" && action.kind === "write"
+        ? "border-navy bg-navy text-white"
+        : "border-transparent text-ocean underline underline-offset-2";
+
   return (
     <tr className="border-b border-line/60 align-top">
       <td className="p-3 font-mono text-xs font-bold text-navy">{r.dmsOpCode}</td>
@@ -643,39 +662,52 @@ function OpCodeRowView({
         {r.ros.toLocaleString("en-US")}
       </td>
       <td className="p-3">
-        <form action={ruleOpCode} className="flex flex-wrap items-center gap-2">
-          <input type="hidden" name="dmsOpCode" value={r.dmsOpCode} />
-          <input type="hidden" name="rooftopIds" value={dealer.rooftopIds.join(",")} />
-          <input type="hidden" name="mode" value={locked ? "change" : "correction"} />
-          <input
-            type="hidden"
-            name="matchedBy"
-            value={r.canonical ? "human" : r.suggestion ? "auto" : "human"}
-          />
-          <input
-            name="canonical"
-            defaultValue={r.canonical ?? r.suggestion?.code ?? ""}
-            placeholder="no match"
-            className="w-32 rounded-lg border border-line bg-cream-card px-2 py-1 font-mono text-xs text-navy"
-          />
-          {/* Same three weights as section 1: gold where the work is, navy for
-              agreeing with a suggestion, a ghost once it is decided. */}
-          <button
-            type="submit"
-            className={`rounded-pill border px-3 py-1 text-xs font-bold ${
-              weight === "needs-ruling"
-                ? "border-gold bg-gold text-navy hover:brightness-95"
-                : weight === "confirmable"
-                  ? "border-navy bg-navy text-white"
-                  : "border-transparent text-ocean underline underline-offset-2"
-            }`}
-          >
-            {weight === "ruled" ? "Change…" : weight === "confirmable" ? "Confirm" : "Rule it…"}
-          </button>
-        </form>
+        {/* The value, as text. A field somebody can leave alone is a field that
+            can be submitted by accident. */}
+        <div className="font-mono text-xs font-bold text-navy">
+          {r.canonical ?? (r.status === "no_match" ? "nothing fits" : r.suggestion?.code ?? "—")}
+        </div>
+
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          {action.kind === "write" ? (
+            <form action={ruleOpCode}>
+              <input type="hidden" name="dmsOpCode" value={r.dmsOpCode} />
+              <input type="hidden" name="rooftopIds" value={dealer.rooftopIds.join(",")} />
+              <input type="hidden" name="mode" value="correction" />
+              <input type="hidden" name="matchedBy" value="auto" />
+              {/* The exact string on screen, and nothing else. */}
+              <input type="hidden" name="canonical" value={action.value} />
+              <button
+                type="submit"
+                className={`rounded-pill border px-3 py-1 text-xs font-bold ${weightClass}`}
+              >
+                {action.label}
+              </button>
+            </form>
+          ) : (
+            <Link
+              href={href}
+              className={`rounded-pill border px-3 py-1 text-xs font-bold ${weightClass}`}
+            >
+              {action.label}
+            </Link>
+          )}
+
+          {/* Disagreeing with a suggestion is always available, and always goes
+              through the screen. */}
+          {action.kind === "write" && (
+            <Link
+              href={href}
+              className="rounded-pill border border-transparent px-3 py-1 text-xs font-bold text-ocean underline underline-offset-2"
+            >
+              Different code…
+            </Link>
+          )}
+        </div>
+
         <p className="mt-1 text-[11px] text-ink-soft">
           {r.status === "unruled" && r.suggestion
-            ? `proposed · ${r.suggestion.name} · ${Math.round(r.suggestion.score * 100)}% match`
+            ? `suggested · ${r.suggestion.name} · ${Math.round(r.suggestion.score * 100)}% match`
             : r.status === "unruled"
               ? "no auto-match"
               : `${r.status === "no_match" ? "ruled: nothing fits" : r.status}${

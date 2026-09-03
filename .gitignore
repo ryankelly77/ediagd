@@ -112,3 +112,6 @@ exports/
 
 # tsc scratch output from npm run ruling:op-codes
 .tmp-rul/
+
+# tsc scratch output from npm run test:dealer-rows
+.tmp-dr/

@@ -107,10 +107,17 @@ export async function ruleOpCode(formData: FormData): Promise<void> {
   if (!dmsOpCode || rooftopIds.length === 0) return;
   if (mode !== "correction" && mode !== "change") return;
 
-  /* An empty canonical is a real ruling: "no code we have fits this". It is
-     recorded rather than left blank, because "nobody looked" and "somebody
-     looked and there is nothing" are different facts. */
-  const canonical = canonicalRaw === "" ? null : canonicalRaw;
+  /*
+   * "NOTHING FITS" MUST BE CHOSEN, NEVER INFERRED FROM AN EMPTY FIELD.
+   *
+   * This used to treat "" as the ruling "no code we have fits this", and the
+   * row rendered an empty text box with a "no match" placeholder above a submit
+   * button — so two codes were ruled by somebody clicking a button over a field
+   * they had never touched. "Nobody chose anything" and "somebody chose
+   * nothing" are different facts and now have different values.
+   */
+  if (canonicalRaw === "") return;
+  const canonical = canonicalRaw === "__none__" ? null : canonicalRaw;
   const status = canonical ? "confirmed" : "no_match";
 
   const service = createServiceClient();

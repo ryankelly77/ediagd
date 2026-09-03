@@ -454,3 +454,77 @@ export function csvCell(v: unknown): string {
 export function csv(headers: string[], rows: unknown[][]): string {
   return [headers, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
 }
+
+/* ---------------------------------------------------------------------------
+   What a row's button is allowed to do
+--------------------------------------------------------------------------- */
+
+/**
+ * Navigate, or write.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS A FUNCTION AND NOT AN EXPRESSION INSIDE THE ROW
+ * ---------------------------------------------------------------------------
+ * Ryan clicked "Rule it…" on two DMS op codes with no suggested match and both
+ * were ruled instantly — recorded as "nothing fits", at genesis, across all
+ * eleven rooftops, with no dialog and no chance to pick a value. The button was
+ * a submit inside a form whose text input defaulted to "" and whose placeholder
+ * read "no match", so the placeholder became the ruling.
+ *
+ * The rule that was violated is small enough to state and therefore small
+ * enough to test: A ONE-TAP WRITE IS ONLY EVER LEGITIMATE WHEN THE VALUE SHOWN
+ * ON THE ROW IS EXACTLY THE VALUE RECORDED. A row with nothing shown has
+ * nothing to confirm, so its button must navigate.
+ *
+ * scripts/dealer-row-scenarios.ts holds it to that.
+ */
+export type RowAction =
+  | { kind: "navigate"; label: string; weight: RowWeight }
+  | { kind: "write"; label: string; weight: RowWeight; value: string };
+
+export type RowWeight = "needs-ruling" | "confirmable" | "ruled";
+
+/** Section 2: a raw DMS op code. */
+export function opCodeRowAction(
+  row: Pick<OpCodeRow, "status" | "canonical" | "suggestion">,
+  locked = false
+): RowAction {
+  const decided = row.status === "confirmed" || row.status === "no_match";
+  if (decided) return { kind: "navigate", label: "Change…", weight: "ruled" };
+
+  /*
+   * The ONLY write path. A suggestion exists, it is on screen, and confirming
+   * records that exact string — nothing is inferred from an empty box.
+   * Locked turns even this into a review: after the table is ruled complete,
+   * agreeing with a guess is still an edit to a finished table.
+   */
+  if (row.suggestion && !locked) {
+    return {
+      kind: "write",
+      label: "Confirm",
+      weight: "confirmable",
+      value: row.suggestion.code,
+    };
+  }
+  if (row.suggestion) return { kind: "navigate", label: "Review…", weight: "confirmable" };
+
+  /* No suggestion: there is nothing to confirm, so there is nothing to tap. */
+  return { kind: "navigate", label: "Rule it…", weight: "needs-ruling" };
+}
+
+/** Section 1: a sub-category. Kept here so both grains state the rule once. */
+export function subCategoryRowAction(
+  row: Pick<SubCategoryRow, "status" | "family">,
+  locked = false
+): RowAction {
+  const decided = row.status === "confirmed" || row.status === "not_coachable";
+  if (decided) return { kind: "navigate", label: "Review…", weight: "ruled" };
+
+  const hasValue = row.family !== null && row.status !== "mixed";
+  if (hasValue && !locked) {
+    return { kind: "write", label: "Confirm", weight: "confirmable", value: row.family as string };
+  }
+  if (hasValue) return { kind: "navigate", label: "Review…", weight: "confirmable" };
+
+  return { kind: "navigate", label: "Rule it…", weight: "needs-ruling" };
+}

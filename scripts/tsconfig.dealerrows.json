@@ -1,0 +1,10 @@
+{
+  "//": "Standalone build for dealer-row-scenarios.ts. Imports the REAL decision functions — a paraphrase would prove nothing about the buttons that write.",
+  "compilerOptions": {
+    "target": "ES2022", "module": "commonjs", "moduleResolution": "node",
+    "esModuleInterop": true, "skipLibCheck": true, "strict": true,
+    "outDir": "../.tmp-dr", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./dealer-row-scenarios.ts", "../lib/mapping/dealer-codes.ts"]
+}
