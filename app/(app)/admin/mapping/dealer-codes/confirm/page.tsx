@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
+import { clearNotCoachable, markNotCoachable, setFamilyEverywhere } from "@/lib/dms/mapping-actions";
 import {
   GENESIS,
   describeEdit,
@@ -63,7 +63,7 @@ export default async function ConfirmDealerCodeEdit({
 
   const back = `/admin/mapping/dealer-codes?dealer=${dealer.id}`;
 
-  const [{ data: current }, { data: periods }] = await Promise.all([
+  const [{ data: current }, { data: periods }, { data: familyRows }] = await Promise.all([
     service
       .from("sub_category_map_live")
       .select("rooftop_id, family, status, effective_from")
@@ -75,7 +75,10 @@ export default async function ConfirmDealerCodeEdit({
       .in("rooftop_id", dealer.rooftopIds)
       .eq("source_kind", "dynatron")
       .order("starts_on"),
+    service.from("service_family").select("name").order("sort_order"),
   ]);
+
+  const familyNames = ((familyRows ?? []) as { name: string }[]).map((f) => f.name);
 
   const rulings = (current ?? []) as {
     rooftop_id: string;
@@ -103,6 +106,8 @@ export default async function ConfirmDealerCodeEdit({
   const unchanged = currentFamilies.length === 1 && (currentFamilies[0] || null) === newFamily;
 
   const since = rulings.map((r) => r.effective_from).sort()[0] ?? null;
+  const alreadyNotCoachable =
+    rulings.length > 0 && rulings.every((r) => r.status === "not_coachable");
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -171,13 +176,30 @@ export default async function ConfirmDealerCodeEdit({
           <p className="mt-2 text-sm text-ink">
             {describeEdit("correction", GENESIS, allPeriods.length)}
           </p>
-          <form action={setFamilyEverywhere} className="mt-3">
+          {/*
+            THE FAMILY IS CHOSEN HERE, not on the row.
+            The row used to carry a dropdown beside a chip that already showed a
+            family, which read as a contradiction and offered a routing change
+            with no way to see what it would move. This screen can show that, so
+            this is where the choice belongs.
+          */}
+          <form action={setFamilyEverywhere} className="mt-3 flex flex-wrap items-center gap-2">
             <input type="hidden" name="subCategory" value={subCategory} />
-            <input type="hidden" name="family" value={newFamily ?? ""} />
+            <select
+              name="family"
+              defaultValue={newFamily ?? currentFamilies[0] ?? ""}
+              className="rounded-xl border border-line bg-cream-card px-3 py-2 text-sm text-navy"
+            >
+              <option value="">— choose a family —</option>
+              {familyNames.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
             <button
               type="submit"
-              disabled={!newFamily}
-              className="rounded-xl bg-gold px-4 py-2 text-sm font-extrabold text-navy transition hover:brightness-95 disabled:opacity-40"
+              className="rounded-xl bg-gold px-4 py-2 text-sm font-extrabold text-navy transition hover:brightness-95"
             >
               Save as a correction
             </button>
@@ -207,6 +229,37 @@ export default async function ConfirmDealerCodeEdit({
           <p className="mt-3 text-xs text-ink-soft">
             A dated change applies per rooftop. Use the rooftop view to date one.
           </p>
+        </Card>
+
+        {/*
+          NOT COACHABLE IS AN ACT, NOT A CHIP.
+          On the row it sat beside a family as though it were a second label,
+          which made a mapped row look simultaneously mapped and excluded. It is
+          a ruling — "this is not sold, so it should never count" — and it
+          belongs beside the other rulings, with the sentence that says what it
+          does.
+        */}
+        <Card className="p-5">
+          <p className="text-base font-extrabold text-navy">
+            {alreadyNotCoachable ? "Put it back in the queue" : "Rule it out of coaching"}
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">
+            {alreadyNotCoachable
+              ? "It counts again — the rows return to the queue for a family ruling."
+              : "A state inspection is required by law, not sold. Diagnosis is time booked against whatever the fault turns out to be. Neither is an attach, and counting them inflates every advisor's denominator. Applied at every rooftop, as a correction — if it was never coachable, it was never coachable in any month either."}
+          </p>
+          <form
+            action={alreadyNotCoachable ? clearNotCoachable : markNotCoachable}
+            className="mt-3"
+          >
+            <input type="hidden" name="subCategory" value={subCategory} />
+            <button
+              type="submit"
+              className="rounded-xl border border-line bg-cream-card px-4 py-2 text-sm font-extrabold text-navy"
+            >
+              {alreadyNotCoachable ? "Back to the queue" : "Not coachable"}
+            </button>
+          </form>
         </Card>
 
         <p className="px-1 pt-2 text-sm">

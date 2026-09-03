@@ -4,11 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import {
-  clearNotCoachable,
-  markNotCoachable,
-  setSubCategoryFamily,
-} from "@/lib/dms/mapping-actions";
+import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
 import { ruleOpCode, setDealerLock } from "@/lib/mapping/dealer-code-actions";
 import {
   loadDealers,
@@ -63,15 +59,13 @@ export default async function DealerCodesPage({
   const dealers = await loadDealers(service);
   const dealer = dealers.find((d) => d.id === dealerParam) ?? dealers[0] ?? null;
 
-  const [{ data: families }, subs, ops] = await Promise.all([
-    service.from("service_family").select("name").order("sort_order"),
+  const [subs, ops] = await Promise.all([
     dealer ? loadSubCategories(service, dealer) : Promise.resolve([]),
     dealer
       ? loadOpCodes(service, dealer, codesParam === "all" ? 5000 : 150)
       : Promise.resolve({ rows: [], total: 0, noMatch: 0 }),
   ]);
 
-  const familyNames = ((families ?? []) as { name: string }[]).map((f) => f.name);
   const unmapped = subs.filter((s) => s.status === "unmapped").length;
   const waiting = subs.filter((s) => s.proposal).length;
   const locked = Boolean(dealer?.lockedAt);
@@ -107,7 +101,6 @@ export default async function DealerCodesPage({
               <SubCategorySection
                 dealer={dealer}
                 rows={subs}
-                familyNames={familyNames}
                 locked={locked}
               />
 
@@ -258,12 +251,10 @@ const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 function SubCategorySection({
   dealer,
   rows,
-  familyNames,
   locked,
 }: {
   dealer: Dealer;
   rows: SubCategoryRow[];
-  familyNames: string[];
   locked: boolean;
 }) {
   return (
@@ -294,7 +285,6 @@ function SubCategorySection({
                 key={r.subCategory}
                 dealer={dealer}
                 row={r}
-                familyNames={familyNames}
                 locked={locked}
               />
             ))}
@@ -308,28 +298,29 @@ function SubCategorySection({
 function SubCategoryRowView({
   dealer,
   row,
-  familyNames,
   locked,
 }: {
   dealer: Dealer;
   row: SubCategoryRow;
-  familyNames: string[];
   locked: boolean;
 }) {
   /*
-   * THE QUEUE STAYS A QUEUE.
+   * ---- ONE STORY PER ROW ---------------------------------------------------
    *
-   * An unmapped row has no prior value, so there is nothing for history to keep
-   * and nothing to choose between — it posts straight through as a correction.
-   * Sixty rows worked down one at a time do not each deserve a confirm screen.
+   * This row used to say the family three times and disagree with itself: a
+   * green pill reading "Fluids", a dropdown reading "— unmapped —", and a
+   * "Not coachable" chip sitting beside both. A person reading it could not
+   * tell whether the thing was mapped, and the honest answer was "mapped
+   * automatically, not yet ruled by a human" — which none of the three said.
    *
-   * A row that already HAS a family is different: that mapping has been feeding
-   * every period it covers, so the edit either rewrites measured numbers or it
-   * does not, and only Mitch knows which. Those go to the confirm screen. So
-   * does everything once the table is LOCKED, because after lock even a first
-   * ruling is a change to a finished table.
+   * So: ONE control showing the effective value AND where it came from, and one
+   * primary action. The dropdown is gone from the row. Choosing a DIFFERENT
+   * family is a change of routing, and a change of routing belongs on the
+   * screen that can tell you what it would move.
    */
-  const needsConfirm = locked || (row.status !== "unmapped" && row.family !== null);
+  const ruled = row.status === "confirmed";
+  const hasValue = row.family !== null;
+  const notCoachable = row.status === "not_coachable";
 
   return (
     <tr className="border-b border-line/60 align-top">
@@ -338,8 +329,9 @@ function SubCategoryRowView({
       <td className="p-3 text-right tabular-nums text-ink-soft">{row.ros.toLocaleString("en-US")}</td>
       <td className="p-3 text-right tabular-nums text-ink-soft">{row.storeCount}</td>
 
+      {/* The single family control: value and source, in one place. */}
       <td className="p-3">
-        <StatusChip status={row.status} family={row.family} />
+        <FamilyState status={row.status} family={row.family} />
       </td>
 
       <td className="p-3">
@@ -360,108 +352,138 @@ function SubCategoryRowView({
       </td>
 
       <td className="p-3">
-        {/* Two sibling forms, never nested — a form inside a form is invalid
-            HTML and the browser silently drops the inner one. */}
         <div className="flex flex-wrap items-center gap-2">
-          {needsConfirm ? (
-            /* GET to the confirm screen: it needs the database to compute how
-               many periods a correction would recompute, and this app renders
-               on the server. */
-            <form method="get" action="/admin/mapping/dealer-codes/confirm" className="flex items-center gap-2">
-              <input type="hidden" name="dealer" value={dealer.id} />
+          {/*
+            CONFIRM IS THE PRIMARY ACTION, and only where there is something to
+            confirm. It accepts the value already in force as the human ruling —
+            same family, now ruled — which moves no measured number: the attach
+            view groups on `family` and reads `status` only to exclude
+            not_coachable, so auto -> confirmed with the same family is
+            arithmetically invisible. Verified by diffing all 16,379 rows of
+            advisor_family_attach_all across a confirm: zero changed.
+
+            Not offered once LOCKED. After the table is ruled complete even a
+            one-tap confirm is an edit to a finished table, and it goes through
+            the screen that explains itself.
+          */}
+          {hasValue && !ruled && !notCoachable && !locked && (
+            <form action={setFamilyEverywhere}>
               <input type="hidden" name="subCategory" value={row.subCategory} />
-              <FamilySelect familyNames={familyNames} current={row.proposal ? "" : row.family} />
-              <Go label="Review…" />
-            </form>
-          ) : (
-            <form action={setSubCategoryFamily} className="flex items-center gap-2">
-              <input type="hidden" name="rooftopId" value={dealer.rooftopIds[0] ?? ""} />
-              <input type="hidden" name="subCategory" value={row.subCategory} />
-              <input type="hidden" name="mode" value="correction" />
-              <FamilySelect familyNames={familyNames} current={row.family} />
-              <Go label="Apply" />
+              <input type="hidden" name="family" value={row.family ?? ""} />
+              <button
+                type="submit"
+                className="rounded-pill border border-navy bg-navy px-3 py-1 text-xs font-bold text-white"
+              >
+                Confirm
+              </button>
             </form>
           )}
 
-          <form action={row.status !== "not_coachable" ? markNotCoachable : clearNotCoachable}>
-            <input type="hidden" name="subCategory" value={row.subCategory} />
-            <button
-              type="submit"
-              className="rounded-pill border border-line px-3 py-1 text-xs font-bold text-ink-soft"
-            >
-              {row.status !== "not_coachable" ? "Not coachable" : "Back to queue"}
-            </button>
-          </form>
+          {/*
+            THE CHANGE PATH. Everything that is not "yes, that one" lives behind
+            this: picking a different family, or ruling it out of coaching
+            altogether. Both are decisions with consequences the row cannot
+            show, so they happen on the screen that can.
+          */}
+          <Link
+            href={`/admin/mapping/dealer-codes/confirm?dealer=${dealer.id}&subCategory=${encodeURIComponent(row.subCategory)}`}
+            className={`rounded-pill border px-3 py-1 text-xs font-bold ${
+              hasValue && !ruled && !notCoachable && !locked
+                ? "border-line text-ink-soft"
+                : "border-navy bg-navy text-white"
+            }`}
+          >
+            Review…
+          </Link>
         </div>
 
-        {row.audit && (
-          <p className="mt-1.5 text-[11px] text-ink-soft">
-            {row.audit.origin === "admin" ? "ruled" : "auto"}
-            {row.audit.updatedAt && ` ${row.audit.updatedAt.slice(0, 10)}`}
-            {row.audit.effectiveFrom && ` · from ${row.audit.effectiveFrom}`}
-          </p>
-        )}
+        <RulingFootnote row={row} />
       </td>
     </tr>
   );
 }
 
-function FamilySelect({
-  familyNames,
-  current,
-}: {
-  familyNames: string[];
-  current: string | null;
-}) {
+/**
+ * The family, and where it came from — the row's one statement about routing.
+ *
+ * "Fluids · automatic" and "Fluids · confirmed" are the same family and a
+ * different amount of trust, which is the distinction the three-control version
+ * lost. Not coachable is a value here rather than a chip beside one, because it
+ * IS the answer to "what family does this land in": none, deliberately.
+ */
+function FamilyState({ status, family }: { status: string; family: string | null }) {
+  if (status === "not_coachable") {
+    return (
+      <span className="inline-flex rounded-pill border border-line bg-cream-card px-2 py-0.5 text-[11px] font-bold text-ink-soft">
+        Not coachable
+      </span>
+    );
+  }
+  if (status === "mixed") {
+    return (
+      <span className="inline-flex rounded-pill border border-gold/40 bg-gold/10 px-2 py-0.5 text-[11px] font-bold text-gold-deep">
+        Differs by store
+      </span>
+    );
+  }
+  if (!family) {
+    return (
+      <span className="inline-flex rounded-pill border border-clay/40 bg-clay/10 px-2 py-0.5 text-[11px] font-bold text-clay">
+        Not ruled
+      </span>
+    );
+  }
+  const confirmed = status === "confirmed";
   return (
-    <select
-      name="family"
-      defaultValue={current ?? ""}
-      className="rounded-lg border border-line bg-cream-card px-2 py-1 text-xs text-navy"
+    <span
+      className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2 py-0.5 text-[11px] font-bold ${
+        confirmed
+          ? "border-palm/40 bg-palm-soft/40 text-navy"
+          : "border-line bg-cream-card text-ink"
+      }`}
     >
-      <option value="">— unmapped —</option>
-      {familyNames.map((f) => (
-        <option key={f} value={f}>
-          {f}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function Go({ label }: { label: string }) {
-  return (
-    <button
-      type="submit"
-      className="rounded-pill border border-navy bg-navy px-3 py-1 text-xs font-bold text-white"
-    >
-      {label}
-    </button>
-  );
-}
-
-function StatusChip({ status, family }: { status: string; family: string | null }) {
-  const tone =
-    status === "unmapped"
-      ? "border-clay/40 bg-clay/10 text-clay"
-      : status === "not_coachable"
-        ? "border-line bg-cream-card text-ink-soft"
-        : status === "mixed"
-          ? "border-gold/40 bg-gold/10 text-gold-deep"
-          : "border-palm/40 bg-palm-soft/40 text-navy";
-  const label =
-    status === "unmapped"
-      ? "unmapped"
-      : status === "not_coachable"
-        ? "not coachable"
-        : status === "mixed"
-          ? "differs by store"
-          : family ?? status;
-  return (
-    <span className={`inline-flex rounded-pill border px-2 py-0.5 text-[11px] font-bold ${tone}`}>
-      {label}
+      {family}
+      <span className="font-normal text-ink-soft">
+        · {confirmed ? "confirmed" : "automatic"}
+      </span>
     </span>
   );
+}
+
+/**
+ * The audit line, in plain words.
+ *
+ * Was `auto 2026-09-02 · from 2000-01-01`, which is three pieces of jargon and
+ * a date nobody can read as "the beginning". Mitch is the reader.
+ */
+function RulingFootnote({ row }: { row: SubCategoryRow }) {
+  if (!row.audit) return null;
+  const { origin, updatedAt, effectiveFrom } = row.audit;
+
+  const who = origin === "admin" ? "ruled by hand" : "classified automatically";
+  const when = updatedAt ? ` ${plainDate(updatedAt)}` : "";
+  /* Genesis is not a date somebody should have to recognise. */
+  const scope =
+    effectiveFrom === "2000-01-01"
+      ? "applies to all history"
+      : effectiveFrom
+        ? `applies from ${plainDate(effectiveFrom)}`
+        : null;
+
+  return (
+    <p className="mt-1.5 text-[11px] text-ink-soft">
+      {who}
+      {when}
+      {scope ? ` · ${scope}` : ""}
+    </p>
+  );
+}
+
+/** "Sep 2" — the format a person writing a note would use. */
+function plainDate(iso: string): string {
+  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 /* ---------------------------------------------------------------------------
