@@ -29,7 +29,7 @@ export default async function MappingHub() {
   if (!isOwner) redirect("/admin");
 
   const service = createServiceClient();
-  const [codes, retired, families, aliases, unconfirmed] = await Promise.all([
+  const [codes, retired, families, aliases, unconfirmed, unmappedSubs] = await Promise.all([
     service.from("op_code_catalog").select("code", { count: "exact", head: true }),
     service
       .from("op_code_catalog")
@@ -41,6 +41,12 @@ export default async function MappingHub() {
       .from("mapping_alias")
       .select("id", { count: "exact", head: true })
       .eq("confirmed", false),
+    /* The Dealer Codes queue, at a glance. Cheap: a head count on the live
+       view, not the 156,918-row metric table behind the screen itself. */
+    service
+      .from("sub_category_map_live")
+      .select("rooftop_id", { count: "exact", head: true })
+      .eq("status", "unmapped"),
   ]);
 
   const tools = [
@@ -63,6 +69,13 @@ export default async function MappingHub() {
         unconfirmed.count ? `, ${unconfirmed.count} waiting on a ruling` : ""
       }. Proposed aliases are visible and inert.`,
     },
+    {
+      href: "/admin/mapping/dealer-codes",
+      label: "Dealer Codes",
+      hint: `${unmappedSubs.count ?? 0} sub-categories still unmapped${
+        unconfirmed.count ? `, ${unconfirmed.count} proposals waiting` : ""
+      }. Everything a dealer's DMS sends, ruled onto our vocabulary.`,
+    },
   ];
 
   return (
@@ -84,21 +97,6 @@ export default async function MappingHub() {
         ))}
       </div>
 
-      {/*
-        NAMED RATHER THAN OMITTED. The dealer translation is the one mapping
-        with no table, no repo file and no code path — 208 DMS codes against 73
-        catalog codes, with Mitch's 46-row spreadsheet as a partial seed that
-        nothing reads. Leaving it off this page would make the set look
-        complete, and the next person would have to rediscover the gap.
-      */}
-      <Card className="mt-2 border-dashed p-5">
-        <p className="text-base font-extrabold text-navy">Dealer Codes</p>
-        <p className="mt-1 text-sm text-ink-soft">
-          Not built. The DMS emits 208 codes that share no namespace with the
-          catalog&apos;s 73, and nothing translates between them yet — the pick
-          reaches op-code grain through the family map instead.
-        </p>
-      </Card>
     </main>
   );
 }
