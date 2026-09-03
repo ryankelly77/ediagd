@@ -10,6 +10,7 @@ import {
   describeEdit,
   firstAffectedMonth,
   monthLabel,
+  sinceLabel,
   storeToday,
 } from "@/lib/mapping/epoch";
 import { loadDealers } from "@/lib/mapping/dealer-codes";
@@ -39,6 +40,12 @@ import { loadDealers } from "@/lib/mapping/dealer-codes";
  * dealer. A count for one rooftop under a button that writes eleven would be a
  * preview of something other than what happens.
  */
+function alreadyNotCoachableCheck(
+  rulings: { status: string }[]
+): boolean {
+  return rulings.length > 0 && rulings.every((r) => r.status === "not_coachable");
+}
+
 export default async function ConfirmDealerCodeEdit({
   searchParams,
 }: {
@@ -97,17 +104,35 @@ export default async function ConfirmDealerCodeEdit({
 
   const newFamily = (family ?? "").trim() || null;
   const currentFamilies = [...new Set(rulings.map((r) => r.family ?? ""))];
-  const currentLabel =
-    currentFamilies.length === 0
-      ? "— not ruled —"
+  /* The same words the row uses. "unmapped" is our jargon; "not ruled" is what
+     it is, and the two screens must not describe one state two ways. */
+  const currentLabel = alreadyNotCoachableCheck(rulings)
+    ? "Not coachable"
+    : currentFamilies.length === 0
+      ? "Not ruled"
       : currentFamilies.length === 1
-        ? currentFamilies[0] || "— unmapped —"
-        : `differs by store (${currentFamilies.length} values)`;
-  const unchanged = currentFamilies.length === 1 && (currentFamilies[0] || null) === newFamily;
+        ? currentFamilies[0] || "Not ruled"
+        : `Differs by store (${currentFamilies.length} values)`;
+  /* Only meaningful once something has been picked. On arrival nothing has
+     been chosen, so "nothing is different" is not a warning, it is noise. */
+  const unchanged =
+    newFamily !== null && currentFamilies.length === 1 && (currentFamilies[0] || null) === newFamily;
 
   const since = rulings.map((r) => r.effective_from).sort()[0] ?? null;
-  const alreadyNotCoachable =
-    rulings.length > 0 && rulings.every((r) => r.status === "not_coachable");
+  const alreadyNotCoachable = alreadyNotCoachableCheck(rulings);
+
+  /*
+   * WHAT THE CURRENT STATE MEANS, in words a dealer GM could repeat.
+   * "unmapped" is our word for it; "these ROs count toward no family" is what
+   * it does to their numbers.
+   */
+  const currentState = alreadyNotCoachable
+    ? " — ruled out of coaching, so these ROs are excluded from every advisor's attach rate."
+    : currentFamilies.length === 0 || currentFamilies[0] === ""
+      ? " — nothing was matched automatically, so these ROs count toward no family and no advisor gets credit for the work."
+      : currentFamilies.length > 1
+        ? " — the stores disagree, so the same work is counted differently depending on which store did it."
+        : ` — every RO in this sub-category counts toward ${currentFamilies[0]}.`;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -126,14 +151,33 @@ export default async function ConfirmDealerCodeEdit({
         <p className="mt-0.5 text-xs text-ink-soft">
           {dealer.name} · {dealer.rooftopCount} rooftops
         </p>
-        <p className="mt-2 text-sm text-ink">
-          <span className="text-ink-soft">Family </span>
-          {currentLabel} <span className="text-ink-soft">→</span>{" "}
-          <strong className="text-navy">{newFamily ?? "— unmapped —"}</strong>
-        </p>
+        {/*
+          ---- NO ARROW UNTIL THERE IS SOMETHING ON THE OTHER SIDE ------------
+
+          This read "Family — unmapped — → — unmapped —" before anything was
+          picked: a before-and-after with no after, and the same placeholder on
+          both ends. An arrow is a promise that something changes, and on
+          arrival nothing does.
+
+          So: the current state as a sentence, and the arrow only once a value
+          has been chosen.
+        */}
+        {newFamily ? (
+          <p className="mt-2 text-sm text-ink">
+            <strong className="text-navy">{currentLabel}</strong>{" "}
+            <span className="text-ink-soft">→</span>{" "}
+            <strong className="text-navy">{newFamily}</strong>
+          </p>
+        ) : (
+          <p className="mt-2 text-sm leading-relaxed text-ink">
+            <span className="text-ink-soft">Currently: </span>
+            <strong className="text-navy">{currentLabel}</strong>
+            {currentState}
+          </p>
+        )}
         {since && (
           <p className="mt-1 text-xs text-ink-soft">
-            The current mapping has been in force since {since}.
+            In force since {sinceLabel(since)}.
           </p>
         )}
         {unchanged && (
@@ -169,9 +213,9 @@ export default async function ConfirmDealerCodeEdit({
         <Card className="p-5">
           <p className="text-base font-extrabold text-navy">Correction</p>
           <p className="mt-1 text-sm text-ink-soft">
-            This was always wrong — nobody ever meant the old value. Effective from the
-            beginning ({GENESIS}); every earlier version is retired as though it never
-            applied.
+            This was always wrong — nobody ever meant the old value. It applies from
+            the beginning of measurement, and every earlier version is retired as
+            though it never applied.
           </p>
           <p className="mt-2 text-sm text-ink">
             {describeEdit("correction", GENESIS, allPeriods.length)}
@@ -246,7 +290,7 @@ export default async function ConfirmDealerCodeEdit({
           <p className="mt-1 text-sm text-ink-soft">
             {alreadyNotCoachable
               ? "It counts again — the rows return to the queue for a family ruling."
-              : "A state inspection is required by law, not sold. Diagnosis is time booked against whatever the fault turns out to be. Neither is an attach, and counting them inflates every advisor's denominator. Applied at every rooftop, as a correction — if it was never coachable, it was never coachable in any month either."}
+              : "Some work is not sold — a state inspection is required by law, and diagnosis is time booked against whatever the fault turns out to be. Ruling this out means these ROs stop counting against every advisor's attach rate, at every store, for every month already measured. Nobody is asked to sell more of it."}
           </p>
           <form
             action={alreadyNotCoachable ? clearNotCoachable : markNotCoachable}

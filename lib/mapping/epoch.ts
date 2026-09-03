@@ -126,3 +126,44 @@ function prevMonth(isoDate: string): string {
   const py = m === 1 ? y - 1 : y;
   return `${py}-${String(pm).padStart(2, "0")}-01`;
 }
+
+/* ---------------------------------------------------------------------------
+   Dates a person reads
+--------------------------------------------------------------------------- */
+
+/** "Sep 2" — the format somebody writing a note would use. */
+export function plainDate(iso: string): string {
+  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+/**
+ * When a mapping started applying, said in words rather than in a sentinel.
+ *
+ * ---------------------------------------------------------------------------
+ * GENESIS IS NOT A DATE AND MUST NEVER RENDER AS ONE
+ * ---------------------------------------------------------------------------
+ * `2000-01-01` is how "for all of history" is stored. It is not a day anything
+ * happened, and printing it asks the reader to know that — which nobody outside
+ * this repo does. Mitch reading "in force since 2000-01-01" reasonably concludes
+ * the system has been running since before the dealership had this DMS.
+ *
+ * It leaked in four places at once, which is why the wording lives here and not
+ * in each screen: the row footer, both confirm screens, and the families table.
+ * One function means the next surface cannot get it wrong on its own.
+ */
+export function sinceLabel(effectiveFrom: string | null | undefined): string {
+  if (!effectiveFrom) return "unknown";
+  return effectiveFrom.slice(0, 10) === GENESIS
+    ? "the beginning of measurement"
+    : plainDate(effectiveFrom);
+}
+
+/** The same fact as a clause: "applies to all history" / "applies from Sep 2". */
+export function appliesLabel(effectiveFrom: string | null | undefined): string {
+  if (!effectiveFrom) return "";
+  return effectiveFrom.slice(0, 10) === GENESIS
+    ? "applies to all history"
+    : `applies from ${plainDate(effectiveFrom)}`;
+}

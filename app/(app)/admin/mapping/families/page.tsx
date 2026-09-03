@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { sinceLabel } from "@/lib/mapping/epoch";
 
 type FamilyRow = {
   code: string;
@@ -149,7 +150,7 @@ export default async function FamiliesPage() {
                             ? "ruled by hand"
                             : `confidence: ${r.confidence}`}
                           {" · since "}
-                          {r.effective_from}
+                          {sinceLabel(r.effective_from)}
                         </p>
                       </div>
                       <p className="mt-0.5 text-sm text-ink">{cat?.name ?? "—"}</p>

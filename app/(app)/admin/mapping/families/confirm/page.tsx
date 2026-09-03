@@ -158,7 +158,7 @@ export default async function ConfirmFamilyEdit({
           <p className="text-base font-extrabold text-navy">Correction</p>
           <p className="mt-1 text-sm text-ink-soft">
             This was always wrong — nobody ever meant the old value. Effective
-            from the beginning ({GENESIS}); the old mapping is retired as though
+            from the beginning of measurement; the old mapping is retired as though
             it never applied.
           </p>
           <p className="mt-2 text-sm text-ink">
