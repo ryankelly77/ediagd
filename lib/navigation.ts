@@ -80,6 +80,11 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     label: "Mapping",
     hint: "Op codes, service families and aliases — what Mitch coaches against.",
   },
+  {
+    href: "/admin/mapping/dealer-codes",
+    label: "Dealer Codes",
+    hint: "Everything a dealer's DMS sends, ruled onto our vocabulary.",
+  },
 ] as const;
 
 /**
@@ -188,5 +193,8 @@ export const NAV_EXEMPT: Readonly<Record<string, string>> = {
   "/library/m/[module]/quiz": "A module's quiz, opened from the module.",
   "/joe-the-pro/[make]": "One make, opened from the Joe the Pro index.",
   "/admin/dms/mapping":
-    "The sub-category queue, opened from DMS Upload once an import lands.",
+    "Redirects to Dealer Codes, which absorbed the queue. Kept because DMS "
+    + "Upload links here and Mitch has the URL.",
+  "/admin/mapping/dealer-codes/confirm":
+    "Correction or Change for one sub-category, opened from Dealer Codes.",
 } as const;
