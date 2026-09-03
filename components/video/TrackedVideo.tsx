@@ -295,6 +295,13 @@ export function TrackedVideo({
          * the speed menu and the resume point. Nothing is held shut there.
          */
         gated={player.gated ?? policy === "gate-continue"}
+        /*
+         * `none` means measure nothing, and that has to include the
+         * furthest-reached row MuxVideo writes on its own — otherwise the
+         * promise is only half kept and an admin preview quietly accrues watch
+         * progress against the admin's account.
+         */
+        recordProgress={player.recordProgress ?? policy !== "none"}
         onTimeUpdate={tracking ? handleTimeUpdate : undefined}
         onPlay={tracking ? handlePlay : undefined}
         onPause={tracking ? handlePause : undefined}

@@ -90,6 +90,28 @@ export type MuxVideoProps = {
   /** Hide the built-in progress read-out when a parent draws its own. */
   showProgress?: boolean;
   /**
+   * Write furthest-reached to content_progress as this plays. Default true.
+   *
+   * ---------------------------------------------------------------------------
+   * WHY THIS IS A SEPARATE SWITCH FROM THE WATCH POLICY
+   * ---------------------------------------------------------------------------
+   * There are two measurements here and they are recorded by different code.
+   * TrackedVideo's coverage is the one the gate reads; THIS one is
+   * furthest-reached, and it is written from inside this component, on its own
+   * timeupdate, whatever the tracker above is doing.
+   *
+   * So `policy="none"` — which promises to "measure nothing" — did not actually
+   * stop a row being written. That never mattered while every caller was the
+   * daily loop, and it started mattering the moment the admin preview became a
+   * real player: an admin scrubbing through an asset to check it is not an
+   * advisor watching it, and the difference has to survive into the table the
+   * LMS will credit lessons from.
+   *
+   * TrackedVideo derives it from the policy, so callers do not have to keep two
+   * flags in agreement.
+   */
+  recordProgress?: boolean;
+  /**
    * This player stands in front of a gate, so it is a player you cannot skip.
    *
    * ---------------------------------------------------------------------------
@@ -132,6 +154,7 @@ export function MuxVideo({
   onError,
   showProgress = true,
   gated = false,
+  recordProgress = true,
   className,
 }: MuxVideoProps) {
   const [watched, setWatched] = useState(initialWatchedPct);
@@ -149,6 +172,8 @@ export function MuxVideo({
 
   const persist = useCallback(
     async (pct: number, positionSec: number) => {
+      /* A preview is not a watch. See the prop's note. */
+      if (!recordProgress) return;
       try {
         await supabase.current.rpc("record_watch_progress", {
           _content_id: contentId,
@@ -164,7 +189,7 @@ export function MuxVideo({
          */
       }
     },
-    [contentId]
+    [contentId, recordProgress]
   );
 
   const handleTimeUpdate = useCallback(

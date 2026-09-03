@@ -26,10 +26,11 @@
    ============================================================================ */
 
 import { useMemo, useState, useTransition } from "react";
-import MuxPlayer from "@mux/mux-player-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/brand/Card";
+import { TrackedVideo } from "@/components/video/TrackedVideo";
+import type { VideoRenditions } from "@/lib/mux/playback";
 import {
   CONTENT_ENTITLEMENT,
   PRODUCT_META,
@@ -89,7 +90,9 @@ type Mux = {
   verticalAssetId: string | null; verticalPlaybackId: string | null;
   durationSec: number | null; width: number | null; height: number | null;
   quality: string | null; dashboardBase: string | null;
-  token: string | null; thumbnailToken: string | null; verticalToken: string | null;
+  /** The MASTER only, shaped for the shared player. Never the vertical. */
+  preview: VideoRenditions | null;
+  verticalToken: string | null;
   /** Which cut each device gets, in a sentence. See lib/video-rendition.ts. */
   renditionNote: string;
 };
@@ -254,26 +257,36 @@ export function ContentDetail({
 
       {isVideo && (
         <Section title="Mux">
-          {mux.token && mux.playbackId ? (
+          {mux.preview ? (
             /*
-             * mux-player, NOT a bare <video src="…m3u8">.
+             * THE SHARED PLAYER, not a MuxPlayer of its own.
              *
-             * Chrome cannot play HLS natively — only Safari can — so a plain
-             * video element sits there loading forever, which is exactly what
-             * it did: the page hung hard enough that a screenshot could not be
-             * injected. mux-player ships the HLS engine and handles the signed
-             * token, and it is already what the daily loop uses.
+             * This screen mounted mux-player directly, which made it the one
+             * playing surface in the app that missed anything the shared
+             * component grows — most recently the EDIAGD mark, which is drawn
+             * by the player rather than burned into the asset, so a surface
+             * outside the component is a surface with no mark on it. The point
+             * of one player is that there is one place to change.
+             *
+             * policy="none" is the explicit "measure nothing" setting rather
+             * than reaching for the untracked MuxVideo underneath — TrackedVideo
+             * says why: the two players would drift. Nothing here gates, nothing
+             * mints a ticket, and nothing writes progress: an admin checking an
+             * asset is not an advisor watching it, and a preview that recorded
+             * a watch would put fabricated numbers under a certification.
+             *
+             * (mux-player rather than a bare <video src="…m3u8"> for the reason
+             * it always was: Chrome cannot play HLS natively, so a plain video
+             * element sits there loading forever — it hung this page hard enough
+             * that a screenshot could not be injected.)
              */
-            <div className="overflow-hidden rounded-xl bg-navy">
-              <MuxPlayer
-                playbackId={mux.playbackId}
-                tokens={{ playback: mux.token, thumbnail: mux.thumbnailToken ?? undefined }}
-                streamType="on-demand"
-                accentColor="#0E7C7B"
-                playsInline
-                style={{ aspectRatio: "16 / 9", width: "100%" }}
-              />
-            </div>
+            <TrackedVideo
+              policy="none"
+              contentId={id}
+              renditions={mux.preview}
+              title={(item.title as string) ?? "Preview"}
+              showProgress={false}
+            />
           ) : null}
 
           <div className="mt-4 flex items-start gap-4">

@@ -12,7 +12,7 @@ import "server-only";
    slower than the list it came from.
    ============================================================================ */
 
-import { playbackFor } from "@/lib/mux/playback";
+import { playbackFor, type VideoRenditions } from "@/lib/mux/playback";
 import { describeRenditions } from "@/lib/video-rendition";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,9 +80,18 @@ export type MuxFacts = {
   quality: string | null;
   /** Null when MUX_DASHBOARD_ENV is unset — then the ids are copy-only. */
   dashboardBase: string | null;
-  /** Signed, short-lived, minted per view. */
-  token: string | null;
-  thumbnailToken: string | null;
+  /**
+   * The MASTER, signed, for the preview player — never the vertical.
+   *
+   * Shaped as VideoRenditions with `vertical: null` on purpose rather than as
+   * loose tokens: that is what the shared player takes, and a null vertical is
+   * how pickRendition is told "there is no phone cut here, play the master at
+   * any viewport". The admin preview is for checking the asset, and the asset
+   * is the master; the 9:16 crop stays what it has always been on this screen,
+   * a thumbnail.
+   */
+  preview: VideoRenditions | null;
+  /** Signed thumbnail token for the 9:16 still. Not a player. */
   verticalToken: string | null;
   /**
    * WHICH CUT EACH DEVICE ACTUALLY GETS, in a sentence.
@@ -210,17 +219,16 @@ export async function loadContentDetail(client: Client, id: string) {
     dashboardBase: process.env.MUX_DASHBOARD_ENV
       ? `https://dashboard.mux.com/environments/${process.env.MUX_DASHBOARD_ENV}/assets`
       : null,
-    token: null,
-    thumbnailToken: null,
+    preview: null,
     verticalToken: null,
     renditionNote: describeRenditions(row),
   };
 
   if (row.mux_playback_id) {
     const t = await playbackFor(row);
-    if (t) {
-      mux = { ...mux, token: t.token, thumbnailToken: t.thumbnailToken };
-    }
+    /* vertical: null — see the field's note. The preview always plays the
+       master, whatever the admin's window happens to be shaped like. */
+    if (t) mux = { ...mux, preview: { landscape: t, vertical: null } };
   }
   if (row.vertical_playback_id && row.vertical_status === "ready") {
     const vt = await playbackFor({
