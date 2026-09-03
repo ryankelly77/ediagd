@@ -15,7 +15,9 @@
 
 import {
   VERTICAL_NATIVE_WIDTH,
+  contentBox,
   describeRenditions,
+  markGeometry,
   pickRendition,
   type Viewport,
 } from "../lib/video-rendition";
@@ -37,6 +39,8 @@ function check(label: string, actual: unknown, expected: unknown) {
     console.log(`    ✗ ${label}  expected ${e}, got ${a}`);
   }
 }
+const ok = (label: string, cond: boolean, detail = "") =>
+  check(label + (detail ? ` (${detail})` : ""), cond, true);
 const section = (t: string) => console.log(`\n${t}`);
 
 const cut = (id: string): Rendition => ({
@@ -238,6 +242,82 @@ check(
     vertical_status: "ready",
   }).startsWith("Master only"),
   true
+);
+
+
+/* ---- 7 · The mark in the corner ------------------------------------------- */
+section("7 · The mark sits on the picture, never in a letterbox bar");
+
+/*
+ * The frame is always drawn at the shape of the cut inside it, so today every
+ * one of these resolves to "the whole box" — contentBox is a no-op against real
+ * content. It is here for the upload that is not 16:9, because the failure then
+ * is a logo floating in a black bar, which reads as a broken page rather than a
+ * watermark, and nobody would think to look for it.
+ */
+check(
+  "a 16:9 picture in a 16:9 frame fills it — no bars",
+  contentBox({ width: 900, height: 506.25 }, 16 / 9),
+  { x: 0, y: 0, width: 900, height: 506.25 }
+);
+check(
+  "a 4:3 picture in a 16:9 frame gets bars left and right",
+  contentBox({ width: 800, height: 450 }, 4 / 3),
+  { x: 100, y: 0, width: 600, height: 450 }
+);
+check(
+  "a 16:9 picture in a 9:16 frame gets bars top and bottom",
+  contentBox({ width: 360, height: 640 }, 16 / 9),
+  { x: 0, y: 218.75, width: 360, height: 202.5 }
+);
+
+/* Sizing: 8% of the picture on landscape, 14% on the phone cut. */
+check(
+  "a 900px landscape frame gets a 72px mark, inset 27",
+  markGeometry({ width: 900, height: 506.25 }, 16 / 9, "landscape"),
+  { left: 27, top: 27, size: 72 }
+);
+check(
+  "a 390px vertical frame gets 55, inset 12",
+  markGeometry({ width: 390, height: 693.33 }, 9 / 16, "vertical"),
+  { left: 12, top: 12, size: 55 }
+);
+ok(
+  "the phone share is larger on purpose — 8% of 390 would be a smudge",
+  markGeometry({ width: 390, height: 693.33 }, 9 / 16, "vertical")!.size >
+    Math.round(390 * 0.08)
+);
+
+/* THE CASE THIS EXISTS FOR: a letterboxed picture pushes the mark inward, so
+   it lands on the video rather than on the bar above it. */
+const boxed = markGeometry({ width: 360, height: 640 }, 16 / 9, "vertical")!;
+const picture = contentBox({ width: 360, height: 640 }, 16 / 9);
+ok(
+  "a letterboxed mark starts below the top bar",
+  boxed.top >= picture.y,
+  `top ${boxed.top} vs bar ends at ${picture.y}`
+);
+ok(
+  "and ends before the picture does",
+  boxed.top + boxed.size <= picture.y + picture.height,
+  `${boxed.top + boxed.size} <= ${picture.y + picture.height}`
+);
+
+/* Floor and ceiling, because a percentage alone is wrong at both ends. */
+check(
+  "a huge desktop frame is capped, not proportional",
+  markGeometry({ width: 2560, height: 1440 }, 16 / 9, "landscape")!.size,
+  104
+);
+check(
+  "and a tiny embed gets the floor rather than a smudge",
+  markGeometry({ width: 200, height: 112.5 }, 16 / 9, "landscape")!.size,
+  36
+);
+check(
+  "a frame with no width has nowhere to put a mark",
+  markGeometry({ width: 0, height: 0 }, 16 / 9, "landscape"),
+  null
 );
 
 console.log(`\n  ${passed} passed, ${failed} failed`);

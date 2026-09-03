@@ -40,7 +40,7 @@ import MuxPlayer from "@mux/mux-player-react";
 import type MuxPlayerElement from "@mux/mux-player";
 import { createClient } from "@/lib/supabase/client";
 import type { VideoRenditions } from "@/lib/mux/playback";
-import { pickRendition, type Viewport } from "@/lib/video-rendition";
+import { markGeometry, pickRendition, type Viewport } from "@/lib/video-rendition";
 
 /*
  * useLayoutEffect on the client, useEffect on the server.
@@ -299,6 +299,30 @@ export function MuxVideo({
 
   const { rendition, shape } = pickRendition(renditions, view);
 
+  /*
+   * The picture's real aspect ratio, once the player knows it. Until then the
+   * declared shape stands in, which is right for every asset in the library —
+   * all 57 are exactly 16:9 and each frame is drawn at the shape of the cut
+   * inside it. loadedmetadata is what would catch the first one that is not.
+   */
+  const [sourceRatio, setSourceRatio] = useState<number | null>(null);
+  const handleLoadedMetadata = useCallback((event: Event) => {
+    const el = event.currentTarget as { videoWidth?: number; videoHeight?: number } | null;
+    const w = Number(el?.videoWidth);
+    const h = Number(el?.videoHeight);
+    if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) {
+      setSourceRatio(w / h);
+    }
+  }, []);
+
+  const declaredRatio = shape === "vertical" ? 9 / 16 : 16 / 9;
+  const frameBox = view
+    ? { width: view.frameWidth, height: view.frameWidth / declaredRatio }
+    : null;
+  const mark = frameBox
+    ? markGeometry(frameBox, sourceRatio ?? declaredRatio, shape)
+    : null;
+
   const handlePlay = useCallback(
     (event: Event) => {
       playing.current = true;
@@ -347,7 +371,7 @@ export function MuxVideo({
     <div className={className}>
       <div
         ref={frame}
-        className="overflow-hidden rounded-card bg-navy"
+        className="relative overflow-hidden rounded-card bg-navy"
         style={{ boxShadow: "0 4px 16px rgba(12,28,44,0.08)" }}
       >
         {/*
@@ -404,6 +428,7 @@ export function MuxVideo({
            */
           playbackRate={gated ? 1 : undefined}
           onRateChange={handleRateChange}
+          onLoadedMetadata={handleLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
           onEnded={onEnded}
           onPlay={handlePlay}
@@ -444,6 +469,45 @@ export function MuxVideo({
               : null),
           }}
         />
+        )}
+
+        {/*
+          THE MARK. Drawn over the picture, never over a letterbox bar — see
+          markGeometry.
+
+          pointer-events: none is the load-bearing line. The whole surface of a
+          gated player is a play/pause target, and on a phone the mark sits
+          exactly where a thumb lands; a watermark that swallowed that tap would
+          look like a video that will not start.
+
+          The drop shadow is not decoration either. Mitch films against bright
+          walls, and a white mark on a white wall is an invisible mark; a soft
+          navy shadow under it survives the worst case without printing a box on
+          the good one.
+        */}
+        {mark && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: mark.left,
+              top: mark.top,
+              width: mark.size,
+              height: mark.size,
+              /* A background rather than an <img>: this is decoration with no
+                 content, it carries no alt text, and it is the shape the lint
+                 rule about next/image is actually asking for. drop-shadow reads
+                 the painted alpha, so the shadow follows the ring and the wave
+                 rather than boxing the square. */
+              backgroundImage: "url(/brand/svg/ediagd-mark-oneink-white.svg)",
+              backgroundSize: "contain",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              opacity: 0.85,
+              pointerEvents: "none",
+              filter: "drop-shadow(0 1px 3px rgba(12,28,44,0.55))",
+            }}
+          />
         )}
       </div>
 

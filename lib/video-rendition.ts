@@ -144,3 +144,81 @@ export function describeRenditions(row: {
   }
   return "Master only. Phones letterbox it; no vertical has been cut.";
 }
+
+/* ============================================================================
+   THE MARK IN THE CORNER
+   ============================================================================
+
+   A white EDIAGD mark over every playing video, drawn by us rather than burned
+   into the asset. Burning it in would mean re-encoding 57 masters and their 57
+   derived crops, and doing it again for every future upload; this applies to
+   all of them at once, to both renditions, and costs nothing to change.
+
+   ---------------------------------------------------------------------------
+   ANCHORED TO THE PICTURE, NOT TO THE ELEMENT
+   ---------------------------------------------------------------------------
+   object-fit is `contain`, so a source whose shape does not match its frame is
+   letterboxed — and a mark positioned against the element box would then float
+   in a black bar, which reads as a rendering fault rather than a watermark.
+
+   Every published video is exactly 16:9 today and every frame we draw is
+   exactly the shape of the cut inside it, so there are no bars and this
+   arithmetic currently resolves to "the whole box". It is written properly
+   anyway: the first non-16:9 upload is not the moment to discover the logo is
+   sitting in the letterbox.
+--------------------------------------------------------------------------- */
+
+/** Where the picture actually is inside a frame, under object-fit: contain. */
+export function contentBox(
+  frame: { width: number; height: number },
+  sourceRatio: number
+): { x: number; y: number; width: number; height: number } {
+  if (!(frame.width > 0) || !(frame.height > 0) || !(sourceRatio > 0)) {
+    return { x: 0, y: 0, width: frame.width, height: frame.height };
+  }
+  const frameRatio = frame.width / frame.height;
+  if (frameRatio > sourceRatio) {
+    /* Frame is wider than the picture: bars left and right. */
+    const width = frame.height * sourceRatio;
+    return { x: (frame.width - width) / 2, y: 0, width, height: frame.height };
+  }
+  /* Frame is taller: bars top and bottom. */
+  const height = frame.width / sourceRatio;
+  return { x: 0, y: (frame.height - height) / 2, width: frame.width, height };
+}
+
+/**
+ * How big the mark is, as a share of the picture's width.
+ *
+ * A phone needs proportionally more or the mark disappears: 8% of a 390pt
+ * portrait video is 31pt, which at arm's length on a service drive is a smudge.
+ */
+const MARK_SHARE = { landscape: 0.08, vertical: 0.14 } as const;
+
+/** Inset from the top and left edges of the picture, both as a share of WIDTH. */
+const MARK_INSET_SHARE = 0.03;
+
+/*
+ * Floor and ceiling in real pixels, because a percentage alone is wrong at both
+ * ends: 8% of a 300px embed is a 24px smudge, and 8% of a 2560px desktop is a
+ * 205px badge competing with the video for attention.
+ */
+const MARK_MIN_PX = 36;
+const MARK_MAX_PX = 104;
+
+export function markGeometry(
+  frame: { width: number; height: number },
+  sourceRatio: number,
+  shape: "vertical" | "landscape"
+): { left: number; top: number; size: number } | null {
+  const box = contentBox(frame, sourceRatio);
+  if (!(box.width > 0)) return null;
+  const size = Math.round(
+    Math.min(MARK_MAX_PX, Math.max(MARK_MIN_PX, box.width * MARK_SHARE[shape]))
+  );
+  /* Both insets are a share of WIDTH, so the mark sits the same distance from
+     each edge — 3% of height on a 16:9 frame would tuck it visibly higher. */
+  const inset = Math.round(box.width * MARK_INSET_SHARE);
+  return { left: Math.round(box.x) + inset, top: Math.round(box.y) + inset, size };
+}
+
