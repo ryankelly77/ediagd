@@ -109,3 +109,6 @@ exports/
 
 # tsc scratch output from npm run test:names
 .tmp-nm/
+
+# tsc scratch output from npm run ruling:op-codes
+.tmp-rul/
