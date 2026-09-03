@@ -6,6 +6,7 @@ import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
 import { ruleOpCode, setDealerLock } from "@/lib/mapping/dealer-code-actions";
+import { appliesLabel, plainDate } from "@/lib/mapping/epoch";
 import {
   loadDealers,
   loadOpCodes,
@@ -248,23 +249,56 @@ const money = (n: number) => `$${n.toLocaleString("en-US")}`;
    Section 1 — sub-categories
 --------------------------------------------------------------------------- */
 
-function SubCategorySection({
-  dealer,
+/* ---------------------------------------------------------------------------
+   Grouping
+
+   THREE STATES, THREE WEIGHTS, THREE GROUPS.
+
+   A flat table sorted by money treats "nobody has ever ruled this" and "an
+   automatic guess somebody could accept in one tap" as the same job. They are
+   not: the first needs a decision, the second needs agreement, and the third —
+   already ruled — needs nothing and should get out of the way.
+
+   Working this screen means driving "Needs your ruling" to zero, so it says how
+   many are left in its own heading.
+--------------------------------------------------------------------------- */
+
+type Weight = "needs-ruling" | "confirmable" | "ruled";
+
+function weightOf(row: SubCategoryRow): Weight {
+  if (row.status === "confirmed" || row.status === "not_coachable") return "ruled";
+  /* Mixed means the rooftops disagree, which is a decision nobody has made
+     cleanly — it belongs with the work, not with the done. */
+  if (row.family === null || row.status === "mixed") return "needs-ruling";
+  return "confirmable";
+}
+
+function RowGroup({
+  title,
+  blurb,
   rows,
+  dealer,
   locked,
+  collapsed = false,
 }: {
-  dealer: Dealer;
+  title: string;
+  blurb: string;
   rows: SubCategoryRow[];
+  dealer: Dealer;
   locked: boolean;
+  collapsed?: boolean;
 }) {
+  if (rows.length === 0) return null;
   return (
-    <section className="mt-8">
-      <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
-        Sub-categories
-      </h2>
-      <p className="mt-1 px-1 text-xs leading-relaxed text-ink-soft">
-        Live. Every attach rate on every screen is measured through this mapping.
-      </p>
+    /* <details> rather than client state: this page is a server component and a
+       disclosure triangle does not need React to open. */
+    <details open={!collapsed} className="mt-4 first:mt-0">
+      <summary className="cursor-pointer list-none px-1">
+        <span className="text-sm font-extrabold text-navy">
+          {title} ({rows.length})
+        </span>
+        <span className="ml-2 text-xs text-ink-soft">{blurb}</span>
+      </summary>
 
       <Card className="mt-2 overflow-x-auto p-0">
         <table className="w-full min-w-[900px] text-sm">
@@ -281,20 +315,87 @@ function SubCategorySection({
           </thead>
           <tbody>
             {rows.map((r) => (
-              <SubCategoryRowView
-                key={r.subCategory}
-                dealer={dealer}
-                row={r}
-                locked={locked}
-              />
+              <SubCategoryRowView key={r.subCategory} dealer={dealer} row={r} locked={locked} />
             ))}
           </tbody>
         </table>
       </Card>
+    </details>
+  );
+}
+
+function SubCategorySection({
+  dealer,
+  rows,
+  locked,
+}: {
+  dealer: Dealer;
+  rows: SubCategoryRow[];
+  locked: boolean;
+}) {
+  /* `rows` arrives sorted by labor descending, and partitioning preserves that
+     order, so each group is already money-first. */
+  const needsRuling = rows.filter((r) => weightOf(r) === "needs-ruling");
+  const confirmable = rows.filter((r) => weightOf(r) === "confirmable");
+  const ruled = rows.filter((r) => weightOf(r) === "ruled");
+
+  return (
+    <section className="mt-8">
+      <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
+        Sub-categories
+      </h2>
+      <p className="mt-1 px-1 text-xs leading-relaxed text-ink-soft">
+        Live. Every attach rate on every screen is measured through this mapping.
+      </p>
+
+      <div className="mt-3">
+        <RowGroup
+          title="Needs your ruling"
+          blurb="No family yet — these ROs count toward nothing."
+          rows={needsRuling}
+          dealer={dealer}
+          locked={locked}
+        />
+        <RowGroup
+          title="Confirm the automatic"
+          blurb="Classified by rule. Confirming changes no number, only who decided."
+          rows={confirmable}
+          dealer={dealer}
+          locked={locked}
+        />
+        <RowGroup
+          title="Ruled"
+          blurb="Decided. Nothing to do."
+          rows={ruled}
+          dealer={dealer}
+          locked={locked}
+          collapsed
+        />
+      </div>
     </section>
   );
 }
 
+/**
+ * One row, at one of three weights.
+ *
+ * ---------------------------------------------------------------------------
+ * THE BUTTON CARRIES THE STATE
+ * ---------------------------------------------------------------------------
+ *   needs-ruling  Review is GOLD. Per DESIGN_LANGUAGE gold is the single
+ *                 primary action on a screen — and scarcity comes from one gold
+ *                 THING per screen, not from withholding it across repetitions:
+ *                 "the daily loop's Continue is gold on all five steps". This
+ *                 queue's repeated action is that one thing. These rows are the
+ *                 work; nothing else on the screen should out-shout them.
+ *
+ *   confirmable   Confirm in navy, Review as an outline beside it. Agreement is
+ *                 the common act and gets the filled button; disagreement is
+ *                 available and quieter.
+ *
+ *   ruled         Status text and a ghost Review. Done rows should recede — a
+ *                 filled button on a decided row is an invitation to undo one.
+ */
 function SubCategoryRowView({
   dealer,
   row,
@@ -304,23 +405,19 @@ function SubCategoryRowView({
   row: SubCategoryRow;
   locked: boolean;
 }) {
-  /*
-   * ---- ONE STORY PER ROW ---------------------------------------------------
-   *
-   * This row used to say the family three times and disagree with itself: a
-   * green pill reading "Fluids", a dropdown reading "— unmapped —", and a
-   * "Not coachable" chip sitting beside both. A person reading it could not
-   * tell whether the thing was mapped, and the honest answer was "mapped
-   * automatically, not yet ruled by a human" — which none of the three said.
-   *
-   * So: ONE control showing the effective value AND where it came from, and one
-   * primary action. The dropdown is gone from the row. Choosing a DIFFERENT
-   * family is a change of routing, and a change of routing belongs on the
-   * screen that can tell you what it would move.
-   */
-  const ruled = row.status === "confirmed";
-  const hasValue = row.family !== null;
-  const notCoachable = row.status === "not_coachable";
+  const weight = weightOf(row);
+  /* Locked turns everything into a review: after the table is ruled complete,
+     even agreeing with a guess is an edit to a finished table. */
+  const canConfirm = weight === "confirmable" && !locked;
+
+  const reviewHref = `/admin/mapping/dealer-codes/confirm?dealer=${dealer.id}&subCategory=${encodeURIComponent(row.subCategory)}`;
+
+  const reviewClass =
+    weight === "needs-ruling"
+      ? "bg-gold text-navy border-gold hover:brightness-95"
+      : canConfirm
+        ? "border-line bg-cream-card text-ink"
+        : "border-transparent text-ocean underline underline-offset-2";
 
   return (
     <tr className="border-b border-line/60 align-top">
@@ -329,7 +426,6 @@ function SubCategoryRowView({
       <td className="p-3 text-right tabular-nums text-ink-soft">{row.ros.toLocaleString("en-US")}</td>
       <td className="p-3 text-right tabular-nums text-ink-soft">{row.storeCount}</td>
 
-      {/* The single family control: value and source, in one place. */}
       <td className="p-3">
         <FamilyState status={row.status} family={row.family} />
       </td>
@@ -354,19 +450,13 @@ function SubCategoryRowView({
       <td className="p-3">
         <div className="flex flex-wrap items-center gap-2">
           {/*
-            CONFIRM IS THE PRIMARY ACTION, and only where there is something to
-            confirm. It accepts the value already in force as the human ruling —
-            same family, now ruled — which moves no measured number: the attach
-            view groups on `family` and reads `status` only to exclude
-            not_coachable, so auto -> confirmed with the same family is
-            arithmetically invisible. Verified by diffing all 16,379 rows of
-            advisor_family_attach_all across a confirm: zero changed.
-
-            Not offered once LOCKED. After the table is ruled complete even a
-            one-tap confirm is an edit to a finished table, and it goes through
-            the screen that explains itself.
+            Confirm accepts the value already in force as the human ruling. It
+            moves no measured number: the attach view groups on `family` and
+            reads `status` only to exclude not_coachable, so auto -> confirmed
+            with the same family is arithmetically invisible. Verified by
+            diffing all 16,379 rows of advisor_family_attach_all across one.
           */}
-          {hasValue && !ruled && !notCoachable && !locked && (
+          {canConfirm && (
             <form action={setFamilyEverywhere}>
               <input type="hidden" name="subCategory" value={row.subCategory} />
               <input type="hidden" name="family" value={row.family ?? ""} />
@@ -379,21 +469,11 @@ function SubCategoryRowView({
             </form>
           )}
 
-          {/*
-            THE CHANGE PATH. Everything that is not "yes, that one" lives behind
-            this: picking a different family, or ruling it out of coaching
-            altogether. Both are decisions with consequences the row cannot
-            show, so they happen on the screen that can.
-          */}
           <Link
-            href={`/admin/mapping/dealer-codes/confirm?dealer=${dealer.id}&subCategory=${encodeURIComponent(row.subCategory)}`}
-            className={`rounded-pill border px-3 py-1 text-xs font-bold ${
-              hasValue && !ruled && !notCoachable && !locked
-                ? "border-line text-ink-soft"
-                : "border-navy bg-navy text-white"
-            }`}
+            href={reviewHref}
+            className={`rounded-pill border px-3 py-1 text-xs font-bold ${reviewClass}`}
           >
-            Review…
+            {weight === "needs-ruling" ? "Rule it…" : "Review…"}
           </Link>
         </div>
 
@@ -460,15 +540,19 @@ function RulingFootnote({ row }: { row: SubCategoryRow }) {
   if (!row.audit) return null;
   const { origin, updatedAt, effectiveFrom } = row.audit;
 
-  const who = origin === "admin" ? "ruled by hand" : "classified automatically";
+  /* An unmapped row WAS seen by the classifier — it just produced nothing.
+     Saying "classified automatically" over an empty family is the same kind of
+     lie the three-control row told. */
+  const who =
+    origin === "admin"
+      ? "ruled by hand"
+      : row.family === null && row.status !== "not_coachable"
+        ? "no family matched"
+        : "classified automatically";
   const when = updatedAt ? ` ${plainDate(updatedAt)}` : "";
-  /* Genesis is not a date somebody should have to recognise. */
-  const scope =
-    effectiveFrom === "2000-01-01"
-      ? "applies to all history"
-      : effectiveFrom
-        ? `applies from ${plainDate(effectiveFrom)}`
-        : null;
+  /* Genesis is not a date somebody should have to recognise — the wording
+     lives in lib/mapping/epoch so every surface says it the same way. */
+  const scope = appliesLabel(effectiveFrom) || null;
 
   return (
     <p className="mt-1.5 text-[11px] text-ink-soft">
@@ -479,16 +563,129 @@ function RulingFootnote({ row }: { row: SubCategoryRow }) {
   );
 }
 
-/** "Sep 2" — the format a person writing a note would use. */
-function plainDate(iso: string): string {
-  const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-}
 
 /* ---------------------------------------------------------------------------
    Section 2 — DMS op codes
 --------------------------------------------------------------------------- */
+
+/* Section 2's three states, same shape as section 1's. */
+function opWeight(r: OpCodeRow): Weight {
+  if (r.status === "confirmed" || r.status === "no_match") return "ruled";
+  if (r.suggestion) return "confirmable";
+  return "needs-ruling";
+}
+
+function OpCodeGroup({
+  title,
+  blurb,
+  rows,
+  dealer,
+  locked,
+  collapsed = false,
+}: {
+  title: string;
+  blurb: string;
+  rows: OpCodeRow[];
+  dealer: Dealer;
+  locked: boolean;
+  collapsed?: boolean;
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <details open={!collapsed} className="mt-4 first:mt-0">
+      <summary className="cursor-pointer list-none px-1">
+        <span className="text-sm font-extrabold text-navy">
+          {title} ({rows.length})
+        </span>
+        <span className="ml-2 text-xs text-ink-soft">{blurb}</span>
+      </summary>
+
+      <Card className="mt-2 overflow-x-auto p-0">
+        <table className="w-full min-w-[900px] text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-soft">
+              <th className="p-3">DMS code</th>
+              <th className="p-3">What they call it</th>
+              <th className="p-3 text-right">Labor</th>
+              <th className="p-3 text-right">ROs</th>
+              <th className="p-3">Our code</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <OpCodeRowView key={r.dmsOpCode} dealer={dealer} row={r} locked={locked} />
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </details>
+  );
+}
+
+function OpCodeRowView({
+  dealer,
+  row: r,
+  locked,
+}: {
+  dealer: Dealer;
+  row: OpCodeRow;
+  locked: boolean;
+}) {
+  const weight = opWeight(r);
+  return (
+    <tr className="border-b border-line/60 align-top">
+      <td className="p-3 font-mono text-xs font-bold text-navy">{r.dmsOpCode}</td>
+      <td className="p-3 text-xs text-ink">
+        <span className="line-clamp-2">{r.description || "—"}</span>
+      </td>
+      <td className="p-3 text-right tabular-nums text-ink">{money(r.labor)}</td>
+      <td className="p-3 text-right tabular-nums text-ink-soft">
+        {r.ros.toLocaleString("en-US")}
+      </td>
+      <td className="p-3">
+        <form action={ruleOpCode} className="flex flex-wrap items-center gap-2">
+          <input type="hidden" name="dmsOpCode" value={r.dmsOpCode} />
+          <input type="hidden" name="rooftopIds" value={dealer.rooftopIds.join(",")} />
+          <input type="hidden" name="mode" value={locked ? "change" : "correction"} />
+          <input
+            type="hidden"
+            name="matchedBy"
+            value={r.canonical ? "human" : r.suggestion ? "auto" : "human"}
+          />
+          <input
+            name="canonical"
+            defaultValue={r.canonical ?? r.suggestion?.code ?? ""}
+            placeholder="no match"
+            className="w-32 rounded-lg border border-line bg-cream-card px-2 py-1 font-mono text-xs text-navy"
+          />
+          {/* Same three weights as section 1: gold where the work is, navy for
+              agreeing with a suggestion, a ghost once it is decided. */}
+          <button
+            type="submit"
+            className={`rounded-pill border px-3 py-1 text-xs font-bold ${
+              weight === "needs-ruling"
+                ? "border-gold bg-gold text-navy hover:brightness-95"
+                : weight === "confirmable"
+                  ? "border-navy bg-navy text-white"
+                  : "border-transparent text-ocean underline underline-offset-2"
+            }`}
+          >
+            {weight === "ruled" ? "Change…" : weight === "confirmable" ? "Confirm" : "Rule it…"}
+          </button>
+        </form>
+        <p className="mt-1 text-[11px] text-ink-soft">
+          {r.status === "unruled" && r.suggestion
+            ? `proposed · ${r.suggestion.name} · ${Math.round(r.suggestion.score * 100)}% match`
+            : r.status === "unruled"
+              ? "no auto-match"
+              : `${r.status === "no_match" ? "ruled: nothing fits" : r.status}${
+                  r.matchedBy ? ` · ${r.matchedBy}` : ""
+                }${r.audit?.updatedAt ? ` · ${plainDate(r.audit.updatedAt)}` : ""}`}
+        </p>
+      </td>
+    </tr>
+  );
+}
 
 function OpCodeSection({
   dealer,
@@ -520,66 +717,30 @@ function OpCodeSection({
         recorded with the same effective dating so the history is already honest when it does.
       </p>
 
-      <Card className="mt-2 overflow-x-auto p-0">
-        <table className="w-full min-w-[900px] text-sm">
-          <thead>
-            <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-soft">
-              <th className="p-3">DMS code</th>
-              <th className="p-3">What they call it</th>
-              <th className="p-3 text-right">Labor</th>
-              <th className="p-3 text-right">ROs</th>
-              <th className="p-3">Our code</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.dmsOpCode} className="border-b border-line/60 align-top">
-                <td className="p-3 font-mono text-xs font-bold text-navy">{r.dmsOpCode}</td>
-                <td className="p-3 text-xs text-ink">
-                  <span className="line-clamp-2">{r.description || "—"}</span>
-                </td>
-                <td className="p-3 text-right tabular-nums text-ink">{money(r.labor)}</td>
-                <td className="p-3 text-right tabular-nums text-ink-soft">
-                  {r.ros.toLocaleString("en-US")}
-                </td>
-                <td className="p-3">
-                  <form action={ruleOpCode} className="flex flex-wrap items-center gap-2">
-                    <input type="hidden" name="dmsOpCode" value={r.dmsOpCode} />
-                    <input type="hidden" name="rooftopIds" value={dealer.rooftopIds.join(",")} />
-                    <input type="hidden" name="mode" value={locked ? "change" : "correction"} />
-                    <input
-                      type="hidden"
-                      name="matchedBy"
-                      value={r.canonical ? "human" : r.suggestion ? "auto" : "human"}
-                    />
-                    <input
-                      name="canonical"
-                      defaultValue={r.canonical ?? r.suggestion?.code ?? ""}
-                      placeholder="no match"
-                      className="w-32 rounded-lg border border-line bg-cream-card px-2 py-1 font-mono text-xs text-navy"
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-pill border border-navy bg-navy px-3 py-1 text-xs font-bold text-white"
-                    >
-                      {r.status === "unruled" ? "Confirm" : "Update"}
-                    </button>
-                  </form>
-                  <p className="mt-1 text-[11px] text-ink-soft">
-                    {r.status === "unruled" && r.suggestion
-                      ? `proposed · ${r.suggestion.name} · ${Math.round(r.suggestion.score * 100)}% match`
-                      : r.status === "unruled"
-                        ? "no auto-match"
-                        : `${r.status}${r.matchedBy ? ` · ${r.matchedBy}` : ""}${
-                            r.audit?.updatedAt ? ` · ${r.audit.updatedAt.slice(0, 10)}` : ""
-                          }`}
-                  </p>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      <div className="mt-3">
+        <OpCodeGroup
+          title="Needs your ruling"
+          blurb="No suggestion the matcher would stand behind."
+          rows={rows.filter((r) => opWeight(r) === "needs-ruling")}
+          dealer={dealer}
+          locked={locked}
+        />
+        <OpCodeGroup
+          title="Confirm the automatic"
+          blurb="Matched on the description. Check it, then confirm."
+          rows={rows.filter((r) => opWeight(r) === "confirmable")}
+          dealer={dealer}
+          locked={locked}
+        />
+        <OpCodeGroup
+          title="Ruled"
+          blurb="Decided, including the ones ruled as nothing-fits."
+          rows={rows.filter((r) => opWeight(r) === "ruled")}
+          dealer={dealer}
+          locked={locked}
+          collapsed
+        />
+      </div>
 
       <p className="mt-2 px-1 text-xs text-ink-soft">
         Showing {rows.length} of {total} by labor. {noMatch} have no auto-match.
