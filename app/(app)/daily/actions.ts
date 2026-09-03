@@ -49,9 +49,38 @@ export async function completeDayAction(
     return { ok: false, error: "No active membership found for this account." };
   }
 
+  /*
+   * ---- THE TECHNICIAN FALLBACK, RECONCILED --------------------------------
+   *
+   * This used to read
+   *
+   *     advisor ?? technician ?? memberships[0]
+   *
+   * which meant a technician-only account could complete a day: write a
+   * daily_completion row, start a streak, and mint Sand Dollars for a ritual
+   * that does not exist for them. Nobody decided that — it was a fallback
+   * reaching for the next role in a list.
+   *
+   * There is now one deliberate path. The technician screen has no completion
+   * button (see TechnicianDay), and this refuses by name if anything ever posts
+   * here anyway. When technicians get a daily contract, the refusal is the one
+   * place that has to change, and it will be obvious.
+   *
+   * MIXED ACCOUNTS ARE UNAFFECTED: an advisor who is also a technician matches
+   * the first arm and completes days exactly as before.
+   */
+  const roles = new Set(memberships.map((m) => m.role as string));
+  if (roles.has("technician") && !roles.has("advisor")) {
+    return {
+      ok: false,
+      error:
+        "Technician accounts don't have a daily loop to complete yet — your training is on the Today screen.",
+    };
+  }
+
   const chosen =
     memberships.find((m) => m.role === "advisor") ??
-    memberships.find((m) => m.role === "technician") ??
+    memberships.find((m) => m.role === "manager") ??
     memberships[0];
 
   try {

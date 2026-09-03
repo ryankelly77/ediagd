@@ -41,16 +41,31 @@
      npm run ingest:videos -- --dir="/path/to/01 - Ready"
      npm run ingest:videos -- --dir="…" --only=MINDSET
    ============================================================================ */
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readdir, stat, readFile, copyFile, rm, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { createDirectUpload } from "../lib/mux/upload";
 
-const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
-  auth: { persistSession: false },
-});
+/*
+ * LAZY, NOT MODULE-LEVEL.
+ *
+ * createClient() at import time throws "supabaseUrl is required" the moment
+ * anything requires this file without the ingest env — which is every test that
+ * wants parseName. The require.main guard below stops main() from running; it
+ * cannot stop a side effect that happens while the module is still loading.
+ * A connection is a thing the ingest needs, not a thing the file needs.
+ */
+let _sb: SupabaseClient | null = null;
+function sb(): SupabaseClient {
+  if (!_sb) {
+    _sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
+      auth: { persistSession: false },
+    });
+  }
+  return _sb;
+}
 
 const args = process.argv.slice(2);
 const arg = (k: string) =>
@@ -60,13 +75,21 @@ const ONLY = arg("only")?.toUpperCase();
 const DRY = args.includes("--dry");
 const LIMIT = Number(arg("limit") ?? "0");
 
-if (!DIR) {
-  console.error("  --dir= is required (the folder of masters).\n");
-  process.exit(1);
+/*
+ * CHECKED WHEN THE INGEST RUNS, not when the module loads.
+ *
+ * A module-level process.exit(1) means importing this file for parseName kills
+ * the importing process with "--dir= is required" — which is what it did to the
+ * name test. Same class of fault as the eager Supabase client above: work that
+ * belongs to the run, happening at load.
+ */
+function requireDir(): string {
+  if (!DIR) {
+    console.error("  --dir= is required (the folder of masters).\n");
+    process.exit(1);
+  }
+  return DIR;
 }
-// process.exit() does not narrow for the compiler, and the alternative is a
-// non-null assertion at every use site.
-const SRC: string = DIR;
 
 /* ---- Where each collection surfaces ---------------------------------------
  * NO NEW COLUMNS. The content-model audit proposes `collection` and `format`;
@@ -79,10 +102,24 @@ const SRC: string = DIR;
  * group on, and which is visibly a tag rather than pretending to be a link.
  */
 type Route = {
-  placement: "daily_lifestyle" | "daily_pitch" | "onboarding_intro" | null;
-  /** One of the six collections. Was `series` until 0063 replaced it. */
+  placement:
+    | "daily_lifestyle"
+    | "daily_pitch"
+    | "onboarding_intro"
+    | "technician_daily"
+    | null;
+  /** The shelf. Was `series` until 0063 replaced it. */
   collection: string | null;
   craftSeries: string | null;
+  /**
+   * The content type, when it is not the advisor default.
+   *
+   * COLLECTION IS A SHELF; TYPE IS THE ACCESS RULE. content_entitled_read
+   * resolves roles_for_content_type(content.type) and has never looked at
+   * collection, so a technician video filed as advisor_video would be a
+   * technician video every advisor can see. See 0091.
+   */
+  contentType?: "advisor_video" | "technician_video";
 };
 
 const ROUTES: Record<string, Route> = {
@@ -97,6 +134,17 @@ const ROUTES: Record<string, Route> = {
   CRAFT: { placement: "daily_lifestyle", collection: "Craft", craftSeries: null },
   // The first-run intro. Stored correctly; no screen consumes it yet.
   ONBOARDING: { placement: "onboarding_intro", collection: "Onboarding", craftSeries: null },
+  /*
+   * The technician track (0091). A different CONTENT TYPE, not just a different
+   * shelf: entitlement is keyed on type, so this is what makes a tech video
+   * readable by a technician and invisible to an advisor's daily pools.
+   */
+  TECH: {
+    placement: "technician_daily",
+    collection: "Technician Training",
+    craftSeries: null,
+    contentType: "technician_video",
+  },
 };
 
 type Parsed = {
@@ -135,7 +183,19 @@ type Parsed = {
  * goes to review with a reason — never rejected silently, never filed on a
  * shelf nobody chose.
  */
-function parseName(file: string): Parsed | null {
+/**
+ * Voices the library already knows, for the dash-delimited form below.
+ *
+ * A seed, not the whole list: parseName is pure and testable, and ingest passes
+ * the real set from `content` on top of this. These are here so the parser is
+ * useful against an empty database and so the test does not need one.
+ */
+const SEED_VOICES = [
+  "Mitch Hardt", "Kobe Bryant", "Warren Buffett", "Nick Saban", "Ray Lewis",
+  "Jimmy Valvano", "Lou Holtz", "John Wooden", "Ted Lasso", "Vince Lombardi",
+];
+
+function parseName(file: string, knownVoices: Iterable<string> = SEED_VOICES): Parsed | null {
   const ext = (file.match(/\.(mov|mp4|m4v)$/i)?.[1] ?? "mov").toLowerCase();
   let base = file.replace(/\.(mov|mp4|m4v)$/i, "").trim();
 
@@ -162,6 +222,36 @@ function parseName(file: string): Parsed | null {
     title = v[1].trim();
     voice = v[2].trim();
   }
+
+  /*
+   * ---- THE OTHER WAY MITCH WRITES A VOICE --------------------------------
+   *
+   * `TECH — Torque Spec Basics — Mitch Hardt — v1.mov`. The established shape
+   * puts the voice in parentheses, and this one puts it in a third
+   * dash-delimited segment. Both are things a person types; the parser is
+   * forgiving on purpose, and that is the product.
+   *
+   * IT ONLY FIRES ON A VOICE WE ALREADY KNOW, which is what makes it safe.
+   * A title may legitimately contain a dash — the library has
+   * "Watch First — The Walk-Around" — and a heuristic like "two capitalised
+   * words is a name" would eat it. Matching against the known set cannot:
+   * "The Walk-Around" is not a voice, so it stays part of the title, and a
+   * genuinely new voice also stays in the title and goes to review rather than
+   * being guessed at. Same rule as the collection prefix.
+   */
+  if (!voice) {
+    const known = new Map<string, string>();
+    for (const name of knownVoices) known.set(name.toLowerCase(), name);
+    const tail = title.match(/^(.*?)\s*[—–-]+\s*([^—–]+?)\s*$/);
+    if (tail) {
+      const candidate = known.get(tail[2].trim().toLowerCase());
+      if (candidate && tail[1].trim()) {
+        title = tail[1].trim();
+        voice = candidate;
+      }
+    }
+  }
+
   if (!title) return null;
 
   return { file, collection, title, voice, version, bytes: 0, ext };
@@ -246,7 +336,8 @@ async function putFile(url: string, filePath: string, bytes: number) {
   }
 }
 
-(async () => {
+async function main() {
+  const SRC = requireDir();
   /* ---- 1. Read and parse the folder ------------------------------------- */
   const names = (await readdir(SRC)).filter((f) => /\.(mov|mp4|m4v)$/i.test(f));
   const parsed: Parsed[] = [];
@@ -322,7 +413,7 @@ async function putFile(url: string, filePath: string, bytes: number) {
    * makes a video the same idea — and neither has to reconcile the filename's
    * "(Buffett)" with the row's resolved "Warren Buffett".
    */
-  const { data: priorRows } = await sb
+  const { data: priorRows } = await sb()
     .from("content")
     .select("id, canonical_filename, version")
     .not("mux_asset_id", "is", null)
@@ -454,12 +545,14 @@ async function putFile(url: string, filePath: string, bytes: number) {
 
       // The draft lands BEFORE the bytes, so a crash mid-upload still leaves a
       // correctly tagged row for Mux to finish into.
-      const { error } = await sb.from("mux_upload").insert({
+      const { error } = await sb().from("mux_upload").insert({
         upload_id: uploadId,
         status: "waiting",
         draft: {
           title: p.title,
-          type: "advisor_video",
+          /* The route decides, defaulting to advisor. A tech video filed as
+             advisor_video would be readable by every advisor — see 0091. */
+          type: route.contentType ?? "advisor_video",
           collection: route.collection,
           placement: route.placement,
           subcategory: route.craftSeries,
@@ -497,7 +590,22 @@ async function putFile(url: string, filePath: string, bytes: number) {
       `  its asset is ready; the derive-vertical cron picks up the 9:16 within 30\n` +
       `  minutes of that. Nothing is advisor-visible until somebody publishes it.\n`
   );
-})().catch((e) => {
-  console.error(e.message ?? e);
-  process.exit(1);
-});
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * This was a bare IIFE, which means requiring the file for any reason — a test
+ * wanting parseName, a script reusing ROUTES — ran a full Drop Zone ingest
+ * against production. That is not hypothetical: importing import-knowledge.ts
+ * to write a test is exactly how 797 rows were touched and 15 cue bodies
+ * truncated, and this file uploads to Mux.
+ */
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e.message ?? e);
+    process.exit(1);
+  });
+}
+
+export { parseName, ROUTES, SEED_VOICES, canonicalName, type Parsed, type Route };

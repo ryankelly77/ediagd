@@ -876,6 +876,57 @@ export async function pickLifestyleVideo(
 }
 
 /**
+ * The technician's video for the day, or null when the shelf is empty.
+ *
+ * ---------------------------------------------------------------------------
+ * THE SAME MECHANICS AS THE LIFESTYLE ROTATION, AND DELIBERATELY LESS
+ * ---------------------------------------------------------------------------
+ * Same deterministic day-walk, same shaping, same signed playback — so two
+ * technicians at one store see the same video on the same day and each one
+ * recurs once per cycle rather than at random.
+ *
+ * What it does NOT carry is a gate. There is no daily-loop contract for
+ * technicians: no streak to protect, no Sand Dollars to earn, nothing that
+ * depends on having watched it. The caller uses watch policy `credit-only`,
+ * which measures and reports and holds nothing shut. Building a gate before
+ * anybody has decided what a technician's day IS would be inventing the
+ * contract by accident.
+ *
+ * Null is the ordinary state today: no technician video has been filmed. The
+ * caller renders "coming soon" rather than a blank card — doctrine, and the
+ * exact finding this whole task exists to close.
+ */
+export async function pickTechnicianVideo(
+  client: Client,
+  today: IsoDate,
+  userId: string
+): Promise<LifestyleVideoData | null> {
+  const { data: rows } = await client
+    .from("content")
+    .select(
+      "id, title, collection, mux_playback_id, mux_playback_policy, " +
+        "vertical_playback_id, vertical_status, artifact_id"
+    )
+    /* TYPE, not collection. Entitlement is keyed on type (0091), so this is the
+       same predicate RLS is already applying — the pool and the policy agree by
+       construction rather than by coincidence. */
+    .eq("type", "technician_video")
+    .eq("placement", "technician_daily")
+    .eq("status", "published")
+    .not("mux_playback_id", "is", null)
+    .is("retired_at", null)
+    /* Ordered for the same reason the lifestyle pool is: an unordered rotation
+       walks a set that can change under it. */
+    .order("id", { ascending: true });
+
+  const all = (rows ?? []) as VideoRow[];
+  if (all.length === 0) return null;
+
+  const row = all[rotationIndex(today, all.length, 5)];
+  return shapeVideo(client, row, userId, today);
+}
+
+/**
  * Sign a video row and read the viewer's progress against it.
  *
  * Shared by the lifestyle slot and the pitch slot, which need identical

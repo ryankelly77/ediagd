@@ -1,0 +1,11 @@
+{
+  "//": "Standalone build for ingest-name-scenarios.ts. It imports the REAL parseName from ingest-videos.ts — a paraphrase would prove nothing about the function that files Mitch's videos.",
+  "compilerOptions": {
+    "target": "ES2022", "module": "commonjs", "moduleResolution": "node",
+    "esModuleInterop": true, "skipLibCheck": true, "strict": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-nm", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./ingest-name-scenarios.ts", "./ingest-videos.ts"]
+}

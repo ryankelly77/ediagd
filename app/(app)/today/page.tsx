@@ -8,6 +8,7 @@ import {
   pickCoachingCueForBlock,
   pickLifestyleVideo,
   pickPitchVideo,
+  pickTechnicianVideo,
   pickQuotesForDay,
 } from "@/lib/daily";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -16,6 +17,7 @@ import { mintDayStamp } from "@/lib/day-stamp";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
+import { TechnicianDay } from "@/components/daily/TechnicianDay";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 export default async function TodayPage({
@@ -46,10 +48,57 @@ export default async function TodayPage({
 
   const rooftopId = membership.rooftop_id as string;
 
+  /*
+   * ---- IS THIS A TECHNICIAN'S DAY? ---------------------------------------
+   *
+   * TECHNICIAN-ONLY, not "has a technician membership". A mixed advisor +
+   * technician account stays PURE ADVISOR: the advisor experience is the one
+   * with a contract behind it — a streak, Sand Dollars, a coaching block — and
+   * quietly downgrading somebody to the slimmer screen because they also turn a
+   * wrench would take all of that away. Technician content stays reachable
+   * through the library when the LMS lands.
+   *
+   * The `find` order above already prefers advisor; this only decides which
+   * SCREEN renders, and it asks the stricter question.
+   */
+  const roles = new Set((memberships ?? []).map((m) => m.role as string));
+  const technicianOnly = roles.has("technician") && !roles.has("advisor");
+
   const { data: todayRaw } = await supabase.rpc("rooftop_today", {
     _rooftop: rooftopId,
   });
   const today = (todayRaw as IsoDate | null) ?? new Date().toISOString().slice(0, 10);
+
+  /*
+   * ---- THE TECHNICIAN'S DAY, AND THEN NOTHING ELSE RUNS -------------------
+   *
+   * Returned here, before the advisor machinery, on purpose. Everything below
+   * this line — Eddie's Pick, the coaching block, the cue pools, the day stamp
+   * — is advisor apparatus that would either find nothing or, worse, OPEN A
+   * COACHING BLOCK for somebody who will never be coached against it.
+   * ensureBlockForToday writes rows.
+   *
+   * The quote is read through the user's own client, so RLS decides: 0091
+   * widened `quote` to technicians and this is the read that proves it.
+   */
+  if (technicianOnly) {
+    const [techQuotes, techVideo, techSettings, techUser] = await Promise.all([
+      pickQuotesForDay(supabase, today, null),
+      pickTechnicianVideo(supabase, today, user.id),
+      supabase.from("game_settings").select("video_complete_pct").limit(1).maybeSingle(),
+      supabase.from("app_user").select("full_name").eq("id", user.id).maybeSingle(),
+    ]);
+
+    const q = techQuotes.slot3 ?? techQuotes.slot2;
+    return (
+      <TechnicianDay
+        greetingName={firstName(techUser.data?.full_name ?? user.email ?? "there")}
+        quote={q ? { id: q.id, title: q.title, body: q.body, voice: q.voice } : null}
+        video={techVideo}
+        videoThreshold={Number(techSettings.data?.video_complete_pct ?? 90)}
+      />
+    );
+  }
 
   // ---- Already done today? The ritual can't be re-run or re-earned. -------
   // NOT a server redirect: completeDayAction writes Supabase session cookies,

@@ -106,3 +106,6 @@ exports/
 
 # tsc scratch output from npm run import:deck-map
 .tmp-idm/
+
+# tsc scratch output from npm run test:names
+.tmp-nm/

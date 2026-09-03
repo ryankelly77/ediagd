@@ -48,6 +48,25 @@ export default async function AdvisorPage() {
     .maybeSingle();
 
   if (!membership?.op_code_id) {
+    /*
+     * A TECHNICIAN IS NOT AN ADVISOR WITHOUT AN ID.
+     *
+     * Both land here — no advisor membership means no op code — and the
+     * existing copy tells them their numbers appear "as soon as your manager
+     * links you to your advisor ID". For a technician that is not a delay, it
+     * is a category error: nobody is going to link them, because there is
+     * nothing to link them to. Being told to wait for something that will never
+     * arrive is worse than being told plainly that it does not apply.
+     */
+    const { data: anyRole } = await supabase
+      .from("membership")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("active", true);
+    const roles = new Set((anyRole ?? []).map((m) => m.role as string));
+    if (roles.has("technician") && !roles.has("advisor")) {
+      return <NoTechnicianPerformance />;
+    }
     return <NoAdvisorProfile />;
   }
 
@@ -406,6 +425,36 @@ function SecondaryStat({ label, value }: { label: string; value: string }) {
 }
 
 /** Signed in, but this account isn't linked to a DMS advisor record yet. */
+/**
+ * The honest answer for a technician on the performance page.
+ *
+ * Not a crash and not an empty chart — the two things the review's finding 10
+ * said a provisioned technician actually gets today. Performance here means
+ * attach rate against DMS repair orders, which is measured per advisor op code;
+ * a technician has none, and there is no technician measurement yet by design.
+ * The screen says that instead of implying a missing setup step.
+ */
+function NoTechnicianPerformance() {
+  return (
+    <main className="mx-auto max-w-app px-4 py-10">
+      <Card className="p-6">
+        <h1 className="text-lg font-extrabold text-navy">
+          No performance tracking on technician accounts
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          These numbers come from advisor repair orders — attach rate, labor,
+          what got offered. There is nothing here to measure for a technician
+          account, and that is on purpose rather than something waiting to be
+          switched on.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+          Your training lives on the Today screen.
+        </p>
+      </Card>
+    </main>
+  );
+}
+
 function NoAdvisorProfile() {
   return (
     <main className="mx-auto max-w-app px-4 py-10">
