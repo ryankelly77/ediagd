@@ -111,6 +111,16 @@ export type SubCategoryRow = {
   /** Summed across the dealer's rooftops. */
   ros: number;
   labor: number;
+  /**
+   * This row's labor as a share of the dealer's total, in percentage points.
+   *
+   * What ruling it moves on the coverage figure — the number that says how much
+   * of the money somebody has actually signed off on, rather than how many rows
+   * they got through. The two diverge hard: 58 auto rows carry 52.9% of the
+   * labor and 9 unruled rows carry 24.7%, so the nine at the top are worth more
+   * than most of the fifty-eight.
+   */
+  laborShare: number;
   storeCount: number;
   /** One entry per rooftop that has ruled — usually all or none. */
   families: { rooftopId: string; family: string | null; status: string }[];
@@ -251,6 +261,7 @@ export async function loadSubCategories(
       subCategory: name,
       ros: Math.round(v?.ros ?? 0),
       labor: Math.round(v?.labor ?? 0),
+      laborShare: 0, // filled below, once the dealer total is known
       storeCount: v?.storeCount ?? 0,
       families: ruled.map((r) => ({
         rooftopId: r.rooftop_id,
@@ -272,7 +283,48 @@ export async function loadSubCategories(
 
   /* Money first. This is the whole point of the ordering. */
   rows.sort((a, b) => b.labor - a.labor || b.ros - a.ros);
+
+  /* Each row's share of the dealer's labor, once the whole is known. */
+  const dealerLabor = rows.reduce((sum, r) => sum + r.labor, 0);
+  for (const r of rows) {
+    r.laborShare =
+      dealerLabor > 0 ? Math.round((r.labor / dealerLabor) * 1000) / 10 : 0;
+  }
   return rows;
+}
+
+/**
+ * How much of the dealer's labor somebody has actually ruled on.
+ *
+ * The unmapped COUNT says how many rows are left; this says how much money is
+ * behind them. Mitch is done when this is high, not when the count is low.
+ *
+ * `ruled` is confirmed or not-coachable — a person decided. Auto rows are
+ * counted toward a family already and their numbers are live, but nobody has
+ * agreed with the rule file, so they are not ruled.
+ */
+export function laborCoverage(rows: SubCategoryRow[]): {
+  totalLabor: number;
+  ruledLabor: number;
+  ruledPct: number;
+  autoPct: number;
+  openPct: number;
+} {
+  const totalLabor = rows.reduce((s, r) => s + r.labor, 0);
+  const share = (f: (r: SubCategoryRow) => boolean) =>
+    totalLabor > 0
+      ? Math.round((rows.filter(f).reduce((s, r) => s + r.labor, 0) / totalLabor) * 1000) / 10
+      : 0;
+  const ruledLabor = rows
+    .filter((r) => r.status === "confirmed" || r.status === "not_coachable")
+    .reduce((s, r) => s + r.labor, 0);
+  return {
+    totalLabor,
+    ruledLabor,
+    ruledPct: share((r) => r.status === "confirmed" || r.status === "not_coachable"),
+    autoPct: share((r) => r.status === "auto"),
+    openPct: share((r) => r.status === "unmapped" || r.status === "mixed"),
+  };
 }
 
 /* ---------------------------------------------------------------------------

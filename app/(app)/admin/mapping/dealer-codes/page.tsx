@@ -7,7 +7,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
 import { ruleOpCode } from "@/lib/mapping/dealer-code-actions";
 import { appliesLabel, plainDate } from "@/lib/mapping/epoch";
-import { opCodeRowAction, subCategoryRowAction } from "@/lib/mapping/dealer-codes";
+import { laborCoverage, opCodeRowAction, subCategoryRowAction } from "@/lib/mapping/dealer-codes";
 import {
   loadDealers,
   loadOpCodes,
@@ -102,6 +102,7 @@ export default async function DealerCodesPage({
                 subCount={subs.length}
                 unmapped={unmapped}
                 waiting={waiting}
+                ruledPct={laborCoverage(subs).ruledPct}
                 opTotal={ops.total}
                 noMatch={ops.noMatch}
                 coveragePct={ops.coveragePct}
@@ -171,6 +172,7 @@ function Summary({
   subCount,
   unmapped,
   waiting,
+  ruledPct,
   opTotal,
   noMatch,
   coveragePct,
@@ -182,6 +184,7 @@ function Summary({
   subCount: number;
   unmapped: number;
   waiting: number;
+  ruledPct: number;
   opTotal: number;
   noMatch: number;
   coveragePct: number;
@@ -197,6 +200,17 @@ function Summary({
           <Stat label="Unmapped" value={unmapped} tone={unmapped > 0 ? "clay" : "palm"} />
           <Stat label="Proposals waiting" value={waiting} tone={waiting > 0 ? "gold" : "palm"} />
           <Stat label="Sub-categories" value={subCount} />
+          {/* The section 1 twin of op-code coverage: how much of the money a
+              person has actually ruled on, not how many rows they got through. */}
+          <div>
+            <div className="text-2xl font-extrabold text-navy">
+              {ruledPct}
+              <span className="text-base">%</span>
+            </div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              of labor $ a person has ruled
+            </div>
+          </div>
           <Stat label="DMS op codes" value={opTotal} />
           <Stat label="No auto-match" value={noMatch} />
         </div>
@@ -215,10 +229,10 @@ function Summary({
             <span className="text-base">%</span>
           </div>
           <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-            of labor $ bridged
+            of labor $ on a code we recognise
           </div>
           <div className="mt-0.5 text-[11px] text-ink-soft">
-            {money(coveredLabor)} of {money(totalLabor)}
+            {money(coveredLabor)} of {money(totalLabor)} · op-code grain
           </div>
         </div>
 
@@ -345,6 +359,9 @@ function RowGroup({
               <th className="p-3 text-right">ROs</th>
               <th className="p-3 text-right">Stores</th>
               <th className="p-3">Family</th>
+              {/* What ruling this row moves on the coverage figure. Meaning
+                  differs by group, so the group blurb says which — see below. */}
+              <th className="p-3 text-right">Share of $</th>
               <th className="p-3">Mitch&rsquo;s proposal</th>
               <th className="w-[230px] p-3">Ruling</th>
             </tr>
@@ -374,6 +391,7 @@ function SubCategorySection({
   const needsRuling = rows.filter((r) => weightOf(r) === "needs-ruling");
   const confirmable = rows.filter((r) => weightOf(r) === "confirmable");
   const ruled = rows.filter((r) => weightOf(r) === "ruled");
+  const { ruledPct, autoPct, openPct } = laborCoverage(rows);
 
   return (
     <section className="mt-8">
@@ -387,21 +405,21 @@ function SubCategorySection({
       <div className="mt-3">
         <RowGroup
           title="Needs your ruling"
-          blurb="No family yet — these ROs count toward nothing."
+          blurb={`No family yet — these ROs count toward nothing. Ruling one starts counting its labor, and adds its share to coverage. ${openPct} pts sit here.`}
           rows={needsRuling}
           dealer={dealer}
           locked={locked}
         />
         <RowGroup
           title="Confirm the automatic"
-          blurb="Classified by rule. Confirming changes no number, only who decided."
+          blurb={`Classified by rule, so the labor is already counted. Confirming changes no number — it moves the share a person has signed off. ${autoPct} pts sit here.`}
           rows={confirmable}
           dealer={dealer}
           locked={locked}
         />
         <RowGroup
           title="Ruled"
-          blurb="Decided. Nothing to do."
+          blurb={`Decided. ${ruledPct} pts of the dealer's labor.`}
           rows={ruled}
           dealer={dealer}
           locked={locked}
@@ -464,6 +482,20 @@ function SubCategoryRowView({
 
       <td className="p-3">
         <FamilyState status={row.status} family={row.family} />
+      </td>
+
+      <td className="p-3 text-right tabular-nums">
+        {weight === "ruled" ? (
+          <span className="text-xs text-ink-soft">{row.laborShare}%</span>
+        ) : (
+          <span
+            className={`text-xs font-bold ${
+              weight === "needs-ruling" ? "text-clay" : "text-ink"
+            }`}
+          >
+            +{row.laborShare} pts
+          </span>
+        )}
       </td>
 
       <td className="p-3">
