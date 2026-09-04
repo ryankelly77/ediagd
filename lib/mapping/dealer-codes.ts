@@ -121,6 +121,16 @@ export type SubCategoryRow = {
    * than most of the fifty-eight.
    */
   laborShare: number;
+  /**
+   * The five states Mitch actually cares about, which `status` alone cannot
+   * express: it has no value for "somebody agreed with the rule file" as
+   * distinct from "somebody chose this themselves". Both are `confirmed`.
+   *
+   * The difference is in the version history — a row confirmed FROM an auto
+   * classification has a retired predecessor that was `auto` with the same
+   * family. One that was chosen has either no predecessor or a different value.
+   */
+  ruling: "by-hand" | "auto-confirmed" | "auto" | "none" | "not-coachable";
   storeCount: number;
   /** One entry per rooftop that has ruled — usually all or none. */
   families: { rooftopId: string; family: string | null; status: string }[];
@@ -155,7 +165,7 @@ export async function loadSubCategories(
 ): Promise<SubCategoryRow[]> {
   if (dealer.rooftopIds.length === 0) return [];
 
-  const [{ data: metrics }, { data: maps }, { data: proposals }] = await Promise.all([
+  const [{ data: metrics }, { data: maps }, { data: proposals }, retired] = await Promise.all([
     /* AGGREGATED IN THE DATABASE (0095). This used to sum dms_daily_metric in
        here behind a .limit(50000) — on a 156,918-row table, which meant the
        screen saw a fraction of the dealer's codes and printed the fraction as
@@ -175,7 +185,27 @@ export async function loadSubCategories(
       .from("mapping_alias")
       .select("alias, canonical, confirmed, evidence_ros, evidence_labor, evidence_stores, evidence_period, note")
       .eq("kind", "op_code"),
+    /* Retired versions, so a confirmed row can say whether it agreed with the
+       rule file or overrode it. Paginated for the same reason everything else
+       here is — versions accumulate. */
+    allRows<{ sub_category: string; family: string | null; status: string; retired_at: string }>(
+      () =>
+        service
+          .from("sub_category_map")
+          .select("sub_category, family, status, retired_at")
+          .in("rooftop_id", dealer.rooftopIds)
+          .not("retired_at", "is", null)
+          .order("retired_at", { ascending: false })
+    ),
   ]);
+
+  /* The most recent retired version per sub-category — what this row replaced. */
+  const previous = new Map<string, { family: string | null; status: string }>();
+  for (const r of retired) {
+    if (!previous.has(r.sub_category)) {
+      previous.set(r.sub_category, { family: r.family, status: r.status });
+    }
+  }
 
   type Agg = { ros: number; labor: number; storeCount: number };
   const volume = new Map<string, Agg>();
@@ -262,6 +292,7 @@ export async function loadSubCategories(
       ros: Math.round(v?.ros ?? 0),
       labor: Math.round(v?.labor ?? 0),
       laborShare: 0, // filled below, once the dealer total is known
+      ruling: rulingOf(status, families.size === 1 ? [...families][0] || null : null, previous.get(name)),
       storeCount: v?.storeCount ?? 0,
       families: ruled.map((r) => ({
         rooftopId: r.rooftop_id,
@@ -291,6 +322,58 @@ export async function loadSubCategories(
       dealerLabor > 0 ? Math.round((r.labor / dealerLabor) * 1000) / 10 : 0;
   }
   return rows;
+}
+
+/**
+ * Which of the five states a row is in.
+ *
+ * `confirmed` splits in two, and the split is the interesting part: agreeing
+ * with the rule file and overriding it are different amounts of information,
+ * and a table that shows them as one number cannot tell you whether the
+ * automatic classifier is any good.
+ */
+function rulingOf(
+  status: string,
+  family: string | null,
+  prior: { family: string | null; status: string } | undefined
+): SubCategoryRow["ruling"] {
+  if (status === "not_coachable") return "not-coachable";
+  if (status === "auto") return "auto";
+  if (status === "confirmed") {
+    return prior && prior.status === "auto" && prior.family === family
+      ? "auto-confirmed"
+      : "by-hand";
+  }
+  return "none";
+}
+
+/** The five states, with the money behind each. */
+export function laborBreakdown(rows: SubCategoryRow[]): {
+  totalLabor: number;
+  states: { key: SubCategoryRow["ruling"]; label: string; rows: number; labor: number; pct: number }[];
+} {
+  const totalLabor = rows.reduce((s, r) => s + r.labor, 0);
+  const order: { key: SubCategoryRow["ruling"]; label: string }[] = [
+    { key: "by-hand", label: "Ruled by hand" },
+    { key: "auto-confirmed", label: "Auto, confirmed" },
+    { key: "auto", label: "Auto, unconfirmed" },
+    { key: "none", label: "No ruling" },
+    { key: "not-coachable", label: "Not coachable" },
+  ];
+  return {
+    totalLabor,
+    states: order.map(({ key, label }) => {
+      const group = rows.filter((r) => r.ruling === key);
+      const labor = group.reduce((s, r) => s + r.labor, 0);
+      return {
+        key,
+        label,
+        rows: group.length,
+        labor,
+        pct: totalLabor > 0 ? Math.round((labor / totalLabor) * 1000) / 10 : 0,
+      };
+    }),
+  };
 }
 
 /**

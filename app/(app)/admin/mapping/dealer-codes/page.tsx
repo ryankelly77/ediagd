@@ -7,7 +7,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
 import { ruleOpCode } from "@/lib/mapping/dealer-code-actions";
 import { appliesLabel, plainDate } from "@/lib/mapping/epoch";
-import { laborCoverage, opCodeRowAction, subCategoryRowAction } from "@/lib/mapping/dealer-codes";
+import { laborBreakdown, opCodeRowAction, subCategoryRowAction } from "@/lib/mapping/dealer-codes";
 import {
   loadDealers,
   loadOpCodes,
@@ -75,8 +75,6 @@ export default async function DealerCodesPage({
         }),
   ]);
 
-  const unmapped = subs.filter((s) => s.status === "unmapped").length;
-  const waiting = subs.filter((s) => s.proposal).length;
   const locked = Boolean(dealer?.lockedAt);
 
   return (
@@ -97,19 +95,7 @@ export default async function DealerCodesPage({
 
           {dealer && (
             <>
-              <Summary
-                dealer={dealer}
-                subCount={subs.length}
-                unmapped={unmapped}
-                waiting={waiting}
-                ruledPct={laborCoverage(subs).ruledPct}
-                opTotal={ops.total}
-                noMatch={ops.noMatch}
-                coveragePct={ops.coveragePct}
-                coveredLabor={ops.coveredLabor}
-                totalLabor={ops.totalLabor}
-                locked={locked}
-              />
+              <Summary dealer={dealer} rows={subs} locked={locked} />
 
               <SubCategorySection
                 dealer={dealer}
@@ -122,6 +108,9 @@ export default async function DealerCodesPage({
                 rows={ops.rows}
                 total={ops.total}
                 noMatch={ops.noMatch}
+                coveragePct={ops.coveragePct}
+                coveredLabor={ops.coveredLabor}
+                totalLabor={ops.totalLabor}
                 showingAll={codesParam === "all"}
                 locked={locked}
               />
@@ -169,75 +158,61 @@ function DealerPicker({ dealers, current }: { dealers: Dealer[]; current: Dealer
 
 function Summary({
   dealer,
-  subCount,
-  unmapped,
-  waiting,
-  ruledPct,
-  opTotal,
-  noMatch,
-  coveragePct,
-  coveredLabor,
-  totalLabor,
+  rows,
   locked,
 }: {
   dealer: Dealer;
-  subCount: number;
-  unmapped: number;
-  waiting: number;
-  ruledPct: number;
-  opTotal: number;
-  noMatch: number;
-  coveragePct: number;
-  coveredLabor: number;
-  totalLabor: number;
+  rows: SubCategoryRow[];
   locked: boolean;
 }) {
+  /*
+   * ---- FIVE STATES, IN MONEY --------------------------------------------
+   *
+   * This card carried seven unrelated counts and two percentages — sub-category
+   * totals next to op-code totals next to two different coverage figures — and
+   * read as a pile rather than a picture. The op-code numbers moved down to
+   * section 2 where they belong; what is left is one question answered five
+   * ways: where is this dealer's labor, by how well it has been ruled.
+   *
+   * Money AND rows, because they disagree and both matter: nine unruled
+   * sub-categories carry a quarter of the labor.
+   */
+  const { totalLabor, states } = laborBreakdown(rows);
+
   return (
     <Card className="mt-4 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-wrap gap-x-8 gap-y-3">
-          {/* Unmapped is FIRST and is never hidden — it is the queue. */}
-          <Stat label="Unmapped" value={unmapped} tone={unmapped > 0 ? "clay" : "palm"} />
-          <Stat label="Proposals waiting" value={waiting} tone={waiting > 0 ? "gold" : "palm"} />
-          <Stat label="Sub-categories" value={subCount} />
-          {/* The section 1 twin of op-code coverage: how much of the money a
-              person has actually ruled on, not how many rows they got through. */}
-          <div>
-            <div className="text-2xl font-extrabold text-navy">
-              {ruledPct}
-              <span className="text-base">%</span>
-            </div>
-            <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-              of labor $ a person has ruled
-            </div>
-          </div>
-          <Stat label="DMS op codes" value={opTotal} />
-          <Stat label="No auto-match" value={noMatch} />
-        </div>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+            {dealer.name} · {money(totalLabor)} of labor
+          </p>
 
-        {/*
-          THE NUMBER THAT SAYS WHEN HE IS DONE ENOUGH.
-          The counts measure effort; this measures progress. Doggett's top few
-          op codes carry millions and the tail carries hundreds, so ruling a
-          hundred codes off the bottom moves the count a long way and the money
-          hardly at all. A no-match ruling is not coverage — the dollars behind
-          it are still bridged to nothing.
-        */}
-        <div className="min-w-[190px]">
-          <div className="text-2xl font-extrabold text-navy">
-            {coveragePct}
-            <span className="text-base">%</span>
-          </div>
-          <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-            of labor $ on a code we recognise
-          </div>
-          <div className="mt-0.5 text-[11px] text-ink-soft">
-            {money(coveredLabor)} of {money(totalLabor)} · op-code grain
+          <div className="mt-3 flex flex-wrap gap-x-8 gap-y-4">
+            {states.map((st) => (
+              <div key={st.key}>
+                <div
+                  className={`text-2xl font-extrabold ${
+                    st.key === "none"
+                      ? "text-clay"
+                      : st.key === "auto"
+                        ? "text-gold-deep"
+                        : "text-navy"
+                  }`}
+                >
+                  {st.pct}
+                  <span className="text-base">%</span>
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                  {st.label}
+                </div>
+                <div className="mt-0.5 text-[11px] text-ink-soft">
+                  {money(st.labor)} · {st.rows} {st.rows === 1 ? "row" : "rows"}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Navigates. Locking changes what every number afterwards means, so it
-            is not something a stray click can do — see the lock screen. */}
         <Link
           href={`/admin/mapping/dealer-codes/lock?dealer=${dealer.id}`}
           className={`whitespace-nowrap rounded-pill border px-4 py-2 text-sm font-bold ${
@@ -270,28 +245,6 @@ function Summary({
   );
 }
 
-function Stat({
-  label,
-  value,
-  tone = "ink",
-}: {
-  label: string;
-  value: number;
-  tone?: "ink" | "clay" | "palm" | "gold";
-}) {
-  const colour = {
-    ink: "text-navy",
-    clay: "text-clay",
-    palm: "text-palm",
-    gold: "text-gold-deep",
-  }[tone];
-  return (
-    <div>
-      <div className={`text-2xl font-extrabold ${colour}`}>{value}</div>
-      <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">{label}</div>
-    </div>
-  );
-}
 
 const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 
@@ -391,7 +344,15 @@ function SubCategorySection({
   const needsRuling = rows.filter((r) => weightOf(r) === "needs-ruling");
   const confirmable = rows.filter((r) => weightOf(r) === "confirmable");
   const ruled = rows.filter((r) => weightOf(r) === "ruled");
-  const { ruledPct, autoPct, openPct } = laborCoverage(rows);
+  /* The group blurbs say how much money sits in each group — the same
+     breakdown the card shows, said where the work is. */
+  const byState = Object.fromEntries(
+    laborBreakdown(rows).states.map((st) => [st.key, st.pct])
+  ) as Record<SubCategoryRow["ruling"], number>;
+  const openPct = byState["none"];
+  const autoPct = byState["auto"];
+  const ruledPct =
+    Math.round((byState["by-hand"] + byState["auto-confirmed"] + byState["not-coachable"]) * 10) / 10;
 
   return (
     <section className="mt-8">
@@ -794,6 +755,9 @@ function OpCodeSection({
   rows,
   total,
   noMatch,
+  coveragePct,
+  coveredLabor,
+  totalLabor,
   showingAll,
   locked,
 }: {
@@ -801,6 +765,9 @@ function OpCodeSection({
   rows: OpCodeRow[];
   total: number;
   noMatch: number;
+  coveragePct: number;
+  coveredLabor: number;
+  totalLabor: number;
   showingAll: boolean;
   locked: boolean;
 }) {
@@ -817,6 +784,16 @@ function OpCodeSection({
       <p className="mt-1 px-1 text-xs leading-relaxed text-ink-soft">
         Nothing reads this yet — used when coaching moves to op-code precision. Rulings are
         recorded with the same effective dating so the history is already honest when it does.
+      </p>
+      {/* The op-code numbers live here rather than in the card at the top: they
+          are a different grain, and standing them next to the sub-category
+          figures made both harder to read. */}
+      <p className="mt-1 px-1 text-xs leading-relaxed text-ink-soft">
+        <strong className="text-navy">
+          {coveragePct}% of labor $ on a code we recognise
+        </strong>{" "}
+        — {money(coveredLabor)} of {money(totalLabor)}. {total} codes, {noMatch} with no
+        auto-match.
       </p>
 
       <div className="mt-3">
