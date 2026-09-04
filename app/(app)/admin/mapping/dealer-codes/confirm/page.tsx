@@ -14,6 +14,7 @@ import {
   storeToday,
 } from "@/lib/mapping/epoch";
 import { loadDealers } from "@/lib/mapping/dealer-codes";
+import { TypedConfirm } from "@/components/admin/TypedConfirm";
 
 /**
  * Correction or Change, for a sub-category across a whole dealer.
@@ -187,10 +188,10 @@ export default async function ConfirmDealerCodeEdit({
         )}
         {dealer.lockedAt && (
           <p className="mt-3 rounded-card border border-clay/40 bg-clay/10 p-3 text-sm leading-relaxed text-ink">
-            <strong className="text-navy">This dealer&rsquo;s table is locked.</strong> The
-            codes were ruled complete on {dealer.lockedAt.slice(0, 10)}. Editing now is not
-            finishing onboarding — it changes a mapping that measured months have already
-            run through, so choose deliberately.
+            <strong className="text-navy">This table is locked.</strong>{" "}
+            {dealer.name}&rsquo;s codes were declared finished on{" "}
+            {dealer.lockedAt.slice(0, 10)}. An edit from here starts a new measurement
+            epoch — see below.
           </p>
         )}
       </Card>
@@ -227,26 +228,60 @@ export default async function ConfirmDealerCodeEdit({
             with no way to see what it would move. This screen can show that, so
             this is where the choice belongs.
           */}
-          <form action={setFamilyEverywhere} className="mt-3 flex flex-wrap items-center gap-2">
+          <form action={setFamilyEverywhere} className="mt-3">
             <input type="hidden" name="subCategory" value={subCategory} />
-            <select
-              name="family"
-              defaultValue={newFamily ?? currentFamilies[0] ?? ""}
-              className="rounded-xl border border-line bg-cream-card px-3 py-2 text-sm text-navy"
-            >
-              <option value="">— choose a family —</option>
-              {familyNames.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="rounded-xl bg-gold px-4 py-2 text-sm font-extrabold text-navy transition hover:brightness-95"
-            >
-              Save as a correction
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                name="family"
+                defaultValue={newFamily ?? currentFamilies[0] ?? ""}
+                className="rounded-xl border border-line bg-cream-card px-3 py-2 text-sm text-navy"
+              >
+                <option value="">— choose a family —</option>
+                {familyNames.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+              {/* Before the lock, one step. The 60-row grind must not grow
+                  ceremony or it stops getting done. */}
+              {!dealer.lockedAt && (
+                <button
+                  type="submit"
+                  className="rounded-xl bg-gold px-4 py-2 text-sm font-extrabold text-navy transition hover:brightness-95"
+                >
+                  Save as a correction
+                </button>
+              )}
+            </div>
+
+            {/*
+              AFTER THE LOCK, THE SAME WEIGHT AS LOCKING ITSELF.
+              The table was declared finished, so this edit is not completing
+              onboarding — it restates what months of measurement were computed
+              through. That is a new epoch, and a new epoch is a thing somebody
+              should have to read before doing.
+            */}
+            {dealer.lockedAt && (
+              <div className="mt-3 rounded-card border border-clay/40 bg-clay/10 p-4">
+                <p className="text-sm font-extrabold text-navy">
+                  This starts a new measurement epoch
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-ink">
+                  {dealer.name}&rsquo;s table was declared finished, so advisors have been
+                  measured through this mapping. Changing it now recomputes{" "}
+                  {allPeriods.length}{" "}
+                  {allPeriods.length === 1 ? "period" : "periods"} — the before and after
+                  numbers will no longer be directly comparable, and the change is recorded
+                  as such.
+                </p>
+                <TypedConfirm
+                  phrase="start new epoch"
+                  label="Start a new epoch and apply"
+                  hint="To confirm, type:"
+                />
+              </div>
+            )}
           </form>
         </Card>
 
@@ -297,12 +332,34 @@ export default async function ConfirmDealerCodeEdit({
             className="mt-3"
           >
             <input type="hidden" name="subCategory" value={subCategory} />
-            <button
-              type="submit"
-              className="rounded-xl border border-line bg-cream-card px-4 py-2 text-sm font-extrabold text-navy"
-            >
-              {alreadyNotCoachable ? "Back to the queue" : "Not coachable"}
-            </button>
+            {/* Ruling something out of coaching after the lock is as much a new
+                epoch as re-filing it — it removes ROs from every advisor's
+                denominator for every month already measured. Same gate. */}
+            {dealer.lockedAt ? (
+              <div className="rounded-card border border-clay/40 bg-clay/10 p-4">
+                <p className="text-sm font-extrabold text-navy">
+                  This starts a new measurement epoch
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-ink">
+                  {alreadyNotCoachable
+                    ? `Putting this back in the queue adds its ROs to every advisor's denominator across ${allPeriods.length} measured periods.`
+                    : `Ruling this out removes its ROs from every advisor's denominator across ${allPeriods.length} measured periods.`}{" "}
+                  The before and after numbers will no longer be directly comparable.
+                </p>
+                <TypedConfirm
+                  phrase="start new epoch"
+                  label={alreadyNotCoachable ? "Start a new epoch and reopen" : "Start a new epoch and rule it out"}
+                  hint="To confirm, type:"
+                />
+              </div>
+            ) : (
+              <button
+                type="submit"
+                className="rounded-xl border border-line bg-cream-card px-4 py-2 text-sm font-extrabold text-navy"
+              >
+                {alreadyNotCoachable ? "Back to the queue" : "Not coachable"}
+              </button>
+            )}
           </form>
         </Card>
 

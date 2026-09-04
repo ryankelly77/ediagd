@@ -5,7 +5,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { setFamilyEverywhere } from "@/lib/dms/mapping-actions";
-import { ruleOpCode, setDealerLock } from "@/lib/mapping/dealer-code-actions";
+import { ruleOpCode } from "@/lib/mapping/dealer-code-actions";
 import { appliesLabel, plainDate } from "@/lib/mapping/epoch";
 import { opCodeRowAction, subCategoryRowAction } from "@/lib/mapping/dealer-codes";
 import {
@@ -222,18 +222,16 @@ function Summary({
           </div>
         </div>
 
-        <form action={setDealerLock}>
-          <input type="hidden" name="dealerId" value={dealer.id} />
-          <input type="hidden" name="locked" value={locked ? "0" : "1"} />
-          <button
-            type="submit"
-            className={`rounded-pill border px-4 py-2 text-sm font-bold ${
-              locked ? "border-line bg-cream-card text-ink" : "border-navy bg-navy text-white"
-            }`}
-          >
-            {locked ? "Unlock table" : "Lock table"}
-          </button>
-        </form>
+        {/* Navigates. Locking changes what every number afterwards means, so it
+            is not something a stray click can do — see the lock screen. */}
+        <Link
+          href={`/admin/mapping/dealer-codes/lock?dealer=${dealer.id}`}
+          className={`whitespace-nowrap rounded-pill border px-4 py-2 text-sm font-bold ${
+            locked ? "border-line bg-cream-card text-ink" : "border-navy bg-navy text-white"
+          }`}
+        >
+          {locked ? "Reopen table…" : "Lock table…"}
+        </Link>
       </div>
 
       {locked && (
