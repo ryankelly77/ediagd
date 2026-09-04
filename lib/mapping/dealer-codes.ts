@@ -342,8 +342,18 @@ export async function loadOpCodes(
   service: Client,
   dealer: Dealer,
   limit = 400
-): Promise<{ rows: OpCodeRow[]; total: number; noMatch: number }> {
-  if (dealer.rooftopIds.length === 0) return { rows: [], total: 0, noMatch: 0 };
+): Promise<{
+  rows: OpCodeRow[];
+  total: number;
+  noMatch: number;
+  /* Dollar coverage — see the note where it is computed. */
+  coveredLabor: number;
+  totalLabor: number;
+  coveragePct: number;
+}> {
+  if (dealer.rooftopIds.length === 0) {
+    return { rows: [], total: 0, noMatch: 0, coveredLabor: 0, totalLabor: 0, coveragePct: 0 };
+  }
 
   const [{ data: metrics }, { data: rulings }, { data: catalog }] = await Promise.all([
     /* Aggregated in the database (0095) — see the note in loadSubCategories.
@@ -438,7 +448,40 @@ export async function loadOpCodes(
     });
   }
 
-  return { rows: rows.slice(0, limit), total: rows.length, noMatch };
+  /*
+   * ---- DOLLAR COVERAGE ----------------------------------------------------
+   *
+   * The count of ruled codes is a measure of effort. THIS is the measure of
+   * progress: the share of the dealer's labor dollars whose DMS code is bridged
+   * to one of ours, either ruled or proposed.
+   *
+   * They diverge sharply because volume does. Doggett has 1,805 codes and the
+   * top few carry millions while the long tail carries hundreds, so ruling a
+   * hundred codes off the bottom of the list moves the count a long way and the
+   * money barely at all.
+   *
+   * A `no_match` ruling does NOT count as covered. It is a real decision and it
+   * empties the queue, but the dollars behind it are still bridged to nothing —
+   * and pretending otherwise would let coverage reach 100% while the biggest
+   * buckets remain untranslatable. That gap is the honest ceiling: `100`,
+   * `MISC` and `DIAG` are catch-alls no catalog code fits, so coverage will
+   * stop somewhere short of everything, and where it stops is worth knowing.
+   *
+   * Computed over EVERY row, before the display limit slices the list.
+   */
+  const totalLabor = rows.reduce((sum, r) => sum + r.labor, 0);
+  const coveredLabor = rows
+    .filter((r) => r.canonical !== null || r.suggestion !== null)
+    .reduce((sum, r) => sum + r.labor, 0);
+
+  return {
+    rows: rows.slice(0, limit),
+    total: rows.length,
+    noMatch,
+    coveredLabor,
+    totalLabor,
+    coveragePct: totalLabor > 0 ? Math.round((coveredLabor / totalLabor) * 1000) / 10 : 0,
+  };
 }
 
 /* ---------------------------------------------------------------------------

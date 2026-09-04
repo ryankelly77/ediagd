@@ -116,11 +116,16 @@ export default async function RuleOpCodePage({
       {/* The one thing somebody ruling 1,805 of these needs to know up front. */}
       <Card className="mt-4 border-dashed p-5">
         <p className="text-sm leading-relaxed text-ink-soft">
-          <strong className="text-navy">Nothing reads this yet.</strong> Coaching is measured
-          at family grain today, so a ruling here changes no advisor&apos;s numbers. It is
-          recorded with the same effective dating as everything else so that when coaching
-          moves to op-code precision, this table can already say what each code meant in
-          every month that was measured.
+          {/* Explicit {" "} rather than a literal space: JSX keeps a space that
+              sits on the same line as the tag, and drops it the moment a
+              formatter wraps the line. One is a rendering that depends on
+              formatting; the other is a space. */}
+          <strong className="text-navy">Nothing reads this yet.</strong>{" "}
+          Coaching is measured at family grain today, so a ruling here changes no
+          advisor&apos;s numbers. It is recorded with the same effective dating as
+          everything else so that when coaching moves to op-code precision, this
+          table can already say what each code meant in every month that was
+          measured.
         </p>
       </Card>
 

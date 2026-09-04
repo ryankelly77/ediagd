@@ -65,7 +65,14 @@ export default async function DealerCodesPage({
     dealer ? loadSubCategories(service, dealer) : Promise.resolve([]),
     dealer
       ? loadOpCodes(service, dealer, codesParam === "all" ? 5000 : 150)
-      : Promise.resolve({ rows: [], total: 0, noMatch: 0 }),
+      : Promise.resolve({
+          rows: [],
+          total: 0,
+          noMatch: 0,
+          coveredLabor: 0,
+          totalLabor: 0,
+          coveragePct: 0,
+        }),
   ]);
 
   const unmapped = subs.filter((s) => s.status === "unmapped").length;
@@ -97,6 +104,9 @@ export default async function DealerCodesPage({
                 waiting={waiting}
                 opTotal={ops.total}
                 noMatch={ops.noMatch}
+                coveragePct={ops.coveragePct}
+                coveredLabor={ops.coveredLabor}
+                totalLabor={ops.totalLabor}
                 locked={locked}
               />
 
@@ -163,6 +173,9 @@ function Summary({
   waiting,
   opTotal,
   noMatch,
+  coveragePct,
+  coveredLabor,
+  totalLabor,
   locked,
 }: {
   dealer: Dealer;
@@ -171,6 +184,9 @@ function Summary({
   waiting: number;
   opTotal: number;
   noMatch: number;
+  coveragePct: number;
+  coveredLabor: number;
+  totalLabor: number;
   locked: boolean;
 }) {
   return (
@@ -183,6 +199,27 @@ function Summary({
           <Stat label="Sub-categories" value={subCount} />
           <Stat label="DMS op codes" value={opTotal} />
           <Stat label="No auto-match" value={noMatch} />
+        </div>
+
+        {/*
+          THE NUMBER THAT SAYS WHEN HE IS DONE ENOUGH.
+          The counts measure effort; this measures progress. Doggett's top few
+          op codes carry millions and the tail carries hundreds, so ruling a
+          hundred codes off the bottom moves the count a long way and the money
+          hardly at all. A no-match ruling is not coverage — the dollars behind
+          it are still bridged to nothing.
+        */}
+        <div className="min-w-[190px]">
+          <div className="text-2xl font-extrabold text-navy">
+            {coveragePct}
+            <span className="text-base">%</span>
+          </div>
+          <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+            of labor $ bridged
+          </div>
+          <div className="mt-0.5 text-[11px] text-ink-soft">
+            {money(coveredLabor)} of {money(totalLabor)}
+          </div>
         </div>
 
         <form action={setDealerLock}>
@@ -311,7 +348,7 @@ function RowGroup({
               <th className="p-3 text-right">Stores</th>
               <th className="p-3">Family</th>
               <th className="p-3">Mitch&rsquo;s proposal</th>
-              <th className="p-3">Ruling</th>
+              <th className="w-[230px] p-3">Ruling</th>
             </tr>
           </thead>
           <tbody>
@@ -463,7 +500,7 @@ function SubCategoryRowView({
               <input type="hidden" name="family" value={action.kind === "write" ? action.value : ""} />
               <button
                 type="submit"
-                className="rounded-pill border border-navy bg-navy px-3 py-1 text-xs font-bold text-white"
+                className="whitespace-nowrap rounded-pill border border-navy bg-navy px-3 py-1 text-xs font-bold text-white"
               >
                 Confirm
               </button>
@@ -472,7 +509,7 @@ function SubCategoryRowView({
 
           <Link
             href={reviewHref}
-            className={`rounded-pill border px-3 py-1 text-xs font-bold ${reviewClass}`}
+            className={`whitespace-nowrap rounded-pill border px-3 py-1 text-xs font-bold ${reviewClass}`}
           >
             {canConfirm ? "Review…" : action.label}
           </Link>
@@ -605,11 +642,14 @@ function OpCodeGroup({
         <table className="w-full min-w-[900px] text-sm">
           <thead>
             <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-soft">
+              {/* Explicit widths on the two flexible columns. Without them the
+                  description takes whatever it wants and "Rule it…" wraps into
+                  two lines inside its own pill. */}
               <th className="p-3">DMS code</th>
-              <th className="p-3">What they call it</th>
+              <th className="w-[38%] p-3">What they call it</th>
               <th className="p-3 text-right">Labor</th>
               <th className="p-3 text-right">ROs</th>
-              <th className="p-3">Our code</th>
+              <th className="w-[220px] p-3">Our code</th>
             </tr>
           </thead>
           <tbody>
@@ -679,7 +719,7 @@ function OpCodeRowView({
               <input type="hidden" name="canonical" value={action.value} />
               <button
                 type="submit"
-                className={`rounded-pill border px-3 py-1 text-xs font-bold ${weightClass}`}
+                className={`whitespace-nowrap rounded-pill border px-3 py-1 text-xs font-bold ${weightClass}`}
               >
                 {action.label}
               </button>
@@ -687,7 +727,7 @@ function OpCodeRowView({
           ) : (
             <Link
               href={href}
-              className={`rounded-pill border px-3 py-1 text-xs font-bold ${weightClass}`}
+              className={`whitespace-nowrap rounded-pill border px-3 py-1 text-xs font-bold ${weightClass}`}
             >
               {action.label}
             </Link>
@@ -698,7 +738,7 @@ function OpCodeRowView({
           {action.kind === "write" && (
             <Link
               href={href}
-              className="rounded-pill border border-transparent px-3 py-1 text-xs font-bold text-ocean underline underline-offset-2"
+              className="whitespace-nowrap rounded-pill border border-transparent px-3 py-1 text-xs font-bold text-ocean underline underline-offset-2"
             >
               Different code…
             </Link>
