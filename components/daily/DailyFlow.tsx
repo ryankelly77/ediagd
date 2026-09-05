@@ -462,15 +462,29 @@ function RestDayCard({
           {island ? "Island Time" : "Scheduled day off"} — your streak is safe
         </h1>
 
+        {/*
+          "COUNT" MEANS ONE THING ON THIS SCREEN.
+
+          This used to read "nothing is owed and nothing is counted" directly
+          above a footer promising "it counts in full". Both sentences were
+          true and they were about different things — the day is not counted
+          AGAINST you, and a voluntary rep IS counted FOR you — but an advisor
+          reading them ten lines apart has no way to know that, and the pair
+          reads as the app contradicting itself about whether today matters.
+
+          So the cost sentence stops using the word. "Skipping today costs you
+          nothing" says the same thing in the currency the reader cares about,
+          and leaves "counts" to mean earning, once, in the footer.
+        */}
         <p className="mt-3 text-base leading-relaxed text-ink-soft">
           {island
-            ? "You booked today off, so nothing is owed and nothing is counted. Your Swell picks up where it left off when you're back."
-            : "Today isn't one of your work days, so nothing is owed and nothing is counted. Your Swell picks up on your next scheduled day."}
+            ? "You booked today off, so nothing is owed — skipping today costs you nothing."
+            : "Today isn't one of your work days, so nothing is owed — skipping today costs you nothing."}
           {streak > 0 && (
             <>
               {" "}
               <span className="font-bold text-navy">
-                Day {streak} is still Day {streak} on {island ? "your return" : "Monday"}.
+                Day {streak} is still Day {streak} {island ? "when you're back" : "on Monday"}.
               </span>
             </>
           )}
@@ -532,8 +546,10 @@ function RestDayCard({
         >
           Take today&apos;s rep anyway
         </button>
+        {/* The one place "counts" appears, and it means earning. Colon rather
+            than a dash: the button and this line read as a single sentence. */}
         <p className="mt-2 text-center text-xs text-ink-soft">
-          It counts in full — Sand Dollars, Swell and all.
+          It counts in full: Sand Dollars, Swell and all.
         </p>
       </PhoneScreen.Footer>
     </PhoneScreen>
