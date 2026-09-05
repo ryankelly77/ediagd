@@ -118,3 +118,6 @@ exports/
 
 # tsc scratch output from npm run propose:twins
 .tmp-pt/
+
+# tsc scratch output from npm run test:rest-day
+.tmp-rd/

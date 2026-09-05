@@ -81,6 +81,7 @@ export function DailyFlow({
   dailyLoopSand,
   lifestyle,
   videoThreshold,
+  restDay = null,
 }: {
   alreadyCompleteOnLoad: boolean;
   currentStreak: number;
@@ -129,6 +130,12 @@ export function DailyFlow({
   lifestyle: LifestyleVideo | null;
   /** game_settings.video_complete_pct — the bar a watch has to clear. */
   videoThreshold: number;
+  /**
+   * Set when today is a scheduled day off or inside Island Time. Null on a work
+   * day, and null in the admin preview — the preview exists to demonstrate the
+   * ritual, and a rest card would demonstrate its absence.
+   */
+  restDay?: { kind: "day_off" | "island_time" } | null;
 }) {
   const preview = Boolean(previewResult);
   // The close button in the rail needs it; the nested steps have their own.
@@ -142,6 +149,11 @@ export function DailyFlow({
 
   // Captured at mount, so a later server re-render can't turn this on.
   const [doneOnArrival] = useState(alreadyCompleteOnLoad);
+
+  /* Did they ask for the loop on a day off? One tap, never remembered — the
+     next rest day opens as a rest day again, because volunteering once is not
+     a standing offer to work weekends. */
+  const [revealed, setRevealed] = useState(false);
 
   /*
    * WHAT WAS ACTUALLY WATCHED, held here rather than in the steps, because the
@@ -229,6 +241,35 @@ export function DailyFlow({
   // navigates on its own.
   if (doneOnArrival && !ritualRun && !preview) {
     return <DoneForTodayScreen streak={currentStreak} />;
+  }
+
+  /*
+   * ---- A DAY OFF OPENS AS A CARD, NOT A RITUAL ----------------------------
+   *
+   * Below the already-done check, because somebody who took the voluntary rep
+   * this morning should see the same "done for today" screen everyone else
+   * does, not be sent back to a card offering them a rep they have taken.
+   *
+   * The reveal is CLIENT STATE, not a navigation. The whole day was assembled by
+   * the server and handed down with it — quote, cue, video, day stamp — so
+   * taking the rep starts the ordinary loop instantly and completes with exactly
+   * the payload a Tuesday would have sent. There is no rest-day completion path
+   * to keep in step with the real one, because there is only one path.
+   */
+  if (restDay && !revealed && !preview) {
+    return (
+      <RestDayCard
+        kind={restDay.kind}
+        greetingName={greetingName}
+        quote={quote}
+        video={lifestyle}
+        threshold={videoThreshold}
+        streak={currentStreak}
+        onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
+        onGateMet={(s) => fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s)}
+        onTakeTheRep={() => setRevealed(true)}
+      />
+    );
   }
 
   return (
@@ -353,6 +394,148 @@ export function DailyFlow({
             fallbackStreak={currentStreak}
           />
         )}
+    </PhoneScreen>
+  );
+}
+
+/* ---- The rest day -------------------------------------------------------- */
+
+/**
+ * What /today is on a day nobody asked them to work.
+ *
+ * ---------------------------------------------------------------------------
+ * THE STREAK LINE IS THE POINT OF THE SCREEN
+ * ---------------------------------------------------------------------------
+ * Before this existed, a Mon–Fri advisor opening the app on a Saturday met the
+ * full five-step ritual with a coaching demand in the middle of it, and nothing
+ * anywhere said their Swell was safe. It always was — countMissedWorkDays has
+ * skipped days off since 0025 — but the app had never once said so, which left
+ * the advisor to either work their day off or guess. Saying it plainly is worth
+ * more than every other pixel here.
+ *
+ * WHAT STAYS AVAILABLE, AND WHY IT IS NOT A LOOP
+ * The quote and the video are still here and still free to read and play. What
+ * is gone is the DEMAND: no step count, no Continue, no coaching cue about an
+ * attach rate on a day they are not on the drive. A rest day is not an empty
+ * day; it is a day with nothing owed.
+ *
+ * ONE QUIET ACTION. "Take today's rep anyway" is a link, not a gold button —
+ * the gold on every other screen is the thing the app is asking for, and on
+ * this screen the app is asking for nothing. An advisor who wants the rep can
+ * have it, in one tap, and it counts in full.
+ */
+function RestDayCard({
+  kind,
+  greetingName,
+  quote,
+  video,
+  threshold,
+  streak,
+  onFirstPlay,
+  onGateMet,
+  onTakeTheRep,
+}: {
+  kind: "day_off" | "island_time";
+  greetingName: string;
+  quote: Quote | null;
+  video: LifestyleVideo | null;
+  threshold: number;
+  streak: number;
+  onFirstPlay: () => void;
+  onGateMet: (state: WatchState) => void;
+  onTakeTheRep: () => void;
+}) {
+  const island = kind === "island_time";
+
+  return (
+    <PhoneScreen>
+      <PhoneScreen.Body>
+        <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
+          {BRAND.greeting}, {greetingName}
+        </p>
+
+        {/* The whole message in one line, in the words somebody would use.
+            "Your streak is safe" rather than "this day is excluded from the
+            consecutive-scheduled-work-day calculation", which is the same fact
+            and no comfort at all. */}
+        <h1 className="mt-2 text-3xl font-extrabold leading-tight text-navy">
+          {island ? "Island Time" : "Scheduled day off"} — your streak is safe
+        </h1>
+
+        <p className="mt-3 text-base leading-relaxed text-ink-soft">
+          {island
+            ? "You booked today off, so nothing is owed and nothing is counted. Your Swell picks up where it left off when you're back."
+            : "Today isn't one of your work days, so nothing is owed and nothing is counted. Your Swell picks up on your next scheduled day."}
+          {streak > 0 && (
+            <>
+              {" "}
+              <span className="font-bold text-navy">
+                Day {streak} is still Day {streak} on {island ? "your return" : "Monday"}.
+              </span>
+            </>
+          )}
+        </p>
+
+        {/* Still here, still free. The quote is the one part of the ritual that
+            asks nothing of anybody. */}
+        {quote && (
+          <div className="mt-8 border-t border-line pt-6">
+            <PullQuote cite={citationFor(quote.voice) ?? undefined}>
+              <p>{quote.body ?? quote.title}</p>
+            </PullQuote>
+            {quote.nugget && (
+              <div className="mt-6 border-t border-line pt-5">
+                <Prose text={quote.nugget} />
+              </div>
+            )}
+            <div className="mt-6">
+              <SaveHeart contentId={quote.id} initialSaved={quote.saved} />
+            </div>
+          </div>
+        )}
+
+        {/*
+          `credit-only`, NOT `gate-continue`. There is no Continue to gate: the
+          watch is recorded like any other so the library and the engagement
+          numbers stay honest about who actually watched, but nothing on this
+          screen is waiting on it.
+        */}
+        {video && (
+          <div className="mt-8 border-t border-line pt-6">
+            <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+              If you want it
+            </p>
+            <h2 className="mt-1 text-xl font-extrabold text-navy">{video.title}</h2>
+            <div className="mt-4">
+              <TrackedVideo
+                policy="credit-only"
+                onFirstPlay={onFirstPlay}
+                contentId={video.contentId}
+                renditions={video.renditions}
+                title={video.title}
+                threshold={threshold}
+                initialWatchedPct={video.watchedPct}
+                initialPositionSec={video.positionSec}
+                initialMet={video.gate}
+                onGateMet={onGateMet}
+              />
+            </div>
+          </div>
+        )}
+      </PhoneScreen.Body>
+
+      <PhoneScreen.Footer>
+        <button
+          type="button"
+          onClick={onTakeTheRep}
+          className="w-full rounded-xl border border-line px-4 py-3 text-base font-bold text-ocean transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          Take today&apos;s rep anyway
+        </button>
+        <p className="mt-2 text-center text-xs text-ink-soft">
+          It counts in full — Sand Dollars, Swell and all.
+        </p>
+      </PhoneScreen.Footer>
     </PhoneScreen>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "@/lib/daily";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ensureBlockForToday, loadBlockDays } from "@/lib/coaching-block";
+import { loadScheduleContext, restDayFor } from "@/lib/work-schedule";
 import { mintDayStamp } from "@/lib/day-stamp";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
@@ -124,6 +125,24 @@ export default async function TodayPage({
     .maybeSingle();
   const currentStreak = Number(swellRow?.current_len ?? 0);
 
+  /*
+   * ---- IS TODAY A DAY THEY WERE ASKED TO WORK? ---------------------------
+   *
+   * The same context the streak engine reads, through the same loader, so the
+   * screen and the maths can never disagree about whether today counted.
+   *
+   * NO SCHEDULE ON FILE MEANS SCHEDULED. countMissedWorkDays treats every day as
+   * a work day when there is no row, so this has to as well — a rest card shown
+   * to somebody whose absence the engine WILL count would be the app telling
+   * them their streak is safe and then breaking it. In practice the layout
+   * redirects to /onboarding before a signed-in screen renders without one.
+   *
+   * The derivation itself lives in lib/work-schedule.ts beside the loader, so
+   * the screen and countMissedWorkDays cannot drift apart about which days
+   * count. See restDayFor.
+   */
+  const restDay = restDayFor(today, await loadScheduleContext(supabase, user.id));
+
   // ---- The day's focus ----------------------------------------------------
   const opCodeId = (membership.op_code_id as string | null) ?? null;
   const advisorDay = opCodeId
@@ -155,7 +174,10 @@ export default async function TodayPage({
     pick ? { family: pick.family, tier: cueTierForRate(pick.rate) } : null,
     blockDays,
     // No block is opened from a part-month. An open one keeps running.
-    advisorDay?.fromPartialPeriod ?? false
+    advisorDay?.fromPartialPeriod ?? false,
+    // Nor from a day off. Opening the app on a Saturday must not start six days
+    // of coaching — an open block still serves if they take the voluntary rep.
+    restDay === null
   );
 
   const focus = block
@@ -295,6 +317,15 @@ export default async function TodayPage({
       lifestyle={lifestyle}
       videoThreshold={videoThreshold}
       alreadyCompleteOnLoad={alreadyCompleteOnLoad}
+      /*
+       * A rest day opens as a card, not a ritual. The whole day is still
+       * assembled above and handed down — the quote, the video, the stamp — so
+       * "Take today's rep anyway" reveals it without a second round trip, and
+       * the voluntary completion is byte-for-byte the one a Tuesday would have
+       * written. The preview walkthrough is never a rest day: it exists to
+       * demonstrate the loop.
+       */
+      restDay={isPreview ? null : restDay}
       currentStreak={currentStreak}
       today={today}
       greetingName={firstName(appUser?.full_name ?? user.email ?? "there")}

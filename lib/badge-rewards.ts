@@ -16,6 +16,10 @@ type Client = {
 /** Badge key -> the game_settings column the engine pays it from. */
 const SETTINGS_COLUMN: Record<string, string> = {
   first_light: "sand_badge",
+  /* completeDay pays this from settings.sandBadge like First Light, so the
+     catalog column is the wrong number to quote the moment an admin edits the
+     setting. */
+  free_surf: "sand_badge",
   swell_7: "sand_swell_7",
   swell_30: "sand_swell_30",
   swell_90: "sand_swell_90",

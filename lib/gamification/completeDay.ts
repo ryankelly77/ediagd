@@ -414,6 +414,29 @@ export async function completeDay(
     // re-reaching a milestone after a reset must not pay again.
     const candidates: { key: string; amount: number; reason: string; note: string }[] = [];
 
+    /*
+     * FREE SURF — the first day they showed up when nobody asked.
+     *
+     * FIRST IN THE LIST ON PURPOSE. `badgeEarned` takes the LAST candidate that
+     * actually awards, so this is the one every other badge outranks for the
+     * celebration headline: a first-ever completion that happens to fall on a
+     * Saturday is First Light's moment, not this one. Both are still awarded and
+     * both still pay.
+     *
+     * `onScheduledDay === false` and not `!onScheduledDay`, because the field is
+     * three-valued: null means no schedule is on file, and "we don't know
+     * whether they were rostered" must never be celebrated as "they came in on
+     * their day off".
+     */
+    if (outcome.onScheduledDay === false) {
+      candidates.push({
+        key: "free_surf",
+        amount: settings.sandBadge,
+        reason: "badge",
+        note: "free_surf",
+      });
+    }
+
     if (outcome.firstEver) {
       candidates.push({
         key: "first_light",

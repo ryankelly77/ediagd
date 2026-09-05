@@ -6,6 +6,7 @@
    ============================================================================ */
 
 import {
+  isIslandTime,
   isWorkDay,
   isoWeekday,
   type IsoDate,
@@ -165,6 +166,39 @@ export function validateDraft(draft: ScheduleDraft): string | null {
     }
   }
 
+  return null;
+}
+
+/* ---- Rest days ----------------------------------------------------------- */
+
+export type RestDay = { kind: "day_off" | "island_time" };
+
+/**
+ * Is today a day nobody asked them to work, and which kind?
+ *
+ * ---------------------------------------------------------------------------
+ * THE SCREEN AND THE MATHS READ THE SAME CONTEXT
+ * ---------------------------------------------------------------------------
+ * /today shows a rest card on exactly the days countMissedWorkDays refuses to
+ * count. Deriving that twice, in two files, is how a screen ends up promising
+ * "your streak is safe" on a day the engine will hold against them — so this is
+ * the one derivation and both sides use it.
+ *
+ * NULL SCHEDULE MEANS SCHEDULED, matching the engine: with no row on file
+ * countMissedWorkDays treats every day as a work day, so a rest card here would
+ * be a promise nothing behind it keeps.
+ *
+ * DAY OFF OUTRANKS ISLAND TIME. A Saturday inside a booked week is both, and
+ * "scheduled day off" is the truer thing to say about it — Island Time copy is
+ * for a day they would otherwise have been on the drive.
+ */
+export function restDayFor(
+  date: IsoDate,
+  context: ScheduleContext
+): RestDay | null {
+  if (!context.schedule) return null;
+  if (!isWorkDay(date, context.schedule)) return { kind: "day_off" };
+  if (isIslandTime(date, context.islandTime)) return { kind: "island_time" };
   return null;
 }
 

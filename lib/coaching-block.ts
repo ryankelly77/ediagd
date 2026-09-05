@@ -172,9 +172,47 @@ export async function ensureBlockForToday(
    * forgets would silently reintroduce the defect, and every caller already
    * knows the answer.
    */
-  fromPartialPeriod: boolean
+  fromPartialPeriod: boolean,
+  /**
+   * False on a scheduled day off or a day inside Island Time.
+   *
+   * ---------------------------------------------------------------------------
+   * OPENING THE APP ON A SATURDAY MUST NOT START A SIX-DAY COMMITMENT
+   * ---------------------------------------------------------------------------
+   * A block is six days of one family, locked so a mid-block pick change cannot
+   * rename the conversation underneath the advisor. That lock is right when the
+   * block was opened on a day they were working and wrong when it was opened
+   * because they glanced at the app on their day off — the first stage would be
+   * served to an empty drive and the remaining five would run a day behind for
+   * the rest of the week.
+   *
+   * NOTHING IS WRITTEN AT ALL on an unscheduled day: not the insert, and not the
+   * tidy-up that closes a finished block. `ended_on` is a date somebody will
+   * read as "the day this coaching finished", and a Saturday nobody worked is
+   * the wrong answer to that. Closing is idempotent and self-healing, so the
+   * next scheduled render does it.
+   *
+   * Required rather than optional, for the same reason as fromPartialPeriod: a
+   * caller that forgets would silently reintroduce exactly the defect this
+   * parameter exists to prevent.
+   */
+  scheduledToday: boolean
 ): Promise<CoachingBlock | null> {
   const open = await readOpenBlock(service, userId);
+
+  if (!scheduledToday) {
+    /*
+     * An open, unfinished block still serves — an advisor who chooses to take
+     * the rep on their day off gets the coaching they are mid-way through, and
+     * completing it advances the block exactly as any other day would. What a
+     * rest day cannot do is START one, or retire one.
+     *
+     * A FINISHED block returns null rather than serving: its stage cursor has
+     * run past the end of the six, and closing it is the write we just refused
+     * to make.
+     */
+    return open && open.served < open.lengthDays ? open : null;
+  }
 
   if (open) {
     /*

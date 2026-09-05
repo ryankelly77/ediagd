@@ -1,0 +1,24 @@
+{
+  "//": "Standalone build for rest-day-scenarios.ts. It imports the REAL restDayFor and the REAL ensureBlockForToday through the @/ alias — a paraphrase of either would prove nothing about the screen that promises 'your streak is safe' or the render that must not write.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-rd",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./rest-day-scenarios.ts",
+    "../lib/work-schedule.ts",
+    "../lib/coaching-block.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}
