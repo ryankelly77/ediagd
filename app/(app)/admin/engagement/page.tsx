@@ -4,6 +4,8 @@ import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminSearch } from "@/components/admin/AdminSearch";
 import { AdvisorDetail } from "@/components/admin/AdvisorDetail";
+import { OnboardingStatusSection } from "@/components/admin/OnboardingStatus";
+import { loadOnboardingStatus } from "@/lib/admin-onboarding";
 import { DistributionDonut } from "@/components/admin/DistributionDonut";
 import { EngagementHero } from "@/components/admin/EngagementHero";
 import { EngagementList, type EngagementRow } from "@/components/admin/EngagementList";
@@ -199,6 +201,14 @@ export default async function AdminPage({
       : "no activity yet",
   ].join(" · ");
 
+  /*
+   * Unfiltered by the band or the search on purpose. "52 of 63 ready" has to
+   * mean every advisor in scope — a count that quietly shrank because somebody
+   * typed a name into the search box would be a rollout number nobody could
+   * trust twice.
+   */
+  const onboarding = await loadOnboardingStatus(supabase);
+
   const query = {
     q: search ?? undefined,
     show: show || undefined,
@@ -304,6 +314,17 @@ export default async function AdminPage({
           }
         />
       )}
+
+      {/* ---- 5. Who is actually set up -----------------------------------
+          BELOW the engagement list, not above it. Engagement is the standing
+          question this screen answers every day; onboarding is a question that
+          gets answered once and then stops mattering, and putting a list that
+          empties itself at the top of a screen somebody opens every morning
+          would leave a dead heading there for the next year.
+
+          Read through the caller's own client, so RLS scopes it: a dealer
+          admin sees their rooftops, the platform owner sees everyone. */}
+      <OnboardingStatusSection status={onboarding} showRooftop={!advisorLevel} />
 
       {/* ---- 6. Tools ---------------------------------------------------- */}
     </main>

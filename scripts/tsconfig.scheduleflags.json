@@ -1,0 +1,23 @@
+{
+  "//": "Standalone build for schedule-flag-scenarios.ts. Imports the REAL flag rules AND the REAL validateDraft through the @/ alias — the point of the file is that the two disagree on purpose, and a paraphrase of either would prove nothing.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-sf",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./schedule-flag-scenarios.ts",
+    "../lib/schedule-flags.ts",
+    "../lib/work-schedule.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

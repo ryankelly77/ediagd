@@ -116,6 +116,27 @@ export function scheduleToDraft(schedule: WorkSchedule | null): ScheduleDraft {
   };
 }
 
+/**
+ * A draft as the engine sees it — the inverse of scheduleToDraft.
+ *
+ * Exists so the form can run the same schedule-flag rules on an UNSAVED week
+ * that the admin's onboarding list runs on a saved one. Without it the form
+ * would need its own copy of the shape, and a copy is how "one day picked" ends
+ * up meaning two different things in two files.
+ */
+export function draftToSchedule(draft: ScheduleDraft): WorkSchedule {
+  return {
+    mon: draft.mon,
+    tue: draft.tue,
+    wed: draft.wed,
+    thu: draft.thu,
+    fri: draft.fri,
+    sun: draft.sun,
+    saturdayMode: draft.saturdayMode,
+    saturdayAnchor: draft.saturdayAnchor,
+  };
+}
+
 export function draftToRow(draft: ScheduleDraft) {
   return {
     works_mon: draft.mon,

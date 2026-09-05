@@ -124,3 +124,6 @@ exports/
 
 # tsc scratch output from npm run test:island-budget
 .tmp-ib/
+
+# tsc scratch output from npm run test:schedule-flags
+.tmp-sf/

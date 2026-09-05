@@ -8,9 +8,11 @@ import {
   SATURDAY_CHOICES,
   WEEKDAYS,
   formatDayLabel,
+  draftToSchedule,
   validateDraft,
   type ScheduleDraft,
 } from "@/lib/work-schedule";
+import { draftWarning } from "@/lib/schedule-flags";
 import type { IsoDate, SaturdayMode } from "@/lib/gamification/streak";
 import { createPortal } from "react-dom";
 import { FOOTER_SLOT } from "@/components/brand/PhoneScreen";
@@ -61,6 +63,11 @@ export function ScheduleForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  /* Recomputed on every keystroke of the form, from the draft as it stands —
+     the advisor sees the question the moment their week stops looking like a
+     week, not after they have saved it. */
+  const warning = draftWarning(draftToSchedule(draft));
 
   const set = <K extends keyof ScheduleDraft>(k: K, v: ScheduleDraft[K]) => {
     setDraft((d) => ({ ...d, [k]: v }));
@@ -197,6 +204,23 @@ export function ScheduleForm({
       )}
 
       {/* ---- Feedback ---------------------------------------------------- */}
+      {/* ---- Legal, and probably wrong ---------------------------------
+          Mitch's row — every weekday off, alternating Saturdays — satisfied
+          validateDraft completely: one day picked, an anchor present. It saved
+          without a murmur, and as far as the engine was concerned he worked
+          every other Saturday and nothing else.
+
+          So the same rules the admin's onboarding list runs, run here, on the
+          draft, addressed to the one person who knows the answer. It is a
+          question and not a block: the button beside it still works, because a
+          two-day part-timer is a real person and refusing their week would be
+          the app telling them their job is wrong. */}
+      {!error && warning && (
+        <p className="mt-4 rounded-card bg-gold-soft/40 px-4 py-3 text-sm font-bold text-navy">
+          {warning}
+        </p>
+      )}
+
       {error && (
         <p
           role="alert"
