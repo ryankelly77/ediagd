@@ -1,0 +1,11 @@
+{
+  "//": "Standalone build for quote-match-scenarios.ts. Imports the REAL matcher, which imports similarity() from transcript-match — the two modules are siblings and share that one scorer deliberately.",
+  "//strict": "strict matches the project build. See tsconfig.dates.json.",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs", "moduleResolution": "node",
+    "esModuleInterop": true, "skipLibCheck": true,
+    "outDir": "../.tmp-qm", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./quote-match-scenarios.ts", "../lib/video/quote-match.ts", "../lib/video/transcript-match.ts"]
+}

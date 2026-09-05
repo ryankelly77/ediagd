@@ -139,3 +139,6 @@ exports/
 
 # tsc scratch output from npm run test:ingest-routing
 .tmp-ir/
+
+# tsc scratch output from npm run test:quote-match
+.tmp-qm/

@@ -885,9 +885,9 @@
   {
    "file": "IMG_2246.MOV",
    "driveTitle": "IMG_2246.MOV",
-   "action": "rename",
-   "renameTo": "FND — Sing It — v1.MOV",
-   "reason": null,
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — two films proposed for this same name; one is misread",
    "deck": "Sing It",
    "stage": null,
    "title": "Sing It",
@@ -1071,6 +1071,466 @@
     "matches the teleprompter script for SERPENTINE BELT · On the Drive (85% of its words)"
    ],
    "opening": "Aloha. Let's offer that serpentine belt right there on the drive. Now, step three of your walk-around is start the car. I want you listening and looking. That step is where this op code lives. A serpe…"
+  },
+  {
+   "file": "IMG_2268.MOV",
+   "driveTitle": "IMG_2268.MOV",
+   "action": "rename",
+   "renameTo": "SRP-038 — At the Kiosk — v1.MOV",
+   "reason": null,
+   "deck": "SERPENTINE BELT",
+   "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "teleprompter",
+   "confidence": "high",
+   "seconds": 66.6,
+   "words": 157,
+   "evidence": [
+    "matches the teleprompter script for SERPENTINE BELT · At the Kiosk (84% of its words)"
+   ],
+   "opening": "Aloha! Let's talk Serpentine Belts at the kiosk. Now, whether you heard a squeal or not, whether you did a pre-write or not, whether you popped the hood or not, there's still ample opportunity to offe…"
+  },
+  {
+   "file": "IMG_2269.MOV",
+   "driveTitle": "IMG_2269.MOV",
+   "action": "rename",
+   "renameTo": "SRP-038 — MPI Setup — v1.MOV",
+   "reason": null,
+   "deck": "Serpentine Belt",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
+   "confidence": "medium",
+   "seconds": 212.3,
+   "words": 536,
+   "evidence": [
+    "\"Serpentine Belt\" named in the opening",
+    "belts",
+    "serpentine",
+    "opens with \"set up that\"",
+    "opens with \"let's set up\"",
+    "let's set up"
+   ],
+   "opening": "Aloha. Let's set up that multi-point inspection for a serpentine belt. So again, to remind you, say you didn't do pre-writes, it's okay. You didn't hear it at the start. You didn't cover it during the…"
+  },
+  {
+   "file": "IMG_2271.MOV",
+   "driveTitle": "IMG_2271.MOV",
+   "action": "rename",
+   "renameTo": "SRP-038 — MPI Selling — v1.MOV",
+   "reason": null,
+   "deck": "Serpentine Belt",
+   "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
+   "confidence": "medium",
+   "seconds": 226.4,
+   "words": 607,
+   "evidence": [
+    "\"Serpentine Belt\" named in the opening",
+    "belts",
+    "tensioner",
+    "serpentine",
+    "instrument",
+    "alternator"
+   ],
+   "opening": "Aloha! Let's offer that Serpentine Belt up after the multi-point inspection. So as a recap, you didn't do pre-writes, it's okay. Maybe you didn't hear it at the start when you were doing your walk-aro…"
+  },
+  {
+   "file": "IMG_2275.MOV",
+   "driveTitle": "IMG_2275.MOV",
+   "action": "rename",
+   "renameTo": "CLH-042 — On the Drive — v1.MOV",
+   "reason": null,
+   "deck": "COOLANT HOSES",
+   "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "teleprompter",
+   "confidence": "high",
+   "seconds": 248.4,
+   "words": 626,
+   "evidence": [
+    "matches the teleprompter script for COOLANT HOSES · On the Drive (80% of its words)"
+   ],
+   "opening": "Aloha, let's offer some coolant hoses right on the drive. Hood's already up, you looked at the overflow tank, now let's check out those hoses. But I want to share with you, the hard parts first. Those…"
+  },
+  {
+   "file": "IMG_2276.MOV",
+   "driveTitle": "IMG_2276.MOV",
+   "action": "rename",
+   "renameTo": "CLH-042 — At the Kiosk — v1.MOV",
+   "reason": null,
+   "deck": "Coolant Hoses",
+   "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
+   "confidence": "high",
+   "seconds": 60.6,
+   "words": 152,
+   "evidence": [
+    "\"Coolant Hoses\" named in the opening",
+    "hoses",
+    "hose",
+    "twice",
+    "opens with \"at the kiosk\"",
+    "kiosk"
+   ],
+   "opening": "Aloha! Let's offer some hoses at the kiosk. Now, whether you did pre-writes or not, whether you popped the hood or not, there's still ample time to offer someone that hose replacement. However, this o…"
+  },
+  {
+   "file": "IMG_2277.MOV",
+   "driveTitle": "IMG_2277.MOV",
+   "action": "rename",
+   "renameTo": "CLH-042 — MPI Setup — v1.MOV",
+   "reason": null,
+   "deck": "Coolant Hoses",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
+   "confidence": "high",
+   "seconds": 133.7,
+   "words": 361,
+   "evidence": [
+    "\"Coolant Hoses\" named in the opening",
+    "hoses",
+    "hose",
+    "clamp",
+    "near",
+    "soft"
+   ],
+   "opening": "Aloha. Get the hell out of here speech for hoses. Now in this op code, it matters more than most to share with them what Hector is really going to do. Because everything else you've said so far about …"
+  },
+  {
+   "file": "IMG_2278.MOV",
+   "driveTitle": "IMG_2278.MOV",
+   "action": "rename",
+   "renameTo": "CLH-042 — MPI Selling — v1.MOV",
+   "reason": null,
+   "deck": "Coolant Hoses",
+   "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
+   "confidence": "high",
+   "seconds": 210.3,
+   "words": 571,
+   "evidence": [
+    "\"Coolant Hoses\" named in the opening",
+    "hoses",
+    "hose",
+    "rubber",
+    "opens with \"after a multi-point\"",
+    "hector recommends"
+   ],
+   "opening": "Aloha! Let's offer those hoses after a multi-point inspection. Okay, we didn't get it done in the pre-writes. It didn't pop the hood. No menus, no kiosks, but you set that multi-point up inspection we…"
+  },
+  {
+   "file": "IMG_2279.MOV",
+   "driveTitle": "IMG_2279.MOV",
+   "action": "rename",
+   "renameTo": "TMB-039 — On the Drive — v1.MOV",
+   "reason": null,
+   "deck": "TIMING BELT",
+   "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "teleprompter",
+   "confidence": "high",
+   "seconds": 334.1,
+   "words": 866,
+   "evidence": [
+    "matches the teleprompter script for TIMING BELT · On the Drive (79% of its words)"
+   ],
+   "opening": "Aloha! We're talking Timing Belts on the Drive. This one's different from most of the other ones on the platform, and we need to discuss exactly why. Step 1. Does this vehicle even have one? Many mode…"
+  },
+  {
+   "file": "IMG_2280.MOV",
+   "driveTitle": "IMG_2280.MOV",
+   "action": "rename",
+   "renameTo": "TMB-039 — At the Kiosk — v1.MOV",
+   "reason": null,
+   "deck": "TIMING BELT",
+   "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "teleprompter",
+   "confidence": "high",
+   "seconds": 74.5,
+   "words": 214,
+   "evidence": [
+    "matches the teleprompter script for TIMING BELT · At the Kiosk (81% of its words)"
+   ],
+   "opening": "Aloha! Let's talk Timing Belts at the Kiosk. Short one on this code and I'll share with you why. There's nothing new to sell at the Kiosk on a timing belt. Everything you had, you had on the drive, th…"
+  },
+  {
+   "file": "IMG_2282.MOV",
+   "driveTitle": "IMG_2282.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — two films proposed for this same name; one is misread",
+   "deck": "Timing Belt",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
+   "confidence": "medium",
+   "seconds": 108,
+   "words": 297,
+   "evidence": [
+    "\"Timing Belt\" named in the opening",
+    "reasonable",
+    "inspected",
+    "opens with \"let's set up\"",
+    "let's set up",
+    "multi-point"
+   ],
+   "opening": "Aloha! Let's set up Hector with a good multi-point inspection to offer that timing belt. The setup speech here is the same as every other module that you've had. You already know it. But on this op co…"
+  },
+  {
+   "file": "IMG_2285.MOV",
+   "driveTitle": "IMG_2285.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — two films proposed for this same name; one is misread",
+   "deck": "Timing Belt",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
+   "confidence": "medium",
+   "seconds": 307.6,
+   "words": 814,
+   "evidence": [
+    "\"Timing Belt\" named in the opening",
+    "apart",
+    "all-green",
+    "inspected",
+    "multi-point"
+   ],
+   "opening": "Aloha, let's offer a timing belt after that good multi-point inspection. Okay, Hector's done. And now you've got a decision to make that no other op code puts in front of you. Because there are two ve…"
+  },
+  {
+   "file": "IMG_2286.MOV",
+   "driveTitle": "IMG_2286.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 133,
+   "words": 336,
+   "evidence": [
+    "help"
+   ],
+   "opening": "Aloha. Thank you so much for being a part of the EDIAGD training platform. I want to share. Each day you will be provided information to help you focus on some item that will help you boost your sales…"
+  },
+  {
+   "file": "IMG_2287.MOV",
+   "driveTitle": "IMG_2287.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 64.2,
+   "words": 130,
+   "evidence": [
+    "\"Power Steering Fluid Exchange\" named in the opening"
+   ],
+   "opening": "Aloha! One focus of Mitch Hardt original. Choosing a daily mantra can be powerful if you're disciplined. Pick one every day and live by that mantra that day. Then pick another and live another. There …"
+  },
+  {
+   "file": "IMG_2289.MOV",
+   "driveTitle": "IMG_2289.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 47.3,
+   "words": 124,
+   "evidence": [
+    "case"
+   ],
+   "opening": "Aloha. Every day is a great day to be Mitch. You can't be surprised that this is a video. Heck, it's the name of the app. EDIAGD stands for Every Day is a Great Day. I am even trying to trademark that…"
+  },
+  {
+   "file": "IMG_2290.MOV",
+   "driveTitle": "IMG_2290.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 78.2,
+   "words": 155,
+   "evidence": [
+    "help"
+   ],
+   "opening": "Aloha. The one thing you can control every day is your attitude. That's one by me. Having the right attitude is essential for your success. But what does that mean? What are some of the character trai…"
+  },
+  {
+   "file": "IMG_2291.MOV",
+   "driveTitle": "IMG_2291.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no deck vocabulary matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 32.4,
+   "words": 71,
+   "evidence": [],
+   "opening": "Aloha. Success is a choice. Success is a choice. You either choose to be or not to be a success. The choice is yours. I say that often and that's a quote I talk about at the end of each of my sessions…"
+  },
+  {
+   "file": "IMG_2292.MOV",
+   "driveTitle": "IMG_2292.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no deck vocabulary matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 31.9,
+   "words": 61,
+   "evidence": [],
+   "opening": "Aloha, Get Better by Kobe Bryant. Another Kobe one, Get Better. Get Better on Monday, then Get Better on Tuesday, then Get Better on Wednesday. Now, better can mean whatever it is you want to mean. It…"
+  },
+  {
+   "file": "IMG_2294.MOV",
+   "driveTitle": "IMG_2294.MOV",
+   "action": "rename",
+   "renameTo": "FND — Selling speech — v1.MOV",
+   "reason": null,
+   "deck": "Selling speech",
+   "stage": null,
+   "title": "Selling speech",
+   "identifiedBy": "declared",
+   "confidence": "medium",
+   "seconds": 143.2,
+   "words": 292,
+   "evidence": [
+    "focus"
+   ],
+   "opening": "Aloha. Stay in a great mood in the absence of things to be in a great mood about. That's Alex Hormozi. The greatest skill you can develop is the ability to stay in a great mood in the absence of thing…"
+  },
+  {
+   "file": "IMG_2297.MOV",
+   "driveTitle": "IMG_2297.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 57.7,
+   "words": 81,
+   "evidence": [
+    "thinks"
+   ],
+   "opening": "Aloha, the most dangerous person by Bruce Lee. The most dangerous person listens, thinks, observes, and adapts. Your ability to gain everything around you, everything that's happening to you, makes yo…"
+  },
+  {
+   "file": "IMG_2299.MOV",
+   "driveTitle": "IMG_2299.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — deck is ambiguous between Wiper Blades and Brake Fluid Exchange",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 50.5,
+   "words": 104,
+   "evidence": [
+    "glass"
+   ],
+   "opening": "Aloha. Tomorrow Me vs. Today Me. This is an internet quote. Tomorrow Me wants it more than Today Me. Part procrastination, part regret. Don't allow Tomorrow You to want it more than Today You. This is…"
+  },
+  {
+   "file": "IMG_2300.MOV",
+   "driveTitle": "IMG_2300.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — two films proposed for this same name; one is misread",
+   "deck": "Sing It",
+   "stage": null,
+   "title": "Sing It",
+   "identifiedBy": "declared",
+   "confidence": "medium",
+   "seconds": 58,
+   "words": 109,
+   "evidence": [
+    "yourself"
+   ],
+   "opening": "Aloha, three things in a teammate, dependable, skilled, selfless, by Chad Wright, Navy SEAL. Dependability, you've got to be where you're supposed to be when you're supposed to be there. The best abil…"
+  },
+  {
+   "file": "IMG_2301.MOV",
+   "driveTitle": "IMG_2301.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no deck vocabulary matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 52.7,
+   "words": 95,
+   "evidence": [],
+   "opening": "Aloha. Everybody, anybody, somebody and nobody by Charles Swindle. There was an important job to do and everybody was sure that somebody would do it. Anybody could have done it, but nobody did it. Som…"
+  },
+  {
+   "file": "IMG_2302.MOV",
+   "driveTitle": "IMG_2302.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 87.8,
+   "words": 180,
+   "evidence": [
+    "reach"
+   ],
+   "opening": "Aloha, All for One and One for All versus Every Man for Himself by Mitch Hardt, Via, Dumois, and John Nash. Somehow this discussion is still being debated. Does a group of people trying to work their …"
+  },
+  {
+   "file": "IMG_2305.MOV",
+   "driveTitle": "IMG_2305.MOV",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — no stage language matched",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
+   "seconds": 71.3,
+   "words": 134,
+   "evidence": [
+    "worry"
+   ],
+   "opening": "Aloha, Confidence by Vince Lombardi. Confidence is contagious. So is the lack of confidence. As a manager, you set the tone for your team. Not every day, every moment of the day, throughout the day. A…"
   }
  ]
 }

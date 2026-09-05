@@ -74,15 +74,26 @@ def main() -> int:
     ap.add_argument("--model", default=DEFAULT_MODEL, help="faster-whisper model")
     ap.add_argument("--audio-cache", default="",
                     help="keep extracted wavs here so a model change costs no re-pull")
+    ap.add_argument("--match", default="",
+                    help="only files whose name starts with this (e.g. IMG_ for the unnamed)")
     args = ap.parse_args()
 
     if not os.path.isdir(args.dir):
         print(f"  not a folder: {args.dir}", file=sys.stderr)
         return 1
 
+    """
+    --match EXISTS BECAUSE THE FOLDER IS NOW HALF NAMED.
+
+    The audio cache is keyed on the filename, so a renamed file is a cache miss
+    and would be pulled again — 700MB each, for a transcript already held under
+    its old name. "IMG_" selects exactly the films nobody has identified yet,
+    which is what "the new ones" means in a Drop Zone that keeps filling.
+    """
     files = sorted(
         f for f in os.listdir(args.dir)
         if f.lower().endswith((".mov", ".mp4", ".m4v")) and not f.startswith(".")
+        and (not args.match or f.startswith(args.match))
     )
     print(f"\n  {len(files)} video files in {args.dir}\n")
 
