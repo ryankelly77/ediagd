@@ -182,16 +182,22 @@ export function parseAnnouncement(transcript: string): Announcement | null {
  * Mindset shelf and surface in the daily rotation, which is the wrong shelf
  * for the film that welcomes somebody to the product.
  *
- * The signal is that it talks about the app itself. Nothing else in the Drop
- * Zone does: a pitch film sells a service, a mindset film performs a line.
+ * THE SIGNAL IS THE OFFER, NOT THE BRAND. The first version of this also
+ * matched "name of the app" and "EDIAGD stands for", and Mitch ruled that film
+ * (IMG_2289) a mindset piece about attitude — it explains the acronym on the
+ * way to making a point about how you show up, which is not the same as telling
+ * somebody what the product will do for them.
+ *
+ * So these are the phrases that describe what the platform PROVIDES. Brand
+ * colour is dropped: any film may explain the name, and one that only does that
+ * is still a film about its own subject.
  */
 const ONBOARDING_SIGNALS = [
   /\btraining platform\b/,
-  /\bname of the app\b/,
-  /\bediagd stands for\b/,
   /\beach day you will be provided\b/,
   /\bwelcome to (the )?ediagd\b/,
   /\bthis platform\b/,
+  /\bthree minutes a day\b/,
 ];
 
 export function onboardingSignals(transcript: string): string[] {
