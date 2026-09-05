@@ -71,26 +71,36 @@ export default async function AdminEconomyPage() {
           {problems === 0 ? "Everything reconciles" : "Needs a look"}
         </p>
         <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-          Every Sand Dollar ever minted, minus every one spent, should equal
-          every one people are holding. All three are counted from the ledger
-          itself, so a difference means the arithmetic broke somewhere and not
-          that a total drifted.
+          Everything the app has awarded for an event, minus everything spent,
+          plus every correction, should equal everything people are holding. All
+          four are counted from the ledger itself, so a difference means the
+          arithmetic broke somewhere and not that a total drifted.
         </p>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <Figure label="Minted" value={n(a.minted)} />
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Figure label="Earned" value={n(a.earned)} />
           <Figure label="Spent" value={n(a.spent)} />
+          <Figure
+            label="Adjustments"
+            value={`${a.adjustments >= 0 ? "+" : ""}${n(a.adjustments)}`}
+          />
           <Figure label="Held by people" value={n(a.outstanding)} />
         </div>
 
+        {/* Adjustments stand on their own rather than being split by sign into
+            the other two. A reversal writes entries in both directions, so by
+            sign alone undoing a mistake would ADD to both "earned" and "spent"
+            — the ledger getting more honest while the headline got less so. */}
         <p
           className={`mt-3 text-sm font-bold ${
             a.drift === 0 ? "text-ink-soft" : "text-clay"
           }`}
         >
           {a.drift === 0
-            ? `${n(a.minted)} − ${n(a.spent)} = ${n(a.outstanding)}. It balances.`
-            : `Off by ${n(a.drift)}. Minted minus spent does not equal what people hold.`}
+            ? `${n(a.earned)} − ${n(a.spent)} ${
+                a.adjustments >= 0 ? "+" : "−"
+              } ${n(Math.abs(a.adjustments))} = ${n(a.outstanding)}. It balances.`
+            : `Off by ${n(a.drift)}. Earned, spent and corrected do not add up to what people hold.`}
         </p>
       </Card>
 

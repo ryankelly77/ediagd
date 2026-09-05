@@ -63,10 +63,14 @@ export type RedemptionCheck = {
 
 export type EconomyAudit = {
   entries: number;
-  minted: number;
+  /** Positive entries the app awarded for an event. Adjustments are not here. */
+  earned: number;
+  /** Negative entries somebody spent. Adjustments are not here either. */
   spent: number;
+  /** Net of every adjustment, in either direction. Corrections, not economy. */
+  adjustments: number;
   outstanding: number;
-  /** minted − spent − outstanding. Anything but 0 means the arithmetic broke. */
+  /** earned − spent + adjustments − outstanding. Anything but 0 is broken. */
   drift: number;
   negativeBalances: PersonTotal[];
   topBalances: PersonTotal[];
@@ -109,15 +113,24 @@ export async function loadEconomyAudit(
   const name = (id: string) => nameOf.get(id) ?? "(unknown user)";
 
   /* ---- The one identity that has to hold ---------------------------------
-     Balance is a view over this same table, so minted − spent must equal the
-     sum of balances exactly. Computing both sides here rather than trusting
-     the view is the point: if they ever disagree, the view is wrong or rows
-     are being read under a policy that hides some. */
-  let minted = 0;
+     Balance is a view over this same table, so these have to equal the sum of
+     balances exactly. Computing both sides here rather than trusting the view
+     is the point: if they ever disagree, the view is wrong or rows are being
+     read under a policy that hides some.
+
+     ADJUSTMENTS ARE COUNTED APART FROM BOTH, because they are corrections and
+     not economy. Splitting them by sign is what a first reading does and it
+     reads backwards the moment one is used: reversing a 2,500 test top-up
+     wrote a −2,500 and two +500s, which by sign alone RAISED "minted" to 4,015
+     and "spent" to 3,500 — both further from the truth than before the ledger
+     was corrected. What the app has ever awarded for an event is 512. */
+  let earned = 0;
   let spent = 0;
+  let adjustments = 0;
   const balance = new Map<string, number>();
   for (const e of entries) {
-    if (e.amount >= 0) minted += e.amount;
+    if (e.reason === "adjustment") adjustments += e.amount;
+    else if (e.amount >= 0) earned += e.amount;
     else spent += -e.amount;
     balance.set(e.user_id, (balance.get(e.user_id) ?? 0) + e.amount);
   }
@@ -134,7 +147,10 @@ export async function loadEconomyAudit(
      landing on the same day would otherwise mask it. */
   const day = new Map<string, { userId: string; date: string; earned: number; entries: number }>();
   for (const e of entries) {
-    if (e.amount <= 0) continue;
+    /* Adjustments are excluded for the same reason they are counted apart
+       above: no cap applies to a correction, so one landing here would be a
+       big number the panel cannot say anything useful about. */
+    if (e.amount <= 0 || e.reason === "adjustment") continue;
     const d = String(e.created_at).slice(0, 10);
     const k = `${e.user_id}|${d}`;
     const cur = day.get(k) ?? { userId: e.user_id, date: d, earned: 0, entries: 0 };
@@ -190,10 +206,11 @@ export async function loadEconomyAudit(
 
   return {
     entries: entries.length,
-    minted,
+    earned,
     spent,
+    adjustments,
     outstanding,
-    drift: minted - spent - outstanding,
+    drift: earned - spent + adjustments - outstanding,
     /* A balance below zero means somebody spent Sand Dollars they did not have
        — the redemption race guard failing, or a debit written twice. */
     negativeBalances: balances.filter((b) => b.amount < 0),
