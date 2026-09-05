@@ -136,3 +136,6 @@ exports/
 
 # tsc scratch output from npm run identify:videos
 .tmp-idv/
+
+# tsc scratch output from npm run test:ingest-routing
+.tmp-ir/

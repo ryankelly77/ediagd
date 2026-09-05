@@ -129,6 +129,13 @@ export async function POST(req: NextRequest) {
         placement: (draft.placement as string) ?? null,
         service_family: (draft.service_family as string) ?? null,
         subcategory: (draft.subcategory as string) ?? null,
+        /* Carried from the ingest draft. Without these two the op-code films
+           land on the right shelf with nothing to find them by: `Pitches by Op
+           Code` requires op_code (0063), and the day's pitch lookup is keyed on
+           (op_code, stage). A draft that set them and a webhook that dropped
+           them would look like a working ingest and serve nothing. */
+        op_code: (draft.op_code as string) ?? null,
+        stage: (draft.stage as string) ?? null,
         mux_asset_id: assetId,
         mux_playback_id: signed.id,
         mux_playback_policy: "signed",

@@ -47,6 +47,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { createDirectUpload } from "../lib/mux/upload";
+import {
+  resolveStage,
+  routeFor,
+  splitPrefix,
+  type Route as RoutingRoute,
+  type RoutingTables,
+} from "../lib/video/ingest-routing";
 
 /*
  * LAZY, NOT MODULE-LEVEL.
@@ -208,13 +215,14 @@ function parseName(file: string, knownVoices: Iterable<string> = SEED_VOICES): P
     base = base.replace(vm[0], " ").trim();
   }
 
-  // The prefix is a single word-ish token, so a title containing a dash is not
-  // mistaken for a collection boundary.
-  const m = base.match(/^\s*([A-Za-z][A-Za-z0-9 _]*?)\s*[—–:-]+\s*(.+)$/);
+  /* The prefix is a single word-ish token OR an op code — see splitPrefix. A
+     pattern that merely allowed hyphens could not tell "EAF-001 - On the Drive"
+     apart, because the separator is sometimes a hyphen too. */
+  const m = splitPrefix(base);
   if (!m) return null;
 
-  const collection = m[1].trim().toUpperCase().replace(/[\s_]+/g, "");
-  let title = m[2].replace(/[\s—–:-]+$/, "").trim();
+  const collection = m.prefix;
+  let title = m.title.replace(/[\s—–:-]+$/, "").trim();
   let voice: string | null = null;
 
   const v = title.match(/^(.*?)\s*\(([^()]+)\)\s*$/);
@@ -338,6 +346,45 @@ async function putFile(url: string, filePath: string, bytes: number) {
 
 async function main() {
   const SRC = requireDir();
+  /* ---- 0. What the database says a prefix means -------------------------
+   *
+   * Loaded once, before anything is parsed. The op codes and the collection
+   * aliases both live in the database because both change without a deploy —
+   * a new deck gets a code, a new prefix gets a shelf — and because a
+   * deck-to-code table typed into a script has been wrong three times in this
+   * project already.
+   */
+  const [{ data: catalogRows }, { data: aliasRows }] = await Promise.all([
+    sb().from("op_code_catalog").select("code").is("retired_at", null),
+    sb().from("mapping_alias").select("kind, alias, canonical").in("kind", ["collection", "stage"]),
+  ]);
+
+  const opCodes = new Set(
+    ((catalogRows ?? []) as { code: string }[]).map((r) => r.code.toUpperCase())
+  );
+  const collectionAliases = new Map<string, string>();
+  const stageAliases = new Map<string, string>();
+  for (const a of (aliasRows ?? []) as { kind: string; alias: string; canonical: string }[]) {
+    if (a.kind === "collection") collectionAliases.set(a.alias.toUpperCase(), a.canonical);
+    if (a.kind === "stage") stageAliases.set(a.alias.toLowerCase(), a.canonical);
+  }
+
+  /* A collection reached through an alias still needs a placement. These are
+     the shelves the static routes already describe, keyed by collection name
+     rather than by prefix. */
+  const collectionRoutes: Record<string, RoutingRoute> = {};
+  for (const r of Object.values(ROUTES)) {
+    if (r.collection) collectionRoutes[r.collection] = r;
+  }
+
+  const tables: RoutingTables = { staticRoutes: ROUTES, collectionAliases, opCodes, collectionRoutes };
+  const routeOf = (prefix: string) => routeFor(prefix, tables);
+
+  console.log(
+    `  routing:  ${opCodes.size} op codes · ${collectionAliases.size} collection aliases · ` +
+      `${stageAliases.size} stage aliases\n`
+  );
+
   /* ---- 1. Read and parse the folder ------------------------------------- */
   const names = (await readdir(SRC)).filter((f) => /\.(mov|mp4|m4v)$/i.test(f));
   const parsed: Parsed[] = [];
@@ -351,7 +398,7 @@ async function main() {
       continue;
     }
     p.bytes = (await stat(path.join(SRC, f))).size;
-    if (!ROUTES[p.collection]) {
+    if (!routeOf(p.collection)) {
       unrouted.push(p);
       continue;
     }
@@ -368,9 +415,11 @@ async function main() {
   const byCollection = new Map<string, number>();
   parsed.forEach((p) => byCollection.set(p.collection, (byCollection.get(p.collection) ?? 0) + 1));
   for (const [c, n] of [...byCollection].sort()) {
-    const r = ROUTES[c];
+    const r = routeOf(c);
+    if (!r) continue;
     console.log(
       `    ${String(n).padStart(3)}  ${c.padEnd(11)} -> collection=${r.collection ?? "—"} placement=${r.placement ?? "—"}` +
+        (r.opCode ? `  op_code=${r.opCode}` : "") +
         (r.craftSeries ? `  cert=${r.craftSeries}` : "")
     );
   }
@@ -441,7 +490,7 @@ async function main() {
   const pending: Parsed[] = [];
 
   for (const p of parsed) {
-    const route = ROUTES[p.collection];
+    const route = routeOf(p.collection);
     const canonical = canonicalName(p, route?.collection ?? p.collection);
     if (byCanonical.has(canonical)) {
       skipped.push({ file: p.file, because: `already ingested as ${canonical}` });
@@ -531,7 +580,8 @@ async function main() {
   for (const [i, p] of queue.entries()) {
     const label = `[${i + 1}/${queue.length}] ${p.title.slice(0, 44)}`;
     try {
-      const route = ROUTES[p.collection];
+      const route = routeOf(p.collection);
+      if (!route) throw new Error(`no route for prefix ${p.collection}`);
       // Voice in the Mux-side title too, so the dashboard is scannable
       // without opening anything. See the note in createDirectUpload.
       const { uploadId, url } = await createDirectUpload(
@@ -556,6 +606,14 @@ async function main() {
           collection: route.collection,
           placement: route.placement,
           subcategory: route.craftSeries,
+          /* Pitches by Op Code REQUIRES an op code — 0063's constraint — and
+             the whole point of the shelf is that a video answers "how do I sell
+             THIS". Null for every other route, by design. */
+          op_code: route.opCode ?? null,
+          /* The six canonical stages only. A part title is a film name and
+             leaves this null: the column answers "where in the pitch", which
+             "Part 2" does not. See resolveStage. */
+          stage: resolveStage(p.title, stageAliases),
           // Voice goes in its own column now, never into notes. Writing it as
           // prose was the mistake the Phase 3 backfill had to undo.
           voice: p.voice ?? "Mitch Hardt",

@@ -118,6 +118,12 @@ function main() {
     proposal: matchTranscript(r.transcript, profiles, scripts),
   }));
 
+  /** The one place a file's proposed name is decided — ruling or matcher. */
+  const nameFor = (m: (typeof matched)[number]): string | null => {
+    const r = RULINGS[m.file];
+    return r ? `${r.code} — ${r.title} — v1` : proposedName(m.proposal);
+  };
+
   /* Takes first: a pair is one film, and naming both would put two v1s of the
      same stage in the folder. */
   const takes = findTakes(matched);
@@ -140,11 +146,11 @@ function main() {
    */
   const proposedNames = new Map<string, number>();
   for (const m of matched) {
-    const n = proposedName(m.proposal);
+    const n = nameFor(m);
     if (n) proposedNames.set(n, (proposedNames.get(n) ?? 0) + 1);
   }
   const collides = (m: (typeof matched)[number]) => {
-    const n = proposedName(m.proposal);
+    const n = nameFor(m);
     return Boolean(n && (proposedNames.get(n) ?? 0) > 1);
   };
 
@@ -156,7 +162,12 @@ function main() {
 
   for (const m of matched) {
     const p: Proposal = m.proposal;
-    const name = proposedName(p);
+    /* RULINGS APPLY TO THE RENAME, NOT ONLY THE REPORT.
+       They were read here from proposedName alone while the plan below applied
+       the ruling, so the CSV said one name and --apply wrote another. IMG_2249
+       went into Drive as "FND — Pre-Write, Part 2" and had to be corrected by
+       hand. One source for the name, used by both. */
+    const name = nameFor(m);
     const dupe = inAPair.has(m.file)
       ? keepers.has(m.file)
         ? " [take: keep]"
@@ -224,9 +235,7 @@ function main() {
      to match on in Drive; `file` is what is on this disk. */
   const plan = matched.map((m) => {
     const ruled = RULINGS[m.file];
-    const name = ruled
-      ? `${ruled.code} — ${ruled.title} — v1`
-      : proposedName(m.proposal);
+    const name = nameFor(m);
     const held = ruled
       ? null
       : collides(m)

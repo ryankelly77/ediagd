@@ -1,0 +1,11 @@
+{
+  "//": "Standalone build for ingest-routing-scenarios.ts. Imports the REAL resolver the ingest calls — a paraphrase would prove nothing about whether 43 films route.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs", "moduleResolution": "node",
+    "esModuleInterop": true, "skipLibCheck": true,
+    "outDir": "../.tmp-ir", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./ingest-routing-scenarios.ts", "../lib/video/ingest-routing.ts"]
+}
