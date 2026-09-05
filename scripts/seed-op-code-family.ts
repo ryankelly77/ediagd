@@ -104,7 +104,7 @@ async function dropAdminEdited<T extends { code: string }>(
   return kept;
 }
 
-(async () => {
+async function main() {
   const rows = parseCsv(readFileSync(FROM, "utf8"));
   console.log(`\n  ${rows.length} rows in ${FROM.split("/").pop()}`);
 
@@ -194,7 +194,19 @@ async function dropAdminEdited<T extends { code: string }>(
   /* writable, not payload: reporting the number we INTENDED to write while
      leaving rows alone is how a guard becomes invisible again. */
   console.log(`\n  upserted ${writable.length}; table now holds ${count}.\n`);
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

@@ -68,7 +68,7 @@ async function waitForAsset(assetId: string, label: string) {
   return a;
 }
 
-(async () => {
+async function main() {
   /* ---- 1. What are we replacing? ---------------------------------------- */
   const { data: row, error } = await sb
     .from("content")
@@ -217,4 +217,16 @@ async function waitForAsset(assetId: string, label: string) {
   console.log(`    landscape  ${String(after?.mux_playback_id).slice(0, 16)}…`);
   console.log(`    vertical   ${String(after?.vertical_playback_id).slice(0, 16)}…  (${after?.vertical_status})`);
   console.log(`    archived   ${String(after?.archived_asset_id).slice(0, 16)}…\n`);
-})().catch((e) => { console.error(`\n  FAILED: ${e.message}\n`); process.exit(1); });
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => { console.error(`\n  FAILED: ${e.message}\n`); process.exit(1); });
+}

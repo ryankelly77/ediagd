@@ -127,7 +127,7 @@ function unionSlot(a: string | null, b: string | null): string | null {
   return "both";
 }
 
-(async () => {
+async function main() {
   if (VERIFY) {
     /* ---- 1. No live row still has a twin in a resolved group -------------- */
     const live: { id: string; body: string | null; voice: string | null; quote_key: string | null }[] = [];
@@ -360,10 +360,22 @@ function unionSlot(a: string | null, b: string | null): string | null {
     if (ok) groups++;
   }
   console.log(`\n  groups resolved: ${groups}   rows retired: ${rows}   already: ${already}   refused: ${refused.length}\n`);
-})().catch((e) => {
-  console.error(e.message ?? e);
-  process.exit(1);
-});
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e.message ?? e);
+    process.exit(1);
+  });
+}
 
 /* ============================================================================
    Seeding the Duplicates queue

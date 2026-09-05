@@ -30,9 +30,20 @@ const args = process.argv.slice(2);
 const FILE = args.find((a) => a.startsWith("--file="))?.split("=").slice(1).join("=");
 const DRY = args.includes("--dry");
 
-if (!FILE) {
-  console.error("  --file= is required (op_code_seed.csv).\n");
-  process.exit(1);
+/*
+ * CHECKED INSIDE main(), not at module level.
+ *
+ * A module-level `process.exit` narrowed this for the old IIFE, because an IIFE
+ * is an expression evaluated in place. A function DECLARATION is hoisted, so
+ * TypeScript can no longer assume the check ran first — and it is right to
+ * refuse.
+ */
+function requireFile(): string {
+  if (!FILE) {
+    console.error("  --file= is required (op_code_seed.csv).\n");
+    process.exit(1);
+  }
+  return FILE;
 }
 
 /** Minimal RFC-4180 reader: the piggyback columns are quoted comma lists. */
@@ -102,9 +113,9 @@ async function dropAdminEdited<T extends { code: string }>(
   return kept;
 }
 
-(async () => {
-  const rows = parseCsv(readFileSync(FILE, "utf8"));
-  console.log(`  ${rows.length} rows in ${FILE.split("/").pop()}`);
+async function main() {
+  const rows = parseCsv(readFileSync(requireFile(), "utf8"));
+  console.log(`  ${rows.length} rows in ${requireFile().split("/").pop()}`);
 
   const codes = new Set(rows.map((r) => r.code));
   if (codes.size !== rows.length) {
@@ -193,7 +204,19 @@ async function dropAdminEdited<T extends { code: string }>(
     console.log(`\n  WARNING — content tagged with codes not in this file: ${orphans.length}`);
     orphans.slice(0, 10).forEach((o) => console.log(`    ${o.op_code}  ${o.title}`));
   }
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

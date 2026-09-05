@@ -215,7 +215,7 @@ type Row = {
   excelRow: number;
 };
 
-(async () => {
+async function main() {
   /* ---- 1. Read the authoritative tab ------------------------------------- */
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(FILE);
@@ -664,7 +664,19 @@ type Row = {
   );
   console.log(`\n  wrote exports/quote-dedupe-pairs.csv`);
   if (DRY) console.log("  (--dry: nothing was written to the database)\n");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+}

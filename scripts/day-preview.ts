@@ -241,7 +241,7 @@ async function reportSuppressed() {
   );
 }
 
-(async () => {
+async function main() {
   /* ---- Which rooftops, and what is "tomorrow" there? --------------------- */
   const { data: rooftops } = await sb
     .from("rooftop")
@@ -376,7 +376,19 @@ async function reportSuppressed() {
   await reportSuppressed();
 
   console.log("  Nothing was written. No block was opened.\n");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

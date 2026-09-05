@@ -80,7 +80,7 @@ function section(title: string) {
    test pass or fail depending on the day it ran, which is not a test. */
 const TODAY = "2026-08-31" as const;
 
-(async () => {
+async function main() {
   /* =========================================================================
      1 · The pick, at family grain
      ========================================================================= */
@@ -321,7 +321,19 @@ const TODAY = "2026-08-31" as const;
     failures.forEach((f) => console.log(`    ${f}`));
     process.exit(1);
   }
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

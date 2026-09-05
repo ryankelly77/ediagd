@@ -63,7 +63,7 @@ function play(from: number, to: number, step = 0.25): Range[] {
 /* The brief's video: 29 seconds. */
 const D = 29;
 
-(async () => {
+async function main() {
   /* =======================================================================
      1 · The acceptance cases, in order
      ======================================================================= */
@@ -386,4 +386,16 @@ const D = 29;
     failures.forEach((f) => console.log(`    ${f}`));
     process.exit(1);
   }
-})();
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main();
+}

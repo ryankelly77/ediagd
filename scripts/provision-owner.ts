@@ -53,9 +53,20 @@ const LIKE = arg("advisor-like");
 const NAME = arg("name");
 const DRY = args.includes("--dry");
 
-if (!EMAIL) {
-  console.error("  --email= is required.\n");
-  process.exit(1);
+/*
+ * CHECKED INSIDE main(), not at module level.
+ *
+ * A module-level `process.exit` narrowed this for the old IIFE, because an IIFE
+ * is an expression evaluated in place. A function DECLARATION is hoisted, so
+ * TypeScript can no longer assume the check ran first — and it is right to
+ * refuse.
+ */
+function requireEmail(): string {
+  if (!EMAIL) {
+    console.error("  --email= is required.\n");
+    process.exit(1);
+  }
+  return EMAIL;
 }
 
 /** Page the auth list; there is no server-side email filter on listUsers. */
@@ -70,7 +81,7 @@ async function findByEmail(email: string) {
   }
 }
 
-(async () => {
+async function main() {
   /* ---- 1. The auth user must already exist ------------------------------- */
   /*
    * THIS SCRIPT DOES NOT CREATE ACCOUNTS OR TOUCH PASSWORDS. The invite is sent
@@ -78,9 +89,9 @@ async function findByEmail(email: string) {
    * grants what that account may see. Minting a user here would mean this
    * script deciding who exists, which is a bigger power than it needs.
    */
-  const user = await findByEmail(EMAIL);
+  const user = await findByEmail(requireEmail());
   if (!user) {
-    console.error(`  No auth user for ${EMAIL}.`);
+    console.error(`  No auth user for ${requireEmail()}.`);
     console.error("  Invite them from Supabase Auth first, then re-run this.\n");
     process.exit(1);
   }
@@ -238,7 +249,19 @@ async function findByEmail(email: string) {
     }
   }
   if (DRY) console.log("\n  (--dry: nothing was written)\n");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

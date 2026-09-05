@@ -42,7 +42,7 @@ const ONLY = args.find((a) => a.startsWith("--tab="))?.split("=").slice(1).join(
 
 const pad = (n: number, w = 4) => String(n).padStart(w);
 
-(async () => {
+async function main() {
   console.log(`\n  ${DRY ? "DRY RUN — nothing will be published" : "PUBLISHING"}\n`);
 
   /* Every row this import created or repaired, by tab. */
@@ -135,7 +135,19 @@ const pad = (n: number, w = 4) => String(n).padStart(w);
     console.log(`    ${n > 0 ? "ON " : "off"}  ${pad(n)}  ${f}`);
   }
   console.log("");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

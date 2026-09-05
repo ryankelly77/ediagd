@@ -165,7 +165,7 @@ async function deriveOne(row: Row) {
   }
 }
 
-(async () => {
+async function main() {
   let q = sb.from("vertical_derivation_queue").select("*");
   if (only) q = q.eq("content_id", only);
   const { data, error } = await q;
@@ -190,4 +190,16 @@ async function deriveOne(row: Row) {
     }
   }
   console.log(`\n  done: ${ok}/${rows.length} derived\n`);
-})().catch((e) => { console.error(e); process.exit(1); });
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}

@@ -96,7 +96,7 @@ async function workbook(opts: { withIndex: boolean }): Promise<ArrayBuffer> {
   return buf as ArrayBuffer;
 }
 
-(async () => {
+async function main() {
   const withIndex = await parseWorkbook(await workbook({ withIndex: true }));
   check(
     "a 2025 index files December 2025, whatever year it is today",
@@ -129,4 +129,16 @@ async function workbook(opts: { withIndex: boolean }): Promise<ArrayBuffer> {
     failures.forEach((f) => console.log(`    ${f}`));
     process.exit(1);
   }
-})();
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main();
+}

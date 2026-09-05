@@ -59,7 +59,7 @@ function cellText(v: unknown): string {
 
 type Candidate = { sheet: string; row: number; text: string; norm: string };
 
-(async () => {
+async function main() {
   /* ---- 1. Every long text cell in the workbook -------------------------- */
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(FILE);
@@ -269,4 +269,16 @@ type Candidate = { sheet: string; row: number; text: string; norm: string };
   );
   console.log(`\n  wrote exports/cues-for-mitch.csv`);
   if (DRY) console.log("  (--dry: nothing was written to the database)\n");
-})().catch((e) => { console.error(e); process.exit(1); });
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}

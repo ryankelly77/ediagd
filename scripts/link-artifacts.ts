@@ -40,9 +40,20 @@ const FROM = args.find((a) => a.startsWith("--from="))?.split("=").slice(1).join
 const APPLY = args.includes("--apply");
 const VERIFY = args.includes("--verify");
 
-if (!FROM) {
-  console.error("  --from=<csv> is required.\n");
-  process.exit(1);
+/*
+ * CHECKED INSIDE main(), not at module level.
+ *
+ * A module-level `process.exit` narrowed FROM to `string` for the old IIFE,
+ * because an IIFE is an expression evaluated in place. A function DECLARATION
+ * is hoisted, so TypeScript can no longer assume the check ran before the body
+ * — and it is right to refuse: nothing stops main() being called first.
+ */
+function requireFrom(): string {
+  if (!FROM) {
+    console.error("  --from=<csv> is required.\n");
+    process.exit(1);
+  }
+  return FROM;
 }
 
 /** Minimal RFC-4180 reader — quote bodies in the CSV contain commas. */
@@ -77,8 +88,8 @@ type Pair = {
   tier: string;
 };
 
-(async () => {
-  const csv = parseCsv(readFileSync(FROM, "utf8"));
+async function main() {
+  const csv = parseCsv(readFileSync(requireFrom(), "utf8"));
   const decisions = csv.filter((r) => (r.decision ?? "").toLowerCase() === "link");
 
   const wanted: Pair[] = decisions.map((r) => ({
@@ -88,7 +99,7 @@ type Pair = {
     tier: r.tier,
   }));
 
-  console.log(`  ${csv.length} rows in ${FROM.split("/").pop()}`);
+  console.log(`  ${csv.length} rows in ${requireFrom().split("/").pop()}`);
   console.log(`  decision = link: ${wanted.length}\n`);
 
   /* ---- Resolve both sides fresh from the database -------------------------
@@ -187,7 +198,19 @@ type Pair = {
     done++;
   }
   console.log(`\n  linked: ${done}   already: ${already}   refused: ${refused.length}\n`);
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

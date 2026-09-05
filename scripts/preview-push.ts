@@ -42,7 +42,7 @@ async function rpc(fn: string, body: unknown) {
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
-(async () => {
+async function main() {
   /* ---- 1. Does the copy obey its own rules? ------------------------------ */
   const problems = lintPushCopy();
   console.log(`\n  COPY LINT — ${problems.length ? `${problems.length} PROBLEM(S)` : "clean"}`);
@@ -173,4 +173,16 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
   if (problems.length || drift.length || overCap.length || outsideQuiet.length || digestToAdvisor.length) {
     process.exit(1);
   }
-})().catch((e) => { console.error(e); process.exit(1); });
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}

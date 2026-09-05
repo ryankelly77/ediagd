@@ -168,7 +168,7 @@ async function verify() {
   console.log(`\n  ${allOk ? "ALL CHECKS PASS" : "SOME CHECKS FAILED — re-run with --apply; the script is idempotent"}\n`);
 }
 
-(async () => {
+async function main() {
   if (VERIFY) { await verify(); return; }
 
   const rows: Row[] = [];
@@ -366,7 +366,19 @@ async function verify() {
   }
   console.log(`    filenames:   ${f}`);
   console.log("");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

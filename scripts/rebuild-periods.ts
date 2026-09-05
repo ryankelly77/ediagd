@@ -51,7 +51,7 @@ const args = process.argv.slice(2);
 const DRY = args.includes("--dry");
 const ONLY_ROOFTOP = args.find((a) => a.startsWith("--rooftop="))?.split("=")[1];
 
-(async () => {
+async function main() {
   const { data: periods, error } = await sb
     .from("perf_period")
     .select("rooftop_id, starts_on, rules_as_of")
@@ -159,7 +159,19 @@ const ONLY_ROOFTOP = args.find((a) => a.startsWith("--rooftop="))?.split("=")[1]
     process.exit(1);
   }
   console.log("");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

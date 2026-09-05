@@ -173,7 +173,7 @@ function readTab(ws: ExcelJS.Worksheet): { rows: SourceRow[]; headerCodes: strin
   return { rows, headerCodes, title };
 }
 
-(async () => {
+async function main() {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(BOOK);
 
@@ -339,7 +339,19 @@ function readTab(ws: ExcelJS.Worksheet): { rows: SourceRow[]; headerCodes: strin
   mkdirSync("reports", { recursive: true });
   writeFileSync("reports/knowledge-tabs.csv", lines.join("\n") + "\n");
   console.log(`\n  wrote reports/knowledge-tabs.csv — nothing was written to the database.\n`);
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

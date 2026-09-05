@@ -120,7 +120,7 @@ function descriptivePart(filename: string | null): string {
 const TIER_B = 0.85;
 const TIER_C = 0.65;
 
-(async () => {
+async function main() {
   const page = async (build: (b: unknown) => unknown) => {
     const out: Row[] = [];
     for (let o = 0; ; o += 1000) {
@@ -312,7 +312,19 @@ const TIER_C = 0.65;
   );
 
   console.log("\n  wrote reports/video-quote-matches.csv — decision column blank\n");
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

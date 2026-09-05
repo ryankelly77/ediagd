@@ -157,7 +157,7 @@ function quoteNumber(key: string | null): number {
   return m ? parseInt(m[1], 10) : Number.MAX_SAFE_INTEGER;
 }
 
-(async () => {
+async function main() {
   const all: Row[] = [];
   for (let o = 0; ; o += 1000) {
     const { data, error } = await sb
@@ -448,7 +448,19 @@ function quoteNumber(key: string | null): number {
   }
 
   console.log(`\n  wrote reports/quote-duplicates.csv — nothing was written to the database.\n`);
-})().catch((e) => {
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => {
   console.error(e.message ?? e);
   process.exit(1);
 });
+}

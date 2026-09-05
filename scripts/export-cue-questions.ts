@@ -67,7 +67,7 @@ function styleHeader(ws: ExcelJS.Worksheet, height = 34) {
   ws.views = [{ state: "frozen", ySplit: 1 }];
 }
 
-(async () => {
+async function main() {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(FILE);
 
@@ -243,4 +243,16 @@ function styleHeader(ws: ExcelJS.Worksheet, height = 34) {
   console.log(`  Tab 1 — pick the ending:      ${pickEnding.length} cues`);
   console.log(`  Tab 2 — send us full text:    ${needFull.length} cues`);
   console.log(`  -> ${outPath}`);
-})().catch((e) => { console.error(e); process.exit(1); });
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
