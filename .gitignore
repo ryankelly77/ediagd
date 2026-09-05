@@ -121,3 +121,6 @@ exports/
 
 # tsc scratch output from npm run test:rest-day
 .tmp-rd/
+
+# tsc scratch output from npm run test:island-budget
+.tmp-ib/

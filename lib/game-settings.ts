@@ -20,6 +20,7 @@ export type GameSettingsValues = {
   sand_certification: number;
   sand_lesson: number;
   video_complete_pct: number;
+  island_time_days_per_year: number;
 };
 
 export type GameSettingKey = keyof GameSettingsValues;
@@ -39,6 +40,25 @@ export type GameSettingField = {
  * let the engine try to bank more grace than a row can hold.
  */
 export const GAME_SETTING_FIELDS: GameSettingField[] = [
+  {
+    /*
+     * Island Time makes days stop counting against a Swell, so with no cap an
+     * advisor could book every week they did not feel like turning up and hold
+     * a 365-Day Swell without completing a day. 15 is a placeholder pending
+     * Mitch's ruling — roughly three working weeks, and not defended beyond
+     * that, which is why it is a text box here rather than a constant.
+     *
+     * Counted in WORK days against each advisor's own schedule: a Saturday
+     * inside a booked fortnight costs a Mon-Fri advisor nothing. 0 switches
+     * Island Time off entirely and the screen says so in those words.
+     */
+    key: "island_time_days_per_year",
+    label: "Island Time days per year",
+    hint: "Scheduled work days of planned absence an advisor may book per calendar year. Days they weren't working don't count. 0 turns it off.",
+    group: "streak",
+    min: 0,
+    max: 365,
+  },
   {
     key: "paddle_out_cap",
     label: "Max grace days a user can bank",

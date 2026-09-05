@@ -33,6 +33,7 @@ import {
   rowToSchedule,
   type ScheduleRow,
 } from "@/lib/work-schedule";
+import { usageForYear, yearOf, type YearUsage } from "@/lib/island-budget";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Client = { from: (table: string) => any; rpc: (fn: string, args: any) => any };
@@ -89,6 +90,15 @@ export type AdvisorDetail = {
    * stated in words instead.
    */
   upcomingIsland: IslandTime[];
+  /**
+   * This calendar year's Island Time budget: used, remaining, cap.
+   *
+   * A GM approving next month's cover needs to know an advisor has two days
+   * left before the conversation, not after the app has refused them. Counted
+   * over the WHOLE year, which is why it has its own read — the strip's window
+   * is thirty days and a fortnight booked in January is not in it.
+   */
+  islandBudget: YearUsage;
   /** Days they finished the loop, from daily_completion. */
   completedDays: number;
   /** Days they opened the app at all, from daily_activity. */
@@ -119,7 +129,11 @@ type RawRows = {
   completion: Map<string, Set<IsoDate>>;
   schedule: Map<string, WorkSchedule | null>;
   island: Map<string, IslandTime[]>;
+  /** Every range touching this calendar year — the budget's own read. */
+  yearIsland: Map<string, IslandTime[]>;
   swell: Map<string, AdvisorDetail["swell"]>;
+  /** game_settings.island_time_days_per_year, the same number the app enforces. */
+  islandCap: number;
 };
 
 const emptyRaw = (): RawRows => ({
@@ -127,15 +141,22 @@ const emptyRaw = (): RawRows => ({
   completion: new Map(),
   schedule: new Map(),
   island: new Map(),
+  yearIsland: new Map(),
   swell: new Map(),
+  islandCap: 15,
 });
 
 /**
  * Detail for a page of advisors, keyed by user id.
  *
- * Five queries per chunk of 25 users, all five in parallel, chunks in parallel
- * too. A default page of ten rows is therefore ONE round of five queries no
- * matter how many rooftops the admin covers.
+ * Seven queries per chunk of 25 users, all seven in parallel, chunks in
+ * parallel too. A default page of ten rows is therefore ONE round of seven
+ * queries no matter how many rooftops the admin covers.
+ *
+ * Island Time is read TWICE and that is not a mistake: once bounded to the
+ * thirty-day strip, once bounded to the calendar year for the budget line. One
+ * read cannot serve both — the strip must not draw squares for January, and the
+ * budget must not forget them.
  *
  * Keyed by user id alone, deliberately: daily_activity and daily_completion are
  * both UNIQUE (user_id, date), so a person who advises at two rooftops still
@@ -180,7 +201,8 @@ async function loadChunk(
 ): Promise<RawRows> {
   const raw = emptyRaw();
 
-  const [activity, completion, schedule, island, swell] = await Promise.all([
+  const [activity, completion, schedule, island, swell, yearIsland, settings] =
+    await Promise.all([
     client
       .from("daily_activity")
       .select("user_id, activity_date, logged_in")
@@ -208,7 +230,32 @@ async function loadChunk(
       .from("swell")
       .select("user_id, current_len, longest_len, last_completed_on")
       .in("user_id", ids),
+    /* The budget's own read. The window above is thirty days; a fortnight
+       booked in January still spends this year's allowance, so the year is the
+       only correct bound. */
+    client
+      .from("island_time")
+      .select("user_id, start_date, end_date")
+      .in("user_id", ids)
+      .gte("end_date", `${yearOf(today)}-01-01`)
+      .lte("start_date", `${yearOf(today)}-12-31`),
+    client
+      .from("game_settings")
+      .select("island_time_days_per_year")
+      .limit(1)
+      .maybeSingle(),
   ]);
+
+  raw.islandCap = Number(
+    (settings?.data as { island_time_days_per_year?: number } | null)
+      ?.island_time_days_per_year ?? 15
+  );
+
+  for (const r of rows(yearIsland)) {
+    const list = raw.yearIsland.get(r.user_id as string) ?? [];
+    list.push({ start: r.start_date as IsoDate, end: r.end_date as IsoDate });
+    raw.yearIsland.set(r.user_id as string, list);
+  }
 
   for (const id of ids) raw.schedule.set(id, null);
 
@@ -311,6 +358,12 @@ function compose(
     // isCurrentOrFuture's rule, applied to ranges: still running today, or
     // entirely ahead of us. Already ordered by start_date from the query.
     upcomingIsland: island.filter((r) => r.end >= today),
+    islandBudget: usageForYear(
+      raw.yearIsland.get(userId) ?? [],
+      schedule,
+      yearOf(today),
+      raw.islandCap
+    ),
     completedDays,
     loggedInDays,
     swell: raw.swell.get(userId) ?? null,

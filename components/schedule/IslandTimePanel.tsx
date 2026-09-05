@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addIslandTime, removeIslandTime } from "@/lib/schedule-actions";
 import { formatDayLabel, type IslandTimeEntry } from "@/lib/work-schedule";
-import type { IsoDate } from "@/lib/gamification/streak";
+import { quoteRange, quoteSentence, yearOf } from "@/lib/island-budget";
+import type { IslandTime, IsoDate, WorkSchedule } from "@/lib/gamification/streak";
 
 /* ============================================================================
    EDIAGD — Island Time
@@ -14,14 +15,34 @@ import type { IsoDate } from "@/lib/gamification/streak";
    Only future ranges can be removed, and none can start in the past — see the
    server action for why. The UI mirrors those rules rather than offering
    controls that will be refused.
+
+   ---------------------------------------------------------------------------
+   THE COST IS QUOTED BEFORE THE BUTTON, NOT AFTER IT
+   ---------------------------------------------------------------------------
+   The days are budgeted now, and a limit an advisor meets by being refused is a
+   worse limit than one they can watch as they pick the dates. So the same
+   function the server enforces with runs here as they type, and the sentence
+   under the pickers is the sentence the action would have used. This is a
+   COURTESY, never the control: the server checks again, because a server action
+   is reachable by direct POST.
    ============================================================================ */
 
 export function IslandTimePanel({
   entries,
   today,
+  schedule = null,
+  cap,
+  booked = [],
 }: {
   entries: IslandTimeEntry[];
   today: IsoDate;
+  /** Their work schedule — a day off inside a range spends no budget. */
+  schedule?: WorkSchedule | null;
+  /** game_settings.island_time_days_per_year. */
+  cap: number;
+  /** Every range on the books, including past ones: the year's budget counts
+      them all, while the list above only shows what is still ahead. */
+  booked?: IslandTime[];
 }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -30,6 +51,14 @@ export function IslandTimePanel({
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+
+  /* Priced from the same function the action enforces with, so the preview and
+     the refusal can never quote different arithmetic. Only once both ends are
+     real dates — a half-typed range has no cost worth naming. */
+  const quote =
+    start && (end || start) >= start
+      ? quoteRange(start as IsoDate, (end || start) as IsoDate, booked, schedule, cap)
+      : null;
 
   function submit() {
     startTransition(async () => {
@@ -156,10 +185,25 @@ export function IslandTimePanel({
             />
           </label>
 
+          {/* The arithmetic, in the words the refusal would use. Amber when it
+              fits, clay when it does not — and the button goes with it, so the
+              only way to meet the cap is to be told before you tap. */}
+          {quote && (
+            <p
+              className={`mt-3 text-sm font-bold ${
+                quote.affordable ? "text-ink-soft" : "text-clay"
+              }`}
+            >
+              {quote.affordable
+                ? quoteSentence(quote, yearOf(today))
+                : `That's more than you have left. ${quoteSentence(quote, yearOf(today))}`}
+            </p>
+          )}
+
           <div className="mt-4 flex gap-2">
             <button
               onClick={submit}
-              disabled={pending || !start}
+              disabled={pending || !start || quote?.affordable === false}
               className="flex-1 rounded-xl bg-navy p-3 font-extrabold text-white transition hover:brightness-110 disabled:opacity-60"
             >
               {pending ? "Booking…" : "Book Island Time"}

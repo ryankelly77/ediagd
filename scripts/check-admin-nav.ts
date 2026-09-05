@@ -30,7 +30,7 @@ const APP_DIR = join(process.cwd(), "app", "(app)");
  * missing link would look like "not entitled" rather than "not linked", which
  * is the hardest kind of orphan to notice.
  */
-const WATCHED = ["admin", "library", "joe-the-pro", "meetings"];
+const WATCHED = ["admin", "library", "joe-the-pro", "meetings", "island-time"];
 
 /** Every route under app/(app)/admin that has a page. */
 function routesUnder(dir: string, prefix: string): string[] {

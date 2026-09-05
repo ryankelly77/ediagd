@@ -1,0 +1,22 @@
+{
+  "//": "Standalone build for island-budget-scenarios.ts. It imports the REAL budget module through the @/ alias — the same one the panel previews with and the server action refuses with, because a paraphrase would prove nothing about either.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-ib",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./island-budget-scenarios.ts",
+    "../lib/island-budget.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

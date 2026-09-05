@@ -155,6 +155,30 @@ export function AdvisorDetail({
           </Row>
         )}
 
+        {/* THE YEAR, NOT THE WINDOW. A GM works out cover a month ahead, and
+            "they have two days left" is a fact he needs before the
+            conversation rather than after the app has refused the booking.
+            Shown whatever the number, including zero used — a budget you only
+            see when it runs low is one nobody plans against. */}
+        {detail.islandBudget.cap > 0 && (
+          <Row label="Island Time left">
+            <span className="ediagd-numeral">{detail.islandBudget.remaining}</span>{" "}
+            of <span className="ediagd-numeral">{detail.islandBudget.cap}</span>{" "}
+            {plural(detail.islandBudget.cap, "day")} in{" "}
+            {detail.islandBudget.year}
+            <span className="text-ink-soft">
+              {" · "}
+              <span className="ediagd-numeral">{detail.islandBudget.used}</span>{" "}
+              used
+            </span>
+            {detail.islandBudget.used > detail.islandBudget.cap && (
+              <span className="font-bold text-clay">
+                {" · "}over the limit, booked before it existed
+              </span>
+            )}
+          </Row>
+        )}
+
         <Row label="Engagement">
           {loginRatePct == null && watchRatePct == null ? (
             <span className="text-ink-soft">No activity recorded yet</span>

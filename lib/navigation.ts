@@ -167,6 +167,18 @@ export const MEMBER_SECTIONS: readonly MemberSection[] = [
     requiresRole: null,
   },
   {
+    /*
+     * Second, above the libraries, because it is the other thing on this list
+     * that is THEIRS. It lived as the fourth card on /profile — the one feature
+     * that decides whether a fortnight away costs a Swell, filed under account
+     * admin with nothing in the tab bar or this menu pointing at it.
+     */
+    href: "/island-time",
+    label: "Island Time",
+    hint: "Book time off so your Swell holds while you're away.",
+    requiresRole: null,
+  },
+  {
     href: "/library",
     label: "Lesson Library",
     hint: "Coaching cues and pitch videos, by service.",

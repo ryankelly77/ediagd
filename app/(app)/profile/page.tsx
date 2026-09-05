@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
@@ -5,7 +6,6 @@ import { BRAND } from "@/lib/brand";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { AccountForms } from "@/components/profile/AccountForms";
 import { ScheduleForm } from "@/components/schedule/ScheduleForm";
-import { IslandTimePanel } from "@/components/schedule/IslandTimePanel";
 import { addDays, isoWeekday, type IsoDate } from "@/lib/gamification/streak";
 import {
   SCHEDULE_COLUMNS,
@@ -185,9 +185,31 @@ export default async function ProfilePage() {
         </div>
       </Card>
 
-      {/* ---- Island Time --------------------------------------------- */}
-      <Card className="mt-3 p-5">
-        <IslandTimePanel entries={island} today={today} />
+      {/* ---- Island Time, which lives on its own screen now -------------
+          The panel used to be inline here, four cards down a page an advisor
+          opens to change their name. Booking time off is something they DO;
+          keeping a second copy of the booking form would also mean two places
+          the year's budget has to be shown, and they would disagree the first
+          time one was missed. One link, one screen. */}
+      <Card className="mt-3">
+        <Link
+          href="/island-time"
+          className="flex items-center gap-3 p-5 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-bold uppercase tracking-wide text-ink-soft">
+              Island Time
+            </span>
+            <span className="mt-1 block text-sm leading-relaxed text-ink-soft">
+              {island.length > 0
+                ? `${island.length} booked or coming up. Days you're away don't count as missed.`
+                : "Heading out? Tell us and your Swell holds."}
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-lg text-ink-soft">
+            ›
+          </span>
+        </Link>
       </Card>
 
       <AccountForms

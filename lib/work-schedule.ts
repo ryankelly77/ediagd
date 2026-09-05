@@ -237,6 +237,33 @@ export async function loadScheduleContext(
   return { schedule: rowToSchedule(scheduleRow as ScheduleRow | null), islandTime };
 }
 
+/**
+ * Everything needed to price a new Island Time range: their calendar, and the
+ * cap in force.
+ *
+ * The cap is read from game_settings on every call rather than cached. It is a
+ * policy Mitch edits on the settings screen, and a booking refused against a
+ * number that changed last week is a support conversation nobody can win.
+ *
+ * DEFAULTS TO THE MIGRATION'S 15 if the settings row cannot be read. Not zero:
+ * a failed read must not silently forbid all Island Time, which would look
+ * exactly like the feature being switched off.
+ */
+export async function loadIslandBudgetContext(
+  client: Client,
+  userId: string
+): Promise<ScheduleContext & { cap: number }> {
+  const [context, { data: settings }] = await Promise.all([
+    loadScheduleContext(client, userId),
+    client.from("game_settings").select("island_time_days_per_year").limit(1).maybeSingle(),
+  ]);
+
+  const raw = (settings as { island_time_days_per_year?: number } | null)
+    ?.island_time_days_per_year;
+
+  return { ...context, cap: raw == null ? 15 : Number(raw) };
+}
+
 /** Has this person told us their schedule? Absence of a row is the signal. */
 export function isOnboarded(row: ScheduleRow | null | undefined): boolean {
   return Boolean(row);

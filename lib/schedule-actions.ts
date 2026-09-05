@@ -19,7 +19,13 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { addDays, daysBetween, isoWeekday, type IsoDate } from "@/lib/gamification/streak";
-import { draftToRow, validateDraft, type ScheduleDraft } from "@/lib/work-schedule";
+import {
+  draftToRow,
+  loadIslandBudgetContext,
+  validateDraft,
+  type ScheduleDraft,
+} from "@/lib/work-schedule";
+import { quoteRange, refusalSentence, yearOf } from "@/lib/island-budget";
 
 export type ScheduleResult = { ok: true; message: string } | { ok: false; error: string };
 
@@ -133,6 +139,34 @@ export async function addIslandTime(
   }
 
   const service = createServiceClient();
+
+  /*
+   * ---- THE YEAR'S BUDGET, CHECKED ON THE SERVER --------------------------
+   *
+   * The panel shows the same arithmetic under the date pickers before anybody
+   * taps Book, and that preview is a courtesy — this is the check. A server
+   * action is reachable by direct POST, and Island Time is the one thing in the
+   * app that makes days stop counting against a Swell, so an unenforced cap is
+   * an unlimited streak freeze with a friendly label.
+   *
+   * READ THROUGH THE SERVICE CLIENT, scoped by user_id. The same rows are
+   * readable under the user's own policy, but this function already holds the
+   * service client to do the insert and the two reads must see the same thing
+   * the insert will land beside.
+   */
+  const budget = await loadIslandBudgetContext(service, user.id);
+  const quote = quoteRange(
+    start,
+    end,
+    budget.islandTime ?? [],
+    budget.schedule ?? null,
+    budget.cap
+  );
+
+  if (!quote.affordable) {
+    return { ok: false, error: refusalSentence(quote, yearOf(today)) };
+  }
+
   const { error } = await service.from("island_time").insert({
     user_id: user.id,
     start_date: start,
