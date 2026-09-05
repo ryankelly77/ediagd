@@ -1,6 +1,8 @@
 {
   "//": "Standalone build for day-preview.ts. Imports the real picker through the @/ alias — the point of the preview is that it runs the SAME code the page runs, not a paraphrase of it.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
   "compilerOptions": {
+    "strict": true,
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",

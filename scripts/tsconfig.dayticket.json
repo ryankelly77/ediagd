@@ -1,6 +1,8 @@
 {
   "//": "Standalone build for day-ticket-scenarios.ts. Reaches the REAL signing and verification code — a paraphrase of an HMAC proves nothing about the one that runs.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
   "compilerOptions": {
+    "strict": true,
     "target": "ES2022", "module": "commonjs", "moduleResolution": "node",
     "esModuleInterop": true, "skipLibCheck": true, "resolveJsonModule": true,
     "outDir": "../.tmp-dtk", "baseUrl": "..", "paths": { "@/*": ["./*"] },

@@ -1,6 +1,8 @@
 {
   "//": "Standalone build for ingest-videos.ts. It imports lib/mux/upload via the @/ alias, which a bare `tsc file.ts` invocation cannot resolve — the other scripts avoid this by importing nothing from the app. Reusing the upload helper is the point (one definition of the master settings), so the script gets a config instead of a copy.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
   "compilerOptions": {
+    "strict": true,
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
