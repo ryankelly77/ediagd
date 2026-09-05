@@ -170,6 +170,39 @@ export function parseAnnouncement(transcript: string): Announcement | null {
     : { title, voice: null, voiceFrom: null };
 }
 
+/**
+ * Is this film about the PLATFORM rather than about a quote?
+ *
+ * ---------------------------------------------------------------------------
+ * A THIRD KIND, AND IT LOOKS LIKE THE SECOND
+ * ---------------------------------------------------------------------------
+ * "Aloha. Thank you so much for being a part of the EDIAGD training platform"
+ * opens exactly like a mindset film and is not one — it explains what the app
+ * is and what three minutes a day buys. Named as a quote it would go on the
+ * Mindset shelf and surface in the daily rotation, which is the wrong shelf
+ * for the film that welcomes somebody to the product.
+ *
+ * The signal is that it talks about the app itself. Nothing else in the Drop
+ * Zone does: a pitch film sells a service, a mindset film performs a line.
+ */
+const ONBOARDING_SIGNALS = [
+  /\btraining platform\b/,
+  /\bname of the app\b/,
+  /\bediagd stands for\b/,
+  /\beach day you will be provided\b/,
+  /\bwelcome to (the )?ediagd\b/,
+  /\bthis platform\b/,
+];
+
+export function onboardingSignals(transcript: string): string[] {
+  const text = transcript.toLowerCase();
+  return ONBOARDING_SIGNALS.filter((re) => re.test(text)).map((re) => re.source);
+}
+
+/** Two signals, for the same reason the production-note guard wants two. */
+export const isOnboarding = (transcript: string): boolean =>
+  onboardingSignals(transcript).length >= 2;
+
 /* ---- Finding it in the library ------------------------------------------- */
 
 const norm = (s: string | null): string =>

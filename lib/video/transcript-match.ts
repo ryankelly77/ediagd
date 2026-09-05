@@ -32,10 +32,12 @@
  * The four films of an op-code deck, plus the foundational modules.
  *
  * CANONICAL VOCABULARY, WHICH IS NOT WHAT MITCH SAYS. Ryan's ruling: the third
- * film is "MPI Setup". The teleprompter writes "FILM 3 · SET UP THE MPI" and the
- * quiz bank writes "Set Up the MPI"; both are his phrasing and both still match,
- * because the markers below read what he says while this list decides what gets
- * written down. One name in the library, however many ways it is spoken.
+ * film is "MPI Setup" and the fourth is "After-MPI". He says "Set Up the MPI"
+ * and "MPI Selling"; both are his phrasing, both still match, because the
+ * markers below read what he says while this list decides what gets written
+ * down. These are also exactly the values 0062's check constraint accepts, so a
+ * filename and a stage column can never disagree. One name in the library,
+ * however many ways it is spoken.
  *
  * PART 1 / PART 2 ARE REAL FILM NAMES, not a fallback. The deck map's "4 films"
  * is approximate — A/C Recharge splits a film in two and the quiz bank's
@@ -46,7 +48,7 @@ export const STAGES = [
   "On the Drive",
   "At the Kiosk",
   "MPI Setup",
-  "MPI Selling",
+  "After-MPI",
   "Part 1",
   "Part 2",
   "Pre-Write",
@@ -117,7 +119,7 @@ const STAGE_MARKERS: Record<Stage, { phrase: string; weight: number }[]> = {
     { phrase: "highlight video", weight: 2 },
     { phrase: "scale of", weight: 1 },
   ],
-  "MPI Selling": [
+  "After-MPI": [
     /* The opening declaration, and the only phrase that separates the selling
        film from the setup film — both are full of multi-point language. */
     { phrase: "after the multi-point", weight: 4 },
@@ -280,7 +282,7 @@ export function scoreStages(transcript: string): Scored<Stage>[] {
      */
     if (stage === "MPI Setup") {
       const sells = DECLARATIONS.some(
-        (d) => d.stage === "MPI Selling" && occurrences(opening, d.phrase) > 0
+        (d) => d.stage === "After-MPI" && occurrences(opening, d.phrase) > 0
       );
       if (sells) score -= DECLARATION_WEIGHT;
     }
@@ -355,17 +357,17 @@ const DECLARATIONS: { phrase: string; stage: Stage }[] = [
   { phrase: "lets set up", stage: "MPI Setup" },
   { phrase: "set up that", stage: "MPI Setup" },
   { phrase: "set that", stage: "MPI Setup" },
-  { phrase: "let's sell", stage: "MPI Selling" },
-  { phrase: "lets sell", stage: "MPI Selling" },
-  { phrase: "sell some", stage: "MPI Selling" },
+  { phrase: "let's sell", stage: "After-MPI" },
+  { phrase: "lets sell", stage: "After-MPI" },
+  { phrase: "sell some", stage: "After-MPI" },
   /* "after the / that / your / our multi-point" — he uses all four, and
      matching only "the" left two selling films reading as setup films. */
-  { phrase: "after the multi-point", stage: "MPI Selling" },
-  { phrase: "after that multi-point", stage: "MPI Selling" },
-  { phrase: "after your multi-point", stage: "MPI Selling" },
-  { phrase: "after our multi-point", stage: "MPI Selling" },
-  { phrase: "after a multi-point", stage: "MPI Selling" },
-  { phrase: "now that", stage: "MPI Selling" },
+  { phrase: "after the multi-point", stage: "After-MPI" },
+  { phrase: "after that multi-point", stage: "After-MPI" },
+  { phrase: "after your multi-point", stage: "After-MPI" },
+  { phrase: "after our multi-point", stage: "After-MPI" },
+  { phrase: "after a multi-point", stage: "After-MPI" },
+  { phrase: "now that", stage: "After-MPI" },
   /* "In part one, we covered..." is this film saying it is part two. Both
      multi-part films in the Drop Zone open exactly that way. */
   { phrase: "in part one", stage: "Part 2" },
@@ -820,7 +822,10 @@ function canonicalStage(raw: string): Stage | null {
   if (k === "onthedrive") return "On the Drive";
   if (k === "atthekiosk") return "At the Kiosk";
   if (k === "setupthempi" || k === "mpisetup" || k === "setupmpi") return "MPI Setup";
-  if (k === "mpiselling") return "MPI Selling";
+  /* The teleprompter heads this film "FILM 4 · MPI SELLING"; the library calls
+     it After-MPI. This function exists to translate his headings into canonical
+     vocabulary, so this is the whole point of it rather than an exception. */
+  if (k === "mpiselling" || k === "aftermpi") return "After-MPI";
   return null;
 }
 
