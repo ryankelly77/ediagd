@@ -114,6 +114,8 @@ const STAGE_MARKERS: Record<Stage, { phrase: string; weight: number }[]> = {
        film from the setup film — both are full of multi-point language. */
     { phrase: "after the multi-point", weight: 4 },
     { phrase: "after that multi-point", weight: 4 },
+    { phrase: "after your multi-point", weight: 4 },
+    { phrase: "after our multi-point", weight: 4 },
     { phrase: "came back from the multi-point", weight: 4 },
     { phrase: "inspection is back", weight: 3 },
     { phrase: "two greens", weight: 3 },
@@ -330,8 +332,13 @@ const DECLARATIONS: { phrase: string; stage: Stage }[] = [
   { phrase: "let's sell", stage: "MPI Selling" },
   { phrase: "lets sell", stage: "MPI Selling" },
   { phrase: "sell some", stage: "MPI Selling" },
+  /* "after the / that / your / our multi-point" — he uses all four, and
+     matching only "the" left two selling films reading as setup films. */
   { phrase: "after the multi-point", stage: "MPI Selling" },
   { phrase: "after that multi-point", stage: "MPI Selling" },
+  { phrase: "after your multi-point", stage: "MPI Selling" },
+  { phrase: "after our multi-point", stage: "MPI Selling" },
+  { phrase: "after a multi-point", stage: "MPI Selling" },
   { phrase: "now that", stage: "MPI Selling" },
   { phrase: "on the drive", stage: "On the Drive" },
   { phrase: "walk around", stage: "On the Drive" },
