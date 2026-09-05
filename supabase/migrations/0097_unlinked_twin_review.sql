@@ -1,0 +1,27 @@
+-- ============================================================================
+-- EDIAGD — 0097 A reason for "these two are the same idea, unlinked"
+--
+-- Search surfaced a cue and a quote with the same title and near-identical
+-- body: "The Perfect Pitch Is Not to Get a Yes". Neither carries artifact_id,
+-- so nothing in the system knows they are one idea in two formats — and the
+-- daily loop's same-day dedup only excludes the LIFESTYLE VIDEO's twin
+-- (pickQuotesForDay takes videoArtifactId and nothing else). The cue is picked
+-- by pickCoachingCueForBlock, which that exclusion never sees.
+--
+-- So an advisor can meet the same sentence twice in one three-minute ritual:
+-- once as the coaching cue on step 2 and once as the quote on step 1. That is
+-- the exact failure the video<->quote link was built to prevent, in the one
+-- pairing nobody linked.
+--
+-- 127 such pairs exist. This adds the review reason; the proposals are seeded
+-- by scripts/propose-twins.ts, which runs after this commits because an enum
+-- value cannot be used in the transaction that adds it.
+--
+-- NO AUTO-LINKING. Two rows sharing a title are usually the same idea and
+-- sometimes are not — an excerpt and the passage it came from are different
+-- content that reads identically at the top. Linking them silently would make
+-- the loop skip a cue Mitch meant to serve. They go to the queue he already
+-- works.
+-- ============================================================================
+
+alter type content_review_reason add value if not exists 'unlinked_twin';

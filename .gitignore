@@ -115,3 +115,6 @@ exports/
 
 # tsc scratch output from npm run test:dealer-rows
 .tmp-dr/
+
+# tsc scratch output from npm run propose:twins
+.tmp-pt/

@@ -5,7 +5,9 @@ import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { Card } from "@/components/brand/Card";
 import { ReviewItem, type ReviewRow } from "@/components/admin/content/ReviewItem";
 import { DuplicateGroupCard } from "@/components/admin/content/DuplicateGroupCard";
+import { TwinProposalCard } from "@/components/admin/content/TwinProposalCard";
 import { loadDuplicateQueue } from "@/lib/duplicates";
+import { loadTwinProposals } from "@/lib/twins";
 
 /* ============================================================================
    EDIAGD — Needs you
@@ -66,16 +68,22 @@ export default async function ContentReviewPage() {
    * thousands — it is bounded by how much a person can answer, which is the
    * point of it existing.
    */
-  const [{ data }, duplicates] = await Promise.all([
+  const [{ data }, duplicates, twins] = await Promise.all([
     supabase
       .from("content_review")
       .select(
         "id, content_id, reason, detail, options, content:content_id(title, body, coaching_nugget, voice, source, type)"
       )
       .eq("status", "open")
+      /* The twin proposals come back through loadTwinProposals, which fetches
+         the candidate quotes this query knows nothing about. Excluding them
+         here keeps one row from being rendered twice and, more to the point,
+         keeps `total` counting only what the page actually shows. */
+      .neq("reason", "unlinked_twin")
       .order("reason")
       .limit(500),
     loadDuplicateQueue(supabase),
+    loadTwinProposals(supabase),
   ]);
 
   const rows: ReviewRow[] = (data ?? []).map((r) => {
@@ -108,7 +116,7 @@ export default async function ContentReviewPage() {
     };
   });
 
-  const total = rows.length + duplicates.length;
+  const total = rows.length + duplicates.length + twins.length;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -178,6 +186,31 @@ export default async function ContentReviewPage() {
             );
           })}
         </div>
+      )}
+
+      {/* ---- Twins, last ----------------------------------------------------
+          Below everything answerable in place. There are 121 of them and no
+          button on any of them, so putting them first would bury five minutes
+          of real work under an afternoon of reading. */}
+      {twins.length > 0 && (
+        <section id="twins" className="mt-8 scroll-mt-4">
+          <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
+            A cue and a quote saying the same thing
+            <span className="ml-2 text-clay">{twins.length}</span>
+          </h2>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink-soft">
+            The daily loop only knows two pieces of content are the same idea
+            when one is linked to the other. These pairs are not linked, so the
+            same words can turn up twice in one morning — once as the cue and
+            again as the quote. Nothing here has been linked automatically:
+            strongest word overlap first, and the tail only shares a title.
+          </p>
+          <div className="mt-3 space-y-3">
+            {twins.map((t) => (
+              <TwinProposalCard key={t.id} proposal={t} />
+            ))}
+          </div>
+        </section>
       )}
     </main>
   );
