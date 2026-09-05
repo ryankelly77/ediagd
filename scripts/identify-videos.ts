@@ -29,7 +29,7 @@
    knows.
    ============================================================================ */
 
-import { readFileSync, renameSync, existsSync } from "fs";
+import { readFileSync, renameSync, existsSync, writeFileSync } from "fs";
 import { join } from "path";
 import {
   findTakes,
@@ -45,35 +45,6 @@ const VOCABULARY = "data/deck-vocabulary.json";
 const APPLY = process.argv.includes("--apply");
 const DIR = (process.argv.find((a) => a.startsWith("--dir=")) ?? "").slice(6);
 
-/**
- * Deck name -> op code.
- *
- * The quiz bank names decks and does not carry op codes, so the mapping is the
- * caller's to supply — see DeckProfile.code. Only decks with a code here can
- * produce a filename; a match on a deck that has none is still reported, it
- * just cannot be renamed automatically.
- */
-const DECK_CODES: Record<string, string> = {
-  "Engine Air Filter": "EAF-001",
-  "Brake Fluid Exchange": "BFF-012",
-  "Cabin Air Filter": "CAF-002",
-  "Arctic Blast": "ABT-054",
-  "Wiper Blades": "WBF-018",
-  "Serpentine Belt": "SRP-038",
-  "Coolant Hoses": "CLH-042",
-  "Timing Belt": "TMB-039",
-  "Battery": "BAT-030",
-  "Brake Service": "BPR-029",
-  "Coolant Exchange": "CLE-010",
-  "Differential Fluid Exchange": "DFF-005",
-  "Power Steering Fluid Exchange": "PSF-004",
-  "Transmission Fluid Exchange": "TRF-003",
-  "A/C Odor Treatment": "ACO-010",
-  "A/C Recharge": "ACR-011",
-  "Spark Plugs": "SPK-037",
-  "Complete Fuel System Service": "CFS-036",
-};
-
 type Row = { file: string; seconds?: number; transcript: string; words?: number; error?: string };
 
 function load(): { rows: Row[]; profiles: DeckProfile[] } {
@@ -86,15 +57,17 @@ function load(): { rows: Row[]; profiles: DeckProfile[] } {
     process.exit(1);
   }
   const rows = JSON.parse(readFileSync(TRANSCRIPTS, "utf8")).files as Row[];
-  const vocab = JSON.parse(readFileSync(VOCABULARY, "utf8")) as {
-    decks: { deck: string; terms: { term: string; weight: number }[] }[];
-  };
-  const profiles = vocab.decks.map((d) => ({
-    deck: d.deck,
-    code: DECK_CODES[d.deck],
-    terms: d.terms,
-  }));
-  return { rows, profiles };
+  /*
+   * THE OP CODES COME FROM THE DECK MAP, not from this file.
+   *
+   * They were hand-typed here first and a third of them were wrong — CLE-010
+   * for Coolant Exchange when Mitch's map says CLF-010, DFF-005 for
+   * Differential when it says DFF-014, SPK-037 for Spark Plugs when it says
+   * SPK-043. Those were the names films would have been renamed to, and the
+   * rename is the one step nobody reviews line by line.
+   */
+  const vocab = JSON.parse(readFileSync(VOCABULARY, "utf8")) as { decks: DeckProfile[] };
+  return { rows, profiles: vocab.decks };
 }
 
 /** The transcript's opening, as the evidence a person actually reads. */
@@ -126,6 +99,25 @@ function main() {
     keepers.add(proposedKeeper(pair).file);
   }
 
+  /*
+   * TWO FILMS PROPOSED FOR ONE NAME IS A WRONG ANSWER, NOT A CHOICE.
+   *
+   * A deck has one film per stage. When two transcripts both come out as
+   * "PSF-013 — Set Up the MPI" the matcher has misread one of them — almost
+   * always the selling film, whose recap talks about setting up the
+   * multi-point. Renaming either would put a confident wrong name on a film,
+   * so both are held and named in the report for a person to split.
+   */
+  const proposedNames = new Map<string, number>();
+  for (const m of matched) {
+    const n = proposedName(m.proposal);
+    if (n) proposedNames.set(n, (proposedNames.get(n) ?? 0) + 1);
+  }
+  const collides = (m: (typeof matched)[number]) => {
+    const n = proposedName(m.proposal);
+    return Boolean(n && (proposedNames.get(n) ?? 0) > 1);
+  };
+
   /* ---- The table --------------------------------------------------------- */
   console.log("  FILE            PROPOSED NAME                              CONF     EVIDENCE");
   console.log("  " + "─".repeat(110));
@@ -151,7 +143,7 @@ function main() {
 
     /* A file in a take pair is never renamed automatically, even the proposed
        keeper — the pair is the thing a person confirms. */
-    if (name && !inAPair.has(m.file) && p.confidence !== "low") {
+    if (name && !inAPair.has(m.file) && p.confidence !== "low" && !collides(m)) {
       renames.push({ file: m.file, to: `${name}.MOV` });
     }
   }
@@ -187,6 +179,67 @@ function main() {
     console.log(`\n  ${failed.length} failed to transcribe\n`);
     for (const f of failed) console.log(`    ${f.file}  ${f.error}`);
   }
+
+  /* ---- The plan, for whoever does the renaming ---------------------------
+     Ryan is handing the renames to another agent working in Drive, so the
+     mapping has to leave this script as data rather than as a table somebody
+     retypes. Every file gets a row INCLUDING the ones not to touch: a plan that
+     lists only the renames leaves the other agent to infer what the silence
+     about the other twelve means, and the safe inference and the intended one
+     are not always the same.
+
+     THE LOCAL MOUNT AND DRIVE DISAGREE ON ONE NAME. Google Drive for Desktop
+     shows "IMG_2173 (1).MOV" for a file Drive itself calls "IMG_2173.MOV" —
+     a local disambiguation suffix, not part of the title. `driveTitle` is what
+     to match on in Drive; `file` is what is on this disk. */
+  const plan = matched.map((m) => {
+    const name = proposedName(m.proposal);
+    const held = collides(m)
+      ? "hold — two films proposed for this same name; one is misread"
+      : inAPair.has(m.file)
+      ? keepers.has(m.file)
+        ? "hold — take, suggested keeper"
+        : "hold — take, suggested spare"
+      : !name
+        ? `hold — ${m.proposal.reason ?? "no op code for this deck"}`
+        : m.proposal.confidence === "low"
+          ? "hold — low confidence"
+          : null;
+
+    return {
+      file: m.file,
+      driveTitle: m.file.replace(/ \(\d+\)(?=\.[A-Za-z0-9]+$)/, ""),
+      action: held ? "hold" : "rename",
+      renameTo: held ? null : `${name}.MOV`,
+      reason: held,
+      deck: m.proposal.deck,
+      stage: m.proposal.stage,
+      confidence: m.proposal.confidence,
+      seconds: m.seconds ?? null,
+      words: m.words ?? null,
+      evidence: m.proposal.evidence.slice(0, 6),
+      opening: opening(m.transcript, 200),
+    };
+  });
+
+  writeFileSync(
+    "reports/dropzone-rename-plan.json",
+    `${JSON.stringify({ folder: DIR || "(Drop Zone)", takes: takes.map((t) => ({
+      a: t.a.file, b: t.b.file, similarity: t.similarity, suggestedKeeper: proposedKeeper(t).file,
+    })), files: plan }, null, 1)}\n`
+  );
+
+  const csv = [
+    "drive_title,action,rename_to,deck,stage,confidence,reason",
+    ...plan.map((p) =>
+      [p.driveTitle, p.action, p.renameTo ?? "", p.deck ?? "", p.stage ?? "", p.confidence, p.reason ?? ""]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(",")
+    ),
+  ].join("\n");
+  writeFileSync("reports/dropzone-rename-plan.csv", `${csv}\n`);
+
+  console.log("  plan -> reports/dropzone-rename-plan.json + .csv\n");
 
   /* ---- Renaming, only on the word ---------------------------------------- */
   console.log(

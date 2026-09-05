@@ -25,9 +25,16 @@ extracted, transcribed and unlinked before the next file is touched, so this
 never holds more than one at a time.
 
 RESUMABLE, BECAUSE IT TAKES AN HOUR
-Roughly a minute per file to stream and extract, ten seconds to transcribe. A
-run that loses its work because the network hiccuped at file 40 is a run nobody
-starts again. Existing entries in the output file are kept and skipped.
+A run that loses its work because the network hiccuped at file 40 is a run
+nobody starts again. Existing entries in the output file are kept and skipped.
+
+PARALLEL ON THE PULL, SERIAL ON THE MODEL
+Measured on the first two files: 187 seconds to stream a 954MB master out of
+Drive, 8 seconds to transcribe it. The cost is almost entirely network, and
+network waits in parallel — so the pulls run on a small thread pool while a lock
+keeps one transcription in flight at a time. Whisper is the only CPU-bound part
+and running several would contend for the same cores; the lock is barely
+contended anyway at a 20:1 ratio.
 """
 
 import argparse
@@ -36,7 +43,9 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 MODEL = "base.en"  # one clear scripted speaker; small buys nothing here
 
@@ -59,6 +68,8 @@ def main() -> int:
     ap.add_argument("--dir", required=True, help="folder of masters (the Drop Zone)")
     ap.add_argument("--out", required=True, help="JSON file to write/extend")
     ap.add_argument("--limit", type=int, default=0, help="stop after N new files")
+    ap.add_argument("--workers", type=int, default=6,
+                    help="concurrent Drive pulls; transcription stays serial")
     args = ap.parse_args()
 
     if not os.path.isdir(args.dir):
@@ -81,48 +92,17 @@ def main() -> int:
     from faster_whisper import WhisperModel
     model = WhisperModel(MODEL, device="cpu", compute_type="int8")
 
-    written = 0
-    for name in files:
-        if name in done:
-            continue
-        if args.limit and written >= args.limit:
-            break
+    todo = [n for n in files if n not in done]
+    if args.limit:
+        todo = todo[: args.limit]
+    print(f"  {len(todo)} to do, {args.workers} concurrent pulls\n", flush=True)
 
-        src = os.path.join(args.dir, name)
-        size_mb = os.path.getsize(src) / 1e6
-        print(f"  {name}  ({size_mb:.0f} MB)", flush=True)
+    # One transcription at a time; one writer at a time.
+    asr_lock = threading.Lock()
+    io_lock = threading.Lock()
+    counter = {"n": 0}
 
-        wav = None
-        try:
-            fd, wav = tempfile.mkstemp(suffix=".wav")
-            os.close(fd)
-            pull = extract_audio(src, wav)
-
-            t0 = time.time()
-            segments, info = model.transcribe(wav, beam_size=1, vad_filter=True)
-            text = " ".join(s.text.strip() for s in segments).strip()
-            transcribe_secs = time.time() - t0
-
-            done[name] = {
-                "file": name,
-                "seconds": round(info.duration, 1),
-                "transcript": text,
-                "words": len(text.split()),
-            }
-            written += 1
-            print(f"      {info.duration:.0f}s audio · {len(text.split())} words "
-                  f"· pull {pull:.0f}s · asr {transcribe_secs:.0f}s", flush=True)
-            print(f"      {text[:110]}…\n", flush=True)
-
-        except Exception as exc:  # noqa: BLE001 — one bad file must not end the run
-            done[name] = {"file": name, "error": str(exc)[:300], "transcript": ""}
-            print(f"      FAILED: {exc}\n", file=sys.stderr, flush=True)
-        finally:
-            # The video bytes were never copied; this is the 3MB of audio.
-            if wav and os.path.exists(wav):
-                os.unlink(wav)
-
-        # Written after EVERY file, not at the end — see the resumability note.
+    def flush() -> None:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
         with open(args.out, "w") as fh:
             json.dump(
@@ -130,6 +110,44 @@ def main() -> int:
                  "files": [done[k] for k in sorted(done)]},
                 fh, indent=1,
             )
+
+    def handle(name: str) -> None:
+        src = os.path.join(args.dir, name)
+        size_mb = os.path.getsize(src) / 1e6
+        wav = None
+        try:
+            fd, wav = tempfile.mkstemp(suffix=".wav")
+            os.close(fd)
+            pull = extract_audio(src, wav)
+
+            t0 = time.time()
+            with asr_lock:
+                segments, info = model.transcribe(wav, beam_size=1, vad_filter=True)
+                text = " ".join(s.text.strip() for s in segments).strip()
+            asr = time.time() - t0
+
+            row = {"file": name, "seconds": round(info.duration, 1),
+                   "transcript": text, "words": len(text.split())}
+        except Exception as exc:  # noqa: BLE001 — one bad file must not end the run
+            row = {"file": name, "error": str(exc)[:300], "transcript": ""}
+            print(f"  {name}  FAILED: {exc}", file=sys.stderr, flush=True)
+        finally:
+            # The video bytes were never copied; this is the 3MB of audio.
+            if wav and os.path.exists(wav):
+                os.unlink(wav)
+
+        with io_lock:
+            done[name] = row
+            counter["n"] += 1
+            n = counter["n"]
+            flush()  # after EVERY file — see the resumability note
+        if row.get("transcript"):
+            print(f"  [{n}/{len(todo)}] {name} ({size_mb:.0f} MB) "
+                  f"{row['seconds']:.0f}s audio · {row['words']} words", flush=True)
+            print(f"      {row['transcript'][:110]}…\n", flush=True)
+
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
+        list(pool.map(handle, todo))
 
     ok = sum(1 for r in done.values() if r.get("transcript"))
     print(f"\n  {ok} of {len(done)} transcribed -> {args.out}\n")

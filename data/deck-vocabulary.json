@@ -3,6 +3,9 @@
  "decks": [
   {
    "deck": "A/C Odor Treatment",
+   "kind": "op_code",
+   "code": null,
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -17,40 +20,16 @@
      "weight": 0.029183
     },
     {
-     "term": "minutes",
-     "n": 7,
-     "df": 6,
-     "weight": 0.024205
-    },
-    {
      "term": "odor",
      "n": 4,
      "df": 2,
      "weight": 0.022745
     },
     {
-     "term": "quick",
-     "n": 7,
-     "df": 7,
-     "weight": 0.022017
-    },
-    {
      "term": "bring",
      "n": 4,
      "df": 3,
      "weight": 0.019456
-    },
-    {
-     "term": "lounge",
-     "n": 6,
-     "df": 7,
-     "weight": 0.018871
-    },
-    {
-     "term": "clock",
-     "n": 4,
-     "df": 4,
-     "weight": 0.017121
     },
     {
      "term": "statement",
@@ -69,30 +48,6 @@
      "n": 3,
      "df": 3,
      "weight": 0.014592
-    },
-    {
-     "term": "ten",
-     "n": 4,
-     "df": 6,
-     "weight": 0.013832
-    },
-    {
-     "term": "twenty",
-     "n": 4,
-     "df": 6,
-     "weight": 0.013832
-    },
-    {
-     "term": "end",
-     "n": 4,
-     "df": 7,
-     "weight": 0.012581
-    },
-    {
-     "term": "treatment",
-     "n": 3,
-     "df": 5,
-     "weight": 0.011483
     },
     {
      "term": "scratch",
@@ -117,18 +72,6 @@
      "n": 2,
      "df": 2,
      "weight": 0.011373
-    },
-    {
-     "term": "photo",
-     "n": 7,
-     "df": 16,
-     "weight": 0.010279
-    },
-    {
-     "term": "question",
-     "n": 5,
-     "df": 12,
-     "weight": 0.01026
     },
     {
      "term": "evaporator",
@@ -165,95 +108,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.009728
-    },
-    {
-     "term": "costs",
-     "n": 4,
-     "df": 10,
-     "weight": 0.009687
-    },
-    {
-     "term": "make",
-     "n": 3,
-     "df": 8,
-     "weight": 0.008623
-    },
-    {
-     "term": "mention",
-     "n": 3,
-     "df": 8,
-     "weight": 0.008623
-    },
-    {
-     "term": "oil",
-     "n": 3,
-     "df": 8,
-     "weight": 0.008623
-    },
-    {
-     "term": "happening",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "seasonal",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "mentioning",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "universal",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "hands",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "easy",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "running",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "ago",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008561
-    },
-    {
-     "term": "decision",
-     "n": 4,
-     "df": 12,
-     "weight": 0.008208
-    },
-    {
-     "term": "sitting",
-     "n": 3,
-     "df": 9,
-     "weight": 0.007906
     }
    ]
   },
   {
    "deck": "A/C Recharge",
+   "kind": "op_code",
+   "code": "ACR-047",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -261,12 +123,6 @@
     "On the Drive, Part 2"
    ],
    "terms": [
-    {
-     "term": "diagnosis",
-     "n": 9,
-     "df": 4,
-     "weight": 0.034784
-    },
     {
      "term": "recharge",
      "n": 5,
@@ -280,12 +136,6 @@
      "weight": 0.025615
     },
     {
-     "term": "concern",
-     "n": 7,
-     "df": 5,
-     "weight": 0.024193
-    },
-    {
      "term": "fee",
      "n": 4,
      "df": 2,
@@ -296,18 +146,6 @@
      "n": 3,
      "df": 1,
      "weight": 0.019212
-    },
-    {
-     "term": "handled",
-     "n": 6,
-     "df": 7,
-     "weight": 0.01704
-    },
-    {
-     "term": "implies",
-     "n": 4,
-     "df": 4,
-     "weight": 0.015459
     },
     {
      "term": "compressor",
@@ -346,12 +184,6 @@
      "weight": 0.013175
     },
     {
-     "term": "air",
-     "n": 6,
-     "df": 10,
-     "weight": 0.01312
-    },
-    {
      "term": "deposit",
      "n": 2,
      "df": 1,
@@ -380,24 +212,6 @@
      "n": 2,
      "df": 1,
      "weight": 0.012808
-    },
-    {
-     "term": "diagnostic",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011595
-    },
-    {
-     "term": "ticket",
-     "n": 4,
-     "df": 8,
-     "weight": 0.010381
-    },
-    {
-     "term": "found",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010369
     },
     {
      "term": "memory",
@@ -436,18 +250,6 @@
      "weight": 0.010269
     },
     {
-     "term": "comes",
-     "n": 6,
-     "df": 13,
-     "weight": 0.010237
-    },
-    {
-     "term": "plan",
-     "n": 3,
-     "df": 6,
-     "weight": 0.009367
-    },
-    {
      "term": "complaint",
      "n": 2,
      "df": 3,
@@ -470,41 +272,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.008783
-    },
-    {
-     "term": "problem",
-     "n": 4,
-     "df": 10,
-     "weight": 0.008747
-    },
-    {
-     "term": "cold",
-     "n": 5,
-     "df": 13,
-     "weight": 0.008531
-    },
-    {
-     "term": "enough",
-     "n": 3,
-     "df": 7,
-     "weight": 0.00852
-    },
-    {
-     "term": "text",
-     "n": 3,
-     "df": 7,
-     "weight": 0.00852
-    },
-    {
-     "term": "system",
-     "n": 5,
-     "df": 14,
-     "weight": 0.007852
     }
    ]
   },
   {
    "deck": "Arctic Blast",
+   "kind": "op_code",
+   "code": "ABT-054",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -561,24 +336,6 @@
      "weight": 0.02213
     },
     {
-     "term": "air",
-     "n": 8,
-     "df": 10,
-     "weight": 0.020151
-    },
-    {
-     "term": "filter",
-     "n": 14,
-     "df": 18,
-     "weight": 0.017903
-    },
-    {
-     "term": "faster",
-     "n": 4,
-     "df": 5,
-     "weight": 0.015925
-    },
-    {
      "term": "one-time",
      "n": 2,
      "df": 1,
@@ -607,36 +364,6 @@
      "n": 2,
      "df": 1,
      "weight": 0.014753
-    },
-    {
-     "term": "cabin",
-     "n": 5,
-     "df": 9,
-     "weight": 0.013706
-    },
-    {
-     "term": "beat",
-     "n": 3,
-     "df": 4,
-     "weight": 0.013356
-    },
-    {
-     "term": "bundle",
-     "n": 3,
-     "df": 4,
-     "weight": 0.013356
-    },
-    {
-     "term": "system",
-     "n": 7,
-     "df": 14,
-     "weight": 0.012663
-    },
-    {
-     "term": "make",
-     "n": 4,
-     "df": 8,
-     "weight": 0.011958
     },
     {
      "term": "fixing",
@@ -697,65 +424,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.010118
-    },
-    {
-     "term": "promise",
-     "n": 3,
-     "df": 7,
-     "weight": 0.009814
-    },
-    {
-     "term": "separate",
-     "n": 3,
-     "df": 7,
-     "weight": 0.009814
-    },
-    {
-     "term": "end",
-     "n": 3,
-     "df": 7,
-     "weight": 0.009814
-    },
-    {
-     "term": "everything",
-     "n": 5,
-     "df": 14,
-     "weight": 0.009045
-    },
-    {
-     "term": "temperature",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008904
-    },
-    {
-     "term": "clean",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008904
-    },
-    {
-     "term": "offering",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008904
-    },
-    {
-     "term": "broken",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007962
-    },
-    {
-     "term": "leave",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007962
     }
    ]
   },
   {
    "deck": "Battery",
+   "kind": "op_code",
+   "code": "BAT-033",
+   "films": 6,
    "stages": [
     "At the Kiosk, Part 1",
     "At the Kiosk, Part 2",
@@ -826,12 +502,6 @@
      "weight": 0.01634
     },
     {
-     "term": "corrosion",
-     "n": 4,
-     "df": 4,
-     "weight": 0.01438
-    },
-    {
      "term": "connection",
      "n": 3,
      "df": 2,
@@ -844,12 +514,6 @@
      "weight": 0.014327
     },
     {
-     "term": "concern",
-     "n": 4,
-     "df": 5,
-     "weight": 0.012859
-    },
-    {
      "term": "kills",
      "n": 3,
      "df": 3,
@@ -860,12 +524,6 @@
      "n": 3,
      "df": 3,
      "weight": 0.012255
-    },
-    {
-     "term": "reading",
-     "n": 6,
-     "df": 10,
-     "weight": 0.012204
     },
     {
      "term": "crank",
@@ -898,36 +556,6 @@
      "weight": 0.011913
     },
     {
-     "term": "morning",
-     "n": 4,
-     "df": 6,
-     "weight": 0.011617
-    },
-    {
-     "term": "four",
-     "n": 6,
-     "df": 11,
-     "weight": 0.011229
-    },
-    {
-     "term": "years",
-     "n": 5,
-     "df": 9,
-     "weight": 0.011067
-    },
-    {
-     "term": "seasonal",
-     "n": 3,
-     "df": 4,
-     "weight": 0.010785
-    },
-    {
-     "term": "date",
-     "n": 3,
-     "df": 5,
-     "weight": 0.009644
-    },
-    {
      "term": "promising",
      "n": 2,
      "df": 2,
@@ -958,30 +586,6 @@
      "weight": 0.009551
     },
     {
-     "term": "step",
-     "n": 5,
-     "df": 11,
-     "weight": 0.009358
-    },
-    {
-     "term": "give",
-     "n": 4,
-     "df": 9,
-     "weight": 0.008854
-    },
-    {
-     "term": "working",
-     "n": 3,
-     "df": 6,
-     "weight": 0.008713
-    },
-    {
-     "term": "somebody",
-     "n": 7,
-     "df": 16,
-     "weight": 0.008633
-    },
-    {
      "term": "catch",
      "n": 2,
      "df": 3,
@@ -1004,11 +608,26 @@
      "n": 2,
      "df": 3,
      "weight": 0.00817
+    },
+    {
+     "term": "pads",
+     "n": 2,
+     "df": 3,
+     "weight": 0.00817
+    },
+    {
+     "term": "protecting",
+     "n": 2,
+     "df": 3,
+     "weight": 0.00817
     }
    ]
   },
   {
    "deck": "Brake Fluid Exchange",
+   "kind": "op_code",
+   "code": "BFF-012",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -1016,18 +635,6 @@
     "Set Up the MPI"
    ],
    "terms": [
-    {
-     "term": "brake",
-     "n": 27,
-     "df": 7,
-     "weight": 0.08005
-    },
-    {
-     "term": "fluid",
-     "n": 28,
-     "df": 16,
-     "weight": 0.038757
-    },
     {
      "term": "moisture",
      "n": 6,
@@ -1063,24 +670,6 @@
      "n": 3,
      "df": 1,
      "weight": 0.020056
-    },
-    {
-     "term": "cars",
-     "n": 4,
-     "df": 5,
-     "weight": 0.014433
-    },
-    {
-     "term": "btm",
-     "n": 4,
-     "df": 5,
-     "weight": 0.014433
-    },
-    {
-     "term": "found",
-     "n": 4,
-     "df": 5,
-     "weight": 0.014433
     },
     {
      "term": "suvs",
@@ -1131,42 +720,6 @@
      "weight": 0.013371
     },
     {
-     "term": "condition",
-     "n": 10,
-     "df": 17,
-     "weight": 0.012682
-    },
-    {
-     "term": "open",
-     "n": 5,
-     "df": 9,
-     "weight": 0.012421
-    },
-    {
-     "term": "implies",
-     "n": 3,
-     "df": 4,
-     "weight": 0.012104
-    },
-    {
-     "term": "exchange",
-     "n": 4,
-     "df": 7,
-     "weight": 0.011859
-    },
-    {
-     "term": "brakes",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010824
-    },
-    {
-     "term": "voice",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010824
-    },
-    {
      "term": "cap",
      "n": 2,
      "df": 2,
@@ -1209,12 +762,6 @@
      "weight": 0.01072
     },
     {
-     "term": "permission",
-     "n": 3,
-     "df": 6,
-     "weight": 0.009779
-    },
-    {
      "term": "highway",
      "n": 2,
      "df": 3,
@@ -1237,29 +784,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.00917
-    },
-    {
-     "term": "mileage",
-     "n": 7,
-     "df": 18,
-     "weight": 0.008113
-    },
-    {
-     "term": "drops",
-     "n": 2,
-     "df": 4,
-     "weight": 0.00807
-    },
-    {
-     "term": "against",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007216
     }
    ]
   },
   {
    "deck": "Brake Service",
+   "kind": "op_code",
+   "code": "BPF-028",
+   "films": 5,
    "stages": [
     "At the Kiosk, Part 1",
     "At the Kiosk, Part 2",
@@ -1287,12 +819,6 @@
      "weight": 0.061606
     },
     {
-     "term": "brake",
-     "n": 12,
-     "df": 7,
-     "weight": 0.036773
-    },
-    {
      "term": "grinding",
      "n": 5,
      "df": 2,
@@ -1311,12 +837,6 @@
      "weight": 0.023695
     },
     {
-     "term": "brakes",
-     "n": 6,
-     "df": 5,
-     "weight": 0.022376
-    },
-    {
      "term": "squeal",
      "n": 4,
      "df": 2,
@@ -1333,12 +853,6 @@
      "n": 3,
      "df": 1,
      "weight": 0.02073
-    },
-    {
-     "term": "wear",
-     "n": 5,
-     "df": 6,
-     "weight": 0.016845
     },
     {
      "term": "spend",
@@ -1401,18 +915,6 @@
      "weight": 0.01382
     },
     {
-     "term": "fluid",
-     "n": 8,
-     "df": 16,
-     "weight": 0.011445
-    },
-    {
-     "term": "wheel",
-     "n": 3,
-     "df": 5,
-     "weight": 0.011188
-    },
-    {
      "term": "metal",
      "n": 2,
      "df": 2,
@@ -1461,12 +963,6 @@
      "weight": 0.01108
     },
     {
-     "term": "job",
-     "n": 7,
-     "df": 15,
-     "weight": 0.010908
-    },
-    {
      "term": "match",
      "n": 2,
      "df": 3,
@@ -1483,35 +979,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.009478
-    },
-    {
-     "term": "sold",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008341
-    },
-    {
-     "term": "weight",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008341
-    },
-    {
-     "term": "buy",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008341
-    },
-    {
-     "term": "showing",
-     "n": 2,
-     "df": 4,
-     "weight": 0.008341
     }
    ]
   },
   {
    "deck": "Bulb Replacement",
+   "kind": "op_code",
+   "code": "BLB-037",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -1562,12 +1037,6 @@
      "weight": 0.037098
     },
     {
-     "term": "brake",
-     "n": 8,
-     "df": 7,
-     "weight": 0.032904
-    },
-    {
      "term": "pairs",
      "n": 5,
      "df": 3,
@@ -1604,28 +1073,10 @@
      "weight": 0.027824
     },
     {
-     "term": "side",
-     "n": 5,
-     "df": 5,
-     "weight": 0.025027
-    },
-    {
-     "term": "wipers",
-     "n": 4,
-     "df": 4,
-     "weight": 0.02239
-    },
-    {
      "term": "lighting",
      "n": 3,
      "df": 2,
      "weight": 0.022308
-    },
-    {
-     "term": "light",
-     "n": 5,
-     "df": 7,
-     "weight": 0.020565
     },
     {
      "term": "4-minute",
@@ -1718,51 +1169,18 @@
      "weight": 0.018549
     },
     {
-     "term": "behind",
-     "n": 4,
-     "df": 6,
-     "weight": 0.018088
-    },
-    {
      "term": "matched",
      "n": 2,
      "df": 2,
      "weight": 0.014872
-    },
-    {
-     "term": "connector",
-     "n": 2,
-     "df": 2,
-     "weight": 0.014872
-    },
-    {
-     "term": "electrical",
-     "n": 2,
-     "df": 2,
-     "weight": 0.014872
-    },
-    {
-     "term": "own",
-     "n": 5,
-     "df": 11,
-     "weight": 0.01457
-    },
-    {
-     "term": "night",
-     "n": 2,
-     "df": 3,
-     "weight": 0.012721
-    },
-    {
-     "term": "plastic",
-     "n": 2,
-     "df": 3,
-     "weight": 0.012721
     }
    ]
   },
   {
    "deck": "Cabin Air Filter",
+   "kind": "op_code",
+   "code": "CAF-002",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -1787,24 +1205,6 @@
      "n": 6,
      "df": 2,
      "weight": 0.029151
-    },
-    {
-     "term": "cabin",
-     "n": 12,
-     "df": 9,
-     "weight": 0.027021
-    },
-    {
-     "term": "filter",
-     "n": 22,
-     "df": 18,
-     "weight": 0.023111
-    },
-    {
-     "term": "air",
-     "n": 10,
-     "df": 10,
-     "weight": 0.020692
     },
     {
      "term": "cowl",
@@ -1837,30 +1237,6 @@
      "weight": 0.016623
     },
     {
-     "term": "000",
-     "n": 8,
-     "df": 10,
-     "weight": 0.016554
-    },
-    {
-     "term": "smell",
-     "n": 5,
-     "df": 5,
-     "weight": 0.016352
-    },
-    {
-     "term": "filters",
-     "n": 5,
-     "df": 6,
-     "weight": 0.014773
-    },
-    {
-     "term": "mention",
-     "n": 6,
-     "df": 8,
-     "weight": 0.014736
-    },
-    {
      "term": "windshield",
      "n": 3,
      "df": 2,
@@ -1871,12 +1247,6 @@
      "n": 3,
      "df": 2,
      "weight": 0.014576
-    },
-    {
-     "term": "leaves",
-     "n": 4,
-     "df": 5,
-     "weight": 0.013082
     },
     {
      "term": "pleasant",
@@ -1921,24 +1291,6 @@
      "weight": 0.01212
     },
     {
-     "term": "cleaning",
-     "n": 4,
-     "df": 6,
-     "weight": 0.011818
-    },
-    {
-     "term": "without",
-     "n": 7,
-     "df": 13,
-     "weight": 0.011301
-    },
-    {
-     "term": "drops",
-     "n": 3,
-     "df": 4,
-     "weight": 0.010972
-    },
-    {
      "term": "scented",
      "n": 2,
      "df": 2,
@@ -1975,24 +1327,6 @@
      "weight": 0.009717
     },
     {
-     "term": "step",
-     "n": 5,
-     "df": 11,
-     "weight": 0.00952
-    },
-    {
-     "term": "behind",
-     "n": 3,
-     "df": 6,
-     "weight": 0.008864
-    },
-    {
-     "term": "services",
-     "n": 3,
-     "df": 6,
-     "weight": 0.008864
-    },
-    {
      "term": "photographs",
      "n": 2,
      "df": 3,
@@ -2009,11 +1343,20 @@
      "n": 2,
      "df": 3,
      "weight": 0.008312
+    },
+    {
+     "term": "points",
+     "n": 2,
+     "df": 3,
+     "weight": 0.008312
     }
    ]
   },
   {
    "deck": "Complete Fuel System Service",
+   "kind": "op_code",
+   "code": "FIC-045",
+   "films": 5,
    "stages": [
     "At the Kiosk, Part 1",
     "At the Kiosk, Part 2",
@@ -2027,12 +1370,6 @@
      "n": 11,
      "df": 1,
      "weight": 0.070442
-    },
-    {
-     "term": "fuel",
-     "n": 13,
-     "df": 5,
-     "weight": 0.04493
     },
     {
      "term": "injectors",
@@ -2065,22 +1402,10 @@
      "weight": 0.020537
     },
     {
-     "term": "cleaning",
-     "n": 6,
-     "df": 6,
-     "weight": 0.018733
-    },
-    {
      "term": "intake",
      "n": 4,
      "df": 3,
      "weight": 0.017567
-    },
-    {
-     "term": "builds",
-     "n": 4,
-     "df": 4,
-     "weight": 0.015459
     },
     {
      "term": "fixing",
@@ -2107,28 +1432,10 @@
      "weight": 0.015403
     },
     {
-     "term": "interval",
-     "n": 9,
-     "df": 13,
-     "weight": 0.015355
-    },
-    {
      "term": "machine",
      "n": 3,
      "df": 3,
      "weight": 0.013175
-    },
-    {
-     "term": "miles",
-     "n": 6,
-     "df": 10,
-     "weight": 0.01312
-    },
-    {
-     "term": "000",
-     "n": 6,
-     "df": 10,
-     "weight": 0.01312
     },
     {
      "term": "restoring",
@@ -2153,24 +1460,6 @@
      "n": 2,
      "df": 1,
      "weight": 0.012808
-    },
-    {
-     "term": "clean",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011595
-    },
-    {
-     "term": "promise",
-     "n": 4,
-     "df": 7,
-     "weight": 0.01136
-    },
-    {
-     "term": "faster",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010369
     },
     {
      "term": "dust",
@@ -2227,30 +1516,6 @@
      "weight": 0.010269
     },
     {
-     "term": "better",
-     "n": 7,
-     "df": 15,
-     "weight": 0.010108
-    },
-    {
-     "term": "full",
-     "n": 4,
-     "df": 9,
-     "weight": 0.009519
-    },
-    {
-     "term": "keeps",
-     "n": 3,
-     "df": 6,
-     "weight": 0.009367
-    },
-    {
-     "term": "service",
-     "n": 12,
-     "df": 22,
-     "weight": 0.008911
-    },
-    {
      "term": "highway",
      "n": 2,
      "df": 3,
@@ -2261,11 +1526,26 @@
      "n": 2,
      "df": 3,
      "weight": 0.008783
+    },
+    {
+     "term": "publish",
+     "n": 2,
+     "df": 3,
+     "weight": 0.008783
+    },
+    {
+     "term": "cheap",
+     "n": 2,
+     "df": 3,
+     "weight": 0.008783
     }
    ]
   },
   {
    "deck": "Coolant Exchange",
+   "kind": "op_code",
+   "code": "CLF-010",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -2274,22 +1554,10 @@
    ],
    "terms": [
     {
-     "term": "coolant",
-     "n": 21,
-     "df": 10,
-     "weight": 0.041787
-    },
-    {
      "term": "bumper-to-bumper",
      "n": 5,
      "df": 1,
      "weight": 0.029138
-    },
-    {
-     "term": "cooling",
-     "n": 7,
-     "df": 4,
-     "weight": 0.024619
     },
     {
      "term": "powertrain",
@@ -2310,18 +1578,6 @@
      "weight": 0.02331
     },
     {
-     "term": "water",
-     "n": 8,
-     "df": 6,
-     "weight": 0.02273
-    },
-    {
-     "term": "pump",
-     "n": 7,
-     "df": 6,
-     "weight": 0.019889
-    },
-    {
      "term": "additive",
      "n": 4,
      "df": 2,
@@ -2332,12 +1588,6 @@
      "n": 4,
      "df": 2,
      "weight": 0.018689
-    },
-    {
-     "term": "package",
-     "n": 5,
-     "df": 4,
-     "weight": 0.017585
     },
     {
      "term": "acidic",
@@ -2352,22 +1602,10 @@
      "weight": 0.017483
     },
     {
-     "term": "system",
-     "n": 12,
-     "df": 14,
-     "weight": 0.017149
-    },
-    {
      "term": "tank",
      "n": 4,
      "df": 3,
      "weight": 0.015986
-    },
-    {
-     "term": "longer",
-     "n": 6,
-     "df": 7,
-     "weight": 0.015506
     },
     {
      "term": "radiator",
@@ -2412,24 +1650,6 @@
      "weight": 0.011655
     },
     {
-     "term": "past",
-     "n": 4,
-     "df": 6,
-     "weight": 0.011365
-    },
-    {
-     "term": "corrosion",
-     "n": 3,
-     "df": 4,
-     "weight": 0.010551
-    },
-    {
-     "term": "trust",
-     "n": 3,
-     "df": 4,
-     "weight": 0.010551
-    },
-    {
      "term": "protection",
      "n": 2,
      "df": 2,
@@ -2472,30 +1692,6 @@
      "weight": 0.009345
     },
     {
-     "term": "open",
-     "n": 4,
-     "df": 9,
-     "weight": 0.008662
-    },
-    {
-     "term": "looks",
-     "n": 4,
-     "df": 9,
-     "weight": 0.008662
-    },
-    {
-     "term": "stops",
-     "n": 3,
-     "df": 6,
-     "weight": 0.008524
-    },
-    {
-     "term": "whatever",
-     "n": 3,
-     "df": 6,
-     "weight": 0.008524
-    },
-    {
      "term": "warm",
      "n": 2,
      "df": 3,
@@ -2512,11 +1708,32 @@
      "n": 2,
      "df": 3,
      "weight": 0.007993
+    },
+    {
+     "term": "cover",
+     "n": 2,
+     "df": 3,
+     "weight": 0.007993
+    },
+    {
+     "term": "protecting",
+     "n": 2,
+     "df": 3,
+     "weight": 0.007993
+    },
+    {
+     "term": "bright",
+     "n": 2,
+     "df": 3,
+     "weight": 0.007993
     }
    ]
   },
   {
    "deck": "Coolant Hoses",
+   "kind": "op_code",
+   "code": "CLH-042",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -2537,12 +1754,6 @@
      "weight": 0.064421
     },
     {
-     "term": "coolant",
-     "n": 14,
-     "df": 10,
-     "weight": 0.049895
-    },
-    {
      "term": "clamp",
      "n": 4,
      "df": 1,
@@ -2559,24 +1770,6 @@
      "n": 4,
      "df": 2,
      "weight": 0.033473
-    },
-    {
-     "term": "cooling",
-     "n": 5,
-     "df": 4,
-     "weight": 0.031496
-    },
-    {
-     "term": "him",
-     "n": 4,
-     "df": 4,
-     "weight": 0.025197
-    },
-    {
-     "term": "outside",
-     "n": 4,
-     "df": 5,
-     "weight": 0.022532
     },
     {
      "term": "degradation",
@@ -2603,12 +1796,6 @@
      "weight": 0.020875
     },
     {
-     "term": "system",
-     "n": 7,
-     "df": 14,
-     "weight": 0.017917
-    },
-    {
      "term": "soft",
      "n": 2,
      "df": 3,
@@ -2631,143 +1818,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.014316
-    },
-    {
-     "term": "inside",
-     "n": 4,
-     "df": 10,
-     "weight": 0.014256
-    },
-    {
-     "term": "labor",
-     "n": 3,
-     "df": 7,
-     "weight": 0.013886
-    },
-    {
-     "term": "chemistry",
-     "n": 2,
-     "df": 4,
-     "weight": 0.012598
-    },
-    {
-     "term": "failure",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011266
-    },
-    {
-     "term": "head",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011266
-    },
-    {
-     "term": "pressure",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011266
-    },
-    {
-     "term": "desk",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011266
-    },
-    {
-     "term": "timing",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011266
-    },
-    {
-     "term": "water",
-     "n": 2,
-     "df": 6,
-     "weight": 0.010178
-    },
-    {
-     "term": "pump",
-     "n": 2,
-     "df": 6,
-     "weight": 0.010178
-    },
-    {
-     "term": "expensive",
-     "n": 3,
-     "df": 11,
-     "weight": 0.009838
-    },
-    {
-     "term": "small",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009257
-    },
-    {
-     "term": "separate",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009257
-    },
-    {
-     "term": "few",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009257
-    },
-    {
-     "term": "whole",
-     "n": 4,
-     "df": 16,
-     "weight": 0.008644
-    },
-    {
-     "term": "modern",
-     "n": 2,
-     "df": 8,
-     "weight": 0.00846
-    },
-    {
-     "term": "look",
-     "n": 3,
-     "df": 13,
-     "weight": 0.008342
-    },
-    {
-     "term": "fine",
-     "n": 4,
-     "df": 17,
-     "weight": 0.00792
-    },
-    {
-     "term": "looks",
-     "n": 2,
-     "df": 9,
-     "weight": 0.007757
-    },
-    {
-     "term": "money",
-     "n": 2,
-     "df": 10,
-     "weight": 0.007128
-    },
-    {
-     "term": "see",
-     "n": 3,
-     "df": 15,
-     "weight": 0.007061
-    },
-    {
-     "term": "usually",
-     "n": 2,
-     "df": 11,
-     "weight": 0.006559
     }
    ]
   },
   {
    "deck": "Differential Fluid Exchange",
+   "kind": "op_code",
+   "code": "DFF-014",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -2810,36 +1868,6 @@
      "n": 6,
      "df": 3,
      "weight": 0.02583
-    },
-    {
-     "term": "rear",
-     "n": 6,
-     "df": 4,
-     "weight": 0.022731
-    },
-    {
-     "term": "water",
-     "n": 6,
-     "df": 6,
-     "weight": 0.018364
-    },
-    {
-     "term": "lift",
-     "n": 5,
-     "df": 5,
-     "weight": 0.01694
-    },
-    {
-     "term": "oil",
-     "n": 6,
-     "df": 8,
-     "weight": 0.015265
-    },
-    {
-     "term": "ever",
-     "n": 6,
-     "df": 8,
-     "weight": 0.015265
     },
     {
      "term": "surprise",
@@ -2926,30 +1954,6 @@
      "weight": 0.012555
     },
     {
-     "term": "vent",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011366
-    },
-    {
-     "term": "community",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011366
-    },
-    {
-     "term": "separate",
-     "n": 4,
-     "df": 7,
-     "weight": 0.011135
-    },
-    {
-     "term": "track",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010164
-    },
-    {
      "term": "hitch",
      "n": 2,
      "df": 2,
@@ -2986,18 +1990,6 @@
      "weight": 0.010066
     },
     {
-     "term": "evidence",
-     "n": 4,
-     "df": 9,
-     "weight": 0.009331
-    },
-    {
-     "term": "service",
-     "n": 12,
-     "df": 22,
-     "weight": 0.008735
-    },
-    {
      "term": "pulls",
      "n": 2,
      "df": 3,
@@ -3014,11 +2006,20 @@
      "n": 2,
      "df": 3,
      "weight": 0.00861
+    },
+    {
+     "term": "bright",
+     "n": 2,
+     "df": 3,
+     "weight": 0.00861
     }
    ]
   },
   {
    "deck": "Engine Air Filter",
+   "kind": "op_code",
+   "code": "EAF-001",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -3027,70 +2028,16 @@
    ],
    "terms": [
     {
-     "term": "shot",
-     "n": 6,
-     "df": 5,
-     "weight": 0.021203
-    },
-    {
-     "term": "filter",
-     "n": 18,
-     "df": 18,
-     "weight": 0.020432
-    },
-    {
      "term": "airbox",
      "n": 3,
      "df": 1,
      "weight": 0.019643
     },
     {
-     "term": "close",
-     "n": 8,
-     "df": 11,
-     "weight": 0.016459
-    },
-    {
      "term": "familiar",
      "n": 3,
      "df": 2,
      "weight": 0.015749
-    },
-    {
-     "term": "greens",
-     "n": 4,
-     "df": 5,
-     "weight": 0.014135
-    },
-    {
-     "term": "air",
-     "n": 6,
-     "df": 10,
-     "weight": 0.013415
-    },
-    {
-     "term": "behind",
-     "n": 4,
-     "df": 6,
-     "weight": 0.01277
-    },
-    {
-     "term": "filters",
-     "n": 4,
-     "df": 6,
-     "weight": 0.01277
-    },
-    {
-     "term": "step",
-     "n": 6,
-     "df": 11,
-     "weight": 0.012344
-    },
-    {
-     "term": "engine",
-     "n": 7,
-     "df": 13,
-     "weight": 0.012211
     },
     {
      "term": "30-second",
@@ -3141,24 +2088,6 @@
      "weight": 0.010499
     },
     {
-     "term": "call",
-     "n": 4,
-     "df": 9,
-     "weight": 0.009732
-    },
-    {
-     "term": "multi-point",
-     "n": 3,
-     "df": 6,
-     "weight": 0.009577
-    },
-    {
-     "term": "tire",
-     "n": 3,
-     "df": 6,
-     "weight": 0.009577
-    },
-    {
      "term": "policy",
      "n": 2,
      "df": 3,
@@ -3187,187 +2116,31 @@
      "n": 2,
      "df": 3,
      "weight": 0.008981
-    },
-    {
-     "term": "objection",
-     "n": 3,
-     "df": 7,
-     "weight": 0.008711
-    },
-    {
-     "term": "mpi",
-     "n": 4,
-     "df": 11,
-     "weight": 0.008229
-    },
-    {
-     "term": "answers",
-     "n": 2,
-     "df": 4,
-     "weight": 0.007903
-    },
-    {
-     "term": "hands",
-     "n": 2,
-     "df": 4,
-     "weight": 0.007903
-    },
-    {
-     "term": "reward",
-     "n": 2,
-     "df": 4,
-     "weight": 0.007903
-    },
-    {
-     "term": "action",
-     "n": 2,
-     "df": 4,
-     "weight": 0.007903
-    },
-    {
-     "term": "structure",
-     "n": 2,
-     "df": 4,
-     "weight": 0.007903
-    },
-    {
-     "term": "take",
-     "n": 4,
-     "df": 12,
-     "weight": 0.007578
-    },
-    {
-     "term": "speech",
-     "n": 8,
-     "df": 20,
-     "weight": 0.007502
-    },
-    {
-     "term": "opening",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007068
-    },
-    {
-     "term": "against",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007068
-    },
-    {
-     "term": "codes",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007068
-    },
-    {
-     "term": "follow-up",
-     "n": 2,
-     "df": 5,
-     "weight": 0.007068
     }
    ]
   },
   {
    "deck": "Four voices",
+   "kind": "foundational",
+   "code": null,
+   "films": null,
    "stages": [
     "Four Voices"
    ],
    "terms": [
     {
-     "term": "voice",
-     "n": 4,
-     "df": 5,
-     "weight": 0.078628
-    },
-    {
-     "term": "store",
-     "n": 5,
-     "df": 10,
-     "weight": 0.062183
-    },
-    {
-     "term": "certified",
-     "n": 5,
-     "df": 10,
-     "weight": 0.062183
-    },
-    {
      "term": "stack",
      "n": 2,
      "df": 3,
      "weight": 0.049956
-    },
-    {
-     "term": "factory",
-     "n": 5,
-     "df": 13,
-     "weight": 0.048519
-    },
-    {
-     "term": "days",
-     "n": 2,
-     "df": 4,
-     "weight": 0.043963
-    },
-    {
-     "term": "yours",
-     "n": 2,
-     "df": 7,
-     "weight": 0.032304
-    },
-    {
-     "term": "hand",
-     "n": 2,
-     "df": 10,
-     "weight": 0.024873
-    },
-    {
-     "term": "four",
-     "n": 2,
-     "df": 11,
-     "weight": 0.022888
-    },
-    {
-     "term": "technician",
-     "n": 5,
-     "df": 23,
-     "weight": 0.018803
-    },
-    {
-     "term": "filter",
-     "n": 2,
-     "df": 18,
-     "weight": 0.012628
-    },
-    {
-     "term": "where",
-     "n": 2,
-     "df": 19,
-     "weight": 0.011501
-    },
-    {
-     "term": "vehicle",
-     "n": 5,
-     "df": 27,
-     "weight": 0.010452
-    },
-    {
-     "term": "part",
-     "n": 2,
-     "df": 21,
-     "weight": 0.009416
-    },
-    {
-     "term": "car",
-     "n": 2,
-     "df": 27,
-     "weight": 0.004181
     }
    ]
   },
   {
    "deck": "Lines",
+   "kind": "foundational",
+   "code": null,
+   "films": null,
    "stages": [
     "Lines You Don't Cross"
    ],
@@ -3377,36 +2150,6 @@
      "n": 3,
      "df": 1,
      "weight": 0.054919
-    },
-    {
-     "term": "rear",
-     "n": 3,
-     "df": 4,
-     "weight": 0.033145
-    },
-    {
-     "term": "verify",
-     "n": 3,
-     "df": 4,
-     "weight": 0.033145
-    },
-    {
-     "term": "belt",
-     "n": 3,
-     "df": 4,
-     "weight": 0.033145
-    },
-    {
-     "term": "talk",
-     "n": 3,
-     "df": 4,
-     "weight": 0.033145
-    },
-    {
-     "term": "smell",
-     "n": 3,
-     "df": 5,
-     "weight": 0.02964
     },
     {
      "term": "differential",
@@ -3433,12 +2176,6 @@
      "weight": 0.029355
     },
     {
-     "term": "looks",
-     "n": 4,
-     "df": 9,
-     "weight": 0.02721
-    },
-    {
      "term": "power",
      "n": 2,
      "df": 3,
@@ -3461,149 +2198,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.025109
-    },
-    {
-     "term": "steering",
-     "n": 2,
-     "df": 4,
-     "weight": 0.022096
-    },
-    {
-     "term": "fluid",
-     "n": 5,
-     "df": 16,
-     "weight": 0.018951
-    },
-    {
-     "term": "reservoir",
-     "n": 2,
-     "df": 6,
-     "weight": 0.017851
-    },
-    {
-     "term": "service",
-     "n": 8,
-     "df": 22,
-     "weight": 0.016983
-    },
-    {
-     "term": "lose",
-     "n": 2,
-     "df": 7,
-     "weight": 0.016237
-    },
-    {
-     "term": "lounge",
-     "n": 2,
-     "df": 7,
-     "weight": 0.016237
-    },
-    {
-     "term": "modern",
-     "n": 2,
-     "df": 8,
-     "weight": 0.014838
-    },
-    {
-     "term": "quote",
-     "n": 2,
-     "df": 8,
-     "weight": 0.014838
-    },
-    {
-     "term": "measured",
-     "n": 2,
-     "df": 8,
-     "weight": 0.014838
-    },
-    {
-     "term": "pitch",
-     "n": 2,
-     "df": 10,
-     "weight": 0.012502
-    },
-    {
-     "term": "down",
-     "n": 2,
-     "df": 11,
-     "weight": 0.011504
-    },
-    {
-     "term": "telling",
-     "n": 2,
-     "df": 12,
-     "weight": 0.010593
-    },
-    {
-     "term": "engine",
-     "n": 2,
-     "df": 13,
-     "weight": 0.009755
-    },
-    {
-     "term": "mileage",
-     "n": 3,
-     "df": 18,
-     "weight": 0.00952
-    },
-    {
-     "term": "means",
-     "n": 2,
-     "df": 16,
-     "weight": 0.00758
-    },
-    {
-     "term": "part",
-     "n": 3,
-     "df": 21,
-     "weight": 0.007099
-    },
-    {
-     "term": "sell",
-     "n": 3,
-     "df": 21,
-     "weight": 0.007099
-    },
-    {
-     "term": "use",
-     "n": 2,
-     "df": 17,
-     "weight": 0.006945
-    },
-    {
-     "term": "fine",
-     "n": 2,
-     "df": 17,
-     "weight": 0.006945
-    },
-    {
-     "term": "never",
-     "n": 4,
-     "df": 25,
-     "weight": 0.005814
-    },
-    {
-     "term": "something",
-     "n": 2,
-     "df": 24,
-     "weight": 0.003335
-    },
-    {
-     "term": "vehicle",
-     "n": 2,
-     "df": 27,
-     "weight": 0.002101
-    },
-    {
-     "term": "price",
-     "n": 2,
-     "df": 27,
-     "weight": 0.002101
     }
    ]
   },
   {
    "deck": "Overcoming Objections",
+   "kind": "foundational",
+   "code": null,
+   "films": 2,
    "stages": [
     "Part 1",
     "Part 2"
@@ -3614,12 +2216,6 @@
      "n": 7,
      "df": 1,
      "weight": 0.08325
-    },
-    {
-     "term": "five",
-     "n": 8,
-     "df": 9,
-     "weight": 0.035355
     },
     {
      "term": "product",
@@ -3688,24 +2284,6 @@
      "weight": 0.023786
     },
     {
-     "term": "urgency",
-     "n": 4,
-     "df": 6,
-     "weight": 0.023194
-    },
-    {
-     "term": "talk",
-     "n": 3,
-     "df": 4,
-     "weight": 0.021533
-    },
-    {
-     "term": "handle",
-     "n": 3,
-     "df": 5,
-     "weight": 0.019256
-    },
-    {
      "term": "competitor",
      "n": 2,
      "df": 2,
@@ -3734,125 +2312,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.016312
-    },
-    {
-     "term": "reasons",
-     "n": 3,
-     "df": 7,
-     "weight": 0.015822
-    },
-    {
-     "term": "explain",
-     "n": 4,
-     "df": 11,
-     "weight": 0.014947
-    },
-    {
-     "term": "debris",
-     "n": 2,
-     "df": 4,
-     "weight": 0.014355
-    },
-    {
-     "term": "reward",
-     "n": 2,
-     "df": 4,
-     "weight": 0.014355
-    },
-    {
-     "term": "action",
-     "n": 2,
-     "df": 4,
-     "weight": 0.014355
-    },
-    {
-     "term": "sometimes",
-     "n": 2,
-     "df": 4,
-     "weight": 0.014355
-    },
-    {
-     "term": "through",
-     "n": 4,
-     "df": 12,
-     "weight": 0.013763
-    },
-    {
-     "term": "outside",
-     "n": 2,
-     "df": 5,
-     "weight": 0.012837
-    },
-    {
-     "term": "version",
-     "n": 2,
-     "df": 5,
-     "weight": 0.012837
-    },
-    {
-     "term": "side",
-     "n": 2,
-     "df": 5,
-     "weight": 0.012837
-    },
-    {
-     "term": "reason",
-     "n": 3,
-     "df": 10,
-     "weight": 0.012183
-    },
-    {
-     "term": "moves",
-     "n": 2,
-     "df": 6,
-     "weight": 0.011597
-    },
-    {
-     "term": "real",
-     "n": 3,
-     "df": 11,
-     "weight": 0.01121
-    },
-    {
-     "term": "objection",
-     "n": 2,
-     "df": 7,
-     "weight": 0.010548
-    },
-    {
-     "term": "almost",
-     "n": 2,
-     "df": 7,
-     "weight": 0.010548
-    },
-    {
-     "term": "declined",
-     "n": 2,
-     "df": 7,
-     "weight": 0.010548
-    },
-    {
-     "term": "moment",
-     "n": 2,
-     "df": 7,
-     "weight": 0.010548
-    },
-    {
-     "term": "tells",
-     "n": 2,
-     "df": 9,
-     "weight": 0.008839
-    },
-    {
-     "term": "move",
-     "n": 2,
-     "df": 9,
-     "weight": 0.008839
     }
    ]
   },
   {
    "deck": "Power Steering Fluid Exchange",
+   "kind": "op_code",
+   "code": "PSF-013",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -3860,12 +2327,6 @@
     "Set Up the MPI"
    ],
    "terms": [
-    {
-     "term": "steering",
-     "n": 16,
-     "df": 4,
-     "weight": 0.062065
-    },
     {
      "term": "power",
      "n": 13,
@@ -3877,18 +2338,6 @@
      "n": 7,
      "df": 1,
      "weight": 0.044992
-    },
-    {
-     "term": "pump",
-     "n": 9,
-     "df": 6,
-     "weight": 0.028204
-    },
-    {
-     "term": "fluid",
-     "n": 21,
-     "df": 16,
-     "weight": 0.027945
     },
     {
      "term": "smooth",
@@ -3939,18 +2388,6 @@
      "weight": 0.01546
     },
     {
-     "term": "interval",
-     "n": 9,
-     "df": 13,
-     "weight": 0.015412
-    },
-    {
-     "term": "grade",
-     "n": 4,
-     "df": 5,
-     "weight": 0.013876
-    },
-    {
      "term": "publish",
      "n": 3,
      "df": 3,
@@ -3993,46 +2430,10 @@
      "weight": 0.012855
     },
     {
-     "term": "step",
-     "n": 6,
-     "df": 11,
-     "weight": 0.012117
-    },
-    {
-     "term": "dash",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011637
-    },
-    {
-     "term": "hear",
-     "n": 4,
-     "df": 8,
-     "weight": 0.01042
-    },
-    {
-     "term": "heard",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010407
-    },
-    {
-     "term": "wheel",
-     "n": 3,
-     "df": 5,
-     "weight": 0.010407
-    },
-    {
      "term": "invisible",
      "n": 2,
      "df": 2,
      "weight": 0.010306
-    },
-    {
-     "term": "noise",
-     "n": 3,
-     "df": 6,
-     "weight": 0.009401
     },
     {
      "term": "listen",
@@ -4081,50 +2482,23 @@
      "n": 2,
      "df": 3,
      "weight": 0.008816
-    },
-    {
-     "term": "feel",
-     "n": 4,
-     "df": 10,
-     "weight": 0.008779
-    },
-    {
-     "term": "light",
-     "n": 3,
-     "df": 7,
-     "weight": 0.008551
-    },
-    {
-     "term": "menu",
-     "n": 4,
-     "df": 11,
-     "weight": 0.008078
     }
    ]
   },
   {
    "deck": "Pre-Write",
+   "kind": "foundational",
+   "code": null,
+   "films": 1,
    "stages": [
     "Foundational"
    ],
    "terms": [
     {
-     "term": "packet",
-     "n": 4,
-     "df": 5,
-     "weight": 0.05066
-    },
-    {
      "term": "loyalty",
      "n": 3,
      "df": 3,
      "weight": 0.04828
-    },
-    {
-     "term": "deferred",
-     "n": 6,
-     "df": 10,
-     "weight": 0.048077
     },
     {
      "term": "completed",
@@ -4139,12 +2513,6 @@
      "weight": 0.046933
     },
     {
-     "term": "declined",
-     "n": 4,
-     "df": 7,
-     "weight": 0.041627
-    },
-    {
      "term": "final",
      "n": 2,
      "df": 2,
@@ -4155,134 +2523,23 @@
      "n": 2,
      "df": 3,
      "weight": 0.032187
-    },
-    {
-     "term": "pre-write",
-     "n": 3,
-     "df": 8,
-     "weight": 0.028532
-    },
-    {
-     "term": "shows",
-     "n": 3,
-     "df": 8,
-     "weight": 0.028532
-    },
-    {
-     "term": "items",
-     "n": 4,
-     "df": 13,
-     "weight": 0.025008
-    },
-    {
-     "term": "six",
-     "n": 2,
-     "df": 6,
-     "weight": 0.022883
-    },
-    {
-     "term": "paying",
-     "n": 2,
-     "df": 7,
-     "weight": 0.020813
-    },
-    {
-     "term": "matters",
-     "n": 2,
-     "df": 7,
-     "weight": 0.020813
-    },
-    {
-     "term": "sounds",
-     "n": 2,
-     "df": 9,
-     "weight": 0.01744
-    },
-    {
-     "term": "loud",
-     "n": 2,
-     "df": 12,
-     "weight": 0.013579
-    },
-    {
-     "term": "worth",
-     "n": 2,
-     "df": 12,
-     "weight": 0.013579
-    },
-    {
-     "term": "top",
-     "n": 2,
-     "df": 13,
-     "weight": 0.012504
-    },
-    {
-     "term": "green",
-     "n": 2,
-     "df": 13,
-     "weight": 0.012504
-    },
-    {
-     "term": "visit",
-     "n": 5,
-     "df": 23,
-     "weight": 0.012115
-    },
-    {
-     "term": "history",
-     "n": 2,
-     "df": 14,
-     "weight": 0.011509
-    },
-    {
-     "term": "required",
-     "n": 2,
-     "df": 16,
-     "weight": 0.009717
-    },
-    {
-     "term": "gets",
-     "n": 2,
-     "df": 17,
-     "weight": 0.008903
-    },
-    {
-     "term": "speech",
-     "n": 2,
-     "df": 20,
-     "weight": 0.006722
     }
    ]
   },
   {
    "deck": "Selling speech",
+   "kind": "foundational",
+   "code": null,
+   "films": null,
    "stages": [
     "MPI Selling"
    ],
    "terms": [
     {
-     "term": "found",
-     "n": 7,
-     "df": 5,
-     "weight": 0.055972
-    },
-    {
      "term": "filthy",
      "n": 4,
      "df": 2,
      "weight": 0.047515
-    },
-    {
-     "term": "implies",
-     "n": 5,
-     "df": 4,
-     "weight": 0.044708
-    },
-    {
-     "term": "greens",
-     "n": 5,
-     "df": 5,
-     "weight": 0.03998
     },
     {
      "term": "loyalty",
@@ -4309,12 +2566,6 @@
      "weight": 0.023757
     },
     {
-     "term": "replacing",
-     "n": 3,
-     "df": 6,
-     "weight": 0.021671
-    },
-    {
      "term": "sing",
      "n": 2,
      "df": 3,
@@ -4331,179 +2582,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.020321
-    },
-    {
-     "term": "red",
-     "n": 5,
-     "df": 13,
-     "weight": 0.019736
-    },
-    {
-     "term": "done",
-     "n": 6,
-     "df": 16,
-     "weight": 0.018405
-    },
-    {
-     "term": "reward",
-     "n": 2,
-     "df": 4,
-     "weight": 0.017883
-    },
-    {
-     "term": "action",
-     "n": 2,
-     "df": 4,
-     "weight": 0.017883
-    },
-    {
-     "term": "judgment",
-     "n": 2,
-     "df": 4,
-     "weight": 0.017883
-    },
-    {
-     "term": "grades",
-     "n": 2,
-     "df": 5,
-     "weight": 0.015992
-    },
-    {
-     "term": "graded",
-     "n": 3,
-     "df": 10,
-     "weight": 0.015177
-    },
-    {
-     "term": "recommends",
-     "n": 2,
-     "df": 6,
-     "weight": 0.014447
-    },
-    {
-     "term": "puts",
-     "n": 2,
-     "df": 6,
-     "weight": 0.014447
-    },
-    {
-     "term": "dirty",
-     "n": 2,
-     "df": 7,
-     "weight": 0.013141
-    },
-    {
-     "term": "shows",
-     "n": 2,
-     "df": 8,
-     "weight": 0.012009
-    },
-    {
-     "term": "mileage",
-     "n": 4,
-     "df": 18,
-     "weight": 0.010273
-    },
-    {
-     "term": "whether",
-     "n": 2,
-     "df": 10,
-     "weight": 0.010118
-    },
-    {
-     "term": "recommendation",
-     "n": 2,
-     "df": 11,
-     "weight": 0.00931
-    },
-    {
-     "term": "needs",
-     "n": 2,
-     "df": 11,
-     "weight": 0.00931
-    },
-    {
-     "term": "came",
-     "n": 2,
-     "df": 11,
-     "weight": 0.00931
-    },
-    {
-     "term": "question",
-     "n": 2,
-     "df": 12,
-     "weight": 0.008573
-    },
-    {
-     "term": "items",
-     "n": 2,
-     "df": 13,
-     "weight": 0.007895
-    },
-    {
-     "term": "comes",
-     "n": 2,
-     "df": 13,
-     "weight": 0.007895
-    },
-    {
-     "term": "history",
-     "n": 2,
-     "df": 14,
-     "weight": 0.007267
-    },
-    {
-     "term": "looking",
-     "n": 2,
-     "df": 14,
-     "weight": 0.007267
-    },
-    {
-     "term": "job",
-     "n": 2,
-     "df": 15,
-     "weight": 0.006682
-    },
-    {
-     "term": "word",
-     "n": 2,
-     "df": 16,
-     "weight": 0.006135
-    },
-    {
-     "term": "hector",
-     "n": 5,
-     "df": 25,
-     "weight": 0.005882
-    },
-    {
-     "term": "fine",
-     "n": 2,
-     "df": 17,
-     "weight": 0.005621
-    },
-    {
-     "term": "condition",
-     "n": 2,
-     "df": 17,
-     "weight": 0.005621
-    },
-    {
-     "term": "service",
-     "n": 3,
-     "df": 22,
-     "weight": 0.005154
-    },
-    {
-     "term": "item",
-     "n": 2,
-     "df": 18,
-     "weight": 0.005137
     }
    ]
   },
   {
    "deck": "Serpentine Belt",
+   "kind": "op_code",
+   "code": "SRP-038",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -4511,12 +2597,6 @@
     "Set Up the MPI"
    ],
    "terms": [
-    {
-     "term": "belt",
-     "n": 20,
-     "df": 4,
-     "weight": 0.123045
-    },
     {
      "term": "belts",
      "n": 7,
@@ -4548,12 +2628,6 @@
      "weight": 0.030582
     },
     {
-     "term": "000",
-     "n": 6,
-     "df": 10,
-     "weight": 0.020885
-    },
-    {
      "term": "slipping",
      "n": 2,
      "df": 1,
@@ -4576,18 +2650,6 @@
      "n": 2,
      "df": 1,
      "weight": 0.020388
-    },
-    {
-     "term": "opinion",
-     "n": 4,
-     "df": 6,
-     "weight": 0.01988
-    },
-    {
-     "term": "timing",
-     "n": 3,
-     "df": 5,
-     "weight": 0.016505
     },
     {
      "term": "squeal",
@@ -4614,18 +2676,6 @@
      "weight": 0.016346
     },
     {
-     "term": "step",
-     "n": 5,
-     "df": 11,
-     "weight": 0.016015
-    },
-    {
-     "term": "looks",
-     "n": 4,
-     "df": 9,
-     "weight": 0.015152
-    },
-    {
      "term": "alternator",
      "n": 2,
      "df": 3,
@@ -4636,125 +2686,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.013982
-    },
-    {
-     "term": "modern",
-     "n": 3,
-     "df": 8,
-     "weight": 0.012394
-    },
-    {
-     "term": "steering",
-     "n": 2,
-     "df": 4,
-     "weight": 0.012304
-    },
-    {
-     "term": "condition",
-     "n": 6,
-     "df": 17,
-     "weight": 0.011603
-    },
-    {
-     "term": "around",
-     "n": 3,
-     "df": 9,
-     "weight": 0.011364
-    },
-    {
-     "term": "adding",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011003
-    },
-    {
-     "term": "engine",
-     "n": 4,
-     "df": 13,
-     "weight": 0.010864
-    },
-    {
-     "term": "start",
-     "n": 3,
-     "df": 10,
-     "weight": 0.010442
-    },
-    {
-     "term": "measurement",
-     "n": 3,
-     "df": 10,
-     "weight": 0.010442
-    },
-    {
-     "term": "miles",
-     "n": 3,
-     "df": 10,
-     "weight": 0.010442
-    },
-    {
-     "term": "reading",
-     "n": 3,
-     "df": 10,
-     "weight": 0.010442
-    },
-    {
-     "term": "wear",
-     "n": 2,
-     "df": 6,
-     "weight": 0.00994
-    },
-    {
-     "term": "few",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009041
-    },
-    {
-     "term": "hears",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009041
-    },
-    {
-     "term": "looked",
-     "n": 2,
-     "df": 8,
-     "weight": 0.008263
-    },
-    {
-     "term": "measured",
-     "n": 2,
-     "df": 8,
-     "weight": 0.008263
-    },
-    {
-     "term": "ticket",
-     "n": 2,
-     "df": 8,
-     "weight": 0.008263
-    },
-    {
-     "term": "quote",
-     "n": 2,
-     "df": 8,
-     "weight": 0.008263
-    },
-    {
-     "term": "look",
-     "n": 3,
-     "df": 13,
-     "weight": 0.008148
-    },
-    {
-     "term": "interval",
-     "n": 3,
-     "df": 13,
-     "weight": 0.008148
     }
    ]
   },
   {
    "deck": "Setup speech",
+   "kind": "foundational",
+   "code": null,
+   "films": null,
    "stages": [
     "Set Up the MPI"
    ],
@@ -4772,42 +2711,6 @@
      "weight": 0.044147
     },
     {
-     "term": "button",
-     "n": 7,
-     "df": 7,
-     "weight": 0.042733
-    },
-    {
-     "term": "permission",
-     "n": 6,
-     "df": 6,
-     "weight": 0.04027
-    },
-    {
-     "term": "approve",
-     "n": 7,
-     "df": 8,
-     "weight": 0.039053
-    },
-    {
-     "term": "call",
-     "n": 7,
-     "df": 9,
-     "weight": 0.035807
-    },
-    {
-     "term": "green",
-     "n": 8,
-     "df": 13,
-     "weight": 0.02934
-    },
-    {
-     "term": "grades",
-     "n": 3,
-     "df": 5,
-     "weight": 0.022288
-    },
-    {
      "term": "highlight",
      "n": 2,
      "df": 2,
@@ -4820,199 +2723,22 @@
      "weight": 0.022074
     },
     {
-     "term": "gyr",
-     "n": 6,
-     "df": 14,
-     "weight": 0.020255
-    },
-    {
-     "term": "minutes",
-     "n": 3,
-     "df": 6,
-     "weight": 0.020135
-    },
-    {
      "term": "interruption",
      "n": 2,
      "df": 3,
      "weight": 0.018881
-    },
-    {
-     "term": "text",
-     "n": 3,
-     "df": 7,
-     "weight": 0.018314
-    },
-    {
-     "term": "promise",
-     "n": 3,
-     "df": 7,
-     "weight": 0.018314
-    },
-    {
-     "term": "setup",
-     "n": 6,
-     "df": 17,
-     "weight": 0.015668
-    },
-    {
-     "term": "grade",
-     "n": 2,
-     "df": 5,
-     "weight": 0.014859
-    },
-    {
-     "term": "follow-up",
-     "n": 2,
-     "df": 5,
-     "weight": 0.014859
-    },
-    {
-     "term": "going",
-     "n": 3,
-     "df": 10,
-     "weight": 0.014101
-    },
-    {
-     "term": "twenty",
-     "n": 2,
-     "df": 6,
-     "weight": 0.013423
-    },
-    {
-     "term": "plan",
-     "n": 2,
-     "df": 6,
-     "weight": 0.013423
-    },
-    {
-     "term": "setting",
-     "n": 2,
-     "df": 6,
-     "weight": 0.013423
-    },
-    {
-     "term": "video",
-     "n": 2,
-     "df": 7,
-     "weight": 0.012209
-    },
-    {
-     "term": "quick",
-     "n": 2,
-     "df": 7,
-     "weight": 0.012209
-    },
-    {
-     "term": "seconds",
-     "n": 3,
-     "df": 12,
-     "weight": 0.011948
-    },
-    {
-     "term": "speech",
-     "n": 6,
-     "df": 20,
-     "weight": 0.011829
-    },
-    {
-     "term": "stage",
-     "n": 2,
-     "df": 8,
-     "weight": 0.011158
-    },
-    {
-     "term": "pre-write",
-     "n": 2,
-     "df": 8,
-     "weight": 0.011158
-    },
-    {
-     "term": "hector",
-     "n": 8,
-     "df": 25,
-     "weight": 0.008744
-    },
-    {
-     "term": "service",
-     "n": 5,
-     "df": 22,
-     "weight": 0.007982
-    },
-    {
-     "term": "coming",
-     "n": 2,
-     "df": 12,
-     "weight": 0.007965
-    },
-    {
-     "term": "line",
-     "n": 2,
-     "df": 12,
-     "weight": 0.007965
-    },
-    {
-     "term": "works",
-     "n": 2,
-     "df": 12,
-     "weight": 0.007965
-    },
-    {
-     "term": "come",
-     "n": 2,
-     "df": 12,
-     "weight": 0.007965
-    },
-    {
-     "term": "items",
-     "n": 2,
-     "df": 13,
-     "weight": 0.007335
-    },
-    {
-     "term": "find",
-     "n": 2,
-     "df": 14,
-     "weight": 0.006752
-    },
-    {
-     "term": "see",
-     "n": 2,
-     "df": 15,
-     "weight": 0.006208
-    },
-    {
-     "term": "turns",
-     "n": 2,
-     "df": 15,
-     "weight": 0.006208
-    },
-    {
-     "term": "whole",
-     "n": 2,
-     "df": 16,
-     "weight": 0.0057
-    },
-    {
-     "term": "item",
-     "n": 2,
-     "df": 18,
-     "weight": 0.004773
     }
    ]
   },
   {
    "deck": "Sing It",
+   "kind": "foundational",
+   "code": null,
+   "films": 1,
    "stages": [
     "Foundational"
    ],
    "terms": [
-    {
-     "term": "track",
-     "n": 8,
-     "df": 5,
-     "weight": 0.089329
-    },
     {
      "term": "sing",
      "n": 6,
@@ -5032,28 +2758,10 @@
      "weight": 0.082758
     },
     {
-     "term": "voice",
-     "n": 5,
-     "df": 5,
-     "weight": 0.05583
-    },
-    {
-     "term": "notes",
-     "n": 4,
-     "df": 5,
-     "weight": 0.044664
-    },
-    {
      "term": "dies",
      "n": 2,
      "df": 1,
      "weight": 0.041379
-    },
-    {
-     "term": "day",
-     "n": 7,
-     "df": 14,
-     "weight": 0.035516
     },
     {
      "term": "offered",
@@ -5066,119 +2774,14 @@
      "n": 2,
      "df": 2,
      "weight": 0.033176
-    },
-    {
-     "term": "sound",
-     "n": 3,
-     "df": 7,
-     "weight": 0.027525
-    },
-    {
-     "term": "own",
-     "n": 4,
-     "df": 11,
-     "weight": 0.026003
-    },
-    {
-     "term": "word",
-     "n": 6,
-     "df": 16,
-     "weight": 0.025701
-    },
-    {
-     "term": "mean",
-     "n": 2,
-     "df": 4,
-     "weight": 0.024973
-    },
-    {
-     "term": "five",
-     "n": 3,
-     "df": 9,
-     "weight": 0.023064
-    },
-    {
-     "term": "flush",
-     "n": 2,
-     "df": 5,
-     "weight": 0.022332
-    },
-    {
-     "term": "yours",
-     "n": 2,
-     "df": 7,
-     "weight": 0.01835
-    },
-    {
-     "term": "exchange",
-     "n": 2,
-     "df": 7,
-     "weight": 0.01835
-    },
-    {
-     "term": "thirty",
-     "n": 2,
-     "df": 7,
-     "weight": 0.01835
-    },
-    {
-     "term": "move",
-     "n": 2,
-     "df": 9,
-     "weight": 0.015376
-    },
-    {
-     "term": "change",
-     "n": 3,
-     "df": 16,
-     "weight": 0.012851
-    },
-    {
-     "term": "like",
-     "n": 3,
-     "df": 16,
-     "weight": 0.012851
-    },
-    {
-     "term": "these",
-     "n": 2,
-     "df": 14,
-     "weight": 0.010147
-    },
-    {
-     "term": "new",
-     "n": 2,
-     "df": 15,
-     "weight": 0.009331
-    },
-    {
-     "term": "fluid",
-     "n": 2,
-     "df": 16,
-     "weight": 0.008567
-    },
-    {
-     "term": "actually",
-     "n": 3,
-     "df": 21,
-     "weight": 0.008023
-    },
-    {
-     "term": "offer",
-     "n": 2,
-     "df": 17,
-     "weight": 0.00785
-    },
-    {
-     "term": "never",
-     "n": 4,
-     "df": 25,
-     "weight": 0.006571
     }
    ]
   },
   {
    "deck": "Spark Plugs",
+   "kind": "op_code",
+   "code": "SPK-043",
+   "films": 5,
    "stages": [
     "At the Kiosk, Part 1",
     "At the Kiosk, Part 2",
@@ -5198,12 +2801,6 @@
      "n": 7,
      "df": 2,
      "weight": 0.043224
-    },
-    {
-     "term": "fuel",
-     "n": 9,
-     "df": 5,
-     "weight": 0.037409
     },
     {
      "term": "misfire",
@@ -5228,12 +2825,6 @@
      "n": 3,
      "df": 1,
      "weight": 0.023105
-    },
-    {
-     "term": "concern",
-     "n": 5,
-     "df": 5,
-     "weight": 0.020783
     },
     {
      "term": "induction",
@@ -5272,24 +2863,6 @@
      "weight": 0.015403
     },
     {
-     "term": "diagnosis",
-     "n": 3,
-     "df": 4,
-     "weight": 0.013944
-    },
-    {
-     "term": "air",
-     "n": 5,
-     "df": 10,
-     "weight": 0.013149
-    },
-    {
-     "term": "lot",
-     "n": 4,
-     "df": 8,
-     "weight": 0.012485
-    },
-    {
      "term": "follow",
      "n": 2,
      "df": 2,
@@ -5314,24 +2887,6 @@
      "weight": 0.01235
     },
     {
-     "term": "engine",
-     "n": 6,
-     "df": 13,
-     "weight": 0.012311
-    },
-    {
-     "term": "menu",
-     "n": 5,
-     "df": 11,
-     "weight": 0.012099
-    },
-    {
-     "term": "give",
-     "n": 4,
-     "df": 9,
-     "weight": 0.011447
-    },
-    {
      "term": "rough",
      "n": 2,
      "df": 3,
@@ -5348,100 +2903,19 @@
      "n": 2,
      "df": 3,
      "weight": 0.010563
-    },
-    {
-     "term": "problem",
-     "n": 4,
-     "df": 10,
-     "weight": 0.010519
-    },
-    {
-     "term": "set",
-     "n": 3,
-     "df": 8,
-     "weight": 0.009364
-    },
-    {
-     "term": "quote",
-     "n": 3,
-     "df": 8,
-     "weight": 0.009364
-    },
-    {
-     "term": "complained",
-     "n": 2,
-     "df": 4,
-     "weight": 0.009296
-    },
-    {
-     "term": "codes",
-     "n": 2,
-     "df": 5,
-     "weight": 0.008313
-    },
-    {
-     "term": "guessing",
-     "n": 2,
-     "df": 5,
-     "weight": 0.008313
-    },
-    {
-     "term": "thousand",
-     "n": 2,
-     "df": 5,
-     "weight": 0.008313
-    },
-    {
-     "term": "maintenance",
-     "n": 2,
-     "df": 6,
-     "weight": 0.00751
-    },
-    {
-     "term": "under",
-     "n": 3,
-     "df": 11,
-     "weight": 0.00726
-    },
-    {
-     "term": "real",
-     "n": 3,
-     "df": 11,
-     "weight": 0.00726
-    },
-    {
-     "term": "service",
-     "n": 8,
-     "df": 22,
-     "weight": 0.007145
-    },
-    {
-     "term": "hears",
-     "n": 2,
-     "df": 7,
-     "weight": 0.006831
-    },
-    {
-     "term": "left",
-     "n": 2,
-     "df": 7,
-     "weight": 0.006831
     }
    ]
   },
   {
    "deck": "The Big Ticket Visit",
+   "kind": "foundational",
+   "code": null,
+   "films": 2,
    "stages": [
     "Part 1",
     "Part 2"
    ],
    "terms": [
-    {
-     "term": "repair",
-     "n": 13,
-     "df": 9,
-     "weight": 0.053621
-    },
     {
      "term": "skipping",
      "n": 4,
@@ -5453,18 +2927,6 @@
      "n": 3,
      "df": 3,
      "weight": 0.022837
-    },
-    {
-     "term": "big",
-     "n": 5,
-     "df": 8,
-     "weight": 0.022493
-    },
-    {
-     "term": "pre-write",
-     "n": 5,
-     "df": 8,
-     "weight": 0.022493
     },
     {
      "term": "decision-making",
@@ -5491,12 +2953,6 @@
      "weight": 0.017799
     },
     {
-     "term": "maintenance",
-     "n": 3,
-     "df": 6,
-     "weight": 0.016236
-    },
-    {
      "term": "battery",
      "n": 2,
      "df": 3,
@@ -5507,200 +2963,23 @@
      "n": 2,
      "df": 3,
      "weight": 0.015225
-    },
-    {
-     "term": "great",
-     "n": 3,
-     "df": 7,
-     "weight": 0.014768
-    },
-    {
-     "term": "labor",
-     "n": 3,
-     "df": 7,
-     "weight": 0.014768
-    },
-    {
-     "term": "day",
-     "n": 5,
-     "df": 14,
-     "weight": 0.01361
-    },
-    {
-     "term": "skip",
-     "n": 3,
-     "df": 8,
-     "weight": 0.013496
-    },
-    {
-     "term": "offering",
-     "n": 2,
-     "df": 4,
-     "weight": 0.013398
-    },
-    {
-     "term": "concern",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011981
-    },
-    {
-     "term": "won",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011981
-    },
-    {
-     "term": "handle",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011981
-    },
-    {
-     "term": "bigger",
-     "n": 2,
-     "df": 5,
-     "weight": 0.011981
-    },
-    {
-     "term": "frame",
-     "n": 2,
-     "df": 6,
-     "weight": 0.010824
-    },
-    {
-     "term": "noise",
-     "n": 2,
-     "df": 6,
-     "weight": 0.010824
-    },
-    {
-     "term": "multi-point",
-     "n": 2,
-     "df": 6,
-     "weight": 0.010824
-    },
-    {
-     "term": "walk-around",
-     "n": 3,
-     "df": 11,
-     "weight": 0.010463
-    },
-    {
-     "term": "handled",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009845
-    },
-    {
-     "term": "tires",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009845
-    },
-    {
-     "term": "well",
-     "n": 2,
-     "df": 7,
-     "weight": 0.009845
-    },
-    {
-     "term": "order",
-     "n": 3,
-     "df": 12,
-     "weight": 0.009634
-    },
-    {
-     "term": "ticket",
-     "n": 2,
-     "df": 8,
-     "weight": 0.008997
-    },
-    {
-     "term": "make",
-     "n": 2,
-     "df": 8,
-     "weight": 0.008997
-    },
-    {
-     "term": "where",
-     "n": 5,
-     "df": 19,
-     "weight": 0.008763
-    },
-    {
-     "term": "while",
-     "n": 4,
-     "df": 17,
-     "weight": 0.008423
-    },
-    {
-     "term": "offer",
-     "n": 4,
-     "df": 17,
-     "weight": 0.008423
-    },
-    {
-     "term": "everything",
-     "n": 3,
-     "df": 14,
-     "weight": 0.008166
-    },
-    {
-     "term": "visit",
-     "n": 7,
-     "df": 23,
-     "weight": 0.008023
-    },
-    {
-     "term": "already",
-     "n": 7,
-     "df": 23,
-     "weight": 0.008023
-    },
-    {
-     "term": "always",
-     "n": 2,
-     "df": 10,
-     "weight": 0.00758
-    },
-    {
-     "term": "going",
-     "n": 2,
-     "df": 10,
-     "weight": 0.00758
-    },
-    {
-     "term": "anyway",
-     "n": 2,
-     "df": 11,
-     "weight": 0.006975
     }
    ]
   },
   {
    "deck": "The close",
+   "kind": "foundational",
+   "code": null,
+   "films": null,
    "stages": [
     "The Close"
    ],
    "terms": [
     {
-     "term": "authorization",
-     "n": 5,
-     "df": 4,
-     "weight": 0.083079
-    },
-    {
      "term": "invites",
      "n": 3,
      "df": 2,
      "weight": 0.066221
-    },
-    {
-     "term": "need",
-     "n": 7,
-     "df": 14,
-     "weight": 0.047261
     },
     {
      "term": "statement",
@@ -5725,83 +3004,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.037762
-    },
-    {
-     "term": "answers",
-     "n": 2,
-     "df": 4,
-     "weight": 0.033232
-    },
-    {
-     "term": "close",
-     "n": 3,
-     "df": 11,
-     "weight": 0.025951
-    },
-    {
-     "term": "end",
-     "n": 2,
-     "df": 7,
-     "weight": 0.024419
-    },
-    {
-     "term": "long",
-     "n": 3,
-     "df": 12,
-     "weight": 0.023896
-    },
-    {
-     "term": "question",
-     "n": 3,
-     "df": 12,
-     "weight": 0.023896
-    },
-    {
-     "term": "made",
-     "n": 2,
-     "df": 9,
-     "weight": 0.020461
-    },
-    {
-     "term": "take",
-     "n": 2,
-     "df": 12,
-     "weight": 0.015931
-    },
-    {
-     "term": "offer",
-     "n": 3,
-     "df": 17,
-     "weight": 0.015668
-    },
-    {
-     "term": "much",
-     "n": 2,
-     "df": 13,
-     "weight": 0.01467
-    },
-    {
-     "term": "many",
-     "n": 2,
-     "df": 14,
-     "weight": 0.013503
-    },
-    {
-     "term": "price",
-     "n": 7,
-     "df": 27,
-     "weight": 0.011061
-    },
-    {
-     "term": "already",
-     "n": 2,
-     "df": 23,
-     "weight": 0.005685
     }
    ]
   },
   {
    "deck": "Timing Belt",
+   "kind": "op_code",
+   "code": "TMB-039",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -5810,22 +3020,10 @@
    ],
    "terms": [
     {
-     "term": "belt",
-     "n": 19,
-     "df": 4,
-     "weight": 0.106633
-    },
-    {
      "term": "apart",
      "n": 4,
      "df": 2,
      "weight": 0.029823
-    },
-    {
-     "term": "may",
-     "n": 4,
-     "df": 4,
-     "weight": 0.022449
     },
     {
      "term": "engines",
@@ -5838,12 +3036,6 @@
      "n": 3,
      "df": 2,
      "weight": 0.022367
-    },
-    {
-     "term": "timing",
-     "n": 4,
-     "df": 5,
-     "weight": 0.020075
     },
     {
      "term": "calendar",
@@ -5882,18 +3074,6 @@
      "weight": 0.018598
     },
     {
-     "term": "engine",
-     "n": 7,
-     "df": 13,
-     "weight": 0.017343
-    },
-    {
-     "term": "report",
-     "n": 5,
-     "df": 9,
-     "weight": 0.017278
-    },
-    {
      "term": "chain",
      "n": 2,
      "df": 2,
@@ -5918,12 +3098,6 @@
      "weight": 0.014911
     },
     {
-     "term": "pump",
-     "n": 3,
-     "df": 6,
-     "weight": 0.013602
-    },
-    {
      "term": "warning",
      "n": 2,
      "df": 3,
@@ -5946,113 +3120,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.012755
-    },
-    {
-     "term": "information",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011225
-    },
-    {
-     "term": "losing",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011225
-    },
-    {
-     "term": "quoted",
-     "n": 2,
-     "df": 5,
-     "weight": 0.010038
-    },
-    {
-     "term": "due",
-     "n": 2,
-     "df": 5,
-     "weight": 0.010038
-    },
-    {
-     "term": "version",
-     "n": 2,
-     "df": 5,
-     "weight": 0.010038
-    },
-    {
-     "term": "mileage",
-     "n": 6,
-     "df": 18,
-     "weight": 0.009672
-    },
-    {
-     "term": "sale",
-     "n": 4,
-     "df": 14,
-     "weight": 0.009122
-    },
-    {
-     "term": "multi-point",
-     "n": 2,
-     "df": 6,
-     "weight": 0.009068
-    },
-    {
-     "term": "morning",
-     "n": 2,
-     "df": 6,
-     "weight": 0.009068
-    },
-    {
-     "term": "new",
-     "n": 4,
-     "df": 15,
-     "weight": 0.008388
-    },
-    {
-     "term": "worse",
-     "n": 2,
-     "df": 7,
-     "weight": 0.008248
-    },
-    {
-     "term": "happens",
-     "n": 3,
-     "df": 13,
-     "weight": 0.007433
-    },
-    {
-     "term": "evidence",
-     "n": 2,
-     "df": 9,
-     "weight": 0.006911
-    },
-    {
-     "term": "different",
-     "n": 3,
-     "df": 14,
-     "weight": 0.006841
-    },
-    {
-     "term": "000",
-     "n": 2,
-     "df": 10,
-     "weight": 0.006351
-    },
-    {
-     "term": "even",
-     "n": 2,
-     "df": 10,
-     "weight": 0.006351
-    },
-    {
-     "term": "front",
-     "n": 3,
-     "df": 15,
-     "weight": 0.006291
     }
    ]
   },
   {
    "deck": "Tire Maintenance",
+   "kind": "op_code",
+   "code": "TRO-022",
+   "films": 6,
    "stages": [
     "At the Kiosk, Part 1",
     "At the Kiosk, Part 2",
@@ -6075,28 +3150,10 @@
      "weight": 0.077948
     },
     {
-     "term": "alignment",
-     "n": 18,
-     "df": 4,
-     "weight": 0.060484
-    },
-    {
-     "term": "tire",
-     "n": 18,
-     "df": 6,
-     "weight": 0.048862
-    },
-    {
      "term": "rotation",
      "n": 10,
      "df": 2,
      "weight": 0.044639
-    },
-    {
-     "term": "tires",
-     "n": 10,
-     "df": 7,
-     "weight": 0.024691
     },
     {
      "term": "align",
@@ -6115,12 +3172,6 @@
      "n": 4,
      "df": 1,
      "weight": 0.022271
-    },
-    {
-     "term": "wear",
-     "n": 8,
-     "df": 6,
-     "weight": 0.021717
     },
     {
      "term": "bump",
@@ -6147,40 +3198,10 @@
      "weight": 0.016703
     },
     {
-     "term": "tread",
-     "n": 6,
-     "df": 6,
-     "weight": 0.016287
-    },
-    {
      "term": "tpms",
      "n": 4,
      "df": 3,
      "weight": 0.015273
-    },
-    {
-     "term": "due",
-     "n": 5,
-     "df": 5,
-     "weight": 0.015024
-    },
-    {
-     "term": "wheels",
-     "n": 6,
-     "df": 9,
-     "weight": 0.012414
-    },
-    {
-     "term": "step",
-     "n": 7,
-     "df": 11,
-     "weight": 0.012246
-    },
-    {
-     "term": "four",
-     "n": 7,
-     "df": 11,
-     "weight": 0.012246
     },
     {
      "term": "road",
@@ -6249,30 +3270,6 @@
      "weight": 0.011135
     },
     {
-     "term": "like",
-     "n": 9,
-     "df": 16,
-     "weight": 0.010375
-    },
-    {
-     "term": "oil",
-     "n": 4,
-     "df": 8,
-     "weight": 0.009026
-    },
-    {
-     "term": "brakes",
-     "n": 3,
-     "df": 5,
-     "weight": 0.009015
-    },
-    {
-     "term": "depth",
-     "n": 3,
-     "df": 5,
-     "weight": 0.009015
-    },
-    {
      "term": "angle",
      "n": 2,
      "df": 2,
@@ -6301,11 +3298,32 @@
      "n": 2,
      "df": 2,
      "weight": 0.008928
+    },
+    {
+     "term": "ours",
+     "n": 2,
+     "df": 2,
+     "weight": 0.008928
+    },
+    {
+     "term": "access",
+     "n": 2,
+     "df": 2,
+     "weight": 0.008928
+    },
+    {
+     "term": "shoulder",
+     "n": 2,
+     "df": 3,
+     "weight": 0.007637
     }
    ]
   },
   {
    "deck": "Tire Repair",
+   "kind": "op_code",
+   "code": "TSL-027",
+   "films": 3,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -6313,22 +3331,10 @@
    ],
    "terms": [
     {
-     "term": "tire",
-     "n": 9,
-     "df": 6,
-     "weight": 0.042857
-    },
-    {
      "term": "sensor",
      "n": 4,
      "df": 1,
      "weight": 0.039067
-    },
-    {
-     "term": "repair",
-     "n": 9,
-     "df": 9,
-     "weight": 0.032664
     },
     {
      "term": "sidewall",
@@ -6361,22 +3367,10 @@
      "weight": 0.026792
     },
     {
-     "term": "tread",
-     "n": 5,
-     "df": 6,
-     "weight": 0.023809
-    },
-    {
      "term": "rotation",
      "n": 3,
      "df": 2,
      "weight": 0.023492
-    },
-    {
-     "term": "wheel",
-     "n": 4,
-     "df": 5,
-     "weight": 0.021085
     },
     {
      "term": "tpms",
@@ -6403,30 +3397,6 @@
      "weight": 0.019534
     },
     {
-     "term": "buy",
-     "n": 3,
-     "df": 4,
-     "weight": 0.017683
-    },
-    {
-     "term": "straight",
-     "n": 3,
-     "df": 4,
-     "weight": 0.017683
-    },
-    {
-     "term": "news",
-     "n": 3,
-     "df": 4,
-     "weight": 0.017683
-    },
-    {
-     "term": "tires",
-     "n": 4,
-     "df": 7,
-     "weight": 0.017325
-    },
-    {
      "term": "inner",
      "n": 2,
      "df": 2,
@@ -6445,12 +3415,6 @@
      "weight": 0.015661
     },
     {
-     "term": "full",
-     "n": 4,
-     "df": 9,
-     "weight": 0.014517
-    },
-    {
      "term": "anywhere",
      "n": 2,
      "df": 3,
@@ -6467,95 +3431,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.013396
-    },
-    {
-     "term": "won",
-     "n": 2,
-     "df": 5,
-     "weight": 0.010542
-    },
-    {
-     "term": "yellow",
-     "n": 2,
-     "df": 5,
-     "weight": 0.010542
-    },
-    {
-     "term": "recommend",
-     "n": 2,
-     "df": 6,
-     "weight": 0.009524
-    },
-    {
-     "term": "anybody",
-     "n": 2,
-     "df": 6,
-     "weight": 0.009524
-    },
-    {
-     "term": "four",
-     "n": 3,
-     "df": 11,
-     "weight": 0.009206
-    },
-    {
-     "term": "shop",
-     "n": 3,
-     "df": 11,
-     "weight": 0.009206
-    },
-    {
-     "term": "small",
-     "n": 2,
-     "df": 7,
-     "weight": 0.008663
-    },
-    {
-     "term": "ever",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007917
-    },
-    {
-     "term": "hear",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007917
-    },
-    {
-     "term": "lot",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007917
-    },
-    {
-     "term": "takes",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007917
-    },
-    {
-     "term": "comes",
-     "n": 3,
-     "df": 13,
-     "weight": 0.007806
-    },
-    {
-     "term": "honest",
-     "n": 2,
-     "df": 9,
-     "weight": 0.007259
-    },
-    {
-     "term": "rather",
-     "n": 2,
-     "df": 9,
-     "weight": 0.007259
     }
    ]
   },
   {
    "deck": "Tires",
+   "kind": "op_code",
+   "code": null,
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -6570,40 +3453,10 @@
      "weight": 0.048294
     },
     {
-     "term": "tire",
-     "n": 10,
-     "df": 6,
-     "weight": 0.047092
-    },
-    {
-     "term": "tires",
-     "n": 9,
-     "df": 7,
-     "weight": 0.038551
-    },
-    {
-     "term": "four",
-     "n": 12,
-     "df": 11,
-     "weight": 0.036418
-    },
-    {
-     "term": "alignment",
-     "n": 6,
-     "df": 4,
-     "weight": 0.034976
-    },
-    {
      "term": "balance",
      "n": 4,
      "df": 2,
      "weight": 0.030976
-    },
-    {
-     "term": "running",
-     "n": 4,
-     "df": 4,
-     "weight": 0.023317
     },
     {
      "term": "option",
@@ -6642,18 +3495,6 @@
      "weight": 0.019318
     },
     {
-     "term": "keeping",
-     "n": 3,
-     "df": 4,
-     "weight": 0.017488
-    },
-    {
-     "term": "need",
-     "n": 7,
-     "df": 14,
-     "weight": 0.016581
-    },
-    {
      "term": "gather",
      "n": 2,
      "df": 2,
@@ -6684,12 +3525,6 @@
      "weight": 0.015488
     },
     {
-     "term": "tells",
-     "n": 4,
-     "df": 9,
-     "weight": 0.014357
-    },
-    {
      "term": "size",
      "n": 2,
      "df": 3,
@@ -6712,101 +3547,14 @@
      "n": 2,
      "df": 3,
      "weight": 0.013248
-    },
-    {
-     "term": "left",
-     "n": 3,
-     "df": 7,
-     "weight": 0.01285
-    },
-    {
-     "term": "quote",
-     "n": 3,
-     "df": 8,
-     "weight": 0.011744
-    },
-    {
-     "term": "buy",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011659
-    },
-    {
-     "term": "lead",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011659
-    },
-    {
-     "term": "complete",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011659
-    },
-    {
-     "term": "answers",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011659
-    },
-    {
-     "term": "rear",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011659
-    },
-    {
-     "term": "inside",
-     "n": 3,
-     "df": 10,
-     "weight": 0.009894
-    },
-    {
-     "term": "whether",
-     "n": 3,
-     "df": 10,
-     "weight": 0.009894
-    },
-    {
-     "term": "walk",
-     "n": 2,
-     "df": 6,
-     "weight": 0.009418
-    },
-    {
-     "term": "each",
-     "n": 2,
-     "df": 6,
-     "weight": 0.009418
-    },
-    {
-     "term": "lose",
-     "n": 2,
-     "df": 7,
-     "weight": 0.008567
-    },
-    {
-     "term": "brake",
-     "n": 2,
-     "df": 7,
-     "weight": 0.008567
-    },
-    {
-     "term": "set",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007829
-    },
-    {
-     "term": "number",
-     "n": 4,
-     "df": 17,
-     "weight": 0.007329
     }
    ]
   },
   {
    "deck": "Transmission Fluid Exchange",
+   "kind": "op_code",
+   "code": "TRF-011",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -6821,22 +3569,10 @@
      "weight": 0.078894
     },
     {
-     "term": "him",
-     "n": 9,
-     "df": 4,
-     "weight": 0.035632
-    },
-    {
      "term": "lifetime",
      "n": 5,
      "df": 1,
      "weight": 0.0328
-    },
-    {
-     "term": "fluid",
-     "n": 18,
-     "df": 16,
-     "weight": 0.024448
     },
     {
      "term": "shift",
@@ -6851,18 +3587,6 @@
      "weight": 0.017995
     },
     {
-     "term": "temperature",
-     "n": 4,
-     "df": 4,
-     "weight": 0.015836
-    },
-    {
-     "term": "keeping",
-     "n": 4,
-     "df": 4,
-     "weight": 0.015836
-    },
-    {
      "term": "pulling",
      "n": 3,
      "df": 2,
@@ -6873,12 +3597,6 @@
      "n": 3,
      "df": 2,
      "weight": 0.015779
-    },
-    {
-     "term": "lift",
-     "n": 4,
-     "df": 5,
-     "weight": 0.014162
     },
     {
      "term": "towing",
@@ -6971,36 +3689,6 @@
      "weight": 0.01312
     },
     {
-     "term": "past",
-     "n": 4,
-     "df": 6,
-     "weight": 0.012794
-    },
-    {
-     "term": "breaks",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011877
-    },
-    {
-     "term": "mean",
-     "n": 3,
-     "df": 4,
-     "weight": 0.011877
-    },
-    {
-     "term": "warranty",
-     "n": 10,
-     "df": 18,
-     "weight": 0.011372
-    },
-    {
-     "term": "000",
-     "n": 5,
-     "df": 10,
-     "weight": 0.0112
-    },
-    {
      "term": "overdue",
      "n": 2,
      "df": 2,
@@ -7041,50 +3729,23 @@
      "n": 2,
      "df": 3,
      "weight": 0.008998
-    },
-    {
-     "term": "heat",
-     "n": 4,
-     "df": 10,
-     "weight": 0.00896
-    },
-    {
-     "term": "text",
-     "n": 3,
-     "df": 7,
-     "weight": 0.008728
     }
    ]
   },
   {
    "deck": "Vocabulary",
+   "kind": "foundational",
+   "code": null,
+   "films": null,
    "stages": [
     "Vocabulary"
    ],
    "terms": [
     {
-     "term": "flush",
-     "n": 5,
-     "df": 5,
-     "weight": 0.069891
-    },
-    {
-     "term": "waiting",
-     "n": 6,
-     "df": 7,
-     "weight": 0.068915
-    },
-    {
      "term": "relaxing",
      "n": 3,
      "df": 3,
      "weight": 0.053287
-    },
-    {
-     "term": "oil",
-     "n": 5,
-     "df": 8,
-     "weight": 0.052484
     },
     {
      "term": "final",
@@ -7103,143 +3764,14 @@
      "n": 2,
      "df": 2,
      "weight": 0.041531
-    },
-    {
-     "term": "services",
-     "n": 3,
-     "df": 6,
-     "weight": 0.037883
-    },
-    {
-     "term": "exchange",
-     "n": 3,
-     "df": 7,
-     "weight": 0.034458
-    },
-    {
-     "term": "lounge",
-     "n": 3,
-     "df": 7,
-     "weight": 0.034458
-    },
-    {
-     "term": "judgment",
-     "n": 2,
-     "df": 4,
-     "weight": 0.031262
-    },
-    {
-     "term": "wipers",
-     "n": 2,
-     "df": 4,
-     "weight": 0.031262
-    },
-    {
-     "term": "000-mile",
-     "n": 4,
-     "df": 12,
-     "weight": 0.029973
-    },
-    {
-     "term": "shot",
-     "n": 2,
-     "df": 5,
-     "weight": 0.027957
-    },
-    {
-     "term": "change",
-     "n": 5,
-     "df": 16,
-     "weight": 0.026812
-    },
-    {
-     "term": "deferred",
-     "n": 3,
-     "df": 10,
-     "weight": 0.026532
-    },
-    {
-     "term": "opinion",
-     "n": 2,
-     "df": 6,
-     "weight": 0.025256
-    },
-    {
-     "term": "declined",
-     "n": 2,
-     "df": 7,
-     "weight": 0.022972
-    },
-    {
-     "term": "dirty",
-     "n": 2,
-     "df": 7,
-     "weight": 0.022972
-    },
-    {
-     "term": "sounds",
-     "n": 2,
-     "df": 9,
-     "weight": 0.019249
-    },
-    {
-     "term": "coolant",
-     "n": 2,
-     "df": 10,
-     "weight": 0.017688
-    },
-    {
-     "term": "service",
-     "n": 5,
-     "df": 22,
-     "weight": 0.015017
-    },
-    {
-     "term": "job",
-     "n": 2,
-     "df": 15,
-     "weight": 0.011681
-    },
-    {
-     "term": "done",
-     "n": 2,
-     "df": 16,
-     "weight": 0.010725
-    },
-    {
-     "term": "condition",
-     "n": 2,
-     "df": 17,
-     "weight": 0.009827
-    },
-    {
-     "term": "while",
-     "n": 2,
-     "df": 17,
-     "weight": 0.009827
-    },
-    {
-     "term": "instead",
-     "n": 4,
-     "df": 24,
-     "weight": 0.009436
-    },
-    {
-     "term": "code",
-     "n": 2,
-     "df": 21,
-     "weight": 0.006696
-    },
-    {
-     "term": "part",
-     "n": 2,
-     "df": 21,
-     "weight": 0.006696
     }
    ]
   },
   {
    "deck": "Wiper Blades",
+   "kind": "op_code",
+   "code": "WBF-018",
+   "films": 4,
    "stages": [
     "At the Kiosk",
     "MPI Selling",
@@ -7258,12 +3790,6 @@
      "n": 7,
      "df": 1,
      "weight": 0.06424
-    },
-    {
-     "term": "wipers",
-     "n": 9,
-     "df": 4,
-     "weight": 0.049848
     },
     {
      "term": "wiper",
@@ -7300,12 +3826,6 @@
      "n": 3,
      "df": 2,
      "weight": 0.022074
-    },
-    {
-     "term": "treatment",
-     "n": 4,
-     "df": 5,
-     "weight": 0.019812
     },
     {
      "term": "missed",
@@ -7350,36 +3870,6 @@
      "weight": 0.018354
     },
     {
-     "term": "judgment",
-     "n": 3,
-     "df": 4,
-     "weight": 0.016616
-    },
-    {
-     "term": "rear",
-     "n": 3,
-     "df": 4,
-     "weight": 0.016616
-    },
-    {
-     "term": "lead",
-     "n": 3,
-     "df": 4,
-     "weight": 0.016616
-    },
-    {
-     "term": "washer",
-     "n": 4,
-     "df": 7,
-     "weight": 0.016279
-    },
-    {
-     "term": "shot",
-     "n": 3,
-     "df": 5,
-     "weight": 0.014859
-    },
-    {
      "term": "spots",
      "n": 2,
      "df": 2,
@@ -7398,99 +3888,18 @@
      "weight": 0.014716
     },
     {
-     "term": "step",
-     "n": 5,
-     "df": 11,
-     "weight": 0.014417
-    },
-    {
      "term": "waited",
      "n": 2,
      "df": 3,
      "weight": 0.012587
-    },
-    {
-     "term": "watching",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011077
-    },
-    {
-     "term": "sold",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011077
-    },
-    {
-     "term": "sits",
-     "n": 2,
-     "df": 4,
-     "weight": 0.011077
-    },
-    {
-     "term": "condition",
-     "n": 6,
-     "df": 17,
-     "weight": 0.010446
-    },
-    {
-     "term": "lives",
-     "n": 2,
-     "df": 5,
-     "weight": 0.009906
-    },
-    {
-     "term": "outcome",
-     "n": 2,
-     "df": 5,
-     "weight": 0.009906
-    },
-    {
-     "term": "frame",
-     "n": 2,
-     "df": 6,
-     "weight": 0.008949
-    },
-    {
-     "term": "protects",
-     "n": 2,
-     "df": 6,
-     "weight": 0.008949
-    },
-    {
-     "term": "worse",
-     "n": 2,
-     "df": 7,
-     "weight": 0.00814
-    },
-    {
-     "term": "year",
-     "n": 2,
-     "df": 7,
-     "weight": 0.00814
-    },
-    {
-     "term": "together",
-     "n": 2,
-     "df": 7,
-     "weight": 0.00814
-    },
-    {
-     "term": "those",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007439
-    },
-    {
-     "term": "set",
-     "n": 2,
-     "df": 8,
-     "weight": 0.007439
     }
    ]
   },
   {
    "deck": "Wrap-Up",
+   "kind": "foundational",
+   "code": null,
+   "films": 1,
    "stages": [
     "Foundational"
    ],
@@ -7500,12 +3909,6 @@
      "n": 4,
      "df": 2,
      "weight": 0.095841
-    },
-    {
-     "term": "four",
-     "n": 7,
-     "df": 11,
-     "weight": 0.065729
     },
     {
      "term": "bdc",
@@ -7530,102 +3933,6 @@
      "n": 2,
      "df": 3,
      "weight": 0.04099
-    },
-    {
-     "term": "store",
-     "n": 4,
-     "df": 10,
-     "weight": 0.040818
-    },
-    {
-     "term": "factory",
-     "n": 5,
-     "df": 13,
-     "weight": 0.03981
-    },
-    {
-     "term": "days",
-     "n": 2,
-     "df": 4,
-     "weight": 0.036072
-    },
-    {
-     "term": "voice",
-     "n": 2,
-     "df": 5,
-     "weight": 0.032258
-    },
-    {
-     "term": "during",
-     "n": 2,
-     "df": 6,
-     "weight": 0.029141
-    },
-    {
-     "term": "pre-write",
-     "n": 2,
-     "df": 8,
-     "weight": 0.024223
-    },
-    {
-     "term": "selling",
-     "n": 3,
-     "df": 14,
-     "weight": 0.021986
-    },
-    {
-     "term": "certified",
-     "n": 2,
-     "df": 10,
-     "weight": 0.020409
-    },
-    {
-     "term": "walk-around",
-     "n": 2,
-     "df": 11,
-     "weight": 0.01878
-    },
-    {
-     "term": "kiosk",
-     "n": 3,
-     "df": 16,
-     "weight": 0.018562
-    },
-    {
-     "term": "saying",
-     "n": 2,
-     "df": 12,
-     "weight": 0.017292
-    },
-    {
-     "term": "technician",
-     "n": 4,
-     "df": 23,
-     "weight": 0.012342
-    },
-    {
-     "term": "where",
-     "n": 2,
-     "df": 19,
-     "weight": 0.009437
-    },
-    {
-     "term": "sell",
-     "n": 2,
-     "df": 21,
-     "weight": 0.007726
-    },
-    {
-     "term": "vehicle",
-     "n": 4,
-     "df": 27,
-     "weight": 0.006861
-    },
-    {
-     "term": "car",
-     "n": 2,
-     "df": 27,
-     "weight": 0.00343
     }
    ]
   }

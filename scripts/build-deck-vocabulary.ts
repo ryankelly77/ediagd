@@ -19,6 +19,30 @@
    the vocabulary comes from there and a new deck brings its own.
 
    ---------------------------------------------------------------------------
+   TWO KINDS OF "DECK", AND THEY MUST NOT COMPETE
+   ---------------------------------------------------------------------------
+   The workbook's `Deck / Category` column mixes op-code decks (Engine Air
+   Filter, Brake Fluid Exchange) with foundational modules (Sing It, The close,
+   Selling speech, Four voices). Every op-code film is full of selling language,
+   so scoring them in one pool has the foundational modules tie — and beat — the
+   real answer: a transcript scoring "brake, fluid, moisture, feet, trucks" lost
+   to "Sing It" on the first real run.
+
+   The deck map's `Deck Inventory` sheet settles it: `Op Codes Covered` reads
+   "Foundational" for a module and a real code list for a deck. Stage labels
+   alone were not enough — "Setup speech" and "Selling speech" are foundational
+   modules whose questions are filed under the film stages they teach, so they
+   classified as op-code decks and then beat the real deck on a transcript.
+
+   THE OP CODE COMES FROM THERE TOO, and that matters more than the split does.
+   The first version of this hand-typed the deck-to-code map into the script and
+   got a third of it wrong — CLE-010 for Coolant Exchange when the map says
+   CLF-010, DFF-005 for Differential when it says DFF-014, SPK-037 for Spark
+   Plugs when it says SPK-043. Those are the names films would have been renamed
+   to. The exact failure this file's header warns about, committed in the file
+   that reads it.
+
+   ---------------------------------------------------------------------------
    WHY DISTINCTIVENESS AND NOT FREQUENCY
    ---------------------------------------------------------------------------
    The most common words in the Engine Air Filter questions are "customer",
@@ -33,6 +57,7 @@ import ExcelJS from "exceljs";
 import { writeFileSync } from "fs";
 
 const SOURCE = "data/EDIAGD_Master_Quiz_Bank.xlsx";
+const DECK_MAP = "data/EDIAGD_Doggett_OpCode_Deck_Map (1).xlsx";
 const OUT = "data/deck-vocabulary.json";
 
 /* Words that carry no deck signal. Deliberately short — this is a corpus of
@@ -62,7 +87,52 @@ const words = (s: string): string[] =>
 
 type DeckDoc = { deck: string; terms: Map<string, number>; total: number };
 
+type Inventory = { kind: "op_code" | "foundational"; code: string | null; films: number | null };
+
+/**
+ * Deck -> what it is and which op code it carries, from the deck map.
+ *
+ * The FIRST code of a multi-code deck is the one a film is named for: Engine
+ * Air Filter covers "EAF-001, TBC-044" and its four films are EAF-001 films —
+ * the second code is a piggyback the deck also touches. "ACO (needs code)" and
+ * "TIR (needs code)" are Mitch's own note that no code exists yet, and they
+ * yield null rather than a code invented here.
+ */
+async function loadInventory(): Promise<Map<string, Inventory>> {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(DECK_MAP);
+  const ws = wb.getWorksheet("Deck Inventory");
+  const out = new Map<string, Inventory>();
+  if (!ws) throw new Error(`no 'Deck Inventory' sheet in ${DECK_MAP}`);
+
+  const hdr = ((ws.getRow(1).values as unknown[]).slice(1) as unknown[]).map((v) =>
+    String(v ?? "")
+  );
+  const iName = hdr.indexOf("Deck Name");
+  const iCodes = hdr.indexOf("Op Codes Covered");
+  const iFilms = hdr.indexOf("Films");
+
+  for (let r = 2; r <= ws.rowCount; r++) {
+    const row = (ws.getRow(r).values as unknown[]).slice(1);
+    const name = String(row[iName] ?? "").trim();
+    if (!name) continue;
+    const codes = String(row[iCodes] ?? "").trim();
+    const films = Number(row[iFilms] ?? 0) || null;
+
+    if (/^foundational$/i.test(codes)) {
+      out.set(name, { kind: "foundational", code: null, films });
+      continue;
+    }
+    const firstCode = codes.split(",")[0]?.trim() ?? "";
+    const code = /^[A-Z]{2,4}-\d{2,3}$/.test(firstCode) ? firstCode : null;
+    out.set(name, { kind: "op_code", code, films });
+  }
+  return out;
+}
+
 async function main() {
+  const inventory = await loadInventory();
+
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(SOURCE);
   const ws = wb.worksheets[0];
@@ -116,6 +186,12 @@ async function main() {
     .map((doc) => {
       const scored = [...doc.terms.entries()]
         .filter(([, n]) => n >= 2) // said once is an accident of phrasing
+        /* A FINGERPRINT, OR NOTHING. A term four or more decks use is not
+           evidence about which deck this is, however well TF-IDF scores it —
+           and the tail of a 40-term profile is exactly where those live. Left
+           in, they gave Battery a flat 0.29 against every transcript in the
+           Drop Zone and destroyed the margin the real deck needed to win. */
+        .filter(([term]) => (documentFrequency.get(term) ?? 99) <= 3)
         .map(([term, n]) => {
           const df = documentFrequency.get(term) ?? 1;
           /* Plain TF-IDF. The weight is what the matcher adds up, so a term
@@ -126,12 +202,30 @@ async function main() {
         })
         .filter((t) => t.weight > 0)
         .sort((a, b) => b.weight - a.weight)
-        .slice(0, 40);
+        .slice(0, 30);
 
+      /* RAW WEIGHTS, NOT NORMALISED — and this was got wrong once in each
+         direction. Scaling every profile to sum to 1 was meant to stop a short
+         deck outscoring a long one; it did the opposite. A profile left with
+         four terms after the fingerprint filter carries 0.25 per term while a
+         rich one carries 0.03, so Battery won every film in the Drop Zone on a
+         single incidental word. Summing raw TF-IDF rewards matching MANY
+         distinctive terms, which is the thing that actually distinguishes the
+         right deck from a coincidence. */
+      const terms = scored;
+
+      const stages = [...(stagesSeen.get(doc.deck) ?? [])].sort();
+      /* Not in the deck map at all — "Lines", "Vocabulary", "Four voices" and
+         the other speech modules. Foundational by default, because a deck the
+         map does not list is not a deck with an op code. */
+      const known = inventory.get(doc.deck);
       return {
         deck: doc.deck,
-        stages: [...(stagesSeen.get(doc.deck) ?? [])].sort(),
-        terms: scored,
+        kind: known?.kind ?? "foundational",
+        code: known?.code ?? null,
+        films: known?.films ?? null,
+        stages,
+        terms,
       };
     })
     .sort((a, b) => a.deck.localeCompare(b.deck));
@@ -140,7 +234,10 @@ async function main() {
 
   console.log(`\n  ${out.length} decks -> ${OUT}\n`);
   for (const d of out.slice(0, 40)) {
-    console.log(`  ${d.deck.padEnd(30)} ${d.terms.slice(0, 6).map((t) => t.term).join(", ")}`);
+    console.log(
+      `  ${d.kind === "op_code" ? "deck  " : "module"} ${(d.code ?? "—").padEnd(9)} ` +
+        `${d.deck.padEnd(30)} ${d.terms.slice(0, 4).map((t) => t.term).join(", ")}`
+    );
   }
   console.log("");
 }
