@@ -85,6 +85,17 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     label: "Dealer Codes",
     hint: "Everything a dealer's DMS sends, ruled onto our vocabulary.",
   },
+  {
+    /*
+     * Listed even though it is platform-owner only and every other tool here is
+     * open to rooftop admins. An unlisted screen is one somebody has to be told
+     * about; the page itself redirects anyone else to /admin, which is the same
+     * answer the link would have given.
+     */
+    href: "/admin/economy",
+    label: "Sand Dollar Economy",
+    hint: "Minted, spent, held — and whether all three still agree.",
+  },
 ] as const;
 
 /**

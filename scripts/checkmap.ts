@@ -9,6 +9,7 @@
    is arithmetically impossible and must never reach a screen; the clamp in 0055
    makes it impossible, and this is what notices if the clamp is ever removed. */
 import { autoMatch, OP_TEXT_RULES, normaliseSubCategory, NOT_COACHABLE } from "../lib/dms/mapping";
+import { auditLedger, tablesToResolve, type LedgerEntry } from "../lib/economy/ledger-refs";
 
 let failures = 0;
 const fail = (msg: string) => { failures++; console.log(`  FAIL — ${msg}`); };
@@ -249,22 +250,15 @@ async function main() {
  * never-having-happened — a rolled-back completion. completeDay already deletes
  * those by ref_id in the same transaction, which is why they never reach here.
  */
-type Entry = { id: string; user_id: string; amount: number; reason: string; ref_id: string | null };
-
-const REF_TARGET: Record<string, string> = {
-  daily_loop: "daily_completion",
-  badge: "daily_completion",
-  swell_7: "daily_completion",
-  swell_30: "daily_completion",
-  swell_90: "daily_completion",
-  swell_365: "daily_completion",
-  lesson_complete: "content_progress",
-  module_complete: "module",
-};
-const NO_REF_EXPECTED = new Set(["paddle_out_purchase", "adjustment"]);
-
+/*
+ * THE MAP MOVED to lib/economy/ledger-refs.ts, which /admin/economy reads too.
+ * A screen showing "every entry resolves" while this check disagreed would be
+ * two answers to one question, and the screen is the one people would believe.
+ */
 async function checkLedger(): Promise<void> {
-  const entries = (await get("sand_dollar_entry?select=id,user_id,amount,reason,ref_id")) as Entry[];
+  const entries = (await get(
+    "sand_dollar_entry?select=id,user_id,amount,reason,ref_id"
+  )) as LedgerEntry[];
   if (entries.length === 0) {
     console.log("  sand_dollar_entry: no entries");
     return;
@@ -273,27 +267,12 @@ async function checkLedger(): Promise<void> {
   /* One read per referenced table, then set membership — rather than a query
      per entry, which would be 61 round trips today and thousands later. */
   const ids: Record<string, Set<string>> = {};
-  for (const table of new Set(Object.values(REF_TARGET))) {
+  for (const table of tablesToResolve(entries)) {
     const rows = (await get(`${table}?select=id`)) as { id: string }[];
     ids[table] = new Set(rows.map((r) => r.id));
   }
 
-  const orphans: Entry[] = [];
-  const unknownReason: string[] = [];
-
-  for (const e of entries) {
-    if (e.ref_id === null) {
-      /* A missing ref is only fine for the two reasons that have no event. */
-      if (!NO_REF_EXPECTED.has(e.reason)) orphans.push(e);
-      continue;
-    }
-    const table = REF_TARGET[e.reason];
-    if (!table) {
-      if (!unknownReason.includes(e.reason)) unknownReason.push(e.reason);
-      continue;
-    }
-    if (!ids[table].has(e.ref_id)) orphans.push(e);
-  }
+  const { orphans, unknownReasons: unknownReason } = auditLedger(entries, ids);
 
   if (unknownReason.length) {
     /* A new reason with no mapping is a hole in this check, not a pass. */
