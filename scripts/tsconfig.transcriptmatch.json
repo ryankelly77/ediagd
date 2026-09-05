@@ -1,0 +1,19 @@
+{
+  "//": "Standalone build for transcript-match-scenarios.ts. Imports the REAL matcher and the REAL generated vocabulary — a paraphrase of either would test my idea of how Mitch talks rather than the corpus he wrote.",
+  "//strict": "strict matches the project build. Without it a discriminated union like TicketCheck will not narrow — see tsconfig.dates.json.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-tm",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./transcript-match-scenarios.ts", "../lib/video/transcript-match.ts"]
+}

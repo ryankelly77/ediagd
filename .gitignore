@@ -127,3 +127,12 @@ exports/
 
 # tsc scratch output from npm run test:schedule-flags
 .tmp-sf/
+
+# tsc scratch output from npm run build:deck-vocab
+.tmp-dv2/
+
+# tsc scratch output from npm run test:transcript-match
+.tmp-tm/
+
+# tsc scratch output from npm run identify:videos
+.tmp-idv/
