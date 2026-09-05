@@ -35,10 +35,14 @@ export function OnboardingStatusSection({
   /** Group scope shows which store each person is at; a rooftop page does not. */
   showRooftop?: boolean;
 }) {
-  if (status.total === 0) return null;
+  /* An empty list is only nothing to say when there is no roster either. A
+     rooftop with a hundred measured advisors and no accounts is the most
+     important state this section has — it is every store before rollout day. */
+  if (status.total === 0 && status.rosterSeats === 0) return null;
 
   const notReady = status.total - status.ready;
   const flagged = status.rows.filter((r) => r.flags.length > 0).length;
+  const unprovisioned = Math.max(0, status.rosterSeats - status.total);
 
   return (
     <section className="mt-8">
@@ -49,7 +53,50 @@ export function OnboardingStatusSection({
         </span>
       </h2>
 
-      <p className="mt-1 max-w-prose px-1 text-sm leading-relaxed text-ink-soft">
+      {/* ---- THE NUMBER THAT ACTUALLY MEASURES ROLLOUT -------------------
+          "3 of 3 ready" is true and reads like the job is done. It counts
+          memberships, and the roster it is drawn from is a hundred people
+          whose work the app is already measuring — so on its own that heading
+          turns a 97% shortfall into a green tick.
+
+          This line goes ABOVE the explanation of what ready means, because
+          the order is the argument: how many people have an account at all,
+          and only then how well set up the ones who do are. */}
+      {status.rosterSeats > 0 && (
+        <p className="mt-2 px-1 text-base font-extrabold text-navy">
+          {status.total.toLocaleString()}{" "}
+          {status.total === 1 ? "account" : "accounts"}
+          <span className="text-ink-soft"> · </span>
+          {status.rosterSeats.toLocaleString()} advisors measured in the DMS
+          {status.rosterRooftops > 1 && (
+            <span className="font-bold text-ink-soft">
+              {" "}
+              across {status.rosterRooftops} rooftops
+            </span>
+          )}
+        </p>
+      )}
+
+      {unprovisioned > 0 && (
+        <p className="mt-1 max-w-prose px-1 text-sm leading-relaxed text-clay">
+          <span className="font-bold">
+            {unprovisioned.toLocaleString()} {unprovisioned === 1 ? "has" : "have"} no
+            account yet.
+          </span>{" "}
+          The DMS is measuring their work and the app has never been able to
+          reach them. Everything below is about the {status.total}{" "}
+          {status.total === 1 ? "person who does" : "people who do"} have one.
+        </p>
+      )}
+
+      {status.total === 0 ? (
+        <p className="mt-3 px-1 text-sm leading-relaxed text-ink-soft">
+          Nobody has been provisioned yet, so there is nothing to check the setup
+          of. Ready will mean two things when there is: a confirmed work
+          schedule, and a linked operator number.
+        </p>
+      ) : (
+      <p className="mt-3 max-w-prose px-1 text-sm leading-relaxed text-ink-soft">
         Ready means two things: they&apos;ve confirmed a work schedule, and
         they&apos;re linked to an operator number. Without the schedule the app
         holds them at onboarding; without the operator there is no volume to
@@ -69,6 +116,7 @@ export function OnboardingStatusSection({
           </>
         )}
       </p>
+      )}
 
       {/* daily_activity stopped being written on 31 July and only started again
           when the live writer shipped. A dash in First login is therefore "we

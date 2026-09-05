@@ -70,6 +70,27 @@ export type OnboardingStatus = {
   rows: OnboardingRow[];
   ready: number;
   total: number;
+  /**
+   * Advisors the DMS is measuring who have not departed — the population that
+   * COULD be provisioned.
+   *
+   * ---------------------------------------------------------------------------
+   * THIS IS THE BIG NUMBER, AND WITHOUT IT THE SECTION LIES BY OMISSION
+   * ---------------------------------------------------------------------------
+   * "3 of 3 ready" is true and reads like rollout is finished. It counts
+   * memberships, and there are three of those against a roster of a hundred-odd
+   * people whose work the app is already measuring. The gap is not readiness,
+   * it is provisioning — nobody has been given an account — and a header that
+   * cannot say so turns a 97% shortfall into a green tick.
+   *
+   * Counted as (rooftop, operator) SEATS rather than distinct operator numbers.
+   * An op id is only unique within a store, so counting ids globally would merge
+   * two different people who happen to share number 593 at two rooftops. A seat
+   * is also the thing a membership is: one person, at one store.
+   */
+  rosterSeats: number;
+  /** Rooftops those seats span, so the line can say where they are. */
+  rosterRooftops: number;
 };
 
 /**
@@ -96,7 +117,32 @@ export async function loadOnboardingStatus(
     .eq("active", true);
   if (rooftopId) membershipQuery = membershipQuery.eq("rooftop_id", rooftopId);
 
-  const { data: memberships } = await membershipQuery;
+  /*
+   * THE ROSTER, THROUGH THE CALLER'S OWN CLIENT.
+   *
+   * dms_advisor's read policy (0046) already scopes it to the reader's
+   * rooftops, so no filter is applied on top: a second, quieter answer to a
+   * question the policies already answer is how the two end up disagreeing.
+   *
+   * DEPARTED OPERATORS ARE EXCLUDED. The denominator has to be people who could
+   * actually be given an account — half this table is operators whose last DMS
+   * activity was in early 2025, and counting them would inflate the gap with
+   * people who left before the app existed.
+   */
+  let rosterQuery = client
+    .from("dms_advisor")
+    .select("rooftop_id, advisor_op_id")
+    .is("departed_on", null);
+  if (rooftopId) rosterQuery = rosterQuery.eq("rooftop_id", rooftopId);
+
+  const [{ data: memberships }, { data: roster }] = await Promise.all([
+    membershipQuery,
+    rosterQuery,
+  ]);
+
+  const seats = (roster ?? []) as { rooftop_id: string; advisor_op_id: string }[];
+  const rosterSeats = new Set(seats.map((s) => `${s.rooftop_id}|${s.advisor_op_id}`)).size;
+  const rosterRooftops = new Set(seats.map((s) => s.rooftop_id)).size;
   const rows = (memberships ?? []) as {
     user_id: string;
     rooftop_id: string;
@@ -104,7 +150,12 @@ export async function loadOnboardingStatus(
     rooftop: unknown;
   }[];
 
-  if (rows.length === 0) return { rows: [], ready: 0, total: 0 };
+  /* A roster with no accounts yet is the MOST important state this section
+     has, not an empty one — it is every rooftop before rollout day. So the
+     counts are returned even when there is nothing to list. */
+  if (rows.length === 0) {
+    return { rows: [], ready: 0, total: 0, rosterSeats, rosterRooftops };
+  }
 
   const ids = [...new Set(rows.map((r) => r.user_id))];
 
@@ -208,5 +259,11 @@ export async function loadOnboardingStatus(
   const rank = (r: OnboardingRow) => (r.ready ? (r.flags.length ? 1 : 2) : 0);
   out.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
 
-  return { rows: out, ready: out.filter((r) => r.ready).length, total: out.length };
+  return {
+    rows: out,
+    ready: out.filter((r) => r.ready).length,
+    total: out.length,
+    rosterSeats,
+    rosterRooftops,
+  };
 }
