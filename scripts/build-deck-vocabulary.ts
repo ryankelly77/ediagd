@@ -55,6 +55,7 @@
 
 import ExcelJS from "exceljs";
 import { writeFileSync } from "fs";
+import { createClient } from "@supabase/supabase-js";
 
 const SOURCE = "data/EDIAGD_Master_Quiz_Bank.xlsx";
 const DECK_MAP = "data/EDIAGD_Doggett_OpCode_Deck_Map (1).xlsx";
@@ -130,8 +131,59 @@ async function loadInventory(): Promise<Map<string, Inventory>> {
   return out;
 }
 
+/**
+ * Fill the deck map's gaps from op_code_catalog, which is the actual authority.
+ *
+ * The map was issued before some codes were ruled and still says "ACO (needs
+ * code)" for A/C Odor Treatment — a deck whose code has since been minted as
+ * ACO-055. Left alone, three finished films sit unnameable behind a note that
+ * stopped being true.
+ *
+ * NOT AN OVERRIDE LIST IN THIS FILE. Typing "A/C Odor Treatment: ACO-055" here
+ * is exactly what put CLE-010 and DFF-005 and SPK-037 into the last version,
+ * and there is no reason to believe a fourth hand-typed table would be the
+ * accurate one. The catalog knows; ask it.
+ *
+ * OPTIONAL. Without credentials this is skipped and the decks keep whatever the
+ * map gave them — the vocabulary is still correct, and a missing code shows up
+ * as a hold rather than a wrong name.
+ */
+async function fillCodesFromCatalog(inventory: Map<string, Inventory>): Promise<number> {
+  const url = process.env.SB_URL;
+  const key = process.env.SB_KEY;
+  if (!url || !key) {
+    console.log("  (no SB_URL/SB_KEY — deck map codes used as-is)");
+    return 0;
+  }
+
+  const sb = createClient(url, key, { auth: { persistSession: false } });
+  const { data } = await sb
+    .from("op_code_catalog")
+    .select("code, name")
+    .is("retired_at", null);
+
+  /* "AC Odor Treatment" in the catalog, "A/C Odor Treatment" in the map. */
+  const key0 = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const byName = new Map(
+    ((data ?? []) as { code: string; name: string }[]).map((r) => [key0(r.name), r.code])
+  );
+
+  let filled = 0;
+  for (const [deck, entry] of inventory) {
+    if (entry.kind !== "op_code" || entry.code) continue;
+    const found = byName.get(key0(deck));
+    if (found) {
+      inventory.set(deck, { ...entry, code: found });
+      console.log(`  deck map had no code for ${deck} — catalog says ${found}`);
+      filled++;
+    }
+  }
+  return filled;
+}
+
 async function main() {
   const inventory = await loadInventory();
+  await fillCodesFromCatalog(inventory);
 
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(SOURCE);

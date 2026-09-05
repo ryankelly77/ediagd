@@ -4,7 +4,7 @@
   {
    "deck": "A/C Odor Treatment",
    "kind": "op_code",
-   "code": null,
+   "code": "ACO-055",
    "films": 4,
    "stages": [
     "At the Kiosk",
@@ -3437,7 +3437,7 @@
   {
    "deck": "Tires",
    "kind": "op_code",
-   "code": null,
+   "code": "TIR-057",
    "films": 4,
    "stages": [
     "At the Kiosk",
