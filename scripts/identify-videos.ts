@@ -37,17 +37,42 @@ import {
   proposedKeeper,
   proposedName,
   type DeckProfile,
+  type FilmScript,
   type Proposal,
 } from "../lib/video/transcript-match";
 
 const TRANSCRIPTS = "reports/dropzone-transcripts.json";
 const VOCABULARY = "data/deck-vocabulary.json";
+const SCRIPTS = "data/teleprompter-films.json";
 const APPLY = process.argv.includes("--apply");
 const DIR = (process.argv.find((a) => a.startsWith("--dir=")) ?? "").slice(6);
 
+/**
+ * Names Ryan ruled that the matcher does not derive.
+ *
+ * ---------------------------------------------------------------------------
+ * A RULING IS NOT A BUG FIX
+ * ---------------------------------------------------------------------------
+ * IMG_2249 is The Big Ticket Visit, Part 2. It names itself in sentence one —
+ * "when we have that big ticket item" — and then spends three minutes on the
+ * pre-write packet, which is enough to pull the Pre-Write module back on top.
+ * Chasing it further meant tuning the matcher against one file, and each
+ * previous round of that moved a different film.
+ *
+ * So it is recorded as what it is: a human decision, in the report, marked as
+ * such. The next batch carries a spoken slate and will not need any of this.
+ */
+const RULINGS: Record<string, { title: string; code: string; note: string }> = {
+  "IMG_2249.MOV": {
+    code: "FND",
+    title: "The Big Ticket Visit, Part 2",
+    note: "Ryan's ruling — matcher reads the pre-write content and proposes Pre-Write, Part 2",
+  },
+};
+
 type Row = { file: string; seconds?: number; transcript: string; words?: number; error?: string };
 
-function load(): { rows: Row[]; profiles: DeckProfile[] } {
+function load(): { rows: Row[]; profiles: DeckProfile[]; scripts: FilmScript[] } {
   if (!existsSync(TRANSCRIPTS)) {
     console.error(
       `\n  ${TRANSCRIPTS} not found.\n` +
@@ -67,7 +92,12 @@ function load(): { rows: Row[]; profiles: DeckProfile[] } {
    * rename is the one step nobody reviews line by line.
    */
   const vocab = JSON.parse(readFileSync(VOCABULARY, "utf8")) as { decks: DeckProfile[] };
-  return { rows, profiles: vocab.decks };
+  /* Ground truth for the twenty films Volume 2 carries. Optional: without it
+     everything still works from declarations alone. */
+  const scripts = existsSync(SCRIPTS)
+    ? (JSON.parse(readFileSync(SCRIPTS, "utf8")).films as FilmScript[])
+    : [];
+  return { rows, profiles: vocab.decks, scripts };
 }
 
 /** The transcript's opening, as the evidence a person actually reads. */
@@ -77,7 +107,7 @@ function opening(text: string, chars = 150): string {
 }
 
 function main() {
-  const { rows, profiles } = load();
+  const { rows, profiles, scripts } = load();
   const usable = rows.filter((r) => r.transcript && r.transcript.length > 0);
 
   console.log(`\n  ${rows.length} files · ${usable.length} transcribed\n`);
@@ -85,7 +115,7 @@ function main() {
   const matched = usable.map((r) => ({
     ...r,
     id: r.file,
-    proposal: matchTranscript(r.transcript, profiles),
+    proposal: matchTranscript(r.transcript, profiles, scripts),
   }));
 
   /* Takes first: a pair is one film, and naming both would put two v1s of the
@@ -193,8 +223,13 @@ function main() {
      a local disambiguation suffix, not part of the title. `driveTitle` is what
      to match on in Drive; `file` is what is on this disk. */
   const plan = matched.map((m) => {
-    const name = proposedName(m.proposal);
-    const held = collides(m)
+    const ruled = RULINGS[m.file];
+    const name = ruled
+      ? `${ruled.code} — ${ruled.title} — v1`
+      : proposedName(m.proposal);
+    const held = ruled
+      ? null
+      : collides(m)
       ? "hold — two films proposed for this same name; one is misread"
       : inAPair.has(m.file)
       ? keepers.has(m.file)
@@ -212,8 +247,10 @@ function main() {
       action: held ? "hold" : "rename",
       renameTo: held ? null : `${name}.MOV`,
       reason: held,
-      deck: m.proposal.deck,
-      stage: m.proposal.stage,
+      deck: ruled ? "The Big Ticket Visit" : m.proposal.deck,
+      stage: ruled ? "Part 2" : m.proposal.stage,
+      title: ruled ? ruled.title : m.proposal.title,
+      identifiedBy: ruled ? "ruled" : m.proposal.source,
       confidence: m.proposal.confidence,
       seconds: m.seconds ?? null,
       words: m.words ?? null,
@@ -230,9 +267,10 @@ function main() {
   );
 
   const csv = [
-    "drive_title,action,rename_to,deck,stage,confidence,reason",
+    "drive_title,action,rename_to,deck,stage,identified_by,confidence,reason",
     ...plan.map((p) =>
-      [p.driveTitle, p.action, p.renameTo ?? "", p.deck ?? "", p.stage ?? "", p.confidence, p.reason ?? ""]
+      [p.driveTitle, p.action, p.renameTo ?? "", p.deck ?? "", p.stage ?? "",
+       p.identifiedBy ?? "", p.confidence, p.reason ?? ""]
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(",")
     ),

@@ -54,12 +54,16 @@
    ============================================================================ */
 
 import ExcelJS from "exceljs";
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync } from "fs";
+import { execFileSync } from "child_process";
 import { createClient } from "@supabase/supabase-js";
 
 const SOURCE = "data/EDIAGD_Master_Quiz_Bank.xlsx";
 const DECK_MAP = "data/EDIAGD_Doggett_OpCode_Deck_Map (1).xlsx";
 const OUT = "data/deck-vocabulary.json";
+const PROMPT_OUT = "data/whisper-prompt.txt";
+const TELEPROMPTER = "data/EDIAGD_Teleprompter_Vol2.docx";
+const FILMS_OUT = "data/teleprompter-films.json";
 
 /* Words that carry no deck signal. Deliberately short — this is a corpus of
    485 sentences, not the web, and an aggressive stop list here would throw away
@@ -181,6 +185,90 @@ async function fillCodesFromCatalog(inventory: Map<string, Inventory>): Promise<
   return filled;
 }
 
+/**
+ * The film scripts themselves, from the teleprompter document.
+ *
+ * ---------------------------------------------------------------------------
+ * GROUND TRUTH, WHERE IT EXISTS
+ * ---------------------------------------------------------------------------
+ * Volume 2 carries the actual words for twenty films across five decks —
+ * "OP CODE — ARCTIC BLAST · ABT-054", then "FILM 1 · ON THE DRIVE" and the
+ * script under it. A transcript that matches one of those is not a guess about
+ * what the film might be; it is the film, because the script is what Mitch read
+ * to camera.
+ *
+ * That distinction is worth keeping in the report: a film can be identified
+ * because it DECLARED itself, or because it MATCHES A KNOWN SCRIPT. Both are
+ * certain; only the second can be checked against a document.
+ *
+ * Volume 1 — Engine Air Filter through A/C Recharge — is not in data/. Getting
+ * it would extend this from five decks to most of the library.
+ */
+function loadTeleprompterFilms(): { deck: string; code: string | null; stage: string; text: string }[] {
+  if (!existsSync(TELEPROMPTER)) return [];
+  /* A .docx is a ZIP container and word/document.xml is the text. Node has no
+     zip reader and zlib only does raw deflate, so this shells out rather than
+     adding a dependency to read one file in a build script. */
+  let doc: string;
+  try {
+    doc = execFileSync("unzip", ["-p", TELEPROMPTER, "word/document.xml"], {
+      encoding: "utf8",
+      maxBuffer: 32 * 1024 * 1024,
+    });
+  } catch {
+    console.log(`  (could not read ${TELEPROMPTER} — no film scripts)`);
+    return [];
+  }
+
+  const paragraphs = (doc.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? []).map((p) =>
+    (p.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g) ?? [])
+      .map((t) => t.replace(/<[^>]+>/g, ""))
+      .join("")
+      .trim()
+  );
+
+  const films: { deck: string; code: string | null; stage: string; text: string }[] = [];
+  let deck: string | null = null;
+  let code: string | null = null;
+  let stage: string | null = null;
+  let buf: string[] = [];
+
+  const flush = () => {
+    if (deck && stage && buf.length) {
+      films.push({ deck, code, stage, text: buf.join(" ") });
+    }
+    buf = [];
+  };
+
+  for (const line of paragraphs) {
+    const op = line.match(/^OP CODE\s*[—–-]\s*(.+?)\s*·\s*([A-Z]{2,4}-\d{2,3})/);
+    if (op) {
+      flush();
+      deck = op[1].trim();
+      code = op[2];
+      stage = null;
+      continue;
+    }
+    const film = line.match(/^FILM\s*\d+\s*·\s*(.+)$/);
+    if (film) {
+      flush();
+      /* "SET UP THE MPI" in the document; "MPI Setup" is the canonical
+         vocabulary Ryan ruled. Title-cased here and mapped by the matcher. */
+      stage = film[1].trim();
+      continue;
+    }
+    if (/^OP CODE DECKS$|^FOUNDATIONAL MODULES$/.test(line)) {
+      flush();
+      deck = null;
+      stage = null;
+      continue;
+    }
+    if (stage && line.length > 40) buf.push(line);
+  }
+  flush();
+  return films;
+}
+
 async function main() {
   const inventory = await loadInventory();
   await fillCodesFromCatalog(inventory);
@@ -283,6 +371,37 @@ async function main() {
     .sort((a, b) => a.deck.localeCompare(b.deck));
 
   writeFileSync(OUT, `${JSON.stringify({ source: SOURCE, decks: out }, null, 1)}\n`);
+
+  /* ---- The whisper prompt ------------------------------------------------
+     An initial_prompt biases decoding toward words it contains, and the base
+     model needed it: "pre-writes" came back as "pre-rights", "pre-orites" and
+     "pre-ride", "Arctic Blast" as "Arctic Glass", "engine air filter" as
+     "engineer filters", "cowl" as "cow". Every one of those is a word the
+     matcher reads.
+
+     DECK NAMES FIRST, because they are what identifies a film — the matcher's
+     strongest signal is the service being named in the opening, so those are
+     the words that must survive transcription intact.
+
+     WHISPER TRUNCATES THE PROMPT at 224 tokens and silently drops the tail, so
+     this is deliberately short and ordered by value rather than being every
+     term in the corpus. */
+  const spoken = [
+    ...out.map((d) => d.deck),
+    ...out.filter((d) => d.code).map((d) => d.code as string),
+  ];
+  const prompt =
+    `EDIAGD service advisor training with Mitch Hardt. Aloha and mahalo. ` +
+    `Decks: ${spoken.slice(0, out.length).join(", ")}. ` +
+    `Terms: pre-write, pre-writes, multi-point inspection, MPI, kiosk, walk-around, ` +
+    `BTM based on time and mileage, green yellow red, Hector, cowl, airbox, ` +
+    `throttle body, op code, piggyback, deferred, declined, Swell, Paddle Back Out.`;
+  writeFileSync(PROMPT_OUT, `${prompt}\n`);
+
+  const films = loadTeleprompterFilms();
+  writeFileSync(FILMS_OUT, `${JSON.stringify({ source: TELEPROMPTER, films }, null, 1)}\n`);
+  console.log(`  ${films.length} teleprompter film scripts -> ${FILMS_OUT}`);
+  console.log(`  whisper prompt -> ${PROMPT_OUT} (${prompt.split(/\s+/).length} words)`);
 
   console.log(`\n  ${out.length} decks -> ${OUT}\n`);
   for (const d of out.slice(0, 40)) {

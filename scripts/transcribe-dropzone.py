@@ -47,7 +47,8 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-MODEL = "base.en"  # one clear scripted speaker; small buys nothing here
+DEFAULT_MODEL = "small.en"
+PROMPT_FILE = "data/whisper-prompt.txt"
 
 
 def extract_audio(src: str, dest: str) -> float:
@@ -70,6 +71,9 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0, help="stop after N new files")
     ap.add_argument("--workers", type=int, default=6,
                     help="concurrent Drive pulls; transcription stays serial")
+    ap.add_argument("--model", default=DEFAULT_MODEL, help="faster-whisper model")
+    ap.add_argument("--audio-cache", default="",
+                    help="keep extracted wavs here so a model change costs no re-pull")
     args = ap.parse_args()
 
     if not os.path.isdir(args.dir):
@@ -90,12 +94,37 @@ def main() -> int:
 
     # Loaded once. The model costs a few seconds to construct and nothing to reuse.
     from faster_whisper import WhisperModel
-    model = WhisperModel(MODEL, device="cpu", compute_type="int8")
+    model = WhisperModel(args.model, device="cpu", compute_type="int8")
+
+    """
+    THE VOCABULARY, HANDED TO THE DECODER.
+
+    base.en heard "pre-writes" as "pre-rights", "pre-orites" and "pre-ride",
+    "Arctic Blast" as "Arctic Glass", "engine air filter" as "engineer filters"
+    and "cowl" as "cow". Every one of those is a word the matcher reads, and the
+    deck NAME is its strongest signal — so a mangled name is a film that cannot
+    be identified.
+
+    initial_prompt biases decoding toward the words it contains. The file is
+    generated from the deck map and the op-code catalog by
+    scripts/build-deck-vocabulary.ts, so a new deck brings its own spelling
+    rather than needing this list edited.
+    """
+    prompt = None
+    if os.path.exists(PROMPT_FILE):
+        with open(PROMPT_FILE) as fh:
+            prompt = fh.read().strip()
+        print(f"  vocabulary prompt: {len(prompt.split())} words", flush=True)
+    else:
+        print(f"  no {PROMPT_FILE} — running without a vocabulary prompt", flush=True)
 
     todo = [n for n in files if n not in done]
     if args.limit:
         todo = todo[: args.limit]
-    print(f"  {len(todo)} to do, {args.workers} concurrent pulls\n", flush=True)
+    print(f"  {len(todo)} to do, {args.workers} concurrent pulls, model {args.model}\n",
+          flush=True)
+    if args.audio_cache:
+        os.makedirs(args.audio_cache, exist_ok=True)
 
     # One transcription at a time; one writer at a time.
     asr_lock = threading.Lock()
@@ -106,7 +135,7 @@ def main() -> int:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
         with open(args.out, "w") as fh:
             json.dump(
-                {"source": args.dir, "model": MODEL,
+                {"source": args.dir, "model": args.model,
                  "files": [done[k] for k in sorted(done)]},
                 fh, indent=1,
             )
@@ -115,14 +144,28 @@ def main() -> int:
         src = os.path.join(args.dir, name)
         size_mb = os.path.getsize(src) / 1e6
         wav = None
+        cached = bool(args.audio_cache)
         try:
-            fd, wav = tempfile.mkstemp(suffix=".wav")
-            os.close(fd)
-            pull = extract_audio(src, wav)
+            if cached:
+                """
+                CACHED AUDIO, BECAUSE THE PULL IS THE WHOLE COST.
+
+                187 seconds to stream a 954MB master out of Drive; 30 to
+                transcribe it. Changing the model should not mean re-reading
+                33GB — 48 wavs are about 150MB and make the next run instant.
+                """
+                wav = os.path.join(args.audio_cache, name + ".wav")
+                pull = 0.0 if os.path.exists(wav) else extract_audio(src, wav)
+            else:
+                fd, wav = tempfile.mkstemp(suffix=".wav")
+                os.close(fd)
+                pull = extract_audio(src, wav)
 
             t0 = time.time()
             with asr_lock:
-                segments, info = model.transcribe(wav, beam_size=1, vad_filter=True)
+                segments, info = model.transcribe(
+                    wav, beam_size=1, vad_filter=True, initial_prompt=prompt
+                )
                 text = " ".join(s.text.strip() for s in segments).strip()
             asr = time.time() - t0
 
@@ -133,7 +176,8 @@ def main() -> int:
             print(f"  {name}  FAILED: {exc}", file=sys.stderr, flush=True)
         finally:
             # The video bytes were never copied; this is the 3MB of audio.
-            if wav and os.path.exists(wav):
+            # Kept only when a cache was asked for.
+            if wav and not cached and os.path.exists(wav):
                 os.unlink(wav)
 
         with io_lock:

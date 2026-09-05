@@ -1,27 +1,36 @@
 {
  "folder": "(Drop Zone)",
- "takes": [],
+ "takes": [
+  {
+   "a": "IMG_2165.MOV",
+   "b": "IMG_2179.MOV",
+   "similarity": 0.824,
+   "suggestedKeeper": "IMG_2179.MOV"
+  }
+ ],
  "files": [
   {
    "file": "IMG_2161.MOV",
    "driveTitle": "IMG_2161.MOV",
-   "action": "hold",
-   "renameTo": null,
-   "reason": "hold — no op code for this deck",
+   "action": "rename",
+   "renameTo": "FND — Pre-Write — v1.MOV",
+   "reason": null,
    "deck": "Pre-Write",
-   "stage": "Pre-Write",
+   "stage": null,
+   "title": "Pre-Write",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 303.1,
    "words": 780,
    "evidence": [
-    "\"Power Steering Fluid Exchange\" named in the opening",
-    "power",
-    "gives",
-    "opens with \"pre-write\"",
-    "pre-write",
-    "packet"
+    "\"Pre-Write\" named in the opening",
+    "loyalty",
+    "completed",
+    "current",
+    "final",
+    "attention"
    ],
-   "opening": "Aloha! Today we're talking pre-writes. If you're doing everything you can to be successful, then you're building a pre-write packet for every customer on tomorrow's schedule. Now, some folks called pr…"
+   "opening": "Aloha. Today we're talking pre-writes. If you're doing everything you can to be successful, then you're building a pre-write packet for every customer on tomorrow's schedule. Now, some folks called pr…"
   },
   {
    "file": "IMG_2162.MOV",
@@ -31,18 +40,20 @@
    "reason": null,
    "deck": "Engine Air Filter",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 328.7,
-   "words": 939,
+   "words": 947,
    "evidence": [
     "\"Engine Air Filter\" named in the opening",
+    "30-second",
     "throttle",
     "body",
-    "opens with \"walk around\"",
-    "opens with \"on the drive\"",
-    "walk around"
+    "opens with \"walk-around\"",
+    "opens with \"on the drive\""
    ],
-   "opening": "Aloha! Let's sell some engineer filters right on the drive with a two-minute walk around. Now, walk around or a brief safety inspection or your Ford or Toyota or whatever your brand check-in process. …"
+   "opening": "Aloha. Let's sell some engine air filters right on the drive with a two minute walk-around. Now the walk-around or a brief safety inspection or your Ford or Toyota or whatever your brand check-in proc…"
   },
   {
    "file": "IMG_2164.MOV",
@@ -52,9 +63,11 @@
    "reason": null,
    "deck": "Engine Air Filter",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 267.2,
-   "words": 749,
+   "words": 751,
    "evidence": [
     "\"Engine Air Filter\" named in the opening",
     "familiar",
@@ -63,16 +76,18 @@
     "opens with \"at the kiosk\"",
     "kiosk"
    ],
-   "opening": "Aloha! Engineer filter sells at the kiosk. Now watch, whether you do pre-orites or not, whether you pop that hood or not, there's still ample opportunity to offer someone an engineer filter. And this …"
+   "opening": "Aloha, Engine Air Filter sells at the kiosk. Now watch, whether you do pre-writes or not, whether you pop that hood or not, there's still ample opportunity to offer someone an Engine Air Filter. And t…"
   },
   {
    "file": "IMG_2165.MOV",
    "driveTitle": "IMG_2165.MOV",
-   "action": "rename",
-   "renameTo": "EAF-001 — Set Up the MPI — v1.MOV",
-   "reason": null,
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — take, suggested spare",
    "deck": "Engine Air Filter",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 105.2,
    "words": 307,
@@ -83,7 +98,7 @@
     "let's set up",
     "multi-point"
    ],
-   "opening": "Aloha! Let's set up that engine air filter multi-point inspection. So say you don't do the pre-writes. You didn't pop the hood. You didn't have a menu or an interval chart to help you offer this engin…"
+   "opening": "Aloha! Let's set up that engine air filter multi-point inspection. So say you don't do the pre-writes, you didn't pop the hood, you didn't have a menu or an interval chart to help you offer this engin…"
   },
   {
    "file": "IMG_2166.MOV",
@@ -93,35 +108,43 @@
    "reason": null,
    "deck": "Engine Air Filter",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 169.7,
-   "words": 511,
+   "words": 513,
    "evidence": [
     "\"Engine Air Filter\" named in the opening",
     "familiar",
     "throttle",
     "body",
-    "focus",
-    "sing"
+    "sing",
+    "opens with \"after the multi-point\""
    ],
-   "opening": "Aloha! Let's sell some engineer filters after the multi-point inspection. So, okay, you didn't do pre-writes. You didn't pop the hood. You didn't have a menu. You didn't have kiosk. But you did set up…"
+   "opening": "Aloha, let's sell some Engine Air Filters after the multi-point inspection. So okay, you didn't do pre-writes, you didn't pop the hood, you didn't have a menu, you didn't have kiosk, but you did set u…"
   },
   {
    "file": "IMG_2167.MOV",
    "driveTitle": "IMG_2167.MOV",
-   "action": "hold",
-   "renameTo": null,
-   "reason": "hold — no op code for this deck",
+   "action": "rename",
+   "renameTo": "FND — Wrap-Up — v1.MOV",
+   "reason": null,
    "deck": "Wrap-Up",
-   "stage": "Wrap-Up",
+   "stage": null,
+   "title": "Wrap-Up",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 171.4,
-   "words": 446,
+   "words": 447,
    "evidence": [
-    "tie",
-    "opens with \"wrap\""
+    "\"Wrap-Up\" named in the opening",
+    "voices",
+    "bdc",
+    "fourth",
+    "authority",
+    "stack"
    ],
-   "opening": "Aloha! Let's put a wrap on our process here. Let's tie this together. However you sold it today, one of your four voices did the selling. It isn't always your voice. Let's go and review this. First, t…"
+   "opening": "Aloha. Let's put a wrap on our process here. Let's tie this together. However you sold it today, one of your four voices did the selling. It isn't always your voice. Let's go and review this. First, t…"
   },
   {
    "file": "IMG_2169.MOV",
@@ -131,9 +154,11 @@
    "reason": null,
    "deck": "Brake Fluid Exchange",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 216.4,
-   "words": 598,
+   "words": 604,
    "evidence": [
     "\"Brake Fluid Exchange\" named in the opening",
     "moisture",
@@ -142,7 +167,7 @@
     "burned",
     "suvs"
    ],
-   "opening": "Aloha. Let's offer that brake fluid exchange right there on the drive. And it's one of the easiest sales on the drive that nobody makes because advisors aren't thinking there's anything to show. And t…"
+   "opening": "Aloha. Let's offer that brake fluid exchange right there on the drive. And it's one of this easiest sales on the drive that nobody makes because advisors aren't thinking there's anything to show. And …"
   },
   {
    "file": "IMG_2172.MOV",
@@ -152,9 +177,11 @@
    "reason": null,
    "deck": "Brake Fluid Exchange",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 209.5,
-   "words": 601,
+   "words": 603,
    "evidence": [
     "\"Brake Fluid Exchange\" named in the opening",
     "moisture",
@@ -163,16 +190,18 @@
     "courtesy",
     "highway"
    ],
-   "opening": "Aloha! Let's offer some brake fluid at the kiosk. Remember, maybe the pre-writes didn't get done. Maybe you didn't get outside and pop the hood or do a good walk around. But that doesn't matter becaus…"
+   "opening": "Aloha, let's offer some brake fluid at the kiosk. Remember, maybe the pre-writes didn't get done. Maybe you didn't get outside and pop the hood or do a good walk around, but that doesn't matter becaus…"
   },
   {
    "file": "IMG_2173 (1).MOV",
    "driveTitle": "IMG_2173.MOV",
    "action": "rename",
-   "renameTo": "BFF-012 — Set Up the MPI — v1.MOV",
+   "renameTo": "BFF-012 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "Brake Fluid Exchange",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 99.3,
    "words": 312,
@@ -184,28 +213,30 @@
     "let's set up",
     "set up that multi-point"
    ],
-   "opening": "Aloha! Let's set up that multi-point inspection. You want to pitch that 75k that includes that brake fluid exchange? Say again, you didn't do your pre-write. You haven't popped your hood. There was no…"
+   "opening": "Aloha. Let's set up that multi-point inspection. You want to pitch that 75K that includes that brake fluid exchange. Say again, you didn't do your pre-writes, you haven't popped your hood. There was n…"
   },
   {
    "file": "IMG_2174.MOV",
    "driveTitle": "IMG_2174.MOV",
-   "action": "rename",
-   "renameTo": "BFF-012 — MPI Selling — v1.MOV",
-   "reason": null,
-   "deck": "Brake Fluid Exchange",
-   "stage": "MPI Selling",
-   "confidence": "medium",
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — stage is ambiguous between MPI Setup and MPI Selling",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
    "seconds": 156.9,
-   "words": 461,
+   "words": 469,
    "evidence": [
     "\"Brake Fluid Exchange\" named in the opening",
     "moisture",
     "based",
-    "burned",
     "boiling",
-    "vapor"
+    "vapor",
+    "soft"
    ],
-   "opening": "Aloha! Now that brake fluid. You didn't do pre-writes, you didn't pop the hood, you didn't have a menu ready, you didn't get kiosk time, but you did set up that multi-point inspection well, and now we…"
+   "opening": "Aloha. Now that brake fluid. You didn't do pre-writes, you didn't pop the hood, you didn't have a menu ready, you didn't get chaos time, but you did set up that multi-point inspection well and now we'…"
   },
   {
    "file": "IMG_2176.MOV",
@@ -215,9 +246,11 @@
    "reason": null,
    "deck": "Coolant Exchange",
    "stage": "On the Drive",
-   "confidence": "medium",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
+   "confidence": "high",
    "seconds": 224.2,
-   "words": 605,
+   "words": 610,
    "evidence": [
     "\"Coolant Exchange\" named in the opening",
     "overflow",
@@ -226,7 +259,7 @@
     "acidic",
     "help"
    ],
-   "opening": "Aloha! Let's offer some cooling exchange on the drive. Now, our 30-second walk around turns into the two-minute one when we pop the hood. So we got the hood open. We're about to look at that overflow …"
+   "opening": "Aloha! Let's offer some Coolant Exchange on the drive. Now, our 30-second walk-around turns into the two-minute one when we pop the hood. So we got the hood open. We're about to look at that overflow …"
   },
   {
    "file": "IMG_2177.MOV",
@@ -236,9 +269,11 @@
    "reason": null,
    "deck": "Coolant Exchange",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 287.2,
-   "words": 759,
+   "words": 754,
    "evidence": [
     "\"Coolant Exchange\" named in the opening",
     "powertrain",
@@ -247,28 +282,30 @@
     "radiator",
     "cool"
    ],
-   "opening": "Aloha! Let's offer some coolant exchanges at the kiosk. Now, whether you do pre-writes or not, whether you pop that hood outside or spoke to them about a coolant exchange or not, there's still ample o…"
+   "opening": "Aloha, let's offer some Coolant Exchanges at the kiosk. Now, whether you do pre-writes or not, whether you pop that hood outside or spoke to them about a Coolant Exchange or not, there's still ample o…"
   },
   {
    "file": "IMG_2179.MOV",
    "driveTitle": "IMG_2179.MOV",
-   "action": "rename",
-   "renameTo": "CLF-010 — Set Up the MPI — v1.MOV",
-   "reason": null,
+   "action": "hold",
+   "renameTo": null,
+   "reason": "hold — take, suggested keeper",
    "deck": "Coolant Exchange",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 140.9,
-   "words": 420,
+   "words": 416,
    "evidence": [
     "\"Coolant Exchange\" named in the opening",
     "hoses",
     "opens with \"set that\"",
     "set that",
     "multi-point",
-    "green yellow"
+    "approve button"
    ],
-   "opening": "Aloha! Let's set that coolant exchange up by really teeing it up for your certified technician. So remember, say you didn't do pre-writes. Say you didn't go and pop the hood, you missed on a walk arou…"
+   "opening": "Aloha. Let's set that Coolant Exchange up by really teeing it up for your certified technician. So remember, say you didn't do pre-writes. Say you didn't go and pop the hood, you missed on a walk-arou…"
   },
   {
    "file": "IMG_2180.MOV",
@@ -278,9 +315,11 @@
    "reason": null,
    "deck": "Coolant Exchange",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 212,
-   "words": 632,
+   "words": 635,
    "evidence": [
     "\"Coolant Exchange\" named in the opening",
     "powertrain",
@@ -289,7 +328,7 @@
     "cooler",
     "acidic"
    ],
-   "opening": "Aloha. Let's offer that coolant exchange after the multi-point inspection. So remember, we didn't do pre-writes, we didn't pop the hood, we didn't have a menu, we didn't sell it at the kiosk, we set u…"
+   "opening": "Aloha. Let's offer that Coolant Exchange after the multi-point inspection. So remember, we didn't do pre-writes, we didn't pop the hood, we didn't have a menu, we didn't sell it at the kiosk. We set u…"
   },
   {
    "file": "IMG_2182.MOV",
@@ -299,9 +338,11 @@
    "reason": null,
    "deck": "Differential Fluid Exchange",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 244.5,
-   "words": 726,
+   "words": 731,
    "evidence": [
     "\"Differential Fluid Exchange\" named in the opening",
     "differential",
@@ -310,7 +351,7 @@
     "ball",
     "aggressive"
    ],
-   "opening": "Aloha! Let's offer that diff service right there on the drive. This one's different. And I want you to understand how before we try it. First, there's nothing you can show them. Differentials under th…"
+   "opening": "Aloha, let's offer that DIF service right there on the drive. This one's different. And I want you to understand how before we try it. First, there's nothing you can show them. Differential's under th…"
   },
   {
    "file": "IMG_2183.MOV",
@@ -320,30 +361,34 @@
    "reason": null,
    "deck": "Differential Fluid Exchange",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 307.2,
-   "words": 889,
+   "words": 896,
    "evidence": [
     "\"Differential Fluid Exchange\" named in the opening",
     "differential",
     "truck",
+    "axle",
     "gear",
-    "surprise",
-    "boat"
+    "surprise"
    ],
-   "opening": "Aloha! Let's offer that differential service at the kiosk. Now remember, whether you did pre-writes or pre-selling when you set your reservation or not, whether you did your walk around or look at tha…"
+   "opening": "Aloha! Let's offer that differential service at the kiosk. Now remember, whether you did pre-writes or pre-selling when you set your reservation or not, whether you did your walk-around or look at tha…"
   },
   {
    "file": "IMG_2185.MOV",
    "driveTitle": "IMG_2185.MOV",
    "action": "rename",
-   "renameTo": "DFF-014 — Set Up the MPI — v1.MOV",
+   "renameTo": "DFF-014 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "Differential Fluid Exchange",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 108.8,
-   "words": 340,
+   "words": 344,
    "evidence": [
     "\"Differential Fluid Exchange\" named in the opening",
     "differential",
@@ -362,9 +407,11 @@
    "reason": null,
    "deck": "Differential Fluid Exchange",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 211,
-   "words": 638,
+   "words": 640,
    "evidence": [
     "\"Differential Fluid Exchange\" named in the opening",
     "differential",
@@ -373,7 +420,7 @@
     "underside",
     "hitch"
    ],
-   "opening": "Aloha! Let's offer that differential service after the multi-point inspection. Alright, you didn't get your pre-writes, you didn't pre-sell it on the telephone, neither did your BDC. You didn't get to…"
+   "opening": "Aloha! Let's offer that differential service after the multi-point inspection. All right, you didn't get your pre-writes, you didn't pre-sell it on the telephone, neither did your BDC. You didn't get …"
   },
   {
    "file": "IMG_2188.MOV",
@@ -383,9 +430,11 @@
    "reason": null,
    "deck": "Power Steering Fluid Exchange",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 274.8,
-   "words": 797,
+   "words": 803,
    "evidence": [
     "\"Power Steering Fluid Exchange\" named in the opening",
     "power",
@@ -394,7 +443,7 @@
     "degraded",
     "safe"
    ],
-   "opening": "Aloha! Let's offer a power steering fluid exchange right on the drive. Before anything else on this one, check whether or not the vehicle has it. A lot of modern cars use electronic power steering whe…"
+   "opening": "Aloha! Let's offer a Power Steering Fluid Exchange right on the drive. Before anything else on this one, check whether or not the vehicle has it. A lot of modern cars use electronic power steering whe…"
   },
   {
    "file": "IMG_2190.MOV",
@@ -404,9 +453,11 @@
    "reason": null,
    "deck": "Power Steering Fluid Exchange",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 221.8,
-   "words": 603,
+   "words": 598,
    "evidence": [
     "\"Power Steering Fluid Exchange\" named in the opening",
     "power",
@@ -415,19 +466,21 @@
     "rack",
     "safe"
    ],
-   "opening": "Aloha! Now let's offer that power steering fluid exchange at the kiosk. Remember, whether you did pre-writes or you pre-sold it or not, it's okay if you didn't. Whether you pop that hood or got them t…"
+   "opening": "Aloha! Now let's offer that Power Steering Fluid Exchange at the kiosk. Remember, whether you did pre-writes, or you pre-sold it or not, it's okay if you didn't. Whether you popped that hood or got th…"
   },
   {
    "file": "IMG_2193.MOV",
    "driveTitle": "IMG_2193.MOV",
    "action": "rename",
-   "renameTo": "PSF-013 — Set Up the MPI — v1.MOV",
+   "renameTo": "PSF-013 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "Power Steering Fluid Exchange",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 136.9,
-   "words": 408,
+   "words": 413,
    "evidence": [
     "\"Power Steering Fluid Exchange\" named in the opening",
     "power",
@@ -436,7 +489,7 @@
     "opens with \"set up that\"",
     "opens with \"let's set up\""
    ],
-   "opening": "Aloha! Let's set up that multi-point inspection for a power steering fluid exchange and Hector the best way we can. Remember, say you didn't offer a power steering during pre-ride, it's okay. Say you …"
+   "opening": "Aloha! Let's set up that multi-point inspection for a power steering fluid exchange and Hector the best way we can. Remember, say you didn't offer a power steering during pre-write, it's okay. Say you…"
   },
   {
    "file": "IMG_2194.MOV",
@@ -446,6 +499,8 @@
    "reason": null,
    "deck": "Power Steering Fluid Exchange",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 178.9,
    "words": 510,
@@ -457,7 +512,7 @@
     "park",
     "harder"
    ],
-   "opening": "Aloha, it's time to offer that power steering fluid exchange after your multi-point inspection by your certified technician Hector. Now remember, you didn't do pre-rights, you didn't turn the wheels, …"
+   "opening": "Aloha, it's time to offer that Power Steering Fluid Exchange after your multi-point inspection by your certified technician Hector. Now remember, you didn't do pre-writes, you didn't turn the wheels, …"
   },
   {
    "file": "IMG_2195.MOV",
@@ -467,9 +522,11 @@
    "reason": null,
    "deck": "Transmission Fluid Exchange",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 308,
-   "words": 794,
+   "words": 796,
    "evidence": [
     "\"Transmission Fluid Exchange\" named in the opening",
     "transmission",
@@ -488,9 +545,11 @@
    "reason": null,
    "deck": "Transmission Fluid Exchange",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 244.7,
-   "words": 651,
+   "words": 653,
    "evidence": [
     "\"Transmission Fluid Exchange\" named in the opening",
     "transmission",
@@ -505,10 +564,12 @@
    "file": "IMG_2200.MOV",
    "driveTitle": "IMG_2200.MOV",
    "action": "rename",
-   "renameTo": "TRF-011 — Set Up the MPI — v1.MOV",
+   "renameTo": "TRF-011 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "Transmission Fluid Exchange",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 143.3,
    "words": 422,
@@ -530,9 +591,11 @@
    "reason": null,
    "deck": "Transmission Fluid Exchange",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 211.9,
-   "words": 559,
+   "words": 561,
    "evidence": [
     "\"Transmission Fluid Exchange\" named in the opening",
     "transmission",
@@ -551,9 +614,11 @@
    "reason": null,
    "deck": "Cabin Air Filter",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 298.3,
-   "words": 798,
+   "words": 799,
    "evidence": [
     "\"Cabin Air Filter\" named in the opening",
     "evaporator",
@@ -562,7 +627,7 @@
     "cowl",
     "pine"
    ],
-   "opening": "Aloha! Let's offer a cabin air filter on the drive. Remember, step five of your walk around is hit the windshield washer fluid. Most advisors think that step is about wipers and washer fluid only. Whi…"
+   "opening": "Aloha! Let's offer a cabin air filter on the drive. Remember, step five of your walk-around is hit the windshield washer fluid. Most advisors think that step is about wipers and washer fluid only. And…"
   },
   {
    "file": "IMG_2205.MOV",
@@ -572,9 +637,11 @@
    "reason": null,
    "deck": "Cabin Air Filter",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 314.4,
-   "words": 799,
+   "words": 804,
    "evidence": [
     "\"Cabin Air Filter\" named in the opening",
     "evaporator",
@@ -583,28 +650,30 @@
     "annual",
     "odors"
    ],
-   "opening": "Aloha! Let's offer that cabin air filter at the kiosk. Now remember, whether you do pre-rides or pre-sales or not, whether you looked at the cowl or not during a walk around, there's still ample oppor…"
+   "opening": "Aloha! Let's offer that cabin air filter at the kiosk. Now remember, whether you do pre-writes or pre-sells or not, whether you looked at the cowl or not during a walk-around, there is still ample opp…"
   },
   {
    "file": "IMG_2206.MOV",
    "driveTitle": "IMG_2206.MOV",
    "action": "rename",
-   "renameTo": "CAF-002 — Set Up the MPI — v1.MOV",
+   "renameTo": "CAF-002 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "Cabin Air Filter",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 157.9,
-   "words": 454,
+   "words": 468,
    "evidence": [
     "\"Cabin Air Filter\" named in the opening",
     "cowl",
+    "pine",
     "needles",
     "seed",
-    "photographs",
-    "opens with \"set up that\""
+    "photographs"
    ],
-   "opening": "Aloha! Let's set up that cabin air filter for a good multi-point inspection. Remember, say you didn't do the pre-writes, it's okay. Look at the cowl when you were on the walk-around. It's okay. No men…"
+   "opening": "Aloha! Let's set up that cabin air filter for a good multi-point inspection. Remember, say you didn't do the pre-writes. It's okay. Didn't look at the cowl when you were on the walk-around. It's okay.…"
   },
   {
    "file": "IMG_2208.MOV",
@@ -614,18 +683,20 @@
    "reason": null,
    "deck": "Cabin Air Filter",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 227.9,
-   "words": 666,
+   "words": 665,
    "evidence": [
     "\"Cabin Air Filter\" named in the opening",
     "evaporator",
     "airflow",
     "smells",
-    "pine",
-    "needles"
+    "cowl",
+    "pine"
    ],
-   "opening": "Aloha! Let's offer that cabin air filter after our multi-point inspection. Okay, you didn't do pre-writes. It's okay. You never looked at the cow. It's okay. You didn't have a menu, no kiosk time. So …"
+   "opening": "Aloha, let's offer that cabin air filter after our multi-point inspection. Okay, you didn't do pre-writes. It's okay. You never looked at the cowl. It's okay. You didn't have a menu, no kiosk time. It…"
   },
   {
    "file": "IMG_2209.MOV",
@@ -635,9 +706,11 @@
    "reason": null,
    "deck": "A/C Odor Treatment",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 223.4,
-   "words": 591,
+   "words": 593,
    "evidence": [
     "\"A/C Odor Treatment\" named in the opening",
     "lane",
@@ -646,7 +719,7 @@
     "statement",
     "observation"
    ],
-   "opening": "Aloha! Let's offer that AC odor treatment right there on the drive. Quickly, guys, this one's built for you. Most of what we coach assumes a drop-off, a full walk-around, and a customer who leaves. Yo…"
+   "opening": "Aloha, let's offer that AC odor treatment right there on the drive. Quickly, guys, this one's built for you. Most of what we coach assumes a drop-off, a full walk-around, and a customer who leaves. Yo…"
   },
   {
    "file": "IMG_2210.MOV",
@@ -656,30 +729,34 @@
    "reason": null,
    "deck": "A/C Odor Treatment",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "medium",
    "seconds": 273.3,
    "words": 730,
    "evidence": [
     "\"A/C Odor Treatment\" named in the opening",
+    "lane",
     "odor",
     "bring",
     "statement",
-    "presentation",
-    "invites"
+    "presentation"
    ],
-   "opening": "Aloha! Let's offer that AC treatment at the kiosk. Now, a quidwine kiosk is a different animal, and I want you to understand what I mean by that. In a drop-off shop, the kiosk is where the customer ha…"
+   "opening": "Aloha! Let's offer that AC treatment at the kiosk. Now, a quick lane kiosk is a different animal, and I want you to understand what I mean by that. In a drop-off shop, the kiosk is where the customer …"
   },
   {
    "file": "IMG_2211.MOV",
    "driveTitle": "IMG_2211.MOV",
    "action": "rename",
-   "renameTo": "ACO-055 — Set Up the MPI — v1.MOV",
+   "renameTo": "ACO-055 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "A/C Odor Treatment",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 264.4,
-   "words": 661,
+   "words": 665,
    "evidence": [
     "\"A/C Odor Treatment\" named in the opening",
     "enjoying",
@@ -688,7 +765,7 @@
     "relaxing",
     "anywhere"
    ],
-   "opening": "Aloha! Let's set up that multi-point inspection for an AC treatment. Everything I've taught about this stage assumes the customer leaves. Before you take off, here's some recommendations. Before you l…"
+   "opening": "Aloha, let's set up that multi-point inspection for an AC treatment. Everything I've taught about this stage assumes the customer leaves. Before you take off, here's some recommendations. Before you l…"
   },
   {
    "file": "IMG_2238.MOV",
@@ -698,9 +775,11 @@
    "reason": null,
    "deck": "A/C Recharge",
    "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 313.9,
-   "words": 849,
+   "words": 855,
    "evidence": [
     "\"A/C Recharge\" named in the opening",
     "recharge",
@@ -709,19 +788,21 @@
     "refrigerant",
     "memory"
    ],
-   "opening": "Aloha! Let's talk diagnostics through the lens of an AC recharge. Now this video is going to be two parts. Before we get to selling an AC or a diagon on the drive, let's talk about that phone call. If…"
+   "opening": "Aloha. Let's talk diagnostics through the lens of an AC recharge. Now this video is going to be two parts. Before we get to selling an AC or Diag on the drive, let's talk about that phone call. If you…"
   },
   {
    "file": "IMG_2240.MOV",
    "driveTitle": "IMG_2240.MOV",
-   "action": "hold",
-   "renameTo": null,
-   "reason": "hold — no stage language matched",
-   "deck": null,
-   "stage": null,
-   "confidence": "none",
+   "action": "rename",
+   "renameTo": "ACR-047 — Part 2 — v1.MOV",
+   "reason": null,
+   "deck": "A/C Recharge",
+   "stage": "Part 2",
+   "title": "Part 2",
+   "identifiedBy": "declared",
+   "confidence": "high",
    "seconds": 178.5,
-   "words": 411,
+   "words": 414,
    "evidence": [
     "\"A/C Recharge\" named in the opening",
     "recharge",
@@ -730,28 +811,30 @@
     "deposit",
     "federal"
    ],
-   "opening": "Aloha! We're talking diagnostic fees through the lens of an AC recharge customer. So, in part one, we covered everything you do before you say a number. Now, let's talk about the number you actually d…"
+   "opening": "Aloha. We're talking diagnostic fees through the lens of an AC recharge customer. So, in part one, we covered everything you do before you say a number. Now, let's talk about the number you actually d…"
   },
   {
    "file": "IMG_2241.MOV",
    "driveTitle": "IMG_2241.MOV",
    "action": "hold",
    "renameTo": null,
-   "reason": "hold — low confidence",
-   "deck": "A/C Recharge",
-   "stage": "Set Up the MPI",
-   "confidence": "low",
+   "reason": "hold — speaks to Ryan about an edit and says it is meant as part three — held until somebody says which film it joins",
+   "deck": null,
+   "stage": null,
+   "title": null,
+   "identifiedBy": null,
+   "confidence": "none",
    "seconds": 131.1,
-   "words": 347,
+   "words": 349,
    "evidence": [
-    "\"A/C Recharge\" named in the opening",
-    "recharge",
-    "fee",
-    "refrigerant",
-    "recommendations",
-    "guesses"
+    "\\bso,? ryan\\b",
+    "\\bryan,? (this|i|we|can|could|let)\\b",
+    "\\bthis is an edit\\b",
+    "\\bwe need to (take out|cut|remove)\\b",
+    "\\bthe teleprompter (stopped|thought|died|froze)\\b",
+    "\\bput this as part\\b"
    ],
-   "opening": "So Ryan, this is an edit. I'm gonna put this as part three. We need to take out that AC recharge where I said mahalo the teleprompter thought so What we don't want to do is sell other things right now…"
+   "opening": "So Ryan, this is an edit. I'm going to put this as part three. We need to take out that AC recharge where I said mahalo, the teleprompter stopped. So what we don't want to do is sell other things righ…"
   },
   {
    "file": "IMG_2242.MOV",
@@ -761,18 +844,20 @@
    "reason": null,
    "deck": "A/C Recharge",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 317.7,
    "words": 892,
    "evidence": [
     "\"A/C Recharge\" named in the opening",
     "recharge",
+    "fee",
     "suspicion",
     "recommendations",
-    "sealed",
-    "worried"
+    "sealed"
    ],
-   "opening": "Aloha! Let's talk Diag-fi and AC recharge at the kiosk. Now kiosk on this upcode is different from many of the other ones that you may have done. Every other time you're the one bringing something up,…"
+   "opening": "Aloha! Let's talk Diag Fee and AC Recharge at the kiosk. Now, kiosk on this op code is different from many of the other ones that you may have done. Every other time, you're the one bringing something…"
   },
   {
    "file": "IMG_2244.MOV",
@@ -782,9 +867,11 @@
    "reason": null,
    "deck": "A/C Recharge",
    "stage": "MPI Selling",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 318.7,
-   "words": 861,
+   "words": 860,
    "evidence": [
     "\"A/C Recharge\" named in the opening",
     "recharge",
@@ -793,84 +880,92 @@
     "topping",
     "refrigerant"
    ],
-   "opening": "Aloha! Let's go over that diag fee through the lens of the AC recharge after the multi-point inspection. Because now we got answers and the order of this conversation matters here a little more than o…"
+   "opening": "Aloha! Let's go over that Diag Fee through the lens of the AC Recharge after the multi-point inspection. Because now we got answers and the order of this conversation matters here a little more than o…"
   },
   {
    "file": "IMG_2246.MOV",
    "driveTitle": "IMG_2246.MOV",
-   "action": "hold",
-   "renameTo": null,
-   "reason": "hold — no stage language matched",
-   "deck": null,
+   "action": "rename",
+   "renameTo": "FND — Sing It — v1.MOV",
+   "reason": null,
+   "deck": "Sing It",
    "stage": null,
-   "confidence": "none",
+   "title": "Sing It",
+   "identifiedBy": "declared",
+   "confidence": "medium",
    "seconds": 205.4,
-   "words": 532,
+   "words": 536,
    "evidence": [
-    "sing"
+    "\"Sing It\" named in the opening",
+    "sing",
+    "gusto",
+    "delivery",
+    "dies",
+    "offered"
    ],
-   "opening": "Aloha! Sing it. I'm gonna hand you a lot of word tracks. And somewhere around the third or fourth one, you're gonna start to think, this doesn't sound like me. Good, it's shouldn't. At least not yet. …"
+   "opening": "Aloha. Sing it. I'm going to hand you a lot of word tracks and somewhere around the third or fourth one, you're going to start to think, this doesn't sound like me. Good. It shouldn't. At least not ye…"
   },
   {
    "file": "IMG_2247.MOV",
    "driveTitle": "IMG_2247.MOV",
    "action": "rename",
-   "renameTo": "TRO-022 — On the Drive — v1.MOV",
+   "renameTo": "FND — The Big Ticket Visit — v1.MOV",
    "reason": null,
-   "deck": "Tire Maintenance",
-   "stage": "On the Drive",
-   "confidence": "medium",
+   "deck": "The Big Ticket Visit",
+   "stage": null,
+   "title": "The Big Ticket Visit",
+   "identifiedBy": "declared",
+   "confidence": "high",
    "seconds": 249.4,
-   "words": 668,
+   "words": 678,
    "evidence": [
-    "\"Tire Maintenance\" named in the opening",
-    "suspension",
+    "\"The Big Ticket Visit\" named in the opening",
+    "battery",
     "walk around",
     "on the drive",
     "pop the hood"
    ],
-   "opening": "Aloha! Let's talk big ticket items. Now, just like the diagnostic one, we're gonna do this in two parts. Some visits aren't maintenance. A customer comes in with a suspension concern, a knock in the e…"
+   "opening": "Aloha! Let's talk big ticket items. Now, just like the diagnostic one, we're going to do this in two parts. Some visits aren't maintenance. A customer comes in with a suspension concern, a knock in th…"
   },
   {
    "file": "IMG_2249.MOV",
    "driveTitle": "IMG_2249.MOV",
-   "action": "hold",
-   "renameTo": null,
-   "reason": "hold — no op code for this deck",
-   "deck": "Pre-Write",
-   "stage": "Pre-Write",
-   "confidence": "high",
+   "action": "rename",
+   "renameTo": "FND — The Big Ticket Visit, Part 2 — v1.MOV",
+   "reason": null,
+   "deck": "The Big Ticket Visit",
+   "stage": "Part 2",
+   "title": "The Big Ticket Visit, Part 2",
+   "identifiedBy": "ruled",
+   "confidence": "medium",
    "seconds": 210.1,
-   "words": 523,
+   "words": 517,
    "evidence": [
-    "\"Tire Repair\" named in the opening",
-    "opens with \"pre-write\"",
-    "pre-write",
-    "packet",
-    "deferred"
+    "\"Pre-Write\" named in the opening",
+    "opens with \"part one, we covered\"",
+    "opens with \"in part one\"",
+    "in part one",
+    "part one, we covered"
    ],
    "opening": "Aloha! Let's talk about what we're going to do after the multi-point inspection when we have that big ticket item. In part one, we covered what still happens on a big repair day. The pre-write, the wa…"
   },
   {
    "file": "IMG_2250.MOV",
    "driveTitle": "IMG_2250.MOV",
-   "action": "hold",
-   "renameTo": null,
-   "reason": "hold — stage is ambiguous between On the Drive and MPI Selling",
-   "deck": null,
-   "stage": null,
-   "confidence": "none",
+   "action": "rename",
+   "renameTo": "ABT-054 — On the Drive — v1.MOV",
+   "reason": null,
+   "deck": "ARCTIC BLAST",
+   "stage": "On the Drive",
+   "title": "On the Drive",
+   "identifiedBy": "teleprompter",
+   "confidence": "high",
    "seconds": 238.4,
-   "words": 615,
+   "words": 623,
    "evidence": [
-    "\"Arctic Blast\" named in the opening",
-    "evaporator",
-    "arctic",
-    "blast",
-    "colder",
-    "maximized"
+    "matches the teleprompter script for ARCTIC BLAST · On the Drive (71% of its words)"
    ],
-   "opening": "Aloha, let's talk Arctic Blast. Now, quick lane, this one's easy, and it starts with a question your customer has probably never been asked in their life. Have you ever had your AC maximize? Watch wha…"
+   "opening": "Aloha, let's talk Arctic Blast. Now quick lane, this one's easy and it starts with a question your customers have probably never been asked in their life. Have you ever had your AC maximized? Watch wh…"
   },
   {
    "file": "IMG_2253.MOV",
@@ -880,30 +975,34 @@
    "reason": null,
    "deck": "Arctic Blast",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 70.3,
-   "words": 192,
+   "words": 188,
    "evidence": [
     "\"Arctic Blast\" named in the opening",
     "arctic",
+    "blast",
     "colder",
     "maximized",
-    "opens with \"at the kiosk\"",
-    "kiosk"
+    "opens with \"at the kiosk\""
    ],
-   "opening": "Aloha! Let's talk Arctic Glass at the kiosk. So, say you didn't do your pre-writes. It's okay. Say you didn't get your walk around, the customer met you at your kiosk. You can still ask that question.…"
+   "opening": "Aloha! Let's talk Arctic Blast at the kiosk. So, say you didn't do your pre-writes. It's okay. Say you didn't get your walk-around, the customer met you at your kiosk. You can still ask that question.…"
   },
   {
    "file": "IMG_2257.MOV",
    "driveTitle": "IMG_2257.MOV",
    "action": "rename",
-   "renameTo": "ABT-054 — Set Up the MPI — v1.MOV",
+   "renameTo": "ABT-054 — MPI Setup — v1.MOV",
    "reason": null,
    "deck": "Arctic Blast",
-   "stage": "Set Up the MPI",
+   "stage": "MPI Setup",
+   "title": "MPI Setup",
+   "identifiedBy": "declared",
    "confidence": "high",
    "seconds": 66.7,
-   "words": 191,
+   "words": 188,
    "evidence": [
     "\"Arctic Blast\" named in the opening",
     "arctic",
@@ -912,7 +1011,7 @@
     "set that",
     "multi-point"
    ],
-   "opening": "Aloha! Let's set that multi-point inspection up for Arctic Blast. Now, if you're a quick-leaning advisor, you probably didn't get your pre-write done, you probably didn't get a walk around, you may no…"
+   "opening": "Aloha! Let's set that multi-point inspection up for Arctic Blast. Now, if you're a quick-leaning advisor, you probably didn't get your pre-write done, you probably didn't get a walk-around, you may no…"
   },
   {
    "file": "IMG_2261.MOV",
@@ -920,20 +1019,17 @@
    "action": "rename",
    "renameTo": "WBF-018 — At the Kiosk — v1.MOV",
    "reason": null,
-   "deck": "Wiper Blades",
+   "deck": "WIPER BLADES",
    "stage": "At the Kiosk",
+   "title": "At the Kiosk",
+   "identifiedBy": "teleprompter",
    "confidence": "high",
    "seconds": 267.6,
-   "words": 712,
+   "words": 707,
    "evidence": [
-    "\"Wiper Blades\" named in the opening",
-    "blade",
-    "blades",
-    "wiper",
-    "glass",
-    "sun"
+    "matches the teleprompter script for WIPER BLADES · At the Kiosk (73% of its words)"
    ],
-   "opening": "Aloha! Let's offer some windshield wipers at the kiosk. Now remember, whether you did a pre-ride or not, whether you hit the windshield washer fluid or not, there's still ample opportunity to offer so…"
+   "opening": "Aloha! Let's offer some windshield wipers at the kiosk. Now remember, whether you did a pre-write or not, whether you hit the windshield washer fluid or not, there's still ample opportunity to offer s…"
   },
   {
    "file": "IMG_2265.MOV",
@@ -943,9 +1039,11 @@
    "reason": null,
    "deck": "Wiper Blades",
    "stage": "MPI Selling",
-   "confidence": "medium",
+   "title": "MPI Selling",
+   "identifiedBy": "declared",
+   "confidence": "high",
    "seconds": 232,
-   "words": 640,
+   "words": 639,
    "evidence": [
     "\"Wiper Blades\" named in the opening",
     "blade",
@@ -954,7 +1052,7 @@
     "windshield",
     "streaking"
    ],
-   "opening": "Aloha! Let's offer some wipers after the multi-point inspection. Okay, so say you didn't get your pre-rides done. It's okay. You never hit your windshield washer fluid on the drive. It's alright. You …"
+   "opening": "Aloha. Let's offer some wipers after the multi-point inspection. Okay, so say you didn't get your pre-writes done, it's okay. You never hit your windshield washer fluid on the drive, it's all right. Y…"
   },
   {
    "file": "IMG_2266.MOV",
@@ -962,20 +1060,17 @@
    "action": "rename",
    "renameTo": "SRP-038 — On the Drive — v1.MOV",
    "reason": null,
-   "deck": "Serpentine Belt",
+   "deck": "SERPENTINE BELT",
    "stage": "On the Drive",
-   "confidence": "medium",
+   "title": "On the Drive",
+   "identifiedBy": "teleprompter",
+   "confidence": "high",
    "seconds": 319.5,
-   "words": 817,
+   "words": 818,
    "evidence": [
-    "\"Serpentine Belt\" named in the opening",
-    "belts",
-    "tensioner",
-    "serpentine",
-    "accessories",
-    "slipping"
+    "matches the teleprompter script for SERPENTINE BELT · On the Drive (85% of its words)"
    ],
-   "opening": "Aloha! Let's offer that serpentine belt right there on the drive. Now, step 3 of your walk around and start the car. I want you listening and looking. That step is where this upcode lives. A serpentin…"
+   "opening": "Aloha. Let's offer that serpentine belt right there on the drive. Now, step three of your walk-around is start the car. I want you listening and looking. That step is where this op code lives. A serpe…"
   }
  ]
 }

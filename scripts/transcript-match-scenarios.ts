@@ -112,7 +112,7 @@ console.log("\n  EVERY STAGE IS RECOGNISED FROM ITS OWN SCRIPT\n");
 const stageOf = (t: string) => scoreStages(t)[0].value;
 check("the walk-around is On the Drive", stageOf(ON_THE_DRIVE), "On the Drive");
 check("the write-up desk is At the Kiosk", stageOf(AT_THE_KIOSK), "At the Kiosk");
-check("green/yellow/red is Set Up the MPI", stageOf(SET_UP_THE_MPI), "Set Up the MPI");
+check("green/yellow/red is MPI Setup", stageOf(SET_UP_THE_MPI), "MPI Setup");
 check("two greens before the red is MPI Selling", stageOf(MPI_SELLING), "MPI Selling");
 check("the packet is Pre-Write", stageOf(PRE_WRITE), "Pre-Write");
 check("saying no is Objections", stageOf(OBJECTIONS), "Objections");

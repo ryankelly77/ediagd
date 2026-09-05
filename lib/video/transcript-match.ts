@@ -31,16 +31,24 @@
 /**
  * The four films of an op-code deck, plus the foundational modules.
  *
- * Spelled exactly as the teleprompter spells them — "FILM 1 · ON THE DRIVE",
- * "FILM 4 · MPI SELLING" — and exactly as the Master Quiz Bank's `Film / Stage`
- * column spells them, because those two already agree and a third spelling here
- * would be the one that has to be reconciled later.
+ * CANONICAL VOCABULARY, WHICH IS NOT WHAT MITCH SAYS. Ryan's ruling: the third
+ * film is "MPI Setup". The teleprompter writes "FILM 3 · SET UP THE MPI" and the
+ * quiz bank writes "Set Up the MPI"; both are his phrasing and both still match,
+ * because the markers below read what he says while this list decides what gets
+ * written down. One name in the library, however many ways it is spoken.
+ *
+ * PART 1 / PART 2 ARE REAL FILM NAMES, not a fallback. The deck map's "4 films"
+ * is approximate — A/C Recharge splits a film in two and the quiz bank's
+ * `Film / Stage` column carries "Part 1" and "Part 2" as its own values. The
+ * quiz bank is the authority on a deck's internal structure.
  */
 export const STAGES = [
   "On the Drive",
   "At the Kiosk",
-  "Set Up the MPI",
+  "MPI Setup",
   "MPI Selling",
+  "Part 1",
+  "Part 2",
   "Pre-Write",
   "Objections",
   "Wrap-Up",
@@ -89,7 +97,7 @@ const STAGE_MARKERS: Record<Stage, { phrase: string; weight: number }[]> = {
     { phrase: "by 2:30", weight: 2 },
     { phrase: "are you familiar with", weight: 2 },
   ],
-  "Set Up the MPI": [
+  "MPI Setup": [
     { phrase: "let's set up", weight: 4 },
     { phrase: "lets set up", weight: 4 },
     { phrase: "set up that multi-point", weight: 4 },
@@ -128,6 +136,12 @@ const STAGE_MARKERS: Record<Stage, { phrase: string; weight: number }[]> = {
     { phrase: "thank them", weight: 1 },
     { phrase: "what can be done", weight: 2 },
     { phrase: "mileage", weight: 1 },
+  ],
+  "Part 1": [{ phrase: "part one", weight: 1 }],
+  "Part 2": [
+    { phrase: "in part one", weight: 4 },
+    { phrase: "part one, we covered", weight: 4 },
+    { phrase: "we covered", weight: 1 },
   ],
   "Pre-Write": [
     { phrase: "pre-write", weight: 3 },
@@ -264,7 +278,7 @@ export function scoreStages(transcript: string): Scored<Stage>[] {
      * Docking the setup claim rather than boosting the selling one keeps a
      * genuine setup film, which triggers only one of them, exactly where it was.
      */
-    if (stage === "Set Up the MPI") {
+    if (stage === "MPI Setup") {
       const sells = DECLARATIONS.some(
         (d) => d.stage === "MPI Selling" && occurrences(opening, d.phrase) > 0
       );
@@ -308,6 +322,18 @@ export function scoreStages(transcript: string): Scored<Stage>[] {
 const OPENING_CHARS = 220;
 
 /**
+ * The film's declaration: the first real sentence, past the greeting.
+ *
+ * Every one of these opens "Aloha!" or "Aloha," and then says what it is. The
+ * greeting is skipped rather than counted as the sentence.
+ */
+export function firstSentence(text: string): string {
+  const body = text.replace(/^\s*aloha[!.,]?\s*/i, "").trim();
+  const end = body.search(/[.!?]/);
+  return end === -1 ? body.slice(0, 160) : body.slice(0, end + 1);
+}
+
+/**
  * How the film announces itself, scored on the OPENING ALONE.
  *
  * ---------------------------------------------------------------------------
@@ -325,10 +351,10 @@ const OPENING_CHARS = 220;
  * where Mitch says what the film is.
  */
 const DECLARATIONS: { phrase: string; stage: Stage }[] = [
-  { phrase: "let's set up", stage: "Set Up the MPI" },
-  { phrase: "lets set up", stage: "Set Up the MPI" },
-  { phrase: "set up that", stage: "Set Up the MPI" },
-  { phrase: "set that", stage: "Set Up the MPI" },
+  { phrase: "let's set up", stage: "MPI Setup" },
+  { phrase: "lets set up", stage: "MPI Setup" },
+  { phrase: "set up that", stage: "MPI Setup" },
+  { phrase: "set that", stage: "MPI Setup" },
   { phrase: "let's sell", stage: "MPI Selling" },
   { phrase: "lets sell", stage: "MPI Selling" },
   { phrase: "sell some", stage: "MPI Selling" },
@@ -340,6 +366,11 @@ const DECLARATIONS: { phrase: string; stage: Stage }[] = [
   { phrase: "after our multi-point", stage: "MPI Selling" },
   { phrase: "after a multi-point", stage: "MPI Selling" },
   { phrase: "now that", stage: "MPI Selling" },
+  /* "In part one, we covered..." is this film saying it is part two. Both
+     multi-part films in the Drop Zone open exactly that way. */
+  { phrase: "in part one", stage: "Part 2" },
+  { phrase: "in part 1", stage: "Part 2" },
+  { phrase: "part one, we covered", stage: "Part 2" },
   { phrase: "on the drive", stage: "On the Drive" },
   { phrase: "walk around", stage: "On the Drive" },
   { phrase: "walk-around", stage: "On the Drive" },
@@ -413,7 +444,9 @@ export function scoreDecks(
   profiles: DeckProfile[]
 ): Scored<DeckProfile>[] {
   const text = normalise(transcript);
-  const opening = normalise(transcript.slice(0, OPENING_CHARS));
+  /* See the note in matchTranscript: "you didn't do pre-writes" is not this
+     film being about pre-writes. */
+  const opening = stripNegated(transcript.slice(0, OPENING_CHARS));
 
   return profiles
     .map((profile) => {
@@ -449,6 +482,19 @@ export type Proposal = {
   deck: string | null;
   code: string | null;
   stage: Stage | null;
+  /**
+   * What goes between the dashes. The stage for a deck's film ("On the Drive",
+   * "Part 2"); the module's own name for a foundational one ("Pre-Write", "The
+   * Big Ticket Visit, Part 2").
+   */
+  title: string | null;
+  /**
+   * How it was identified. `declared` — the film says what it is in its opening.
+   * `teleprompter` — the words match a known script, which is at least as
+   * certain and is the reason the distinction is worth keeping: one can be
+   * checked against a document, the other cannot.
+   */
+  source: "declared" | "teleprompter" | null;
   confidence: Confidence;
   /** Why, in the transcript's own words. Always populated, even at `none`. */
   evidence: string[];
@@ -493,10 +539,89 @@ const STAGE_MIN_MARGIN = 2;
  * confidently mislabelled film. When either half is short of its bar the answer
  * is null and `reason` says which half.
  */
+/**
+ * Signals that this is a production note, not a film.
+ *
+ * ---------------------------------------------------------------------------
+ * IMG_2241 IS MITCH TALKING TO RYAN
+ * ---------------------------------------------------------------------------
+ *   "So Ryan, this is an edit. I'm going to put this as part three. We need to
+ *    take out that AC recharge where I said mahalo, the teleprompter stopped."
+ *
+ * Two minutes of it, in the Drop Zone, alongside the films. It is full of deck
+ * vocabulary — A/C recharge, Arctic Blast, cabin filter — because he is talking
+ * ABOUT the films, so the matcher named it "ACR-047 — MPI Setup — v1" with
+ * medium confidence. That is the worst thing this module can do: a confident
+ * wrong name on something that should never be ingested at all.
+ *
+ * A film is addressed to an advisor and never to Ryan, never mentions the
+ * teleprompter as an object, and never discusses what to cut. TWO signals are
+ * required, because any one of them could appear in a real film as an aside.
+ */
+const PRODUCTION_NOTE = [
+  /\bso,? ryan\b/,
+  /\bryan,? (this|i|we|can|could|let)\b/,
+  /\bthis is an edit\b/,
+  /\bwe need to (take out|cut|remove)\b/,
+  /\bthe teleprompter (stopped|thought|died|froze)\b/,
+  /\bput this as part\b/,
+  /\bstart (that|this) over\b/,
+];
+
+export function productionNoteSignals(transcript: string): string[] {
+  const text = normalise(transcript);
+  return PRODUCTION_NOTE.filter((re) => re.test(text)).map((re) => re.source);
+}
+
 export function matchTranscript(
   transcript: string,
-  profiles: DeckProfile[]
+  profiles: DeckProfile[],
+  scripts: FilmScript[] = []
 ): Proposal {
+  /* Checked before anything else: a note that mentions six decks would
+     otherwise be scored as a film about one of them. */
+  const noteSignals = productionNoteSignals(transcript);
+  if (noteSignals.length >= 2) {
+    return {
+      deck: null,
+      code: null,
+      stage: null,
+      title: null,
+      source: null,
+      confidence: "none",
+      evidence: noteSignals,
+      runnerUp: { deck: null, stage: null },
+      /* Held, not condemned. Mitch says "I'm going to put this as part three"
+         inside it, so where it belongs is a real question with a real answer —
+         it is simply not a question this can settle from the words. */
+      reason: /\bpart (three|3)\b/.test(normalise(transcript))
+        ? "speaks to Ryan about an edit and says it is meant as part three — held until somebody says which film it joins"
+        : "speaks to Ryan about an edit rather than to an advisor — not a film on its own",
+    };
+  }
+
+  /*
+   * THE SCRIPT FIRST, WHEN THERE IS ONE. A word-for-word match to a known film
+   * is the only signal here that can be checked against a document, so it is
+   * not overruled by anything the vocabulary model thinks.
+   */
+  const scripted = matchScript(transcript, scripts);
+  if (scripted) {
+    return {
+      deck: scripted.script.deck,
+      code: scripted.script.code,
+      stage: scripted.stage,
+      title: scripted.stage,
+      source: "teleprompter",
+      confidence: "high",
+      evidence: [
+        `matches the teleprompter script for ${scripted.script.deck} · ${scripted.stage}` +
+          ` (${Math.round(scripted.similarity * 100)}% of its words)`,
+      ],
+      runnerUp: { deck: null, stage: null },
+    };
+  }
+
   /*
    * OP-CODE DECKS FIRST, ALONE. A foundational module is only consulted when no
    * deck clears its bar — see DeckProfile.kind. Profiles with no `kind` are
@@ -514,7 +639,50 @@ export function matchTranscript(
     list[0].score >= DECK_MIN_SCORE &&
     (!list[1] || list[1].score === 0 || list[0].score / list[1].score >= DECK_MIN_RATIO);
 
-  if (!clears(decks) && modulePool.length > 0) {
+  /*
+   * A MODULE NAMES ITSELF TOO, and the pool order was hiding it.
+   *
+   * "Sing it. I'm gonna hand you a lot of word tracks" is the Sing It module
+   * saying so in three words, and "when we have that big ticket item" is The
+   * Big Ticket Visit. Consulting modules only when no DECK cleared meant a
+   * deck that matched on incidental vocabulary — Tire Repair, on a film about
+   * a big-ticket repair visit — beat a module that had named itself outright.
+   *
+   * So the name is compared across both pools first, and only if neither names
+   * itself does the original deck-then-module order apply.
+   */
+  /*
+   * A MODULE MUST NAME ITSELF IN THE FIRST SENTENCE.
+   *
+   * Not the first 220 characters — the first sentence. Mitch's second sentence
+   * is always the list of what you did or didn't do first, and it names other
+   * films constantly: "whether you did pre-writes or pre-selling" is not a
+   * negation, so stripping cannot help, and the Pre-Write module won a
+   * differential film on it.
+   *
+   * Sentence one is the declaration and nothing else: "Let's talk big ticket
+   * items." "Sing it." "Today we're talking pre-writes." That is the whole
+   * signal, and reading one word further is what kept breaking this.
+   */
+  const opening = stripNegated(firstSentence(transcript));
+  const bestNamed = (pool: DeckProfile[]) =>
+    pool
+      .map((p) => ({ profile: p, named: nameMatch(p.deck, opening) }))
+      .sort((a, b) => b.named - a.named)[0];
+
+  const namedDeck = bestNamed(deckPool);
+  const namedModule = bestNamed(modulePool);
+  const NAME_CLEAR = 0.6;
+
+  let moduleNamedItself = false;
+  if (
+    namedModule &&
+    namedModule.named >= NAME_CLEAR &&
+    namedModule.named > (namedDeck?.named ?? 0)
+  ) {
+    decks = scoreDecks(transcript, modulePool);
+    moduleNamedItself = true;
+  } else if (!clears(decks) && modulePool.length > 0) {
     const modules = scoreDecks(transcript, modulePool);
     if (clears(modules)) decks = modules;
   }
@@ -546,8 +714,17 @@ export function matchTranscript(
    * three modules is a module, whatever service it happens to mention.
    */
   const FOUNDATIONAL_STAGES: Stage[] = ["Pre-Write", "Wrap-Up", "Objections"];
+  /*
+   * ONLY WHEN NOTHING NAMED ITSELF. The Big Ticket Visit, Part 2 talks about
+   * the pre-write packet at length, which scored the Pre-Write STAGE high
+   * enough to overrule the module that had already identified itself by name in
+   * sentence one. A stage-derived module is the fallback, not the override.
+   */
   const declaresModule =
-    bestStage && FOUNDATIONAL_STAGES.includes(bestStage.value) && bestStage.score >= STAGE_MIN_SCORE;
+    !moduleNamedItself &&
+    bestStage &&
+    FOUNDATIONAL_STAGES.includes(bestStage.value) &&
+    bestStage.score >= STAGE_MIN_SCORE;
 
   const isModule = bestDeck?.value.kind === "foundational" || Boolean(declaresModule);
   const stageOk =
@@ -571,6 +748,8 @@ export function matchTranscript(
       deck: null,
       code: null,
       stage: null,
+      title: null,
+      source: null,
       confidence: "none",
       evidence,
       runnerUp,
@@ -595,17 +774,104 @@ export function matchTranscript(
         ? "medium"
         : "low";
 
+  /*
+   * A MODULE'S TITLE IS ITS OWN NAME, a deck film's is its stage.
+   *
+   * "FND — Pre-Write — v1", not "FND — Foundational — v1"; "ACR-047 — Part 2 —
+   * v1", not "ACR-047 — A/C Recharge — v1". And a module that is itself split
+   * carries the part in its title: "FND — The Big Ticket Visit, Part 2 — v1".
+   */
+  const moduleName = declaresModule ? bestStage.value : bestDeck.value.deck;
+  const part = bestStage?.value === "Part 2" ? ", Part 2" : "";
+  const title = isModule
+    ? `${moduleName}${part}`
+    : bestStage
+      ? bestStage.value
+      : null;
+
   return {
     deck: declaresModule ? bestStage.value : bestDeck.value.deck,
-    code: declaresModule ? null : bestDeck.value.code ?? null,
+    code: isModule ? FOUNDATIONAL_CODE : bestDeck.value.code ?? null,
+    title,
+    source: "declared",
     /* A module's "stage" is the module. Its four-film siblings have one; it
        does not, and naming a Pre-Write film "On the Drive" because the words
        walk-around appeared in it would be worse than leaving it blank. */
-    stage: declaresModule ? bestStage.value : isModule ? null : bestStage.value,
+    stage: isModule && !declaresModule ? null : bestStage?.value ?? null,
     confidence,
     evidence,
     runnerUp,
   };
+}
+
+/* ---- Ground truth: the scripts he read ----------------------------------- */
+
+export type FilmScript = {
+  deck: string;
+  code: string | null;
+  /** As the teleprompter writes it — "SET UP THE MPI". Mapped below. */
+  stage: string;
+  text: string;
+};
+
+/** The teleprompter's spelling of a film, in canonical vocabulary. */
+function canonicalStage(raw: string): Stage | null {
+  const k = raw.toLowerCase().replace(/[^a-z]/g, "");
+  if (k === "onthedrive") return "On the Drive";
+  if (k === "atthekiosk") return "At the Kiosk";
+  if (k === "setupthempi" || k === "mpisetup" || k === "setupmpi") return "MPI Setup";
+  if (k === "mpiselling") return "MPI Selling";
+  return null;
+}
+
+/**
+ * A transcript that IS one of the known scripts.
+ *
+ * ---------------------------------------------------------------------------
+ * READING THE SCRIPT IS A DECLARATION
+ * ---------------------------------------------------------------------------
+ * Ryan's ruling, and it settles the one film that identified nothing about
+ * itself: IMG_2250 opens "Aloha, let's talk Arctic Blast. Now, quick lane, this
+ * one's easy, and it starts with a question your customer has probably never
+ * been asked in their life" — which is the teleprompter's Arctic Blast Film 1,
+ * word for word. Refusing to name it would be modesty past the point of
+ * accuracy: the script is what he is reading.
+ *
+ * ---------------------------------------------------------------------------
+ * THE MARGIN IS THE EVIDENCE, NOT THE SCORE
+ * ---------------------------------------------------------------------------
+ * Measured against the twenty known scripts, an absolute threshold cannot do
+ * this. IMG_2250 matches its own script at 0.708 and IMG_2166 matches a script
+ * it has nothing to do with at 0.709 — every EDIAGD film shares the presenter,
+ * the structure and most of the selling vocabulary, so a floor high enough to
+ * exclude the false one excludes the true one too.
+ *
+ * What separates them is the runner-up. A film against its own script leaves
+ * the field behind: 0.708 over 0.458, 0.725 over 0.498. A film with no script
+ * in the set scores flat across all of them — 0.709, 0.674, 0.670 — because it
+ * is matching the house style, not a document.
+ *
+ * Volume 1 is missing from data/, which is why the flat case exists at all:
+ * Engine Air Filter and Brake Fluid have no scripts here to match against.
+ */
+export const SCRIPT_THRESHOLD = 0.62;
+export const SCRIPT_MIN_RATIO = 1.35;
+
+export function matchScript(
+  transcript: string,
+  scripts: FilmScript[]
+): { script: FilmScript; stage: Stage; similarity: number } | null {
+  const scored = scripts
+    .map((script) => ({ script, stage: canonicalStage(script.stage), s: similarity(transcript, script.text) }))
+    .filter((x): x is { script: FilmScript; stage: Stage; s: number } => x.stage !== null)
+    .sort((a, b) => b.s - a.s);
+
+  const best = scored[0];
+  const next = scored[1];
+  if (!best || best.s < SCRIPT_THRESHOLD) return null;
+  if (next && next.s > 0 && best.s / next.s < SCRIPT_MIN_RATIO) return null;
+
+  return { script: best.script, stage: best.stage, similarity: Number(best.s.toFixed(3)) };
 }
 
 /* ---- Two takes of the same film ------------------------------------------ */
@@ -690,7 +956,17 @@ export function proposedKeeper<T extends { id: string; transcript: string }>(
  * is the thing that has to read this back. Returns null without a code, because
  * a filename with no op code is not a name the ingest can do anything with.
  */
+/**
+ * The prefix every foundational module is filed under.
+ *
+ * Ryan's ruling. A module is filmed once and applies to every op code, so it
+ * has no op code of its own — and a film with no prefix is a film the ingest
+ * cannot route. FND is the shelf; the module's own name is the title, which is
+ * why "FND — Pre-Write — v1" and not "FND — Foundational — v1".
+ */
+export const FOUNDATIONAL_CODE = "FND";
+
 export function proposedName(proposal: Proposal, version = 1): string | null {
-  if (!proposal.code || !proposal.stage) return null;
-  return `${proposal.code} — ${proposal.stage} — v${version}`;
+  if (!proposal.code || !proposal.title) return null;
+  return `${proposal.code} — ${proposal.title} — v${version}`;
 }
