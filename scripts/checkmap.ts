@@ -25,7 +25,7 @@ async function get(p: string) {
   }
 }
 
-(async () => {
+async function main() {
   const st = await get("sub_category_map?select=status");
   const counts: Record<string, number> = {};
   for (const s of st) counts[String(s.status)] = (counts[String(s.status)] ?? 0) + 1;
@@ -195,6 +195,136 @@ async function get(p: string) {
     }
   }
 
+  await checkLedger();
+
   console.log(failures ? `\n  ${failures} FAILURE(S)\n` : "\n  all checks passed\n");
   if (failures) process.exit(1);
-})();
+}
+
+/* ---------------------------------------------------------------------------
+   The ledger resolves to real events
+--------------------------------------------------------------------------- */
+
+/**
+ * Every Sand Dollar minted points at something that happened.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS WORTH ASSERTING CONTINUOUSLY
+ * ---------------------------------------------------------------------------
+ * The ledger is the economy. An entry whose `ref_id` resolves to nothing is
+ * currency with no source event behind it — either a mint that should never
+ * have happened, or a real one whose event was later deleted without taking
+ * the payment with it. Both are indistinguishable afterwards from the entry
+ * alone, which is exactly why it has to be caught while the difference is
+ * still recoverable.
+ *
+ * completeDay's rollback deletes ledger rows BY ref_id, so the code path is
+ * careful. What is not careful is anything that removes a source event by
+ * other means — a direct SQL delete during testing, a future admin screen, a
+ * cascade nobody thought about.
+ *
+ * TWO REASONS LEGITIMATELY HAVE NO REF and are not orphans:
+ *   paddle_out_purchase   a spend, not a reward for an event
+ *   adjustment            a manual correction, by definition unsourced
+ *
+ * ---------------------------------------------------------------------------
+ * HOW AN ORPHAN IS REPAIRED — Ryan's ruling, and it is not "delete the row"
+ * ---------------------------------------------------------------------------
+ * DELETING LEDGER ROWS IS NOT THE SANCTIONED REPAIR. A ledger that can be
+ * pruned when it embarrasses a check is not a ledger, and the balance it backs
+ * stops meaning anything.
+ *
+ * The repair is an ADJUSTMENT WITH A NOTE: re-reason the entry to `adjustment`,
+ * null the dangling ref, and copy what it replaced into the note verbatim —
+ * the original reason AND the ref that no longer resolves. The first orphan
+ * this check found reads
+ *
+ *   "was lesson_complete → content_progress 10502b6e-…, source row lost pre-review"
+ *
+ * so the row documents exactly what it was rather than merely that something
+ * changed. The balance is untouched: the person earned it, and only the record
+ * of what they earned it for was lost.
+ *
+ * The one exception is an entry whose SOURCE EVENT was itself removed as
+ * never-having-happened — a rolled-back completion. completeDay already deletes
+ * those by ref_id in the same transaction, which is why they never reach here.
+ */
+type Entry = { id: string; user_id: string; amount: number; reason: string; ref_id: string | null };
+
+const REF_TARGET: Record<string, string> = {
+  daily_loop: "daily_completion",
+  badge: "daily_completion",
+  swell_7: "daily_completion",
+  swell_30: "daily_completion",
+  swell_90: "daily_completion",
+  swell_365: "daily_completion",
+  lesson_complete: "content_progress",
+  module_complete: "module",
+};
+const NO_REF_EXPECTED = new Set(["paddle_out_purchase", "adjustment"]);
+
+async function checkLedger(): Promise<void> {
+  const entries = (await get("sand_dollar_entry?select=id,user_id,amount,reason,ref_id")) as Entry[];
+  if (entries.length === 0) {
+    console.log("  sand_dollar_entry: no entries");
+    return;
+  }
+
+  /* One read per referenced table, then set membership — rather than a query
+     per entry, which would be 61 round trips today and thousands later. */
+  const ids: Record<string, Set<string>> = {};
+  for (const table of new Set(Object.values(REF_TARGET))) {
+    const rows = (await get(`${table}?select=id`)) as { id: string }[];
+    ids[table] = new Set(rows.map((r) => r.id));
+  }
+
+  const orphans: Entry[] = [];
+  const unknownReason: string[] = [];
+
+  for (const e of entries) {
+    if (e.ref_id === null) {
+      /* A missing ref is only fine for the two reasons that have no event. */
+      if (!NO_REF_EXPECTED.has(e.reason)) orphans.push(e);
+      continue;
+    }
+    const table = REF_TARGET[e.reason];
+    if (!table) {
+      if (!unknownReason.includes(e.reason)) unknownReason.push(e.reason);
+      continue;
+    }
+    if (!ids[table].has(e.ref_id)) orphans.push(e);
+  }
+
+  if (unknownReason.length) {
+    /* A new reason with no mapping is a hole in this check, not a pass. */
+    fail(
+      `sand_dollar_entry: ${unknownReason.length} reason(s) this check does not know how to ` +
+        `resolve — ${unknownReason.join(", ")}. Add them to REF_TARGET or NO_REF_EXPECTED.`
+    );
+  }
+
+  if (orphans.length) {
+    const total = orphans.reduce((sum, o) => sum + o.amount, 0);
+    fail(
+      `sand_dollar_entry: ${orphans.length} entr${orphans.length === 1 ? "y" : "ies"} ` +
+        `(${total} Sand) reference a source event that does not exist.`
+    );
+    for (const o of orphans.slice(0, 10)) {
+      console.log(`     ${o.reason} ${o.amount} — ref ${o.ref_id ?? "(null)"} user ${o.user_id}`);
+    }
+  } else {
+    console.log(`  sand_dollar_entry: ${entries.length} entries, every one resolves to its source event`);
+  }
+}
+
+/*
+ * NOT ON IMPORT.
+ *
+ * A bare IIFE runs the moment anything requires this file — which is how a test
+ * that only wanted one helper triggered a full production import and truncated
+ * 15 cue bodies. Nothing imports this today; the guard is for the person who
+ * first wants to.
+ */
+if (require.main === module) {
+  main();
+}
