@@ -24,7 +24,7 @@
      npm run test:rest-day
    ============================================================================ */
 
-import { restDayFor } from "../lib/work-schedule";
+import { nextScheduledDayLabel, restDayFor } from "../lib/work-schedule";
 import {
   countMissedWorkDays,
   type IsoDate,
@@ -146,6 +146,45 @@ for (let i = 0; i < 21; i++) {
   if (isRest === costsAGap) disagreements++;
 }
 check("no day is shown as safe while the engine would count it", disagreements, 0);
+
+/* ---- Which day their Swell picks up on ----------------------------------- */
+console.log("\n  THE DAY THE CARD NAMES IS THEIR OWN\n");
+
+/* Mon-Fri, resting Saturday. The case the hardcoded "Monday" got right, and
+   the only one it did. */
+check("a Mon-Fri advisor resting Saturday is told Monday", nextScheduledDayLabel(SAT, ctx()), "Monday");
+check("and resting Sunday, also Monday", nextScheduledDayLabel(SUN, ctx()), "Monday");
+
+/* THE CASE THAT WOULD HAVE LIED. Tue-Sat, resting Monday: the old copy told
+   them their Swell resumed on the day they were standing in. */
+const TUE_SAT: WorkSchedule = {
+  mon: false, tue: true, wed: true, thu: true, fri: true, sun: false,
+  saturdayMode: "every", saturdayAnchor: null,
+};
+check(
+  "a Tue-Sat advisor resting Monday is told Tuesday, not Monday",
+  nextScheduledDayLabel(MON, ctx({ schedule: TUE_SAT })),
+  "Tuesday"
+);
+
+/* A booked absence is not when they are back. */
+check(
+  "a work day inside Island Time is skipped",
+  nextScheduledDayLabel(SAT, ctx({ islandTime: [{ start: MON, end: "2026-09-08" as IsoDate }] })),
+  "Wednesday"
+);
+
+/* Past a week a weekday name stops being unambiguous. Mitch's stored shape:
+   alternating Saturdays and nothing else. */
+const ALT_ONLY: WorkSchedule = {
+  mon: false, tue: false, wed: false, thu: false, fri: false, sun: false,
+  saturdayMode: "alternating", saturdayAnchor: SAT,
+};
+check(
+  "more than a week out, it says so in words rather than naming a weekday",
+  nextScheduledDayLabel(SAT, ctx({ schedule: ALT_ONLY })),
+  "your next work day"
+);
 
 /* ---- An unscheduled render writes nothing -------------------------------- */
 console.log("\n  A DAY OFF OPENS NOTHING AND CLOSES NOTHING\n");

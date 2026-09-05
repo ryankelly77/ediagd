@@ -6,6 +6,8 @@
    ============================================================================ */
 
 import {
+  addDays,
+  daysBetween,
   isIslandTime,
   isWorkDay,
   isoWeekday,
@@ -221,6 +223,67 @@ export function restDayFor(
   if (!isWorkDay(date, context.schedule)) return { kind: "day_off" };
   if (isIslandTime(date, context.islandTime)) return { kind: "island_time" };
   return null;
+}
+
+/**
+ * The next day this person is actually due on the drive, after `date`.
+ *
+ * ---------------------------------------------------------------------------
+ * BECAUSE THE REST CARD USED TO SAY "MONDAY" TO EVERYBODY
+ * ---------------------------------------------------------------------------
+ * "Day 5 is still Day 5 on Monday" is right for a Mon–Fri advisor resting on a
+ * Saturday, which is every advisor in the system today and none of them once
+ * sixty more onboard. A Tue–Sat advisor resting on Monday would have been told
+ * their Swell resumes on the day they are standing in. A card whose entire
+ * premise is "the app knows your schedule" cannot afford one hardcoded weekday.
+ *
+ * ISLAND TIME IS SKIPPED TOO. A work day inside a booked absence is not when
+ * they are back — same rule the streak engine applies, from the same context,
+ * so the card and countMissedWorkDays cannot disagree about which day resumes.
+ *
+ * Returns null when nothing is found inside the scan window: with no schedule
+ * on file every day is a work day and the answer is tomorrow, and validateDraft
+ * forbids an empty week — so null means a booked absence longer than the window
+ * or data nobody expected, and the caller falls back to words.
+ */
+const NEXT_DAY_SCAN = 60;
+
+export function nextScheduledDay(
+  date: IsoDate,
+  context: ScheduleContext
+): IsoDate | null {
+  for (let i = 1; i <= NEXT_DAY_SCAN; i++) {
+    const d = addDays(date, i);
+    if (!isWorkDay(d, context.schedule)) continue;
+    if (isIslandTime(d, context.islandTime)) continue;
+    return d;
+  }
+  return null;
+}
+
+/** "Monday". The weekday alone — the card is about this week, not a date. */
+export function weekdayName(date: IsoDate): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "long",
+    timeZone: "UTC",
+  });
+}
+
+/**
+ * What to put after "still Day 5 on" — a weekday, or an honest hedge.
+ *
+ * A weekday name is only unambiguous inside a week. An advisor who works one
+ * day a fortnight — alternating Saturdays and nothing else, which is a shape
+ * this app has actually stored — would get "on Saturday" for a day thirteen
+ * days out, so past a week it says so in words instead.
+ */
+export function nextScheduledDayLabel(
+  date: IsoDate,
+  context: ScheduleContext
+): string {
+  const next = nextScheduledDay(date, context);
+  if (!next) return "your next work day";
+  return daysBetween(date, next) > 7 ? "your next work day" : weekdayName(next);
 }
 
 /* ---- Loading ------------------------------------------------------------- */

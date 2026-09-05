@@ -82,6 +82,7 @@ export function DailyFlow({
   lifestyle,
   videoThreshold,
   restDay = null,
+  nextWorkDayLabel = "",
 }: {
   alreadyCompleteOnLoad: boolean;
   currentStreak: number;
@@ -136,6 +137,12 @@ export function DailyFlow({
    * ritual, and a rest card would demonstrate its absence.
    */
   restDay?: { kind: "day_off" | "island_time" } | null;
+  /**
+   * "Monday", "Tuesday", or "your next work day" — the day their Swell picks
+   * up, computed from their own schedule with Island Time skipped. Empty on a
+   * work day, where the rest card never renders.
+   */
+  nextWorkDayLabel?: string;
 }) {
   const preview = Boolean(previewResult);
   // The close button in the rail needs it; the nested steps have their own.
@@ -265,6 +272,7 @@ export function DailyFlow({
         video={lifestyle}
         threshold={videoThreshold}
         streak={currentStreak}
+        nextWorkDayLabel={nextWorkDayLabel}
         onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
         onGateMet={(s) => fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s)}
         onTakeTheRep={() => setRevealed(true)}
@@ -431,6 +439,7 @@ function RestDayCard({
   video,
   threshold,
   streak,
+  nextWorkDayLabel,
   onFirstPlay,
   onGateMet,
   onTakeTheRep,
@@ -441,6 +450,8 @@ function RestDayCard({
   video: LifestyleVideo | null;
   threshold: number;
   streak: number;
+  /** Their next scheduled day, in words. Never "Monday" by assumption. */
+  nextWorkDayLabel: string;
   onFirstPlay: () => void;
   onGateMet: (state: WatchState) => void;
   onTakeTheRep: () => void;
@@ -484,7 +495,8 @@ function RestDayCard({
             <>
               {" "}
               <span className="font-bold text-navy">
-                Day {streak} is still Day {streak} {island ? "when you're back" : "on Monday"}.
+                Day {streak} is still Day {streak}{" "}
+                {island ? "when you're back" : `on ${nextWorkDayLabel}`}.
               </span>
             </>
           )}

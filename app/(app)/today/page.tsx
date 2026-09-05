@@ -13,7 +13,11 @@ import {
 } from "@/lib/daily";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ensureBlockForToday, loadBlockDays } from "@/lib/coaching-block";
-import { loadScheduleContext, restDayFor } from "@/lib/work-schedule";
+import {
+  loadScheduleContext,
+  nextScheduledDayLabel,
+  restDayFor,
+} from "@/lib/work-schedule";
 import { mintDayStamp } from "@/lib/day-stamp";
 import { firstName } from "@/lib/advisor";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
@@ -141,7 +145,21 @@ export default async function TodayPage({
    * the screen and countMissedWorkDays cannot drift apart about which days
    * count. See restDayFor.
    */
-  const restDay = restDayFor(today, await loadScheduleContext(supabase, user.id));
+  const scheduleContext = await loadScheduleContext(supabase, user.id);
+  const restDay = restDayFor(today, scheduleContext);
+
+  /*
+   * WHICH DAY THEIR SWELL PICKS UP ON, computed rather than assumed.
+   *
+   * The card used to say "on Monday" to everybody. Right for a Mon-Fri advisor
+   * resting on a Saturday — every advisor in the system today, and none of them
+   * once sixty more onboard — and wrong for a Tue-Sat advisor resting on
+   * Monday, who would be told their Swell resumes on the day they are standing
+   * in. Same context the streak engine reads, so Island Time is skipped too.
+   */
+  const nextWorkDayLabel = restDay
+    ? nextScheduledDayLabel(today, scheduleContext)
+    : "";
 
   // ---- The day's focus ----------------------------------------------------
   const opCodeId = (membership.op_code_id as string | null) ?? null;
@@ -326,6 +344,7 @@ export default async function TodayPage({
        * demonstrate the loop.
        */
       restDay={isPreview ? null : restDay}
+      nextWorkDayLabel={nextWorkDayLabel}
       currentStreak={currentStreak}
       today={today}
       greetingName={firstName(appUser?.full_name ?? user.email ?? "there")}
