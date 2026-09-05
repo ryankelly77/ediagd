@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { markActiveToday } from "@/lib/engagement/mark-active";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
@@ -65,6 +66,21 @@ export default async function AppLayout({
         .eq("user_id", user.id)
         .maybeSingle(),
     ]);
+
+  /*
+   * ---- THE APP NOTICES SOMEBODY OPENED IT --------------------------------
+   *
+   * Here rather than on /today, because engagement means "opened the app" and
+   * a manager who lives on /manager never opens /today. This layout wraps every
+   * signed-in screen, which is the same reason the onboarding gate sits here.
+   *
+   * NOT AWAITED. It is bookkeeping; the page does not need its result and must
+   * not wait on a round trip to render. It cannot throw — see markActiveToday.
+   *
+   * Role-blind: advisor, manager and technician all count.
+   */
+  const activeRooftop = (memberships ?? [])[0]?.rooftop_id as string | undefined;
+  if (activeRooftop) void markActiveToday(user.id, activeRooftop);
 
   // The bell's number. head:true counts in Postgres and transfers no rows, and
   // RLS (0030) scopes it to this user's own mail without a filter here.
