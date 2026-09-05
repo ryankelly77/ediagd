@@ -50,10 +50,12 @@
    ============================================================================ */
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { applyMappingEdit, applyMappingEditEverywhere } from "@/lib/mapping/edit";
 import type { EditMode } from "@/lib/mapping/epoch";
+import { returnTarget } from "@/lib/mapping/return-to";
 
 async function requireOwner() {
   const supabase = await createClient();
@@ -66,7 +68,26 @@ async function requireOwner() {
   return user;
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * THE PATHS THESE ACTIONS ACTUALLY SERVE
+ * ---------------------------------------------------------------------------
+ * This used to revalidate /admin/dms/mapping and /admin/dms and nothing else.
+ * Those were the screens it was written for; the mapping queue was ABSORBED
+ * into Dealer Codes and /admin/dms/mapping now redirects here. So every write
+ * was revalidating two paths nobody renders any more, and none of the paths it
+ * had just changed.
+ *
+ * That is what made ruling a sub-category look like it did nothing: the write
+ * landed, the confirm screen re-rendered from cache with the stale value, and
+ * the dropdown snapped back to "— choose a family —". The ruling was in the
+ * database the whole time, which is exactly why walking out to the list showed
+ * it saved.
+ */
 function done() {
+  revalidatePath("/admin/mapping/dealer-codes");
+  revalidatePath("/admin/mapping/dealer-codes/confirm");
+  // The old queue still redirects here; cheap to keep honest.
   revalidatePath("/admin/dms/mapping");
   revalidatePath("/admin/dms");
 }
@@ -121,6 +142,11 @@ export async function setSubCategoryFamily(formData: FormData): Promise<void> {
   if (!result.ok) throw new Error(result.error);
 
   done();
+  const back = returnTarget(
+    String(formData.get("returnTo") ?? ""),
+    family ? `${subCategory} → ${family}` : `${subCategory} → no family`
+  );
+  if (back) redirect(back);
 }
 
 /**
@@ -174,6 +200,10 @@ export async function markNotCoachable(formData: FormData): Promise<void> {
   }
 
   done();
+  /* Outside every try/catch by construction: redirect() works by throwing, and
+     a caught NEXT_REDIRECT is a navigation that silently does not happen. */
+  const back = returnTarget(String(formData.get("returnTo") ?? ""), `${subCategory} → not coachable`);
+  if (back) redirect(back);
 }
 
 /** Put a not-coachable sub-category back in the queue. */
@@ -210,7 +240,12 @@ export async function clearNotCoachable(formData: FormData): Promise<void> {
     );
   }
 
-  revalidatePath("/admin/dms/mapping");
+  /* This one had a bare revalidatePath("/admin/dms/mapping") and never called
+     done() at all — so putting a row back in the queue refreshed one dead path
+     and nothing else. Same bug as the other three, one layer deeper. */
+  done();
+  const back = returnTarget(String(formData.get("returnTo") ?? ""), `${subCategory} → back in the queue`);
+  if (back) redirect(back);
 }
 
 /**
@@ -261,4 +296,8 @@ export async function setFamilyEverywhere(formData: FormData): Promise<void> {
   }
 
   done();
+  /* Outside every try/catch by construction: redirect() works by throwing, and
+     a caught NEXT_REDIRECT is a navigation that silently does not happen. */
+  const back = returnTarget(String(formData.get("returnTo") ?? ""), `${subCategory} → ${family}`);
+  if (back) redirect(back);
 }

@@ -6,5 +6,5 @@
     "outDir": "../.tmp-dr", "baseUrl": "..", "paths": { "@/*": ["./*"] },
     "lib": ["ES2022", "DOM"], "types": ["node"]
   },
-  "include": ["./dealer-row-scenarios.ts", "../lib/mapping/dealer-codes.ts"]
+  "include": ["./dealer-row-scenarios.ts", "../lib/mapping/dealer-codes.ts", "../lib/mapping/return-to.ts"]
 }

@@ -18,6 +18,7 @@
      npm run test:dealer-rows
    ============================================================================ */
 
+import { returnTarget } from "../lib/mapping/return-to";
 import {
   opCodeRowAction,
   subCategoryRowAction,
@@ -176,6 +177,61 @@ for (const status of subStates) {
   }
 }
 check("no state produces a write without the value it displays", violations, 0);
+
+/* ---------------------------------------------------------------------------
+   WHERE A WRITE SENDS YOU AFTERWARDS
+
+   Ruling a sub-category saved the row and left you on the screen with the
+   dropdown reset to "— choose a family —", which reads exactly like a save
+   that failed. The ruling screen now hands you back to the list with a
+   confirmation; the list's own one-tap Confirm stays put, because you are
+   working down sixty rows.
+
+   The target comes from a form field, and a server action is reachable by
+   direct POST — so it is an open redirect unless something checks it.
+--------------------------------------------------------------------------- */
+console.log("\n  WHERE A WRITE SENDS YOU\n");
+
+check(
+  "the ruling screen goes back to the list, carrying what was written",
+  returnTarget("/admin/mapping/dealer-codes?dealer=abc", "Tires → Tires & Rotation"),
+  "/admin/mapping/dealer-codes?dealer=abc&saved=Tires%20%E2%86%92%20Tires%20%26%20Rotation"
+);
+check(
+  "a path with no query gets one",
+  returnTarget("/admin/mapping/dealer-codes", "X → Y"),
+  "/admin/mapping/dealer-codes?saved=X%20%E2%86%92%20Y"
+);
+check(
+  "no returnTo means stay where you are — the list's one-tap Confirm",
+  returnTarget("", "X → Y"),
+  null
+);
+check("null is the same as absent", returnTarget(null, "X → Y"), null);
+
+/* The guard. Each of these starts with something plausible and leaves the
+   site, or is simply not ours. */
+const refused = [
+  "https://evil.example",
+  "//evil.example",
+  "/admin/mapping/dealer-codes/..//evil.example",
+  "javascript:alert(1)",
+  "/admin/settings",
+  "/admin/mapping/dealer-codes\\@evil.example",
+  "\t//evil.example",
+];
+let followed = 0;
+for (const t of refused) if (returnTarget(t, "X") !== null) followed++;
+check("no off-site or foreign target is ever followed", followed, 0);
+
+/* Whitespace is not an attack. It trims to one of our own paths, and treating
+   it as hostile would refuse a legitimate write's redirect over a stray
+   space — the failure mode this whole fix exists to remove. */
+check(
+  "surrounding whitespace is trimmed, not refused",
+  returnTarget("  /admin/mapping/dealer-codes  ", "X"),
+  "/admin/mapping/dealer-codes?saved=X"
+);
 
 console.log(`\n  ${passed} passed, ${failed} failed`);
 if (failures.length) {

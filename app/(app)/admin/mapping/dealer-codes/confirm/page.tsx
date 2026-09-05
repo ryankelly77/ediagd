@@ -230,6 +230,12 @@ export default async function ConfirmDealerCodeEdit({
           */}
           <form action={setFamilyEverywhere} className="mt-3">
             <input type="hidden" name="subCategory" value={subCategory} />
+            {/* THE RULING SCREEN HANDS YOU BACK. You came here to decide one
+                thing; once it is decided there is nothing left on this page.
+                Without it the action wrote the row, revalidated nothing this
+                screen renders, and the dropdown snapped back to "— choose a
+                family —" — which reads exactly like a save that failed. */}
+            <input type="hidden" name="returnTo" value={back} />
             <div className="flex flex-wrap items-center gap-2">
               <select
                 name="family"
@@ -332,6 +338,7 @@ export default async function ConfirmDealerCodeEdit({
             className="mt-3"
           >
             <input type="hidden" name="subCategory" value={subCategory} />
+            <input type="hidden" name="returnTo" value={back} />
             {/* Ruling something out of coaching after the lock is as much a new
                 epoch as re-filing it — it removes ROs from every advisor's
                 denominator for every month already measured. Same gate. */}

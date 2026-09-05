@@ -44,7 +44,7 @@ import {
 export default async function DealerCodesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dealer?: string; codes?: string }>;
+  searchParams: Promise<{ dealer?: string; codes?: string; saved?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -55,7 +55,11 @@ export default async function DealerCodesPage({
   const { data: isOwner } = await supabase.rpc("is_platform_owner");
   if (!isOwner) redirect("/admin");
 
-  const { dealer: dealerParam, codes: codesParam } = await searchParams;
+  const {
+    dealer: dealerParam,
+    codes: codesParam,
+    saved: savedParam,
+  } = await searchParams;
   const service = createServiceClient();
 
   const dealers = await loadDealers(service);
@@ -84,6 +88,24 @@ export default async function DealerCodesPage({
         title="Dealer Codes"
         subtitle="Everything a dealer's DMS sends, ruled onto our vocabulary."
       />
+
+      {/* ---- The ruling landed ------------------------------------------
+          A write with no acknowledgement is a write somebody does twice. The
+          ruling screen used to save the row and leave you on it with the
+          dropdown reset, which reads as a failure — so it now hands you back
+          here and this line says what it recorded.
+
+          The text is built by the ACTION from what it wrote, not passed in by
+          the form, so the banner cannot congratulate somebody on a value the
+          database does not hold. */}
+      {savedParam && (
+        <p
+          role="status"
+          className="mt-3 rounded-card bg-palm-soft/30 px-4 py-3 text-sm font-bold text-palm"
+        >
+          Saved — {savedParam}
+        </p>
+      )}
 
       {dealers.length === 0 ? (
         <Card className="mt-6 p-6">
