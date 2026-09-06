@@ -42,7 +42,7 @@
      npm run ingest:videos -- --dir="…" --only=MINDSET
    ============================================================================ */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { readdir, stat, readFile, copyFile, rm, mkdtemp } from "node:fs/promises";
+import { readdir, stat, readFile, copyFile, rm, mkdtemp, mkdir, rename } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -310,6 +310,62 @@ function canonicalName(p: Parsed, label: string): string {
 }
 
 /**
+ * Move a finished master out of the Drop Zone and onto its shelf.
+ *
+ * ---------------------------------------------------------------------------
+ * THE DROP ZONE SHOULD READ AS THE OPEN ITEMS
+ * ---------------------------------------------------------------------------
+ * Ryan's rule, and it is worth the machinery: once a file is in Mux with a
+ * draft behind it, its continued presence in the Drop Zone is noise that looks
+ * like work. After two batches the folder held 73 files of which 69 were done —
+ * so "what still needs a decision" could only be answered by cross-referencing
+ * a database. Now the folder answers it.
+ *
+ * FILED UNDER ITS COLLECTION, by the canonical name. `02 - Published` already
+ * carries a subfolder per collection; this puts the file where somebody looking
+ * for "the Arctic Blast kiosk film" would look.
+ *
+ * NEVER OVERWRITES, and a failure to move is never a failure of the ingest: the
+ * bytes are in Mux and the row exists, which is the part that matters. A file
+ * that cannot be moved is reported and left where it is.
+ */
+function publishedRoot(srcDir: string): string {
+  /* Sibling of the Drop Zone, not a path in a config: the two folders are
+     always in the same masters directory, and hard-coding an absolute path
+     would break the moment somebody mounts the Drive somewhere else. */
+  return path.join(path.dirname(srcDir), "02 - Published");
+}
+
+async function fileAway(
+  srcDir: string,
+  file: string,
+  collection: string | null,
+  canonical: string
+): Promise<{ moved: true; to: string } | { moved: false; why: string }> {
+  if (!collection) return { moved: false, why: "no collection to file it under" };
+
+  const destDir = path.join(publishedRoot(srcDir), collection);
+  const from = path.join(srcDir, file);
+  /* The canonical name, not what Mitch typed — the folder is the library's
+     view of itself, and canonical_filename is what a re-drop matches against. */
+  const to = path.join(destDir, canonical);
+
+  try {
+    await mkdir(destDir, { recursive: true });
+    try {
+      await stat(to);
+      return { moved: false, why: `"${canonical}" is already on the shelf` };
+    } catch {
+      /* Not there — good, that is the normal path. */
+    }
+    await rename(from, to);
+    return { moved: true, to: path.join(collection, canonical) };
+  } catch (e) {
+    return { moved: false, why: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
  * PUT the file to the one-time Mux URL.
  *
  * ---------------------------------------------------------------------------
@@ -498,16 +554,24 @@ async function main() {
   }
 
   const done: { file: string; uploadId: string }[] = [];
+  /** Uploaded this run; moved out of the Drop Zone once the draft exists. */
+  const filedAway: { file: string; canonical: string; collection: string | null }[] = [];
   const failed: { file: string; error: string }[] = [];
   const skipped: { file: string; because: string }[] = [];
   const replacements: { file: string; contentId: string; from: number; to: number }[] = [];
   const pending: Parsed[] = [];
+  /** Ingested on a previous run and still sitting in the Drop Zone. */
+  const alreadyDone: { file: string; canonical: string; collection: string | null }[] = [];
 
   for (const p of parsed) {
     const route = routeOf(p.collection);
     const canonical = canonicalName(p, route?.opCode ?? route?.collection ?? p.collection);
     if (byCanonical.has(canonical)) {
       skipped.push({ file: p.file, because: `already ingested as ${canonical}` });
+      /* Filed away too. A file ingested on an EARLIER run is just as finished
+         as one ingested on this one, and leaving it in the Drop Zone is the
+         noise this whole step exists to remove. */
+      alreadyDone.push({ file: p.file, canonical, collection: route?.collection ?? null });
       continue;
     }
     const prior = byIdentity.get(identityOf(canonical));
@@ -656,6 +720,11 @@ async function main() {
       await putFile(url, path.join(SRC, p.file), p.bytes);
       console.log(`ok  (${(p.bytes / 1e6).toFixed(0)}MB)  upload=${uploadId.slice(0, 12)}…`);
       done.push({ file: p.file, uploadId });
+      filedAway.push({
+        file: p.file,
+        canonical: canonicalName(p, route.opCode ?? route.collection ?? p.collection),
+        collection: route.collection,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.log(`\n  ${label} FAILED — ${msg}`);
@@ -664,6 +733,23 @@ async function main() {
   }
 
   /* ---- 4. What happens next, without us ---------------------------------- */
+  /* ---- Clear the Drop Zone of everything that is finished ---------------
+     Both sets: what this run uploaded, and what an earlier run did and left
+     behind. The Drop Zone should read as the open items and nothing else. */
+  const toFile = [...filedAway, ...alreadyDone];
+  if (toFile.length) {
+    console.log(`\n  Filing ${toFile.length} finished master(s) into 02 - Published`);
+    let moved = 0;
+    const stuck: string[] = [];
+    for (const f of toFile) {
+      const r = await fileAway(SRC, f.file, f.collection, f.canonical);
+      if (r.moved) moved++;
+      else stuck.push(`${f.file} — ${r.why}`);
+    }
+    console.log(`    moved ${moved}, left ${stuck.length}`);
+    stuck.slice(0, 10).forEach((x) => console.log(`      ${x}`));
+  }
+
   console.log(`\n  uploaded: ${done.length}/${queue.length}`);
   if (failed.length) {
     console.log(`  failed:   ${failed.length}`);
