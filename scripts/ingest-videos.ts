@@ -289,6 +289,20 @@ function run(cmd: string, argv: string[]): Promise<void> {
 /**
  * What the file SHOULD have been called. Stored as canonical_filename so a
  * re-drop of the same idea under a different working name still matches.
+ *
+ * ---------------------------------------------------------------------------
+ * THE LABEL IS THE OP CODE, NOT THE COLLECTION, FOR A PITCH FILM
+ * ---------------------------------------------------------------------------
+ * Every route until now had one shelf per kind of film, so labelling by
+ * collection produced a unique name. `Pitches by Op Code` holds twelve decks of
+ * four, and labelling those by collection gave ELEVEN films the identical
+ * canonical name "PITCHES BY OP CODE — On the Drive — v1.mov".
+ *
+ * That is not cosmetic. canonical_filename is the key a re-drop is matched
+ * against, so a replacement for one deck's drive film would have matched
+ * whichever of the eleven came back first — silently swapping the video behind
+ * a different deck. Caught by checking the drafts after the upload rather than
+ * trusting that the routing was enough.
  */
 function canonicalName(p: Parsed, label: string): string {
   const voice = p.voice ? ` (${p.voice})` : "";
@@ -491,7 +505,7 @@ async function main() {
 
   for (const p of parsed) {
     const route = routeOf(p.collection);
-    const canonical = canonicalName(p, route?.collection ?? p.collection);
+    const canonical = canonicalName(p, route?.opCode ?? route?.collection ?? p.collection);
     if (byCanonical.has(canonical)) {
       skipped.push({ file: p.file, because: `already ingested as ${canonical}` });
       continue;
@@ -621,7 +635,7 @@ async function main() {
           // What Mitch typed, and what it should have been called. The second
           // is what a re-drop is matched against.
           source_filename: p.file,
-          canonical_filename: canonicalName(p, route.collection ?? p.collection),
+          canonical_filename: canonicalName(p, route.opCode ?? route.collection ?? p.collection),
         },
       });
       if (error) throw new Error(`mux_upload insert: ${error.message}`);
