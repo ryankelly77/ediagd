@@ -12,6 +12,14 @@
    traceable in the Mux account, so a bad replacement is undone by pointing back
    at it rather than by hunting for a file.
 
+   THE DRIVE SIDE IS ARCHIVED TOO, and it was not until this was written. The
+   Mux asset moved to archived_asset_id while the superseded master stayed on
+   the published shelf, so `02 - Published/Onboarding` held two Welcome films
+   with only one row pointing at either — a folder claiming something the data
+   contradicted. The old master now moves to `04 - Archive`, renamed with the
+   version that replaced it, which is the same act as archived_asset_id in the
+   place a person actually looks.
+
    ORDER MATTERS, AND IT IS ENFORCED HERE:
      upload → (optional trim) → swap the master → derive the vertical
    Trimming after derivation would leave the two formats a second apart. The
@@ -27,6 +35,8 @@ import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createReadStream, statSync } from "node:fs";
+import { mkdir, rename, stat } from "node:fs/promises";
+import path from "node:path";
 import { Readable } from "node:stream";
 import { spawn } from "node:child_process";
 
@@ -68,11 +78,68 @@ async function waitForAsset(assetId: string, label: string) {
   return a;
 }
 
+/**
+ * Move the master this replaced out of `02 - Published` and into `04 - Archive`.
+ *
+ * Named with what superseded it, so the folder explains itself: the reason a
+ * file is archived is the only thing anybody wants to know about it later.
+ *
+ * Located by walking up from the published shelf rather than by configuration,
+ * for the same reason the ingest derives its destination: the masters folders
+ * are always siblings, and an absolute path breaks the moment the Drive is
+ * mounted somewhere else.
+ */
+async function archiveOldMaster(row: {
+  collection: string | null;
+  version: number | null;
+  canonical_filename: string | null;
+  title: string | null;
+}): Promise<void> {
+  const masters = process.env.VIDEO_MASTERS_DIR;
+  if (!masters) return; // not configured: nothing to move, nothing to say
+  if (!row.collection || !row.canonical_filename) return;
+
+  const shelf = path.join(masters, "02 - Published", row.collection);
+  const archive = path.join(masters, "04 - Archive");
+  const oldVersion = row.version ?? 1;
+
+  /* Both spellings: what the ingest files (canonical, .MOV) and what an older
+     hand-named drop may have left. */
+  const candidates = [
+    row.canonical_filename,
+    row.canonical_filename.replace(/\.mov$/i, ".MOV"),
+  ];
+
+  for (const name of candidates) {
+    const from = path.join(shelf, name);
+    try {
+      await stat(from);
+    } catch {
+      continue;
+    }
+    const to = path.join(
+      archive,
+      name.replace(/(\.[a-z0-9]+)$/i, ` (superseded by v${oldVersion + 1})$1`)
+    );
+    try {
+      await mkdir(archive, { recursive: true });
+      await rename(from, to);
+      console.log(`\n  archived the old master -> 04 - Archive/${path.basename(to)}`);
+    } catch (e) {
+      console.log(`\n  could not archive the old master: ${e instanceof Error ? e.message : e}`);
+    }
+    return;
+  }
+}
+
 async function main() {
   /* ---- 1. What are we replacing? ---------------------------------------- */
   const { data: row, error } = await sb
     .from("content")
-    .select("id, title, mux_asset_id, mux_playback_id, vertical_status, duration_sec, status")
+    /* One string literal, not a concatenation: PostgREST infers the row type
+       from the literal, and splitting it across a `+` makes every field an
+       error type. */
+    .select("id, title, mux_asset_id, mux_playback_id, vertical_status, duration_sec, status, collection, version, canonical_filename")
     .eq("id", contentId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -206,6 +273,13 @@ async function main() {
     });
     p.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`derive exited ${code}`))));
   });
+
+  /* ---- Archive the superseded master in Drive --------------------------
+     Best effort, after the swap has succeeded. A file that cannot be moved is
+     reported and left alone: the replacement is already live and the row is
+     already correct, so failing the run here would be worse than a stale file
+     on a shelf. */
+  await archiveOldMaster(row);
 
   const { data: after } = await sb
     .from("content")
