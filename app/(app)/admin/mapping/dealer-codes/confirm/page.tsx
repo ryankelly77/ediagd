@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SelectField } from "@/components/brand/Select";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -237,18 +238,16 @@ export default async function ConfirmDealerCodeEdit({
                 family —" — which reads exactly like a save that failed. */}
             <input type="hidden" name="returnTo" value={back} />
             <div className="flex flex-wrap items-center gap-2">
-              <select
+              <SelectField
                 name="family"
+                ariaLabel="Service family"
+                fullWidth={false}
                 defaultValue={newFamily ?? currentFamilies[0] ?? ""}
-                className="rounded-xl border border-line bg-cream-card px-3 py-2 text-sm text-navy"
-              >
-                <option value="">— choose a family —</option>
-                {familyNames.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "— choose a family —" },
+                  ...familyNames.map((f) => ({ value: f, label: f })),
+                ]}
+              />
               {/* Before the lock, one step. The 60-row grind must not grow
                   ceremony or it stops getting done. */}
               {!dealer.lockedAt && (

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SelectField } from "@/components/brand/Select";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
@@ -133,18 +134,13 @@ export default async function AliasesPage() {
         </p>
         <form action={createAlias} className="mt-3 space-y-2">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <select
+            <SelectField
               name="kind"
+              ariaLabel="Kind"
+              fullWidth={false}
               defaultValue="op_code"
-              aria-label="Kind"
-              className="rounded-xl border border-line bg-surface-card px-3 py-2 text-sm text-ink"
-            >
-              {KINDS.map((k) => (
-                <option key={k} value={k}>
-                  {k.replace("_", " ")}
-                </option>
-              ))}
-            </select>
+              options={KINDS.map((k) => ({ value: k, label: k.replace("_", " ") }))}
+            />
             <input
               name="alias"
               placeholder="Old name"

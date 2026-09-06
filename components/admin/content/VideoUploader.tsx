@@ -24,6 +24,7 @@
    it.
    ============================================================================ */
 
+import { Select } from "@/components/brand/Select";
 import { useCallback, useRef, useState } from "react";
 import { startUpload } from "@/app/(app)/admin/content/upload/actions";
 
@@ -153,41 +154,34 @@ export function VideoUploader({ families }: { families: string[] }) {
             />
           </Field>
           <Field label="Where it plays">
-            <select
+            <Select
+              ariaLabel="Where it plays"
               value={placement}
-              onChange={(e) => setPlacement(e.target.value)}
-              className={inputClass}
-            >
-              {PLACEMENTS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
+              onChange={setPlacement}
+              options={PLACEMENTS.map((p) => ({ value: p.value, label: p.label }))}
+            />
           </Field>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Audience">
-            <select
+            <Select
+              ariaLabel="Audience"
               value={type}
-              onChange={(e) => setType(e.target.value)}
-              className={inputClass}
-            >
-              {TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+              onChange={setType}
+              options={TYPES.map((t) => ({ value: t.value, label: t.label }))}
+            />
           </Field>
           <Field label="Service family">
-            <select
+            <Select
+              ariaLabel="Service family"
               value={family}
-              onChange={(e) => setFamily(e.target.value)}
-              className={inputClass}
-            >
-              <option value="">None</option>
-              {families.map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
+              onChange={setFamily}
+              options={[
+                { value: "", label: "None" },
+                ...families.map((f) => ({ value: f, label: f })),
+              ]}
+            />
           </Field>
         </div>
 

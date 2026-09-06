@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/brand/Select";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/brand/Card";
@@ -112,17 +113,12 @@ export function ContentEditor({
       <Card className="p-5">
         <div className="space-y-4">
           <Field label="Type">
-            <select
+            <Select
+              ariaLabel="Type"
               value={draft.type}
-              onChange={(e) => set("type", e.target.value as ContentType)}
-              className={inputClass}
-            >
-              {CONTENT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {TYPE_META[t].label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => set("type", v as ContentType)}
+              options={CONTENT_TYPES.map((t) => ({ value: t, label: TYPE_META[t].label }))}
+            />
           </Field>
 
           {!isQuote && (
@@ -157,20 +153,15 @@ export function ContentEditor({
 
           {!isQuote && (
           <Field label="Tier">
-            <select
+            <Select
+              ariaLabel="Tier"
               value={draft.tier ?? ""}
-              onChange={(e) =>
-                set("tier", (e.target.value || null) as ContentTier | null)
-              }
-              className={inputClass}
-            >
-              <option value="">None</option>
-              {CONTENT_TIERS.map((t) => (
-                <option key={t} value={t}>
-                  {TIER_LABEL[t]}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => set("tier", (v || null) as ContentTier | null)}
+              options={[
+                { value: "", label: "None" },
+                ...CONTENT_TIERS.map((t) => ({ value: t, label: TIER_LABEL[t] })),
+              ]}
+            />
           </Field>
           )}
 
@@ -192,20 +183,15 @@ export function ContentEditor({
                 label="Slot"
                 hint="Required. A quote with no slot is never drawn by anything."
               >
-                <select
+                <Select
+                  ariaLabel="Quote slot"
                   value={draft.quote_slot ?? ""}
-                  onChange={(e) =>
-                    set("quote_slot", (e.target.value || null) as QuoteSlotValue | null)
-                  }
-                  className={inputClass}
-                >
-                  <option value="">Pick one</option>
-                  {QUOTE_SLOTS.map((sl) => (
-                    <option key={sl} value={sl}>
-                      {QUOTE_SLOT_META[sl]}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => set("quote_slot", (v || null) as QuoteSlotValue | null)}
+                  options={[
+                    { value: "", label: "Pick one" },
+                    ...QUOTE_SLOTS.map((sl) => ({ value: sl, label: QUOTE_SLOT_META[sl] })),
+                  ]}
+                />
               </Field>
             </>
           )}

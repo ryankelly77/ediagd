@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SelectField } from "@/components/brand/Select";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Card } from "@/components/brand/Card";
@@ -170,18 +171,13 @@ export default async function FamiliesPage() {
                       >
                         <input type="hidden" name="code" value={r.code} />
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                          <select
+                          <SelectField
                             name="family"
                             defaultValue={r.family}
-                            aria-label={`Family for ${r.code}`}
-                            className="w-full rounded-xl border border-line bg-surface-card px-3 py-2 text-sm text-ink sm:max-w-[16rem]"
-                          >
-                            {familyNames.map((f) => (
-                              <option key={f} value={f}>
-                                {f}
-                              </option>
-                            ))}
-                          </select>
+                            ariaLabel={`Family for ${r.code}`}
+                            className="sm:max-w-[16rem]"
+                            options={familyNames.map((f) => ({ value: f, label: f }))}
+                          />
                           <label className="flex items-center gap-2 text-sm text-ink">
                             <input
                               type="checkbox"

@@ -25,6 +25,7 @@
    are shown and copyable and never editable.
    ============================================================================ */
 
+import { Select } from "@/components/brand/Select";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -413,38 +414,39 @@ export function ContentDetail({
           <LinkedFormats id={id} linked={linked} onDone={() => router.refresh()} />
 
           <Field label="Collection">
-            <select
-              className={input}
+            <Select
+              ariaLabel="Collection"
               value={draft.collection ?? ""}
-              onChange={(e) => {
-                const c = e.target.value || null;
+              onChange={(v) => {
+                const c = v || null;
                 set("collection", c);
                 // Leaving Pitches clears the op code and, with it, the stage.
                 if (c !== "Pitches by Op Code") { set("op_code", null); set("stage", null); }
               }}
-            >
-              <option value="">No collection</option>
-              {COLLECTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+              options={[
+                { value: "", label: "No collection" },
+                ...COLLECTIONS.map((c) => ({ value: c, label: c })),
+              ]}
+            />
           </Field>
 
           <Field
             label="Op code"
             hint={needsOpCode ? "Required — this collection is organised by op code." : "Only for Pitches by Op Code."}
           >
-            <select
-              className={`${input} ${opCodeMissing ? "border-clay" : ""}`}
+            <Select
+              ariaLabel="Op code"
+              className={opCodeMissing ? "border-clay" : ""}
               disabled={!needsOpCode}
               value={draft.op_code ?? ""}
-              onChange={(e) => { const v = e.target.value || null; set("op_code", v); if (!v) set("stage", null); }}
-            >
-              <option value="">{needsOpCode ? "Pick an op code" : "—"}</option>
-              {grouped.map(([cat, list]) => (
-                <optgroup key={cat} label={cat}>
-                  {list.map((o) => <option key={o.code} value={o.code}>{o.code} — {o.name}</option>)}
-                </optgroup>
-              ))}
-            </select>
+              onChange={(v) => { set("op_code", v || null); if (!v) set("stage", null); }}
+              options={[
+                { value: "", label: needsOpCode ? "Pick an op code" : "—" },
+                ...grouped.flatMap(([cat, list]) =>
+                  list.map((o) => ({ value: o.code, label: `${o.code} — ${o.name}`, group: cat }))
+                ),
+              ]}
+            />
           </Field>
           {opCodeMissing && (
             <p className="-mt-2 text-xs font-bold text-clay">
@@ -453,15 +455,13 @@ export function ContentDetail({
           )}
 
           <Field label="Stage" hint="Where in the conversation. Needs an op code first.">
-            <select
-              className={input}
+            <Select
+              ariaLabel="Stage"
               disabled={!draft.op_code}
               value={draft.stage ?? ""}
-              onChange={(e) => set("stage", e.target.value || null)}
-            >
-              <option value="">—</option>
-              {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+              onChange={(v) => set("stage", v || null)}
+              options={[{ value: "", label: "—" }, ...STAGES.map((s) => ({ value: s, label: s }))]}
+            />
           </Field>
 
           {/*
@@ -483,16 +483,15 @@ export function ContentDetail({
           */}
           <Field label="Entitlement">
             {isVideo ? (
-              <select className={input} value={draft.type} onChange={(e) => set("type", e.target.value)}>
-                {(["advisor_video", "manager_video", "joe_the_pro"] as const).map((t) => {
+              <Select
+                ariaLabel="Entitlement"
+                value={draft.type}
+                onChange={(v) => set("type", v)}
+                options={(["advisor_video", "manager_video", "joe_the_pro"] as const).map((t) => {
                   const g = PRODUCT_META[CONTENT_ENTITLEMENT[t].product];
-                  return (
-                    <option key={t} value={t}>
-                      {g.label} — {g.isAddon ? "add-on" : "base"}
-                    </option>
-                  );
+                  return { value: t, label: `${g.label} — ${g.isAddon ? "add-on" : "base"}` };
                 })}
-              </select>
+              />
             ) : (
               <p className="rounded-xl bg-cream-card p-3 text-navy">
                 {product ? `${product.label} — ${product.isAddon ? "add-on" : "base"}` : "—"}

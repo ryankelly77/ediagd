@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SelectField } from "@/components/brand/Select";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -155,19 +156,17 @@ export default async function RuleOpCodePage({
             ruling — "None of ours fits" — so choosing it is an act rather than
             the result of leaving a box alone.
           */}
-          <select
+          <SelectField
             name="canonical"
+            ariaLabel="Our op code"
+            fullWidth={false}
             defaultValue={picked || row.canonical || ""}
-            className="rounded-xl border border-line bg-cream-card px-3 py-2 text-sm text-navy"
-          >
-            <option value="">— choose —</option>
-            <option value="__none__">None of ours fits</option>
-            {catalogRows.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code} · {c.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "— choose —" },
+              { value: "__none__", label: "None of ours fits" },
+              ...catalogRows.map((c) => ({ value: c.code, label: `${c.code} · ${c.name}` })),
+            ]}
+          />
           <button
             type="submit"
             className="rounded-xl bg-gold px-4 py-2 text-sm font-extrabold text-navy transition hover:brightness-95"

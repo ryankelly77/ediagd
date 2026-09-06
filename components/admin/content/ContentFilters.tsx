@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Select } from "@/components/brand/Select";
 import {
   CONTENT_STATUSES,
   CONTENT_TIERS,
@@ -56,67 +57,54 @@ export function ContentFilters({
       className={`mt-4 grid gap-3 ${showTier ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}
     >
       <Field label="Type">
-        <select
+        <Select
+          ariaLabel="Type"
           value={type}
-          onChange={(e) => apply({ type: e.target.value })}
-          className={selectClass}
-        >
-          <option value="">All types</option>
-          {CONTENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {TYPE_META[t].label}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => apply({ type: v })}
+          options={[
+            { value: "", label: "All types" },
+            ...CONTENT_TYPES.map((t) => ({ value: t, label: TYPE_META[t].label })),
+          ]}
+        />
       </Field>
 
       {showTier && (
       <Field label="Tier">
-        <select
+        <Select
+          ariaLabel="Tier"
           value={tier}
-          onChange={(e) => apply({ tier: e.target.value })}
-          className={selectClass}
-        >
-          <option value="">All tiers</option>
-          {CONTENT_TIERS.map((t) => (
-            <option key={t} value={t}>
-              {TIER_LABEL[t]}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => apply({ tier: v })}
+          options={[
+            { value: "", label: "All tiers" },
+            ...CONTENT_TIERS.map((t) => ({ value: t, label: TIER_LABEL[t] })),
+          ]}
+        />
       </Field>
       )}
 
       <Field label="Status">
-        <select
+        <Select
+          ariaLabel="Status"
           value={status}
-          onChange={(e) => apply({ status: e.target.value })}
-          className={selectClass}
-        >
-          <option value="">All statuses</option>
-          {CONTENT_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {STATUS_META[s].label}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => apply({ status: v })}
+          options={[
+            { value: "", label: "All statuses" },
+            ...CONTENT_STATUSES.map((s) => ({ value: s, label: STATUS_META[s].label })),
+          ]}
+        />
       </Field>
     </div>
   );
 }
 
-/**
- * Matches the editor's own inputClass on the same feature — p-3, and NO size
- * class, so it inherits the 16px base.
- *
- * THE SIZE IS NOT COSMETIC. iOS Safari, and so the WKWebView the app ships in,
- * zooms the whole page when a select or input smaller than 16px takes focus.
- * These were text-sm, so opening a filter jumped the layout every time. The old
- * value also just disagreed with every other control in the CMS: p-2.5 against
- * p-3, 14px against 16px, on two screens of the same feature.
+/*
+ * The trigger's look moved into components/brand/Select.tsx as
+ * SELECT_TRIGGER_CLASS, along with the reason it is p-3 with no size class:
+ * iOS Safari — and so the WKWebView the app ships in — zooms the whole page
+ * when a control smaller than 16px takes focus, which used to jump the layout
+ * every time a filter opened. One definition now, so the styled menu and the
+ * native one cannot drift apart.
  */
-const selectClass =
-  "w-full rounded-xl border border-line bg-cream-card p-3 font-semibold text-navy outline-none focus:ring-2 focus:ring-gold";
 
 function Field({
   label,
