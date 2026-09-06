@@ -624,10 +624,15 @@ async function main() {
              the whole point of the shelf is that a video answers "how do I sell
              THIS". Null for every other route, by design. */
           op_code: route.opCode ?? null,
-          /* The six canonical stages only. A part title is a film name and
-             leaves this null: the column answers "where in the pitch", which
-             "Part 2" does not. See resolveStage. */
-          stage: resolveStage(p.title, stageAliases),
+          /* The six canonical stages only, AND ONLY WITH AN OP CODE.
+             content_stage_needs_op_code says so, and it is right: a stage is a
+             position inside a deck's four films, so it means nothing without
+             the deck. "FND — Pre-Write" is a foundational module whose NAME
+             happens to match a stage, and setting it there failed the insert
+             after the bytes were already in Mux. A part title is a film name
+             and leaves this null too — the column answers "where in the pitch",
+             which "Part 2" does not. See resolveStage. */
+          stage: route.opCode ? resolveStage(p.title, stageAliases) : null,
           // Voice goes in its own column now, never into notes. Writing it as
           // prose was the mistake the Phase 3 backfill had to undo.
           voice: p.voice ?? "Mitch Hardt",

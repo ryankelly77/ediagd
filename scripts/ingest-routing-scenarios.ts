@@ -93,7 +93,7 @@ const tables: RoutingTables = {
 };
 
 check("a live op code routes to the pitches shelf, with its code", routeFor("EAF-001", tables), {
-  placement: "op_code_pitch",
+  placement: "daily_pitch",
   collection: "Pitches by Op Code",
   craftSeries: null,
   opCode: "EAF-001",
@@ -109,6 +109,18 @@ check("FND resolves through the alias to Craft", routeFor("FND", tables), {
   collection: "Craft",
 });
 check("an unknown prefix is never guessed onto a shelf", routeFor("NONSENSE", tables), null);
+
+/* The enum in 0057 is the authority. A placement outside it fails the insert
+   AFTER the bytes are in Mux, which is the most expensive moment to find out. */
+const PLACEMENTS = ["daily_lifestyle", "daily_pitch", "onboarding_intro", "technician_daily"];
+check(
+  "every placement this module can return is one the enum accepts",
+  [routeFor("EAF-001", tables), routeFor("MINDSET", tables), routeFor("FND", tables)]
+    .map((r) => r?.placement)
+    .filter((p): p is string => Boolean(p))
+    .filter((p) => !PLACEMENTS.includes(p)),
+  []
+);
 
 console.log("\n  STAGE IS THE SIX, OR NULL\n");
 

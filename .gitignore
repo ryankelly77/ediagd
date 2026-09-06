@@ -142,3 +142,6 @@ exports/
 
 # tsc scratch output from npm run test:quote-match
 .tmp-qm/
+
+# tsc scratch output from npm run reconcile:uploads
+.tmp-ru/

@@ -143,7 +143,13 @@ export function routeFor(prefix: string, tables: RoutingTables): Route | null {
 
   if (tables.opCodes.has(key)) {
     return {
-      placement: "op_code_pitch",
+      /* daily_pitch, NOT a placement invented here. 0057's enum has held
+         exactly this value since it was written — "the daily loop's service
+         pitch slot" — and inventing "op_code_pitch" instead made every one of
+         the 41 pitch films fail its content insert with an enum error, silently,
+         after the bytes were already in Mux. The upload said ready and the row
+         never appeared. */
+      placement: "daily_pitch",
       collection: "Pitches by Op Code",
       craftSeries: null,
       opCode: key,
