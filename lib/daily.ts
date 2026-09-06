@@ -529,7 +529,19 @@ async function pickGenericPassage(
    STEP 3 — the pitch video for today's stage
 --------------------------------------------------------------------------- */
 
-export type PitchVideoData = LifestyleVideoData & { stage: string | null };
+export type PitchVideoData = LifestyleVideoData & {
+  stage: string | null;
+  /**
+   * Which rung answered.
+   *
+   * `deck` — this op code's own film for this stage. `foundational` — the
+   * module that teaches the stage for every op code, served because the deck
+   * has no film of its own. Recorded so "how much of the library is still
+   * standing in for itself" is a query rather than a guess, the same reason
+   * pitch_video_skipped exists.
+   */
+  source: "deck" | "foundational";
+};
 
 /**
  * The op code's video for the stage the block is on, or null.
@@ -547,9 +559,25 @@ export type PitchVideoData = LifestyleVideoData & { stage: string | null };
  * No stage and no op code means there is nothing to look up, which is a skip
  * for the same reason and gets recorded the same way.
  *
- * Returns nothing at all today: 0 rows are in 'Pitches by Op Code'. Every day
- * served before the re-import will record skipped=true, which is the correct
- * measurement of a library that has not been filmed yet.
+ * ---------------------------------------------------------------------------
+ * TWO RUNGS, THEN THE SKIP
+ * ---------------------------------------------------------------------------
+ *   1. the deck's own film for this stage — (op_code, stage), exactly
+ *   2. the FOUNDATIONAL module that teaches this stage for every op code
+ *   3. nothing, recorded as skipped
+ *
+ * The second rung exists because "this deck has no After-MPI film" and "nobody
+ * has anything to say about selling after the MPI" are different facts, and the
+ * old lookup treated them as one. The Selling speech film teaches that beat
+ * generically; showing it beats showing nothing, and both beat inventing a
+ * match from a neighbouring stage.
+ *
+ * WHICH MODULE COVERS WHICH STAGE IS DATA — mapping_alias kind='stage_fallback',
+ * for the reason 0087 gives about the drift between Mitch's names and the six
+ * canonical stages: it belongs on the Aliases screen, not in this file. An
+ * UNCONFIRMED row is inert, so a stage whose module has not been filmed yet
+ * falls straight through to the skip rather than searching for a film that does
+ * not exist.
  */
 export async function pickPitchVideo(
   client: Client,
@@ -575,13 +603,50 @@ export async function pickPitchVideo(
     .limit(1000);
 
   const list = (rows ?? []) as VideoRow[];
-  if (!list.length) return null;
 
-  // Offset 5: distinct from the lifestyle video's 3, so a day that serves both
-  // does not walk the two pools in lockstep.
-  const row = list[rotationIndex(date, list.length, 5)];
-  const shaped = await shapeVideo(client, row, userId, date);
-  return shaped ? { ...shaped, stage: (row.stage as string | null) ?? null } : null;
+  if (list.length) {
+    // Offset 5: distinct from the lifestyle video's 3, so a day that serves both
+    // does not walk the two pools in lockstep.
+    const row = list[rotationIndex(date, list.length, 5)];
+    const shaped = await shapeVideo(client, row, userId, date);
+    return shaped
+      ? { ...shaped, stage: (row.stage as string | null) ?? null, source: "deck" }
+      : null;
+  }
+
+  /* ---- Rung 2: the foundational module for this stage -------------------- */
+  const { data: fallbackRows } = await client
+    .from("mapping_alias")
+    .select("canonical")
+    .eq("kind", "stage_fallback")
+    .eq("alias", block.stage)
+    .eq("confirmed", true)
+    .limit(1);
+
+  const moduleTitle = (fallbackRows ?? [])[0]?.canonical as string | undefined;
+  if (!moduleTitle) return null;
+
+  const { data: moduleRows } = await client
+    .from("content")
+    .select(
+      "id, title, stage, mux_playback_id, mux_playback_policy, " +
+        "vertical_playback_id, vertical_status, artifact_id"
+    )
+    .eq("type", "advisor_video")
+    .eq("status", "published")
+    .eq("title", moduleTitle)
+    .is("op_code", null)
+    .not("mux_playback_id", "is", null)
+    .order("id", { ascending: true })
+    .limit(10);
+
+  const modules = (moduleRows ?? []) as VideoRow[];
+  if (!modules.length) return null;
+
+  const shaped = await shapeVideo(client, modules[0], userId, date);
+  /* The STAGE it stands in for, not the module's own null stage — the day
+     recorded it as this stage's film and the completion row should say so. */
+  return shaped ? { ...shaped, stage: block.stage, source: "foundational" } : null;
 }
 
 /**

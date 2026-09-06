@@ -145,3 +145,6 @@ exports/
 
 # tsc scratch output from npm run reconcile:uploads
 .tmp-ru/
+
+# tsc scratch output from npm run sync:mux-titles
+.tmp-smt/

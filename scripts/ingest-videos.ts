@@ -596,12 +596,19 @@ async function main() {
     try {
       const route = routeOf(p.collection);
       if (!route) throw new Error(`no route for prefix ${p.collection}`);
-      // Voice in the Mux-side title too, so the dashboard is scannable
-      // without opening anything. See the note in createDirectUpload.
-      const { uploadId, url } = await createDirectUpload(
-        origin,
-        p.voice ? `${p.title} (${p.voice})` : p.title
-      );
+      /*
+       * THE MUX TITLE IS THE CANONICAL NAME, NOT THE FILM TITLE.
+       *
+       * It was the title alone, which is unique for a Mindset quote and
+       * emphatically not for a pitch film: twelve decks each have an "At the
+       * Kiosk", so the dashboard listed "At the Kiosk" eight times with nothing
+       * to tell them apart. The prefix is the whole point — EAF-001 — At the
+       * Kiosk — v1 says which deck, which film, which take, in the place
+       * somebody looks when a transcode fails.
+       */
+      const muxTitle = canonicalName(p, route.opCode ?? route.collection ?? p.collection)
+        .replace(/\.[a-z0-9]+$/i, "");
+      const { uploadId, url } = await createDirectUpload(origin, muxTitle);
       // Mux types the one-time URL as optional. It is always present on a
       // successful create, but a missing one would mean PUTting into the void,
       // so it fails this file loudly rather than silently skipping the bytes.
