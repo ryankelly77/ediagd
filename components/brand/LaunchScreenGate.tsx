@@ -81,30 +81,21 @@ export function LaunchScreenGate() {
     const root = document.documentElement;
 
     /*
-     * ---- LIFT THE NATIVE SPLASH THE MOMENT WE HAVE PAINTED ----------------
+     * ---- THE SPLASH IS NOT LIFTED FROM HERE ANY MORE ----------------------
      *
-     * In the shell the native splash sits on top of the webview until
-     * something hides it, and capacitor.config sets launchShowDuration to
-     * 3000. NativeBridge does call hide(), but only after hydration and two
-     * dynamic imports, so in practice the 3s floor usually wins.
+     * It was, and that was the bug. A React effect cannot run until the JS has
+     * downloaded and hydrated, so the native splash sat on top of the webview
+     * for the whole of it — measured 3.5s on Ryan's phone, with the app drawn
+     * and ready underneath the entire time. "the opening screen has the navy
+     * blue for 2 to 3 sec before the animation shows."
      *
-     * The effect Ryan saw: "the opening screen has the navy blue for 2 to 3
-     * sec before the animation shows." The splash was covering the animation,
-     * so the sequence ran AFTER the wait instead of during it — which is
-     * precisely what this feature was supposed not to do.
-     *
-     * This effect runs as soon as the overlay has hydrated, and the overlay is
-     * already painted in the same #0C1C2C the splash is. So dropping the splash
-     * here is invisible — the field does not change, the mark simply begins to
-     * move — and the animation now plays over the rest of the load rather than
-     * being queued behind it.
-     *
-     * Fails silently and on purpose: in a browser there is no plugin, and a
-     * splash that will not hide must never stop the app being revealed. The
-     * config's launchAutoHide remains the backstop for the case where none of
-     * this JavaScript runs at all.
+     * The lift now happens in two places that are both earlier than this: the
+     * inline script in the layout asks the bridge directly at first paint, and
+     * capacitor.config's launchShowDuration is down to 150ms as the floor. The
+     * backstop below stays because neither is guaranteed — the bridge may not
+     * have registered its plugin proxies that early — and a splash that will
+     * not hide must never be able to strand the app on its own launch screen.
      */
-
 
     /* Written immediately, not on the way out: a reload DURING the animation is
        still a reload within the session, and it should not replay. */
@@ -167,11 +158,25 @@ export function LaunchScreenGate() {
      * crash on every launch. Ordering it here makes that impossible rather
      * than merely unlikely.
      */
-    /** Releases the paused keyframes and starts the hold clock. */
+    /**
+     * Releases the paused keyframes and starts the hold clock.
+     *
+     * Normally the inline script in the layout has already done the releasing,
+     * at first paint, and left the timestamp behind — so this reads its clock
+     * rather than starting a new one. Timing the hold from hydration would
+     * count the sequence as beginning when we noticed it, not when it began,
+     * and hold a finished mark on screen for the difference.
+     *
+     * The fallback matters for anything that reaches hydration without the
+     * script having run: an already-launched session, or a browser that blocked
+     * the inline tag. Then this IS the release, and the clock starts here.
+     */
     let releasedAt = 0;
     const release = () => {
       if (releasedAt) return;
-      releasedAt = performance.now();
+      const inline = (window as unknown as { __ediagdLaunchAt?: number })
+        .__ediagdLaunchAt;
+      releasedAt = typeof inline === "number" ? inline : performance.now();
       root.dataset.launchGo = "1";
       hold(dismiss);
     };
@@ -185,25 +190,35 @@ export function LaunchScreenGate() {
         /* No Capacitor: we are in a browser. */
       }
 
-      if (!native) {
-        release(); // nothing is covering us; play the sequence
-        return;
-      }
-
       /*
-       * NATIVE: no sequence. The splash has already shown the mark, so the
-       * overlay renders it settled and identical, the splash lifts onto it,
-       * and we dismiss as soon as the app is ready. Animating here would
-       * replay a mark the user has been looking at for a second and a half.
+       * ---- THE SHELL ANIMATES AGAIN ---------------------------------------
+       *
+       * It briefly did not. When the splash was hidden from a React effect it
+       * sat there for 3.5s, so the 1.2s sequence afterwards was a short brand
+       * moment behind a long wait — Ryan: "the animation is shorter than the
+       * 1.5 blank navy screen hold." The fix at the time was to drop the
+       * animation and put the mark on the splash instead.
+       *
+       * That reasoning expired once the splash floor came down to 150ms. What
+       * was left of the delay is the webview's own time to first paint, and the
+       * sequence now starts on that first painted frame — measured 1.35s to the
+       * mark, then a full second of visible animation, app at 2.35s. It plays
+       * DURING the load, which is the whole rule.
+       *
+       * The splash is plain navy again, so the animation supplies the mark:
+       * nothing is drawn twice, and there is no size to match between two
+       * different rendering systems.
        */
-      root.dataset.launchStatic = "1";
-      try {
-        const { SplashScreen } = await import("@capacitor/splash-screen");
-        await SplashScreen.hide();
-      } catch {
-        /* Plugin unavailable — dismiss anyway rather than hold the screen. */
+      if (native) {
+        try {
+          const { SplashScreen } = await import("@capacitor/splash-screen");
+          await SplashScreen.hide();
+        } catch {
+          /* The inline script in the layout has almost certainly done this
+             already; this is the backstop for a bridge that was not ready. */
+        }
       }
-      dismiss();
+      release();
     })();
 
     const failsafe = window.setTimeout(dismiss, MAX_HOLD_MS);

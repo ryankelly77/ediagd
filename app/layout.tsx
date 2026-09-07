@@ -111,9 +111,40 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "requestAnimationFrame(function(){try{" +
-              "window.Capacitor.Plugins.SplashScreen.hide();" +
-              "}catch(e){}});",
+              "(function(){var d=document.documentElement;" +
+              // START THE SEQUENCE HERE TOO, not in the React effect. The
+              // keyframes are paused until data-launch-go, so the overlay
+              // painted a mark whose every element is still at its opening
+              // value — ring at zero opacity, sun below the horizon. That is
+              // an empty navy field, and it lasted for the whole hydration:
+              // 0.9s on a local server, longer on a phone over cellular.
+              // Releasing at first paint is the feature as specified — the
+              // animation plays DURING the fetch. The timestamp is left for
+              // the gate so its hold is measured from the first moving frame.
+              "if(d.dataset.launched!=='1'){d.dataset.launchGo='1';" +
+              "window.__ediagdLaunchAt=performance.now()}" +
+              // Poll, do not try once. A single rAF fires before Capacitor has
+              // registered its plugin proxies, so the call threw and we silently
+              // fell back to the gate at hydration — measured 1.8s of blank navy.
+              // 40 tries at 25ms hides within a frame of the bridge being ready,
+              // and gives up after a second rather than spinning.
+                            "(function(){var d=document.documentElement;" +
+              // START THE SEQUENCE HERE, not in the React effect. The keyframes
+              // are paused until data-launch-go, so the overlay used to paint a
+              // mark with every element still at its opening value — ring at zero
+              // opacity, sun below the horizon. That is an empty navy field, and
+              // it lasted the whole hydration: 0.9s on a local server, longer on a
+              // phone. Releasing at first paint is the feature as specified — the
+              // animation plays DURING the fetch, not after it. The timestamp is
+              // left for the gate so its hold is measured from the first moving
+              // frame rather than from whenever React caught up.
+              "if(d.dataset.launched!=='1'){d.dataset.launchGo='1';" +
+              "window.__ediagdLaunchAt=performance.now()}" +
+              // And lift the native splash. Best-effort: the bridge may not have
+              // registered its plugin proxies this early, and the config's short
+              // launchShowDuration is the real floor. Never let a splash that
+              // will not hide stop the app being revealed.
+              "try{window.Capacitor.Plugins.SplashScreen.hide()}catch(e){}})();",
           }}
         />
         <LaunchScreenGate />

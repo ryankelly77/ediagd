@@ -111,7 +111,27 @@ const config: CapacitorConfig = {
        * able to brick the app on its own launch screen.
        */
       launchAutoHide: true,
-      launchShowDuration: 3000,
+      /*
+       * 150ms, not 3000. This number was the launch delay.
+       *
+       * The splash was being treated as cover for a slow start, but there is
+       * nothing underneath it to hide: ios.backgroundColor below paints the
+       * WKWebView the same #0C1C2C, and the document's own first bytes set the
+       * same navy again. Lifting the splash reveals navy either way — the
+       * screen does not change, so there is no flash to protect against.
+       *
+       * What the long floor DID do was hold the animation behind an opaque
+       * layer while it played, so the sequence finished unseen and the launch
+       * became a wait followed by a settled mark. Ryan, twice: "there is
+       * literally no animation now", "the animation is shorter than the 1.5
+       * blank navy screen hold." Both were this value.
+       *
+       * Not zero: a handful of frames of native splash makes the handoff a
+       * dissolve between two identical navy fields rather than a swap that can
+       * land mid-frame. launchAutoHide stays true — see above; this is the only
+       * thing standing between a JS failure and an app that never opens.
+       */
+      launchShowDuration: 150,
       backgroundColor: "#0C1C2C",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,

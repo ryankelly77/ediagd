@@ -351,40 +351,6 @@ html:not([data-launch-go="1"]) #ediagd-launch * {
   animation-play-state: paused !important;
 }
 
-/*
- * ---- NO ANIMATION IN THE SHELL ----------------------------------------------
- *
- * Ryan, on the measured timings: "the animation is shorter than the 1.5 blank
- * navy screen hold." That is the argument. In the app the native splash covers
- * the first 1.5s and the animation only gets 1.2s after it, so most of the
- * launch is dead air in front of a shorter brand moment.
- *
- * The native splash now carries the mark, so the branding happens from the
- * first frame — and repeating it as an animation afterwards would be the same
- * mark twice, which is the problem that emptied the splash in the first place.
- *
- * So on native the sequence is switched off and the overlay renders the settled
- * mark, identical to what the splash was already showing. The animation stays
- * for the web, where nothing covers the load and it has something to do.
- */
-html[data-launch-static="1"] #ediagd-launch * {
-  /*
-   * FAST-FORWARDED, NOT DISABLED. `animation: none` looked right and rendered
-   * an empty field: the ring's resting declaration is opacity 0 — it is the
-   * animation's job to bring it in — so removing the animation removed the
-   * ring. The splash lifted onto a blank navy screen for two seconds.
-   *
-   * Running each keyframe to completion in a millisecond lands on exactly the
-   * settled state the sequence was designed to end on, whatever that state is,
-   * without this rule having to know or restate any of it. The play-state
-   * override is required too, or the pause rule above holds them at frame one
-   * forever.
-   */
-  animation-duration: 1ms !important;
-  animation-delay: 0s !important;
-  animation-play-state: running !important;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .ediagd-launch__ring {
     opacity: 0;
