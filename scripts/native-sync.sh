@@ -38,6 +38,16 @@ fi
 # Icons and splash. @capacitor/assets reads native/assets/{icon,splash}.png and
 # writes every size both platforms want.
 if [ -d ios ] || [ -d android ]; then
+  # @capacitor/assets writes the icon set before the splash and ABORTS if the
+  # directory is missing — which it is, because AppIcon.icon replaced the
+  # appiconset and the block below deletes it every run. The generator then
+  # failed silently-ish ("unable to open for write") and the splash was never
+  # regenerated at all, which cost an afternoon of wondering why new splash art
+  # was not appearing. Give it somewhere to write; it gets removed again below.
+  mkdir -p ios/App/App/Assets.xcassets/AppIcon.appiconset
+  printf '{"images":[],"info":{"author":"xcode","version":1}}' \
+    > ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json
+
   say "generating icons + splash from native/assets/"
   npx --yes @capacitor/assets generate \
     --assetPath native/assets \
