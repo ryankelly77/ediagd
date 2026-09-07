@@ -87,6 +87,35 @@ export default function RootLayout({
         {/* First in the body: it covers everything, and being early in the
             markup means it paints before the page it is covering. */}
         <LaunchScreen />
+        {/*
+          HIDE THE NATIVE SPLASH AT FIRST PAINT, NOT AT HYDRATION.
+
+          This is the difference between a launch that feels instant and one
+          that does not. The gate is a React effect, so it cannot run until the
+          JS chunks have downloaded and hydrated — measured at 3.5s on Ryan's
+          phone, which is 3.5s of the user looking at a splash with the app
+          already sitting underneath it, drawn and ready.
+
+          This script is inline and sits immediately after the overlay markup,
+          so it runs as the body parses. The rAF defers it by exactly one frame
+          — long enough for the overlay above to have painted, so the splash
+          never lifts onto an empty webview, and no longer.
+
+          Capacitor injects its bridge before page scripts, so the plugin is
+          callable here. In a browser there is no bridge and the try simply
+          fails, which is correct: there is no splash to hide.
+
+          The gate still calls hide() as a backstop for the case where the
+          bridge was not ready this early.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "requestAnimationFrame(function(){try{" +
+              "window.Capacitor.Plugins.SplashScreen.hide();" +
+              "}catch(e){}});",
+          }}
+        />
         <LaunchScreenGate />
         {/* Recovers from a deploy landing mid-session: chunk filenames change,
             an open tab still holds the old ones, and the next link click throws
