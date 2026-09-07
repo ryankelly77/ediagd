@@ -285,9 +285,18 @@ html[data-launched="1"] #ediagd-launch {
   display: none;
 }
 
-/* The fade-out, driven by the gate once the app is ready AND the sequence has
-   finished. Pointer-events go first so a tap during the fade reaches the app. */
-#ediagd-launch[data-leaving="1"] {
+/*
+ * The fade-out, driven from <html> rather than from the element.
+ *
+ * The attribute goes on documentElement because React OWNS the overlay node —
+ * setting attributes on it, or removing it, corrupts the reconciler's view of
+ * the DOM and every later navigation throws NotFoundError. That took production
+ * down; see LaunchScreenGate.tsx. CSS can hide a node React owns; JavaScript
+ * must not touch it.
+ *
+ * Pointer-events go first so a tap during the fade reaches the app underneath.
+ */
+html[data-launch-leaving="1"] #ediagd-launch {
   opacity: 0;
   pointer-events: none;
   transition: opacity 260ms ease-out;

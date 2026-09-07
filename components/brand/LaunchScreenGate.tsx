@@ -55,8 +55,28 @@ export const LAUNCH_SESSION_KEY = "ediagd:launched";
 
 export function LaunchScreenGate() {
   useEffect(() => {
-    const el = document.getElementById("ediagd-launch");
-    if (!el) return;
+    /*
+     * ---- NOTHING IN HERE TOUCHES THE OVERLAY ELEMENT ----------------------
+     *
+     * The first version called el.remove(), and that was a real bug that took
+     * production down on every link click: <LaunchScreen /> is rendered BY
+     * REACT in the root layout, so removing it imperatively left the reconciler
+     * holding a node that is no longer in the document. The next client-side
+     * navigation threw
+     *
+     *     NotFoundError: Failed to execute 'insertBefore' on 'Node'
+     *     NotFoundError: Failed to execute 'removeChild' on 'Node'
+     *
+     * and the router surfaced it as "this page couldn't load". A full reload
+     * fixed it because rendering started clean, which is exactly the shape Ryan
+     * described: every link broken, reload always works.
+     *
+     * So the gate now only ever writes attributes on <html>, which React does
+     * not own — the same surface the pre-paint script already uses. CSS does
+     * the hiding. The overlay element stays exactly where React put it, inert
+     * and invisible, and the reconciler's picture of the DOM stays true.
+     */
+    const root = document.documentElement;
 
     /* Written immediately, not on the way out: a reload DURING the animation is
        still a reload within the session, and it should not replay. */
@@ -72,14 +92,12 @@ export function LaunchScreenGate() {
     const dismiss = () => {
       if (done) return;
       done = true;
-      el.setAttribute("data-leaving", "1");
-      /* Flips the inline `html` navy back off — see the critical style in
-         app/layout.tsx. Without this the navy would sit behind every cream
-         screen for the rest of the session and show through on overscroll. */
-      document.documentElement.dataset.launched = "1";
-      /* Removed after the fade so it cannot swallow a tap, and so the DOM does
-         not keep a full-screen element around for the rest of the session. */
-      window.setTimeout(() => el.remove(), 300);
+      /* Fade, then mark the session launched — the second rule hides the
+         overlay outright and also stops it replaying on the next load. */
+      root.dataset.launchLeaving = "1";
+      window.setTimeout(() => {
+        root.dataset.launched = "1";
+      }, 300);
     };
 
     const startedAt = performance.now();
