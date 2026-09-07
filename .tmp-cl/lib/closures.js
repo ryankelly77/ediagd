@@ -34,6 +34,7 @@ exports.yearsToSeed = yearsToSeed;
 exports.missingProposals = missingProposals;
 exports.calendarSettledThroughYearEnd = calendarSettledThroughYearEnd;
 exports.openProposalCount = openProposalCount;
+exports.rowsByDate = rowsByDate;
 /* ---- Date helpers, UTC throughout ---------------------------------------- */
 const iso = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 /** The nth given weekday of a month. weekday: 0 Sunday … 6 Saturday. */
@@ -126,4 +127,67 @@ function calendarSettledThroughYearEnd(today, closures) {
 function openProposalCount(today, closures) {
     const yearEnd = `${today.slice(0, 4)}-12-31`;
     return closures.filter((c) => c.date >= today && c.date <= yearEnd && c.status === "proposed" && !c.dismissed).length;
+}
+/**
+ * Fold every rooftop's calendar into one row per date.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS EXISTS: 121 TAPS
+ * ---------------------------------------------------------------------------
+ * The first cut listed each rooftop separately with a confirm and a dismiss
+ * button on every date. Doggett is eleven rooftops and the seeder proposes
+ * eleven dates a year, so settling the group meant a hundred and twenty-one
+ * decisions — for a dealer whose stores almost certainly close on the same
+ * days. Nobody finishes that, and a calendar half-finished is worse than one
+ * not started, because the readiness line goes green for the stores that got
+ * done and the holiday still breaks the ones that did not.
+ *
+ * So the default scope is every rooftop the manager holds, one row per date,
+ * and a ruling writes to all of them at once. Per-store exceptions still exist
+ * — a group can pick one rooftop from the scope switcher — and when the stores
+ * genuinely disagree the row says so rather than picking a side.
+ *
+ * A MISSING ROW COUNTS AS UNSET, not as open. A rooftop the seeder has not
+ * reached yet has no opinion about Labor Day, and treating silence as "we
+ * trade" would let a store go live with a calendar nobody ever looked at.
+ */
+function rowsByDate(rooftopIds, closures) {
+    const scope = new Set(rooftopIds);
+    const byDate = new Map();
+    for (const c of closures) {
+        if (!scope.has(c.rooftopId))
+            continue;
+        const entry = byDate.get(c.date) ?? {
+            label: c.label,
+            closed: 0,
+            open: 0,
+            seen: new Set(),
+        };
+        /* One rooftop counts once per date — the unique index guarantees that in
+           the database, and trusting it here rather than re-deriving it keeps the
+           two from disagreeing if a duplicate ever slips through. */
+        if (!entry.seen.has(c.rooftopId)) {
+            entry.seen.add(c.rooftopId);
+            if (c.status === "confirmed")
+                entry.closed++;
+            else if (c.dismissed)
+                entry.open++;
+        }
+        byDate.set(c.date, entry);
+    }
+    const scopeCount = scope.size;
+    return [...byDate.entries()]
+        .map(([date, e]) => {
+        let state;
+        if (e.closed === scopeCount)
+            state = "closed";
+        else if (e.open === scopeCount)
+            state = "open";
+        else if (e.closed === 0 && e.open === 0)
+            state = "unset";
+        else
+            state = "mixed";
+        return { date, label: e.label, state, closedCount: e.closed, scopeCount };
+    })
+        .sort((a, b) => a.date.localeCompare(b.date));
 }

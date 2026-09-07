@@ -104,6 +104,25 @@ check("the open count is what the line reports", (0, closures_1.openProposalCoun
     { date: "2026-11-26", status: "proposed", dismissed: false },
     { date: "2026-12-25", status: "confirmed", dismissed: false },
 ]), 2);
+console.log("\n  One row per date, across every rooftop\n");
+const c = (rooftopId, status, dismissed = false) => ({
+    rooftopId, date: LABOR_DAY, label: "Labor Day", status, dismissed,
+});
+const THREE = ["a", "b", "c"];
+check("all three shut reads as closed", (0, closures_1.rowsByDate)(THREE, [c("a", "confirmed"), c("b", "confirmed"), c("c", "confirmed")])[0].state, "closed");
+check("all three trading reads as open", (0, closures_1.rowsByDate)(THREE, [c("a", "proposed", true), c("b", "proposed", true), c("c", "proposed", true)])[0].state, "open");
+check("nobody ruled reads as unset", (0, closures_1.rowsByDate)(THREE, [c("a", "proposed"), c("b", "proposed"), c("c", "proposed")])[0].state, "unset");
+check("two shut and one trading is MIXED, not closed", (0, closures_1.rowsByDate)(THREE, [c("a", "confirmed"), c("b", "confirmed"), c("c", "proposed", true)])[0].state, "mixed");
+check("and a mixed row can say how many", (0, closures_1.rowsByDate)(THREE, [c("a", "confirmed"), c("b", "confirmed"), c("c", "proposed", true)])[0]
+    .closedCount + " of " + (0, closures_1.rowsByDate)(THREE, [c("a", "confirmed")])[0].scopeCount, "2 of 3");
+/* Silence is not consent: a rooftop the seeder never reached has no opinion,
+   and calling that "open" would let a store go live on an unlooked-at year. */
+check("two shut and one with NO ROW is mixed, not closed", (0, closures_1.rowsByDate)(THREE, [c("a", "confirmed"), c("b", "confirmed")])[0].state, "mixed");
+check("a rooftop outside the scope is ignored", (0, closures_1.rowsByDate)(["a"], [c("a", "confirmed"), c("zz", "proposed", true)])[0].state, "closed");
+check("rows come back in date order", (0, closures_1.rowsByDate)(["a"], [
+    { rooftopId: "a", date: "2026-12-25", label: "Christmas Day", status: "proposed", dismissed: false },
+    { rooftopId: "a", date: "2026-09-07", label: "Labor Day", status: "proposed", dismissed: false },
+]).map((r) => r.date), ["2026-09-07", "2026-12-25"]);
 console.log(`\n  ${passed} passed, ${failed} failed\n`);
 if (failures.length) {
     failures.forEach((f) => console.log(`    ${f}\n`));

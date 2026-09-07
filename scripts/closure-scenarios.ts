@@ -18,6 +18,7 @@ import {
   federalHolidays,
   missingProposals,
   openProposalCount,
+  rowsByDate,
   yearsToSeed,
 } from "../lib/closures";
 import { restDayFor, nextScheduledDayLabel } from "../lib/work-schedule";
@@ -167,6 +168,42 @@ check("the open count is what the line reports",
     { date: "2026-11-26", status: "proposed", dismissed: false },
     { date: "2026-12-25", status: "confirmed", dismissed: false },
   ]), 2);
+
+console.log("\n  One row per date, across every rooftop\n");
+
+const c = (rooftopId: string, status: "proposed" | "confirmed", dismissed = false) => ({
+  rooftopId, date: LABOR_DAY as IsoDate, label: "Labor Day", status, dismissed,
+});
+const THREE = ["a", "b", "c"];
+
+check("all three shut reads as closed",
+  rowsByDate(THREE, [c("a","confirmed"), c("b","confirmed"), c("c","confirmed")])[0].state,
+  "closed");
+check("all three trading reads as open",
+  rowsByDate(THREE, [c("a","proposed",true), c("b","proposed",true), c("c","proposed",true)])[0].state,
+  "open");
+check("nobody ruled reads as unset",
+  rowsByDate(THREE, [c("a","proposed"), c("b","proposed"), c("c","proposed")])[0].state,
+  "unset");
+check("two shut and one trading is MIXED, not closed",
+  rowsByDate(THREE, [c("a","confirmed"), c("b","confirmed"), c("c","proposed",true)])[0].state,
+  "mixed");
+check("and a mixed row can say how many",
+  rowsByDate(THREE, [c("a","confirmed"), c("b","confirmed"), c("c","proposed",true)])[0]
+    .closedCount + " of " + rowsByDate(THREE, [c("a","confirmed")])[0].scopeCount,
+  "2 of 3");
+/* Silence is not consent: a rooftop the seeder never reached has no opinion,
+   and calling that "open" would let a store go live on an unlooked-at year. */
+check("two shut and one with NO ROW is mixed, not closed",
+  rowsByDate(THREE, [c("a","confirmed"), c("b","confirmed")])[0].state, "mixed");
+check("a rooftop outside the scope is ignored",
+  rowsByDate(["a"], [c("a","confirmed"), c("zz","proposed",true)])[0].state, "closed");
+check("rows come back in date order",
+  rowsByDate(["a"], [
+    { rooftopId:"a", date:"2026-12-25" as IsoDate, label:"Christmas Day", status:"proposed", dismissed:false },
+    { rooftopId:"a", date:"2026-09-07" as IsoDate, label:"Labor Day", status:"proposed", dismissed:false },
+  ]).map((r) => r.date),
+  ["2026-09-07", "2026-12-25"]);
 
 console.log(`\n  ${passed} passed, ${failed} failed\n`);
 if (failures.length) {

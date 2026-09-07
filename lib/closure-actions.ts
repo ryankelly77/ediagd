@@ -34,33 +34,75 @@ function validDate(value: unknown): value is string {
 }
 
 /**
- * Confirm a proposed closure — the store really is shut that day.
+ * Rule one date across however many rooftops: shut, or trading.
  *
- * Stamps who and when, because a closure suppresses a day of coaching for
- * everybody at that rooftop and "who said so" is the first question anybody
- * asks when one turns out to be wrong. The constraint in 0101 requires it.
+ * ---------------------------------------------------------------------------
+ * KEYED BY DATE AND ROOFTOP, NOT BY ROW ID
+ * ---------------------------------------------------------------------------
+ * The first cut took a row id, which forced the screen to list every rooftop
+ * separately: eleven stores times eleven dates is a hundred and twenty-one
+ * decisions for a dealer whose shops almost certainly close on the same days.
+ * Nobody finishes that, and a half-finished calendar is worse than an untouched
+ * one — readiness goes green for the stores that got done and the holiday still
+ * breaks the rest.
  *
- * Confirming clears any dismissal: a manager who dismissed the date in
- * February and confirms it in June has changed their mind, and leaving the
- * tombstone would leave the row saying both things at once.
+ * A date plus a set of rooftops is what a manager actually decides, so it is
+ * what the action takes. One rooftop is just a set of one.
+ *
+ * UPSERT, NOT UPDATE. A rooftop the seeder has not reached has no row for the
+ * date, and a manager ruling it should not have to wait for January. The unique
+ * (rooftop_id, closed_on) makes the write idempotent either way.
  */
-export async function confirmClosureAction(id: string): Promise<ClosureResult> {
+export async function setClosureAction(input: {
+  rooftopIds: string[];
+  date: string;
+  label: string;
+  closed: boolean;
+}): Promise<ClosureResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not signed in." };
+  if (!validDate(input.date)) return { ok: false, error: "That date doesn't look right." };
+  if (input.rooftopIds.length === 0) return { ok: false, error: "Pick a rooftop." };
 
-  const { error } = await supabase
-    .from("rooftop_closed_day")
-    .update({
-      status: "confirmed",
-      confirmed_at: new Date().toISOString(),
-      confirmed_by: user.id,
-      dismissed_at: null,
-      dismissed_by: null,
-    })
-    .eq("id", id);
+  const now = new Date().toISOString();
+
+  /*
+   * CLOSED and OPEN are both rulings, and both have to be recorded.
+   *
+   * Open is not "no row": a dismissal is a tombstone that stops the January
+   * seeder re-asking a question the manager has already answered. So it stays
+   * `proposed` with dismissed_at set — inert, and never proposed again.
+   */
+  const row = input.closed
+    ? {
+        status: "confirmed",
+        confirmed_at: now,
+        confirmed_by: user.id,
+        dismissed_at: null,
+        dismissed_by: null,
+      }
+    : {
+        status: "proposed",
+        confirmed_at: null,
+        confirmed_by: null,
+        dismissed_at: now,
+        dismissed_by: user.id,
+      };
+
+  const { error } = await supabase.from("rooftop_closed_day").upsert(
+    input.rooftopIds.map((rooftopId) => ({
+      rooftop_id: rooftopId,
+      closed_on: input.date,
+      label: input.label,
+      origin: "federal",
+      created_by: user.id,
+      ...row,
+    })),
+    { onConflict: "rooftop_id,closed_on" }
+  );
 
   if (error) return { ok: false, error: error.message };
   revalidatePath(CLOSURES_PATH);
@@ -68,31 +110,40 @@ export async function confirmClosureAction(id: string): Promise<ClosureResult> {
 }
 
 /**
- * Dismiss a proposal — the store trades that day.
+ * Rule every date still waiting, in one act.
  *
- * NOT A DELETE, and that is the point. The seeder runs every January; deleting
- * the row would re-ask the same question a year later, forever. The tombstone
- * is what makes "we're open on Presidents' Day" something a manager says once.
- *
- * It also un-confirms, so this is the undo for a confirmation made in error.
+ * The two answers a whole calendar usually has: "we close on all the usual
+ * ones" and "we trade through them". Either way it settles the year in a tap
+ * rather than eleven, and a date already ruled is left exactly as it is — a
+ * decision somebody made is not swept up by a bulk one.
  */
-export async function dismissClosureAction(id: string): Promise<ClosureResult> {
+export async function ruleRemainingAction(input: {
+  rooftopIds: string[];
+  closed: boolean;
+}): Promise<ClosureResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not signed in." };
+  if (input.rooftopIds.length === 0) return { ok: false, error: "Pick a rooftop." };
+
+  /* Today's floor matches the screen's. Sweeping up a date from last January
+     would retroactively re-score days nobody was asked about. */
+  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date().toISOString();
+
+  const patch = input.closed
+    ? { status: "confirmed", confirmed_at: now, confirmed_by: user.id }
+    : { status: "proposed", dismissed_at: now, dismissed_by: user.id };
 
   const { error } = await supabase
     .from("rooftop_closed_day")
-    .update({
-      status: "proposed",
-      confirmed_at: null,
-      confirmed_by: null,
-      dismissed_at: new Date().toISOString(),
-      dismissed_by: user.id,
-    })
-    .eq("id", id);
+    .update(patch)
+    .in("rooftop_id", input.rooftopIds)
+    .eq("status", "proposed")
+    .gte("closed_on", today)
+    .is("dismissed_at", null);
 
   if (error) return { ok: false, error: error.message };
   revalidatePath(CLOSURES_PATH);
@@ -150,44 +201,6 @@ export async function addClosureAction(input: {
      */
     { onConflict: "rooftop_id,closed_on" }
   );
-
-  if (error) return { ok: false, error: error.message };
-  revalidatePath(CLOSURES_PATH);
-  return { ok: true };
-}
-
-/**
- * Confirm every open proposal for a rooftop, in one action.
- *
- * The convenience that makes the onboarding step take a second for a dealer who
- * simply closes on all eleven. It touches only rows that are still open — a
- * dismissal is a decision and is not swept back up by a bulk confirm.
- */
-export async function confirmAllProposalsAction(
-  rooftopId: string
-): Promise<ClosureResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not signed in." };
-
-  /* Today's floor matches the screen's. A bulk confirm must touch exactly the
-     rows the manager was looking at — sweeping up a date from last January
-     would retroactively re-score days nobody was asked about. */
-  const today = new Date().toISOString().slice(0, 10);
-
-  const { error } = await supabase
-    .from("rooftop_closed_day")
-    .update({
-      status: "confirmed",
-      confirmed_at: new Date().toISOString(),
-      confirmed_by: user.id,
-    })
-    .eq("rooftop_id", rooftopId)
-    .eq("status", "proposed")
-    .gte("closed_on", today)
-    .is("dismissed_at", null);
 
   if (error) return { ok: false, error: error.message };
   revalidatePath(CLOSURES_PATH);
