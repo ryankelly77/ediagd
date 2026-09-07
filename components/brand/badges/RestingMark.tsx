@@ -1,3 +1,13 @@
+import {
+  MARK_SUN,
+  MARK_SWELL_PATHS,
+  MARK_VIEWBOX,
+  MARK_WAVE,
+  MARK_WAVE_PATH,
+  MARK_CREAM,
+  MARK_PALM_PATHS,
+} from "@/lib/brand-ink";
+
 /**
  * The Swell mark, at rest.
  *
@@ -15,71 +25,100 @@
  * greyed out or dimmed: a day off is not a lesser day, it is a different one,
  * and the brand rule is celebrate up, never punish down.
  *
- * ISLAND TIME LEANS. A booked absence gets the palm, because a scheduled day
- * off is the week's own shape and Island Time is somewhere you went.
+ * ---------------------------------------------------------------------------
+ * ISLAND TIME GETS A HAMMOCK, AND THAT IS A CORRECTION
+ * ---------------------------------------------------------------------------
+ * This used to give Island Time a palm tree, which worked only while the
+ * everyday mark had none. The master artwork now has a palm in it, so a palm
+ * says "EDIAGD" rather than "vacation" — the variant stopped signifying the
+ * moment the logo changed.
+ *
+ * A hammock slung from that palm is the thing only Island Time means. One drawn
+ * element, unmistakable at a glance, and it makes the booked-absence card the
+ * small delight it deserves rather than a scheduled-day-off card wearing a
+ * different tree.
+ *
+ * All inks come from lib/brand-ink. Four hand-drawn copies of this mark had
+ * already drifted to an older palette before anyone noticed; geometry sometimes
+ * has to be hand-drawn, ink never does.
  */
 export function RestingMark({
   variant,
   size = 96,
   className,
 }: {
-  /** `palm` for Island Time, `sun` for a day off or a store closure. */
+  /** `palm` for Island Time — palm and hammock. `sun` for a day off or closure. */
   variant: "sun" | "palm";
   size?: number;
   className?: string;
 }) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox={MARK_VIEWBOX}
       width={size}
       height={size}
       className={className}
       aria-hidden="true"
     >
       <g strokeLinecap="round">
+        {/*
+          Z-ORDER IS THE WHOLE DRAWING HERE.
+
+          The master paints the wave IN FRONT of the palm, which is what tucks
+          the trunk behind the water and gives the mark its depth. That is kept.
+          But anything slung FROM the palm then disappears behind the wave too —
+          the first hammock was a sliver of rope above the waterline.
+
+          So the palm and the low sun sit behind the water, as in the master,
+          and the hammock sits in front of it. A hammock is nearer the viewer
+          than the sea is; painting it forward is what the eye expects.
+        */}
+
         {variant === "sun" ? (
           <>
-            {/*
-              Rays short and close to the sun rather than thrown wide, and only
-              the upper three — the two that would sit at the horizon are gone,
-              because a sun this low has nothing to throw sideways past.
-            */}
-            <g stroke="rgb(var(--ediagd-gold))" strokeWidth="4" opacity="0.75">
-              <path d="M50 34v6M33 40l4 4M67 40l-4 4" />
+            {/* Rays short and close rather than thrown wide — a sun this low
+                has nothing to throw sideways past. */}
+            <g stroke={MARK_SUN} strokeWidth="2.6" opacity="0.8" fill="none">
+              <path d="M52 26v-6M38 32l-4-4M66 32l4-4" />
             </g>
-            {/*
-              SITTING IN THE WATER, not above it. A shallow cap where SwellSun
-              draws a full half-disc — the difference between a sun coming up
-              and one that has settled.
-            */}
-            <path d="M34 60a16 16 0 0 1 32 0z" fill="rgb(var(--ediagd-gold))" opacity="0.9" />
+            {/* Low and partly behind the water: the wave crest cuts its base,
+                which is what says "settled" rather than "rising". */}
+            <circle cx="52" cy="40" r="11" fill={MARK_SUN} opacity="0.92" />
           </>
         ) : (
-          <>
-            {/* The trunk, leaning — it is the lean that reads as Island Time. */}
-            <path
-              d="M56 60c0-10 2-18 6-24"
-              fill="none"
-              stroke="rgb(var(--ediagd-teal))"
-              strokeWidth="4"
-            />
-            {/* Fronds, falling away from the lean rather than radiating. */}
-            <g fill="none" stroke="rgb(var(--ediagd-teal))" strokeWidth="4">
-              <path d="M62 36q-11-5-17 1" />
-              <path d="M62 36q11-6 16 1" />
-              <path d="M62 36q-3-11 3-14" />
-              <path d="M62 36q9 3 10 11" />
-            </g>
-            <circle cx="62" cy="36" r="2.5" fill="rgb(var(--ediagd-gold))" />
-          </>
+          /* The master's palm, unchanged — the same tree the logo has, which is
+             what makes the hammock read as hung from it. */
+          <g fill="none" stroke={MARK_CREAM} strokeWidth="2.6">
+            {MARK_PALM_PATHS.map((d, i) => (
+              <path key={i} d={d} />
+            ))}
+          </g>
         )}
 
-        {/* The horizon is IDENTICAL to SwellSun's, deliberately — it is what
-            makes the resting mark read as the same place at a different hour. */}
-        <g fill="none" stroke="rgb(var(--ediagd-teal))" strokeWidth="5">
-          <path d="M12 60h76" />
-          <path d="M16 74q9-8 18 0t18 0 18 0" />
-        </g>
+        <path d={MARK_WAVE_PATH} fill={MARK_WAVE} opacity="0.9" />
+        {MARK_SWELL_PATHS.map((d, i) => (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke={MARK_WAVE}
+            strokeWidth="2.2"
+            opacity={i === 0 ? 0.8 : 0.5}
+          />
+        ))}
+
+        {variant === "palm" && (
+          /*
+            IN FRONT OF THE WATER. Slung from the trunk down to the left, deep
+            enough to read as occupied rather than as a washing line. The end
+            lashings are what say "tied" — without them the curve is a smile.
+          */
+          <g fill="none" stroke={MARK_CREAM} strokeWidth="2.8">
+            <path d="M34 52 C 46 76, 72 76, 84 54" />
+            <path d="M34 52 l-2 -5M34 52 l3 -4" strokeWidth="1.8" />
+            <path d="M84 54 l2 -5M84 54 l-3 -4" strokeWidth="1.8" />
+          </g>
+        )}
       </g>
     </svg>
   );

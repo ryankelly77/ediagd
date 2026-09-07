@@ -21,6 +21,27 @@
   --ediagd-palm:        59 158 106;  /* #3B9E6A  success / "on track"         */
   --ediagd-palm-soft:  185 226 200;  /* #B9E2C8  success tint                 */
   --ediagd-clay:       201 118 47;   /* #C9762F  warm attention — NEVER red   */
+  /* ----------------------------------------------------------------------
+   * THESE ARE UI TOKENS, NOT THE MARK'S INKS.
+   *
+   * The brand mark's master files (public/brand/svg/ediagd-mark-primary-*.svg)
+   * carry their own, very slightly different values:
+   *
+   *     sun    #e3b15c   vs  --ediagd-gold  #E8B44C
+   *     wave   #6fbcc6   vs  --ediagd-teal  #4AA8B0
+   *     navy   #132a40   vs  --ediagd-navy  #0C1C2C
+   *     cream  #f2efe8   vs  --ediagd-cream #F4F0E4
+   *
+   * The gap is deliberate and the split is by PURPOSE. Gold here is not the
+   * sun's ink — it is the language's colour for wins and the single primary
+   * action, woven through every button, streak celebration and badge. Adopting
+   * a logo file's palette across the interface as a side effect would be the
+   * tail wagging the dog.
+   *
+   * So: artwork reads from lib/brand-ink.ts, interface reads from here. The
+   * deltas are small enough that the seam is invisible in use. Aligning them is
+   * a design-language decision to make with Mitch, not a drive-by.
+   * -------------------------------------------------------------------- */
   --ediagd-cream:      244 240 228;  /* #FBF6EA  app background                */
   --ediagd-cream-card: 252 250 244;  /* #FFFDF7  card surface                 */
   --ediagd-ink:         12 28 44;    /* #0C2739  body text                    */
@@ -326,6 +347,19 @@ html[data-launched="1"] #ediagd-launch {
     animation: ediagd-rays 420ms cubic-bezier(0.22, 1, 0.36, 1) 550ms both;
   }
 
+  /*
+   * The palm leans once and returns. Origin at the base of the trunk (80,78 in
+   * master coordinates) so the crown travels and the roots do not — which is
+   * how a tree bends, and the difference between wind and a wobble.
+   *
+   * 2.5 degrees. Enough to read as movement at 120px, small enough that it
+   * never looks like the icon is falling over.
+   */
+  .ediagd-launch__palm {
+    transform-origin: 80px 78px;
+    animation: ediagd-palm-sway 620ms ease-in-out 700ms both;
+  }
+
   /* ONE swell, not a loop. A repeating wave would turn a launch into an
      idle animation, and this screen is a doorway rather than a place. */
   .ediagd-launch__swell--1 {
@@ -342,7 +376,10 @@ html[data-launched="1"] #ediagd-launch {
 }
 
 @keyframes ediagd-sun {
-  from { opacity: 0; transform: translateY(34px); }
+  /* 31 units in the master's 120-wide space — the same proportion of the
+     canvas the 34 was in the old 132-wide one, so the sun still starts just
+     below the waterline. */
+  from { opacity: 0; transform: translateY(31px); }
   60%  { opacity: 1; }
   to   { opacity: 1; transform: translateY(0); }
 }
@@ -353,6 +390,12 @@ html[data-launched="1"] #ediagd-launch {
 }
 
 /* A swell passes THROUGH the water — a small lift and return, not a bounce. */
+@keyframes ediagd-palm-sway {
+  0%   { transform: rotate(0deg); }
+  45%  { transform: rotate(-2.5deg); }
+  100% { transform: rotate(0deg); }
+}
+
 @keyframes ediagd-swell {
   0%   { transform: translateY(0); }
   45%  { transform: translateY(-2.5px); }

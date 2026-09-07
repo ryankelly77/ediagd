@@ -21,7 +21,8 @@
      0.15  the sun rises, with a slight overshoot and settle
      0.55  the rays bloom outward from the sun that just arrived
      0.60  one swell passes through the water
-     1.06  settled
+     0.70  the palm leans once and returns
+     1.10  settled
 
    Under 1.2s end to end. Long enough to read as deliberate, short enough that
    somebody opening the app on a service drive does not wait for it — and it
@@ -36,6 +37,19 @@
    with nothing to cancel and no chance of a flash of the pre-animation state.
    ============================================================================ */
 
+import {
+  MARK_CREAM,
+  MARK_PALM_PATHS,
+  MARK_RAYS,
+  MARK_RING,
+  MARK_SUN,
+  MARK_SUN_CIRCLE,
+  MARK_SWELL_PATHS,
+  MARK_VIEWBOX,
+  MARK_WAVE,
+  MARK_WAVE_PATH,
+} from "@/lib/brand-ink";
+
 export function LaunchScreen() {
   return (
     <div id="ediagd-launch" aria-hidden="true">
@@ -48,61 +62,83 @@ export function LaunchScreen() {
         */}
         <svg
           className="ediagd-launch__mark"
-          viewBox="-18 -18 132 132"
-          width="132"
-          height="132"
+          viewBox={MARK_VIEWBOX}
+          width="120"
+          height="120"
           role="img"
           aria-label="EDIAGD"
         >
           <circle
             className="ediagd-launch__ring"
-            cx="48"
-            cy="48"
-            r="44"
+            cx={MARK_RING.cx}
+            cy={MARK_RING.cy}
+            r={MARK_RING.r}
             fill="none"
-            stroke="#F5F1E8"
-            strokeWidth="2.6"
+            stroke={MARK_CREAM}
+            strokeWidth="2.4"
           />
 
           {/* Rays bloom from the sun's centre, so that is the origin. */}
           <g
             className="ediagd-launch__rays"
-            stroke="#E8B44C"
-            strokeWidth="2.4"
+            stroke={MARK_SUN}
+            strokeWidth="2.2"
             strokeLinecap="round"
           >
-            <line x1="60" y1="18" x2="60" y2="12" />
-            <line x1="72" y1="22" x2="75.5" y2="17" />
-            <line x1="80" y1="31" x2="85.5" y2="28" />
+            {MARK_RAYS.map((r, i) => (
+              <line key={i} x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} />
+            ))}
           </g>
 
           {/* PAINTED BEFORE THE WATER, which is what lets it rise from behind
               it without a mask. */}
-          <circle className="ediagd-launch__sun" cx="60" cy="33" r="9" fill="#E8B44C" />
+          <circle
+            className="ediagd-launch__sun"
+            cx={MARK_SUN_CIRCLE.cx}
+            cy={MARK_SUN_CIRCLE.cy}
+            r={MARK_SUN_CIRCLE.r}
+            fill={MARK_SUN}
+          />
+
+          {/*
+            THE PALM, AND WHY IT SWAYS ONCE RATHER THAN STANDING STILL.
+
+            It is rooted behind the water and drawn in the ring's ink, so it
+            reads as part of the frame the sun rises into rather than a fourth
+            moving object. A single lean-and-return, starting as the sun
+            settles, is enough to say "wind" — a palm that holds perfectly
+            still in an animation about a sunrise looks pasted on, and one that
+            keeps swaying turns a doorway into a screensaver.
+
+            The origin is the base of the trunk, so the crown travels and the
+            roots do not, which is how a real tree bends.
+          */}
+          <g
+            className="ediagd-launch__palm"
+            fill="none"
+            stroke={MARK_CREAM}
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          >
+            {MARK_PALM_PATHS.map((d, i) => (
+              <path key={i} d={d} />
+            ))}
+          </g>
 
           <g className="ediagd-launch__water">
-            <path
-              d="M14 62 C 23 40, 47 33, 56 46 C 46 42, 38 48, 39.5 57 C 51 50, 68 53, 79 63 C 57 72, 30 71, 14 62 Z"
-              fill="#7EC8CD"
-            />
-            <path
-              className="ediagd-launch__swell ediagd-launch__swell--1"
-              d="M22 72 C 38 77, 60 77, 74 71"
-              fill="none"
-              stroke="#7EC8CD"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              opacity="0.7"
-            />
-            <path
-              className="ediagd-launch__swell ediagd-launch__swell--2"
-              d="M30 79 C 42 82.5, 56 82.5, 66 78.5"
-              fill="none"
-              stroke="#7EC8CD"
-              strokeWidth="2"
-              strokeLinecap="round"
-              opacity="0.45"
-            />
+            <path d={MARK_WAVE_PATH} fill={MARK_WAVE} />
+            {MARK_SWELL_PATHS.map((d, i) => (
+              <path
+                key={i}
+                className={`ediagd-launch__swell ediagd-launch__swell--${i + 1}`}
+                d={d}
+                fill="none"
+                stroke={MARK_WAVE}
+                strokeWidth={i === 0 ? 2.2 : 2.2}
+                strokeLinecap="round"
+                opacity={i === 0 ? 1 : 0.6}
+              />
+            ))}
           </g>
         </svg>
       </div>

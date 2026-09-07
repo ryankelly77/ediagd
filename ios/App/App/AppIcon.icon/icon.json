@@ -12,21 +12,21 @@
           "image-name": "water.png",
           "name": "1 Water"
         }
-      ],
-      "translucency": {
-        "enabled": true,
-        "value": 0.5
-      }
+      ]
     },
     {
       "layers": [
         {
+          "image-name": "palm.png",
+          "name": "2 Palm"
+        },
+        {
           "image-name": "sun.png",
-          "name": "2 Sun"
+          "name": "3 Sun"
         },
         {
           "image-name": "rays.png",
-          "name": "3 Rays"
+          "name": "4 Rays"
         }
       ],
       "shadow": {
