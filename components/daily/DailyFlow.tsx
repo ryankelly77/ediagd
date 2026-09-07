@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { VideoNotReady } from "@/components/video/MuxVideo";
 import type { VideoRenditions } from "@/lib/mux/playback";
 import { creditedGate, gateFromWatch, type GateRecord } from "@/lib/watch-credit";
+import type { RestDay } from "@/lib/work-schedule";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { WATCHED_PCT } from "@/lib/watch-coverage";
 import {
@@ -136,7 +137,7 @@ export function DailyFlow({
    * day, and null in the admin preview — the preview exists to demonstrate the
    * ritual, and a rest card would demonstrate its absence.
    */
-  restDay?: { kind: "day_off" | "island_time" } | null;
+  restDay?: RestDay | null;
   /**
    * "Monday", "Tuesday", or "your next work day" — the day their Swell picks
    * up, computed from their own schedule with Island Time skipped. Empty on a
@@ -313,6 +314,7 @@ export function DailyFlow({
     return (
       <RestDayCard
         kind={restDay.kind}
+        closureLabel={restDay.label ?? null}
         greetingName={greetingName}
         quote={quote}
         video={lifestyle && { ...lifestyle, gate: lifestyleGate }}
@@ -484,6 +486,7 @@ export function DailyFlow({
  */
 function RestDayCard({
   kind,
+  closureLabel,
   greetingName,
   quote,
   video,
@@ -494,7 +497,9 @@ function RestDayCard({
   onGateMet,
   onTakeTheRep,
 }: {
-  kind: "day_off" | "island_time";
+  kind: "day_off" | "island_time" | "store_closed";
+  /** The manager's words for the closure — "Labor Day". Only when closed. */
+  closureLabel: string | null;
   greetingName: string;
   quote: Quote | null;
   video: LifestyleVideo | null;
@@ -507,6 +512,15 @@ function RestDayCard({
   onTakeTheRep: () => void;
 }) {
   const island = kind === "island_time";
+  const closed = kind === "store_closed";
+
+  /*
+   * "Closed for Labor Day" — the manager's label, in their words, because they
+   * are the ones who know why the store is shut. A closure with no usable label
+   * falls back to the plain fact rather than printing "Closed for ".
+   */
+  const closureHeading =
+    closed && closureLabel?.trim() ? `Closed for ${closureLabel.trim()}` : "Store closed";
 
   return (
     <PhoneScreen>
@@ -520,7 +534,8 @@ function RestDayCard({
             consecutive-scheduled-work-day calculation", which is the same fact
             and no comfort at all. */}
         <h1 className="mt-2 text-3xl font-extrabold leading-tight text-navy">
-          {island ? "Island Time" : "Scheduled day off"} — your streak is safe
+          {closed ? closureHeading : island ? "Island Time" : "Scheduled day off"} — your
+          streak is safe
         </h1>
 
         {/*
@@ -538,9 +553,14 @@ function RestDayCard({
           and leaves "counts" to mean earning, once, in the footer.
         */}
         <p className="mt-3 text-base leading-relaxed text-ink-soft">
-          {island
-            ? "You booked today off, so nothing is owed — skipping today costs you nothing."
-            : "Today isn't one of your work days, so nothing is owed — skipping today costs you nothing."}
+          {closed
+            ? /* THE STORE decided this one, not them and not us. Said plainly,
+                 because an advisor who sees a rest card on a Monday needs to
+                 know why before they trust it. */
+              "Your store is closed today, so nothing is owed — skipping today costs you nothing."
+            : island
+              ? "You booked today off, so nothing is owed — skipping today costs you nothing."
+              : "Today isn't one of your work days, so nothing is owed — skipping today costs you nothing."}
           {streak > 0 && (
             <>
               {" "}

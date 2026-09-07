@@ -130,7 +130,11 @@ export async function completeDay(
   // written anything, so there is no half-claimed day to compensate for.
   // No schedule row means "not onboarded", and the engine then treats every
   // day as scheduled — identical to the behaviour before 0025.
-  const scheduleContext = await loadScheduleContext(supabase, userId);
+  /* WITH THE ROOFTOP, so a voluntary completion on a closed day is scored
+     against the same calendar the card promised. Without it, scheduledOn()
+     would call a shut store a work day and countMissedWorkDays would charge
+     grace for the days around it. */
+  const scheduleContext = await loadScheduleContext(supabase, userId, rooftopId);
 
   // Three-valued on purpose: null when there's no schedule on file, because
   // "we don't know" is not the same claim as "they weren't scheduled". Stamped

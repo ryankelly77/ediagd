@@ -1,0 +1,384 @@
+"use strict";
+/* ============================================================================
+   EDIAGD — work schedules and Island Time
+   Shared by completeDay (service role), the onboarding screen, /profile, and
+   the manager views. Row shape in, engine shape out — the pure streak module
+   never learns what a database row looks like.
+   ============================================================================ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isWorkDay = exports.SCHEDULE_COLUMNS = exports.MON_FRI_DRAFT = exports.EMPTY_DRAFT = exports.SATURDAY_CHOICES = exports.WEEKDAYS = void 0;
+exports.rowToSchedule = rowToSchedule;
+exports.scheduleToDraft = scheduleToDraft;
+exports.draftToSchedule = draftToSchedule;
+exports.draftToRow = draftToRow;
+exports.validateDraft = validateDraft;
+exports.restDayFor = restDayFor;
+exports.nextScheduledDay = nextScheduledDay;
+exports.weekdayName = weekdayName;
+exports.nextScheduledDayLabel = nextScheduledDayLabel;
+exports.loadScheduleContext = loadScheduleContext;
+exports.loadIslandBudgetContext = loadIslandBudgetContext;
+exports.isOnboarded = isOnboarded;
+exports.isCurrentOrFuture = isCurrentOrFuture;
+exports.describeSchedule = describeSchedule;
+exports.upcomingSaturdays = upcomingSaturdays;
+exports.formatDayLabel = formatDayLabel;
+const streak_1 = require("@/lib/gamification/streak");
+Object.defineProperty(exports, "isWorkDay", { enumerable: true, get: function () { return streak_1.isWorkDay; } });
+/** The six plain days, in the order a week reads. Saturday is a mode. */
+exports.WEEKDAYS = [
+    { key: "mon", column: "works_mon", label: "Mon", full: "Monday" },
+    { key: "tue", column: "works_tue", label: "Tue", full: "Tuesday" },
+    { key: "wed", column: "works_wed", label: "Wed", full: "Wednesday" },
+    { key: "thu", column: "works_thu", label: "Thu", full: "Thursday" },
+    { key: "fri", column: "works_fri", label: "Fri", full: "Friday" },
+    { key: "sun", column: "works_sun", label: "Sun", full: "Sunday" },
+];
+exports.SATURDAY_CHOICES = [
+    { value: "none", label: "I don't work Saturdays" },
+    { value: "every", label: "Every Saturday" },
+    { value: "alternating", label: "Every other Saturday" },
+];
+exports.EMPTY_DRAFT = {
+    mon: false,
+    tue: false,
+    wed: false,
+    thu: false,
+    fri: false,
+    sun: false,
+    saturdayMode: "none",
+    saturdayAnchor: null,
+};
+/** The most common dealership week, offered as a one-tap starting point. */
+exports.MON_FRI_DRAFT = {
+    ...exports.EMPTY_DRAFT,
+    mon: true,
+    tue: true,
+    wed: true,
+    thu: true,
+    fri: true,
+};
+exports.SCHEDULE_COLUMNS = "works_mon, works_tue, works_wed, works_thu, works_fri, works_sun, saturday_mode, saturday_anchor, schedule_set_at";
+function rowToSchedule(row) {
+    if (!row)
+        return null;
+    return {
+        mon: Boolean(row.works_mon),
+        tue: Boolean(row.works_tue),
+        wed: Boolean(row.works_wed),
+        thu: Boolean(row.works_thu),
+        fri: Boolean(row.works_fri),
+        sun: Boolean(row.works_sun),
+        saturdayMode: row.saturday_mode ?? "none",
+        saturdayAnchor: row.saturday_anchor ?? null,
+    };
+}
+function scheduleToDraft(schedule) {
+    if (!schedule)
+        return { ...exports.EMPTY_DRAFT };
+    return {
+        mon: schedule.mon,
+        tue: schedule.tue,
+        wed: schedule.wed,
+        thu: schedule.thu,
+        fri: schedule.fri,
+        sun: schedule.sun,
+        saturdayMode: schedule.saturdayMode,
+        saturdayAnchor: schedule.saturdayAnchor,
+    };
+}
+/**
+ * A draft as the engine sees it — the inverse of scheduleToDraft.
+ *
+ * Exists so the form can run the same schedule-flag rules on an UNSAVED week
+ * that the admin's onboarding list runs on a saved one. Without it the form
+ * would need its own copy of the shape, and a copy is how "one day picked" ends
+ * up meaning two different things in two files.
+ */
+function draftToSchedule(draft) {
+    return {
+        mon: draft.mon,
+        tue: draft.tue,
+        wed: draft.wed,
+        thu: draft.thu,
+        fri: draft.fri,
+        sun: draft.sun,
+        saturdayMode: draft.saturdayMode,
+        saturdayAnchor: draft.saturdayAnchor,
+    };
+}
+function draftToRow(draft) {
+    return {
+        works_mon: draft.mon,
+        works_tue: draft.tue,
+        works_wed: draft.wed,
+        works_thu: draft.thu,
+        works_fri: draft.fri,
+        works_sun: draft.sun,
+        saturday_mode: draft.saturdayMode,
+        // Only an alternating schedule has any use for an anchor; storing one on a
+        // 'never'/'every' schedule would be a fact nobody reads and nobody updates.
+        saturday_anchor: draft.saturdayMode === "alternating" ? draft.saturdayAnchor : null,
+    };
+}
+/* ---- Validation (shared by the action; the DB re-checks anyway) ---------- */
+/**
+ * Returns an error message, or null when the draft is sound.
+ *
+ * The database enforces the same two rules with CHECK constraints, so this is
+ * about giving a person a sentence they can act on rather than a constraint
+ * violation. It is NOT the security boundary.
+ */
+function validateDraft(draft) {
+    const anyDay = draft.mon ||
+        draft.tue ||
+        draft.wed ||
+        draft.thu ||
+        draft.fri ||
+        draft.sun ||
+        draft.saturdayMode !== "none";
+    if (!anyDay) {
+        return "Pick at least one day you're on the drive.";
+    }
+    if (draft.saturdayMode === "alternating") {
+        if (!draft.saturdayAnchor) {
+            return "Tell us the next Saturday you work, so we know which weeks are yours.";
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.saturdayAnchor)) {
+            return "That date doesn't look right.";
+        }
+        if ((0, streak_1.isoWeekday)(draft.saturdayAnchor) !== 6) {
+            return "That date isn't a Saturday.";
+        }
+    }
+    return null;
+}
+/**
+ * Is today a day nobody asked them to work, and which kind?
+ *
+ * ---------------------------------------------------------------------------
+ * THE SCREEN AND THE MATHS READ THE SAME CONTEXT
+ * ---------------------------------------------------------------------------
+ * /today shows a rest card on exactly the days countMissedWorkDays refuses to
+ * count. Deriving that twice, in two files, is how a screen ends up promising
+ * "your streak is safe" on a day the engine will hold against them — so this is
+ * the one derivation and both sides use it.
+ *
+ * NULL SCHEDULE MEANS SCHEDULED, matching the engine: with no row on file
+ * countMissedWorkDays treats every day as a work day, so a rest card here would
+ * be a promise nothing behind it keeps.
+ *
+ * DAY OFF OUTRANKS EVERYTHING. A Saturday that is also Christmas is both, and
+ * "scheduled day off" is the truer thing to say about it — the other two are
+ * for a day they would otherwise have been on the drive.
+ *
+ * A CLOSURE OUTRANKS ISLAND TIME, and that ordering is deliberate. Somebody on
+ * a booked week off when the store also shuts is told the store is shut,
+ * because that is the fact about the day rather than the fact about them: it
+ * is true for everybody at that rooftop, and it is the one of the two they did
+ * not already know. Nothing about the Island Time booking changes — the day is
+ * rest either way, and the budget is counted where it always was.
+ *
+ * NULL SCHEDULE STILL MEANS SCHEDULED, closure or not. The rest of the guard
+ * has always refused to promise "your streak is safe" without a schedule on
+ * file, because countMissedWorkDays counts every day when there is no row, and
+ * a closure does not change what the engine would do with the days around it.
+ */
+function restDayFor(date, context) {
+    if (!context.schedule)
+        return null;
+    if (!(0, streak_1.isWorkDay)(date, context.schedule))
+        return { kind: "day_off" };
+    const closed = (0, streak_1.storeClosure)(date, context.closures);
+    if (closed)
+        return { kind: "store_closed", label: closed.label };
+    if ((0, streak_1.isIslandTime)(date, context.islandTime))
+        return { kind: "island_time" };
+    return null;
+}
+/**
+ * The next day this person is actually due on the drive, after `date`.
+ *
+ * ---------------------------------------------------------------------------
+ * BECAUSE THE REST CARD USED TO SAY "MONDAY" TO EVERYBODY
+ * ---------------------------------------------------------------------------
+ * "Day 5 is still Day 5 on Monday" is right for a Mon–Fri advisor resting on a
+ * Saturday, which is every advisor in the system today and none of them once
+ * sixty more onboard. A Tue–Sat advisor resting on Monday would have been told
+ * their Swell resumes on the day they are standing in. A card whose entire
+ * premise is "the app knows your schedule" cannot afford one hardcoded weekday.
+ *
+ * ISLAND TIME IS SKIPPED TOO. A work day inside a booked absence is not when
+ * they are back — same rule the streak engine applies, from the same context,
+ * so the card and countMissedWorkDays cannot disagree about which day resumes.
+ *
+ * Returns null when nothing is found inside the scan window: with no schedule
+ * on file every day is a work day and the answer is tomorrow, and validateDraft
+ * forbids an empty week — so null means a booked absence longer than the window
+ * or data nobody expected, and the caller falls back to words.
+ */
+const NEXT_DAY_SCAN = 60;
+function nextScheduledDay(date, context) {
+    for (let i = 1; i <= NEXT_DAY_SCAN; i++) {
+        const d = (0, streak_1.addDays)(date, i);
+        if (!(0, streak_1.isWorkDay)(d, context.schedule))
+            continue;
+        if ((0, streak_1.isIslandTime)(d, context.islandTime))
+            continue;
+        /* A shut store is not when they are back. Without this the card would
+           answer "Day 5 is still Day 5 on Thursday" about Thanksgiving. */
+        if ((0, streak_1.isStoreClosed)(d, context.closures))
+            continue;
+        return d;
+    }
+    return null;
+}
+/** "Monday". The weekday alone — the card is about this week, not a date. */
+function weekdayName(date) {
+    return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
+        weekday: "long",
+        timeZone: "UTC",
+    });
+}
+/**
+ * What to put after "still Day 5 on" — a weekday, or an honest hedge.
+ *
+ * A weekday name is only unambiguous inside a week. An advisor who works one
+ * day a fortnight — alternating Saturdays and nothing else, which is a shape
+ * this app has actually stored — would get "on Saturday" for a day thirteen
+ * days out, so past a week it says so in words instead.
+ */
+function nextScheduledDayLabel(date, context) {
+    const next = nextScheduledDay(date, context);
+    if (!next)
+        return "your next work day";
+    return (0, streak_1.daysBetween)(date, next) > 7 ? "your next work day" : weekdayName(next);
+}
+/* ---- Loading ------------------------------------------------------------- */
+/**
+ * Everything the streak engine needs about one person's calendar.
+ *
+ * Both reads are scoped to the user. Under the user's own client RLS does that
+ * too (0025); under the service role this eq() is the only thing that does, so
+ * it is not optional.
+ */
+async function loadScheduleContext(client, userId, 
+/**
+ * The rooftop whose closure calendar applies, when the caller has one.
+ *
+ * OPTIONAL, and omitting it means no closures — which is the pre-0101
+ * behaviour and safe by construction, because closures only ever add rest.
+ * A caller that forgets it gets today's answers, not wrong ones.
+ */
+rooftopId) {
+    const [{ data: scheduleRow }, { data: islandRows }, { data: closureRows }] = await Promise.all([
+        client
+            .from("work_schedule")
+            .select(exports.SCHEDULE_COLUMNS)
+            .eq("user_id", userId)
+            .maybeSingle(),
+        client
+            .from("island_time")
+            .select("start_date, end_date")
+            .eq("user_id", userId)
+            .order("start_date", { ascending: false })
+            .limit(500),
+        rooftopId
+            ? client
+                .from("rooftop_closed_day")
+                .select("closed_on, label")
+                .eq("rooftop_id", rooftopId)
+                /* CONFIRMED ONLY. A proposal is inert everywhere, and this is the
+                   one read that would make it otherwise. */
+                .eq("status", "confirmed")
+                .order("closed_on", { ascending: false })
+                .limit(500)
+            : Promise.resolve({ data: [] }),
+    ]);
+    const islandTime = (islandRows ?? []).map((r) => ({ start: r.start_date, end: r.end_date }));
+    const closures = (closureRows ?? []).map((r) => ({ date: r.closed_on, label: r.label }));
+    return {
+        schedule: rowToSchedule(scheduleRow),
+        islandTime,
+        closures,
+    };
+}
+/**
+ * Everything needed to price a new Island Time range: their calendar, and the
+ * cap in force.
+ *
+ * The cap is read from game_settings on every call rather than cached. It is a
+ * policy Mitch edits on the settings screen, and a booking refused against a
+ * number that changed last week is a support conversation nobody can win.
+ *
+ * DEFAULTS TO THE MIGRATION'S 15 if the settings row cannot be read. Not zero:
+ * a failed read must not silently forbid all Island Time, which would look
+ * exactly like the feature being switched off.
+ */
+async function loadIslandBudgetContext(client, userId) {
+    const [context, { data: settings }] = await Promise.all([
+        loadScheduleContext(client, userId),
+        client.from("game_settings").select("island_time_days_per_year").limit(1).maybeSingle(),
+    ]);
+    const raw = settings
+        ?.island_time_days_per_year;
+    return { ...context, cap: raw == null ? 15 : Number(raw) };
+}
+/** Has this person told us their schedule? Absence of a row is the signal. */
+function isOnboarded(row) {
+    return Boolean(row);
+}
+/** Upcoming or still running today. */
+function isCurrentOrFuture(entry, today) {
+    return entry.end >= today;
+}
+/* ---- Display ------------------------------------------------------------- */
+/** "Mon–Fri" / "Mon, Wed, Fri + every other Saturday" — a human sentence. */
+function describeSchedule(schedule) {
+    if (!schedule)
+        return "Not set yet";
+    const days = exports.WEEKDAYS.filter((d) => schedule[d.key]).map((d) => d.label);
+    // Mon–Fri is common enough to be worth naming rather than listing.
+    const isMonFri = schedule.mon && schedule.tue && schedule.wed && schedule.thu && schedule.fri && !schedule.sun;
+    const base = isMonFri ? "Mon–Fri" : days.length > 0 ? days.join(", ") : "";
+    const sat = schedule.saturdayMode === "every"
+        ? "every Saturday"
+        : schedule.saturdayMode === "alternating"
+            ? "every other Saturday"
+            : null;
+    if (base && sat)
+        return `${base} + ${sat}`;
+    if (base)
+        return base;
+    if (sat)
+        return sat.charAt(0).toUpperCase() + sat.slice(1);
+    return "No days set";
+}
+/** The next N Saturdays from `from`, for the anchor picker. */
+function upcomingSaturdays(from, count = 6) {
+    const out = [];
+    const [y, m, d] = from.split("-").map(Number);
+    let cursor = Date.UTC(y, m - 1, d);
+    // Walk to the next Saturday (today counts if today is one).
+    while (new Date(cursor).getUTCDay() !== 6)
+        cursor += 86_400_000;
+    for (let i = 0; i < count; i++) {
+        out.push(new Date(cursor).toISOString().slice(0, 10));
+        cursor += 7 * 86_400_000;
+    }
+    return out;
+}
+/** 'Sat 8 Aug' — short, unambiguous, no year unless it differs. */
+function formatDayLabel(date, today) {
+    const d = new Date(date + "T00:00:00Z");
+    if (Number.isNaN(d.getTime()))
+        return date;
+    const sameYear = date.slice(0, 4) === today.slice(0, 4);
+    return d.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        ...(sameYear ? {} : { year: "numeric" }),
+        timeZone: "UTC",
+    });
+}

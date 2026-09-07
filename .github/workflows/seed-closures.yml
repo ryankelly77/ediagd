@@ -1,0 +1,56 @@
+# ============================================================================
+# EDIAGD — put next year's holidays in front of every manager, once a year
+#
+# WHY A SCHEDULE AND NOT A ONE-OFF SCRIPT. The closure calendar is only useful
+# if it is always a year ahead. Seeded by hand in 2026 and forgotten, every
+# rooftop quietly runs out of proposals the following January and the first
+# anybody hears about it is an advisor losing a Swell on New Year's Day —
+# exactly the failure the feature was built to prevent, arriving late instead
+# of never.
+#
+# EARLY JANUARY, because that is when the new year becomes the "next year" the
+# seeder wants on file, and because a manager confirming eleven dates in January
+# is doing it before any of them arrive. The 2nd rather than the 1st: nobody is
+# reading a rollout notification on New Year's Day.
+#
+# IT IS SAFE TO RUN AT ANY TIME, and that is the property worth stating. Every
+# row it writes is a PROPOSAL, and nothing in the daily loop or the streak
+# engine reads an unconfirmed row. It skips any date that already has a ruling
+# of either kind, so it can never re-ask a question a manager has answered and
+# can never overwrite one. A misfire costs nothing; a missed year costs a day.
+#
+# workflow_dispatch is here for the first run and for a new dealer onboarding
+# mid-year — their rooftops appear with no proposals until this next fires.
+# ============================================================================
+name: seed-closures
+
+on:
+  schedule:
+    # 09:00 UTC on 2 January.
+    - cron: "0 9 2 1 *"
+  workflow_dispatch:
+
+concurrency:
+  group: seed-closures
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Seed closure proposals
+        env:
+          SB_URL: ${{ secrets.SB_URL }}
+          SB_KEY: ${{ secrets.SB_KEY }}
+        run: npm run seed:closures -- --apply

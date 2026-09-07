@@ -1,0 +1,15 @@
+{
+  "//": "Standalone build for closure-scenarios.ts. Imports the REAL restDayFor, countMissedWorkDays and the closure module — the point is that the card and the streak engine read one derivation, which a paraphrase of either would not prove.",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs",
+    "moduleResolution": "node", "esModuleInterop": true, "skipLibCheck": true,
+    "outDir": "../.tmp-cl", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": [
+    "./closure-scenarios.ts",
+    "../lib/closures.ts",
+    "../lib/work-schedule.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

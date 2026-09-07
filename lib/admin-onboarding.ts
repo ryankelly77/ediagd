@@ -32,6 +32,11 @@
 
 import { describeSchedule, rowToSchedule, SCHEDULE_COLUMNS, type ScheduleRow } from "@/lib/work-schedule";
 import { scheduleFlags, workDaysPerWeek, type ScheduleFlag } from "@/lib/schedule-flags";
+import {
+  calendarSettledThroughYearEnd,
+  openProposalCount,
+  type Closure,
+} from "@/lib/closures";
 import type { IsoDate, WorkSchedule } from "@/lib/gamification/streak";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,6 +96,31 @@ export type OnboardingStatus = {
   rosterSeats: number;
   /** Rooftops those seats span, so the line can say where they are. */
   rosterRooftops: number;
+  /**
+   * One line per rooftop: has anybody ruled on this year's closures?
+   *
+   * ---------------------------------------------------------------------------
+   * BECAUSE THE FIRST HOLIDAY IS THE WORST TIME TO FIND OUT
+   * ---------------------------------------------------------------------------
+   * An unconfirmed calendar is invisible. The store behaves normally, every day
+   * is a work day, and nothing looks wrong — until Thanksgiving, when sixty
+   * advisors who were not at work get charged a missed day and the app they
+   * were told protects their Swell is the thing that broke it.
+   *
+   * There is no way to notice that from the advisor list, because it is not a
+   * fact about an advisor. So it goes here, next to the other things that have
+   * to be true before anybody goes live.
+   */
+  closureCalendars: RooftopCalendarStatus[];
+};
+
+export type RooftopCalendarStatus = {
+  rooftopId: string;
+  rooftopName: string;
+  /** Every date between today and 31 Dec has been confirmed or dismissed. */
+  settled: boolean;
+  /** How many are still waiting on a ruling. */
+  openProposals: number;
 };
 
 /**
@@ -154,7 +184,14 @@ export async function loadOnboardingStatus(
      has, not an empty one — it is every rooftop before rollout day. So the
      counts are returned even when there is nothing to list. */
   if (rows.length === 0) {
-    return { rows: [], ready: 0, total: 0, rosterSeats, rosterRooftops };
+    return {
+      rows: [],
+      ready: 0,
+      total: 0,
+      rosterSeats,
+      rosterRooftops,
+      closureCalendars: await loadClosureCalendars(client, rooftopId),
+    };
   }
 
   const ids = [...new Set(rows.map((r) => r.user_id))];
@@ -265,5 +302,61 @@ export async function loadOnboardingStatus(
     total: out.length,
     rosterSeats,
     rosterRooftops,
+    closureCalendars: await loadClosureCalendars(client, rooftopId),
   };
+}
+
+/**
+ * The closure calendar's state for every rooftop in the caller's scope.
+ *
+ * Read through the caller's own client, so RLS scopes it exactly as it scopes
+ * everything else on this screen. A rooftop with no rows at all reads as NOT
+ * settled, which is the honest answer: nobody has looked at it, and the seeder
+ * may not have reached a dealer who onboarded last week.
+ */
+async function loadClosureCalendars(
+  client: Client,
+  rooftopId?: string
+): Promise<RooftopCalendarStatus[]> {
+  const today = new Date().toISOString().slice(0, 10) as IsoDate;
+
+  let rooftopQuery = client.from("rooftop").select("id, name").order("name");
+  if (rooftopId) rooftopQuery = rooftopQuery.eq("id", rooftopId);
+
+  let closureQuery = client
+    .from("rooftop_closed_day")
+    .select("rooftop_id, closed_on, status, dismissed_at")
+    .gte("closed_on", today);
+  if (rooftopId) closureQuery = closureQuery.eq("rooftop_id", rooftopId);
+
+  const [{ data: rooftopRows }, { data: closureRows }] = await Promise.all([
+    rooftopQuery,
+    closureQuery,
+  ]);
+
+  const byRooftop = new Map<string, Pick<Closure, "date" | "status" | "dismissed">[]>();
+  for (const raw of (closureRows ?? []) as {
+    rooftop_id: string;
+    closed_on: string;
+    status: string;
+    dismissed_at: string | null;
+  }[]) {
+    const list = byRooftop.get(raw.rooftop_id) ?? [];
+    list.push({
+      date: raw.closed_on as IsoDate,
+      status: raw.status === "confirmed" ? "confirmed" : "proposed",
+      dismissed: raw.dismissed_at !== null,
+    });
+    byRooftop.set(raw.rooftop_id, list);
+  }
+
+  return ((rooftopRows ?? []) as { id: string; name: string }[]).map((r) => {
+    const closures = byRooftop.get(r.id) ?? [];
+    return {
+      rooftopId: r.id,
+      rooftopName: r.name,
+      settled: calendarSettledThroughYearEnd(today, closures),
+      openProposals: openProposalCount(today, closures),
+    };
+  });
 }

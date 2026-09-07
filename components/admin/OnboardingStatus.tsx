@@ -89,6 +89,38 @@ export function OnboardingStatusSection({
         </p>
       )}
 
+      {/* ---- The closure calendar, one line per rooftop -------------------
+          A store whose calendar nobody has ruled on looks completely normal
+          until the first holiday, when every advisor who was not at work gets
+          charged a missed day. There is nothing on the advisor list that could
+          show that, because it is not a fact about an advisor — so it sits
+          here, with the other things that must be true before anybody goes
+          live. */}
+      {status.closureCalendars.length > 0 && (
+        <div className="mt-4 rounded-xl border border-line bg-cream-card p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+            Closure calendar
+          </p>
+          <ul className="mt-2 space-y-1">
+            {status.closureCalendars.map((c) => (
+              <li
+                key={c.rooftopId}
+                className="flex flex-wrap items-baseline justify-between gap-2 text-sm"
+              >
+                <span className="font-bold text-navy">{c.rooftopName}</span>
+                <span className={c.settled ? "text-ink-soft" : "font-bold text-clay"}>
+                  {c.settled
+                    ? "confirmed through year-end"
+                    : c.openProposals > 0
+                      ? `${c.openProposals} still to rule`
+                      : "not set up"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {status.total === 0 ? (
         <p className="mt-3 px-1 text-sm leading-relaxed text-ink-soft">
           Nobody has been provisioned yet, so there is nothing to check the setup

@@ -61,6 +61,11 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     hint: "Cues, quotes and videos. Tap a type to open it.",
   },
   {
+    href: "/admin/closures",
+    label: "Closure calendar",
+    hint: "Days your store is shut. Advisors' streaks are safe on them.",
+  },
+  {
     href: "/admin/settings",
     label: "Gamification Settings",
     hint: "Sand Dollar amounts, streak grace days and caps.",

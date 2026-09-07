@@ -84,15 +84,45 @@ export type WorkSchedule = {
 /** A planned absence. Inclusive of both ends. */
 export type IslandTime = { start: IsoDate; end: IsoDate };
 
+/** A day the STORE is shut. Confirmed rows only — see 0101. */
+export type StoreClosure = { date: IsoDate; label: string };
+
 /**
- * Everything the streak needs to know about a person's calendar. Both fields
- * are optional so existing callers keep working: no schedule means every day
- * is scheduled, which is exactly the pre-0025 behaviour.
+ * Everything the streak needs to know about a person's calendar. Every field is
+ * optional so existing callers keep working: no schedule means every day is
+ * scheduled, which is exactly the pre-0025 behaviour, and no closures means
+ * every scheduled day is open, which is exactly the pre-0101 behaviour.
+ *
+ * The three are different kinds of fact and stay separate. The schedule is the
+ * shape of a person's week, Island Time is an absence they booked, and a
+ * closure is the store being shut — which is true for everybody at that rooftop
+ * whether or not they were rostered.
  */
 export type ScheduleContext = {
   schedule?: WorkSchedule | null;
   islandTime?: IslandTime[];
+  closures?: StoreClosure[];
 };
+
+/**
+ * Is the store shut on this day?
+ *
+ * An exact date match, not a range: a closure is one named day, and two
+ * consecutive shut days are two rows with two labels rather than a span with
+ * one. "Closed for Christmas Eve" and "Closed for Christmas Day" are what an
+ * advisor would say, and a range would have to pick one of them.
+ */
+export function storeClosure(
+  date: IsoDate,
+  closures?: StoreClosure[]
+): StoreClosure | null {
+  if (!closures || closures.length === 0) return null;
+  return closures.find((c) => c.date === date) ?? null;
+}
+
+export function isStoreClosed(date: IsoDate, closures?: StoreClosure[]): boolean {
+  return storeClosure(date, closures) !== null;
+}
 
 /** Streak lengths that earn a badge. */
 export const MILESTONES = [7, 30, 90, 365] as const;
@@ -218,7 +248,11 @@ export function scheduledOn(
 ): boolean | null {
   if (!context.schedule) return null;
   return (
-    isWorkDay(date, context.schedule) && !isIslandTime(date, context.islandTime)
+    isWorkDay(date, context.schedule) &&
+    !isIslandTime(date, context.islandTime) &&
+    /* A day the store was shut is not a day they owed us. Same reasoning as
+       Island Time: nobody was asked to be on the drive. */
+    !isStoreClosed(date, context.closures)
   );
 }
 
@@ -248,6 +282,9 @@ export function countMissedWorkDays(
     const day = addDays(from, i);
     if (!isWorkDay(day, context.schedule)) continue;
     if (isIslandTime(day, context.islandTime)) continue;
+    /* THE WHOLE POINT OF 0101. A store closure produces no gap, so it costs no
+       grace and breaks no Swell — exactly what a weekend already does. */
+    if (isStoreClosed(day, context.closures)) continue;
     missed++;
   }
   return missed;

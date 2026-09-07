@@ -145,7 +145,10 @@ export default async function TodayPage({
    * the screen and countMissedWorkDays cannot drift apart about which days
    * count. See restDayFor.
    */
-  const scheduleContext = await loadScheduleContext(supabase, user.id);
+  /* The rooftop is what decides whether the STORE is shut today — the closure
+     calendar is per rooftop, and this is the same id rooftop_today() resolved
+     the date from, so the card and the dates agree. */
+  const scheduleContext = await loadScheduleContext(supabase, user.id, rooftopId);
   const restDay = restDayFor(today, scheduleContext);
 
   /*

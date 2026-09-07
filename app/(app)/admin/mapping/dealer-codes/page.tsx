@@ -23,9 +23,14 @@ import {
  * ---------------------------------------------------------------------------
  * THIS IS THE ONBOARDING FLOW FOR EVERY FUTURE DEALER
  * ---------------------------------------------------------------------------
- * Pull their list, auto-match it, rule the rest, lock it. Built on Doggett so
- * the flow is proven before dealer #2 exists rather than discovered during
- * their first week.
+ * Pull their list, auto-match it, rule the rest, confirm the closure calendar,
+ * lock it. Built on Doggett so the flow is proven before dealer #2 exists
+ * rather than discovered during their first week.
+ *
+ * The calendar step sits second-to-last because it is the last thing that is
+ * cheap to get right and expensive to discover — an unconfirmed one looks
+ * exactly like a correct one until the store's first holiday. It is ruled by
+ * the dealer's own manager at /admin/closures, not here.
  *
  * TWO SECTIONS, AND THEY ARE NOT THE SAME KIND OF THING. Section 1 is live —
  * every attach rate on every screen is computed through that join, so an edit

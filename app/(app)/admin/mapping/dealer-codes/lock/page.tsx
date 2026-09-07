@@ -7,6 +7,8 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { TypedConfirm } from "@/components/admin/TypedConfirm";
 import { setDealerLock } from "@/lib/mapping/dealer-code-actions";
 import { loadDealers, loadOpCodes, loadSubCategories } from "@/lib/mapping/dealer-codes";
+import { calendarSettledThroughYearEnd, openProposalCount } from "@/lib/closures";
+import type { IsoDate } from "@/lib/gamification/streak";
 
 /**
  * Declaring a dealer's translation table finished — or reopening it.
@@ -55,6 +57,44 @@ export default async function LockDealerCodesPage({
     loadSubCategories(service, dealer),
     loadOpCodes(service, dealer, 100000),
   ]);
+
+  /*
+   * ---- THE CLOSURE CALENDAR IS PART OF ONBOARDING NOW --------------------
+   *
+   * Pull the codes, auto-match, rule the rest, CONFIRM THE CLOSURE CALENDAR,
+   * lock. It belongs immediately before the lock because it is the last thing
+   * that is cheap to get right and expensive to discover: an unconfirmed
+   * calendar looks exactly like a correct one until the store's first holiday,
+   * when every advisor who was not at work is charged a missed day.
+   *
+   * It does NOT block locking. The table and the calendar are different
+   * artefacts with different owners — the manager rules closures, Mitch locks
+   * the table — and holding one hostage to the other would stall a dealer whose
+   * measurement is ready on a question only somebody else can answer.
+   */
+  const today = new Date().toISOString().slice(0, 10) as IsoDate;
+  const { data: closureRows } = await service
+    .from("rooftop_closed_day")
+    .select("rooftop_id, closed_on, status, dismissed_at")
+    .in("rooftop_id", dealer.rooftopIds.length ? dealer.rooftopIds : [""])
+    .gte("closed_on", today);
+
+  const closures = ((closureRows ?? []) as {
+    closed_on: string;
+    status: string;
+    dismissed_at: string | null;
+  }[]).map((r) => ({
+    date: r.closed_on as IsoDate,
+    status: (r.status === "confirmed" ? "confirmed" : "proposed") as "confirmed" | "proposed",
+    dismissed: r.dismissed_at !== null,
+  }));
+
+  /* Settled for the DEALER means settled at every one of its rooftops. A group
+     where ten stores are ruled and the eleventh is not is not ready, and an
+     average would hide exactly the store that breaks. */
+  const calendarSettled =
+    dealer.rooftopIds.length > 0 && calendarSettledThroughYearEnd(today, closures);
+  const calendarOpen = openProposalCount(today, closures);
 
   const unruled = subs.filter((s) => s.status === "unmapped" || s.status === "mixed").length;
   const ruled = subs.filter((s) => s.status === "confirmed" || s.status === "not_coachable").length;
@@ -134,6 +174,27 @@ export default async function LockDealerCodesPage({
                 <strong className="text-navy">{ops.coveragePct}%</strong> of labor dollars
                 bridged at op-code grain ({ops.total - ops.noMatch} of {ops.total} codes have
                 a ruling or a suggestion)
+              </li>
+              <li className={calendarSettled ? undefined : "text-clay"}>
+                <strong className={calendarSettled ? "text-navy" : "text-clay"}>
+                  {calendarSettled ? "Closure calendar confirmed" : "Closure calendar not confirmed"}
+                </strong>{" "}
+                {calendarSettled
+                  ? "through year-end"
+                  : calendarOpen > 0
+                    ? `— ${calendarOpen} ${calendarOpen === 1 ? "date is" : "dates are"} still unruled`
+                    : "— nobody has set it up"}
+                {!calendarSettled && (
+                  <>
+                    {". "}
+                    <Link
+                      href="/admin/closures"
+                      className="font-bold text-ocean underline underline-offset-2"
+                    >
+                      Confirm it
+                    </Link>
+                  </>
+                )}
               </li>
             </ul>
           </Card>

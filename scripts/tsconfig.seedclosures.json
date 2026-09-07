@@ -1,0 +1,14 @@
+{
+  "//": "Standalone build for seed-closure-proposals.ts. It imports the REAL federalHolidays and missingProposals, so what the seeder writes and what the tests assert are the same two functions.",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs",
+    "moduleResolution": "node", "esModuleInterop": true, "skipLibCheck": true,
+    "outDir": "../.tmp-sc", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": [
+    "./seed-closure-proposals.ts",
+    "../lib/closures.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

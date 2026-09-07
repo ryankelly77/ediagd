@@ -9,12 +9,15 @@ import {
   addDays,
   daysBetween,
   isIslandTime,
+  isStoreClosed,
   isWorkDay,
   isoWeekday,
+  storeClosure,
   type IsoDate,
   type IslandTime,
   type SaturdayMode,
   type ScheduleContext,
+  type StoreClosure,
   type WorkSchedule,
 } from "@/lib/gamification/streak";
 
@@ -194,7 +197,11 @@ export function validateDraft(draft: ScheduleDraft): string | null {
 
 /* ---- Rest days ----------------------------------------------------------- */
 
-export type RestDay = { kind: "day_off" | "island_time" };
+export type RestDay = {
+  kind: "day_off" | "island_time" | "store_closed";
+  /** Only for store_closed: the words the manager gave the day. */
+  label?: string;
+};
 
 /**
  * Is today a day nobody asked them to work, and which kind?
@@ -211,9 +218,21 @@ export type RestDay = { kind: "day_off" | "island_time" };
  * countMissedWorkDays treats every day as a work day, so a rest card here would
  * be a promise nothing behind it keeps.
  *
- * DAY OFF OUTRANKS ISLAND TIME. A Saturday inside a booked week is both, and
- * "scheduled day off" is the truer thing to say about it — Island Time copy is
+ * DAY OFF OUTRANKS EVERYTHING. A Saturday that is also Christmas is both, and
+ * "scheduled day off" is the truer thing to say about it — the other two are
  * for a day they would otherwise have been on the drive.
+ *
+ * A CLOSURE OUTRANKS ISLAND TIME, and that ordering is deliberate. Somebody on
+ * a booked week off when the store also shuts is told the store is shut,
+ * because that is the fact about the day rather than the fact about them: it
+ * is true for everybody at that rooftop, and it is the one of the two they did
+ * not already know. Nothing about the Island Time booking changes — the day is
+ * rest either way, and the budget is counted where it always was.
+ *
+ * NULL SCHEDULE STILL MEANS SCHEDULED, closure or not. The rest of the guard
+ * has always refused to promise "your streak is safe" without a schedule on
+ * file, because countMissedWorkDays counts every day when there is no row, and
+ * a closure does not change what the engine would do with the days around it.
  */
 export function restDayFor(
   date: IsoDate,
@@ -221,6 +240,8 @@ export function restDayFor(
 ): RestDay | null {
   if (!context.schedule) return null;
   if (!isWorkDay(date, context.schedule)) return { kind: "day_off" };
+  const closed = storeClosure(date, context.closures);
+  if (closed) return { kind: "store_closed", label: closed.label };
   if (isIslandTime(date, context.islandTime)) return { kind: "island_time" };
   return null;
 }
@@ -256,6 +277,9 @@ export function nextScheduledDay(
     const d = addDays(date, i);
     if (!isWorkDay(d, context.schedule)) continue;
     if (isIslandTime(d, context.islandTime)) continue;
+    /* A shut store is not when they are back. Without this the card would
+       answer "Day 5 is still Day 5 on Thursday" about Thanksgiving. */
+    if (isStoreClosed(d, context.closures)) continue;
     return d;
   }
   return null;
@@ -297,28 +321,57 @@ export function nextScheduledDayLabel(
  */
 export async function loadScheduleContext(
   client: Client,
-  userId: string
+  userId: string,
+  /**
+   * The rooftop whose closure calendar applies, when the caller has one.
+   *
+   * OPTIONAL, and omitting it means no closures — which is the pre-0101
+   * behaviour and safe by construction, because closures only ever add rest.
+   * A caller that forgets it gets today's answers, not wrong ones.
+   */
+  rooftopId?: string | null
 ): Promise<ScheduleContext> {
-  const [{ data: scheduleRow }, { data: islandRows }] = await Promise.all([
-    client
-      .from("work_schedule")
-      .select(SCHEDULE_COLUMNS)
-      .eq("user_id", userId)
-      .maybeSingle(),
-    client
-      .from("island_time")
-      .select("start_date, end_date")
-      .eq("user_id", userId)
-      .order("start_date", { ascending: false })
-      .limit(500),
-  ]);
+  const [{ data: scheduleRow }, { data: islandRows }, { data: closureRows }] =
+    await Promise.all([
+      client
+        .from("work_schedule")
+        .select(SCHEDULE_COLUMNS)
+        .eq("user_id", userId)
+        .maybeSingle(),
+      client
+        .from("island_time")
+        .select("start_date, end_date")
+        .eq("user_id", userId)
+        .order("start_date", { ascending: false })
+        .limit(500),
+      rooftopId
+        ? client
+            .from("rooftop_closed_day")
+            .select("closed_on, label")
+            .eq("rooftop_id", rooftopId)
+            /* CONFIRMED ONLY. A proposal is inert everywhere, and this is the
+               one read that would make it otherwise. */
+            .eq("status", "confirmed")
+            .order("closed_on", { ascending: false })
+            .limit(500)
+        : Promise.resolve({ data: [] }),
+    ]);
 
   const islandTime: IslandTime[] = ((islandRows ?? []) as {
     start_date: string;
     end_date: string;
   }[]).map((r) => ({ start: r.start_date, end: r.end_date }));
 
-  return { schedule: rowToSchedule(scheduleRow as ScheduleRow | null), islandTime };
+  const closures: StoreClosure[] = ((closureRows ?? []) as {
+    closed_on: string;
+    label: string;
+  }[]).map((r) => ({ date: r.closed_on, label: r.label }));
+
+  return {
+    schedule: rowToSchedule(scheduleRow as ScheduleRow | null),
+    islandTime,
+    closures,
+  };
 }
 
 /**
@@ -422,4 +475,4 @@ export function formatDayLabel(date: IsoDate, today: IsoDate): string {
 }
 
 export { isWorkDay };
-export type { IslandTime, SaturdayMode, ScheduleContext, WorkSchedule };
+export type { IslandTime, SaturdayMode, ScheduleContext, StoreClosure, WorkSchedule };
