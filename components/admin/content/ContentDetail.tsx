@@ -436,7 +436,7 @@ export function ContentDetail({
           >
             <Select
               ariaLabel="Op code"
-              className={opCodeMissing ? "border-clay" : ""}
+              triggerClassName={opCodeMissing ? "border-clay" : ""}
               disabled={!needsOpCode}
               value={draft.op_code ?? ""}
               onChange={(v) => { set("op_code", v || null); if (!v) set("stage", null); }}

@@ -100,7 +100,18 @@ export function Select({
   disabled = false,
   /** Fills its column, which is what a Field wants. Off for inline toolbars. */
   fullWidth = true,
+  /**
+   * LAYOUT, and it lands on the WRAPPER — width, max-width, margins.
+   *
+   * It has to. The Families row caps its control at 16rem and sits it beside a
+   * checkbox; when this class went on the button instead, the wrapper still
+   * took the full row and pushed "Coachable" and Save out to the far edge. The
+   * old <select> carried `w-full sm:max-w-[16rem]` on the element itself, so
+   * the element WAS the box the flex row measured. The wrapper is that box now.
+   */
   className = "",
+  /** APPEARANCE, on the trigger itself — a red border for an invalid field. */
+  triggerClassName = "",
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -111,6 +122,7 @@ export function Select({
   disabled?: boolean;
   fullWidth?: boolean;
   className?: string;
+  triggerClassName?: string;
 }) {
   const coarse = useCoarsePointer();
   const custom = coarse === false;
@@ -126,6 +138,7 @@ export function Select({
       disabled={disabled}
       fullWidth={fullWidth}
       className={className}
+      triggerClassName={triggerClassName}
     />
   ) : (
     /* Touch, or not yet measured, or no JavaScript: the platform's control. */
@@ -135,7 +148,7 @@ export function Select({
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
-      className={`${SELECT_TRIGGER_CLASS} ${width} ${className}`}
+      className={`${SELECT_TRIGGER_CLASS} ${width} ${className} ${triggerClassName}`}
     >
       {byGroup(options).map((bucket, i) =>
         bucket.group ? (
@@ -173,6 +186,7 @@ function StyledSelect({
   disabled,
   fullWidth,
   className,
+  triggerClassName,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -182,6 +196,7 @@ function StyledSelect({
   disabled: boolean;
   fullWidth: boolean;
   className: string;
+  triggerClassName: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -326,7 +341,7 @@ function StyledSelect({
   };
 
   return (
-    <div className={`relative ${fullWidth ? "w-full" : "inline-block"}`}>
+    <div className={`relative ${fullWidth ? "w-full" : "inline-block"} ${className}`}>
       <button
         ref={triggerRef}
         id={id}
@@ -338,7 +353,7 @@ function StyledSelect({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
-        className={`${SELECT_TRIGGER_CLASS} ${fullWidth ? "w-full" : ""} flex items-center justify-between gap-2 disabled:opacity-60 ${className}`}
+        className={`${SELECT_TRIGGER_CLASS} ${fullWidth ? "w-full" : ""} flex items-center justify-between gap-2 disabled:opacity-60 ${triggerClassName}`}
       >
         <span className="truncate">{selected?.label ?? ""}</span>
         {/* Rotates on open, so the control says which way it is going. */}
@@ -449,6 +464,7 @@ export function SelectField({
   disabled = false,
   fullWidth = true,
   className = "",
+  triggerClassName = "",
   onValueChange,
 }: {
   name: string;
@@ -459,6 +475,7 @@ export function SelectField({
   disabled?: boolean;
   fullWidth?: boolean;
   className?: string;
+  triggerClassName?: string;
   onValueChange?: (value: string) => void;
 }) {
   const [value, setValue] = useState(defaultValue ?? options[0]?.value ?? "");
@@ -488,6 +505,7 @@ export function SelectField({
         disabled={disabled}
         fullWidth={fullWidth}
         className={className}
+        triggerClassName={triggerClassName}
       />
     </>
   );
