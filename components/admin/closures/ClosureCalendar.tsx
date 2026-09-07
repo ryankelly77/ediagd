@@ -44,13 +44,11 @@ export function ClosureCalendar({
   rooftops,
   scope,
   items,
-  unsetCount,
 }: {
   rooftops: { id: string; name: string }[];
   /** A rooftop id, or ALL_SCOPE. */
   scope: string;
   items: CalendarItem[];
-  unsetCount: number;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +57,11 @@ export function ClosureCalendar({
   const [newLabel, setNewLabel] = useState("");
 
   const scopeIds = scope === ALL_SCOPE ? rooftops.map((r) => r.id) : [scope];
+
+  /* The dates the bulk buttons act on, named here so the label and the write
+     cannot disagree. Only rows NOBODY has ruled: a mixed date is a decision
+     made differently per store, and sweeping it up would erase the difference. */
+  const unset = items.filter((i) => i.state === "unset");
   const scopeName =
     scope === ALL_SCOPE
       ? `all ${rooftops.length} rooftops`
@@ -115,23 +118,43 @@ export function ClosureCalendar({
           <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             Closed on this day?
           </p>
-          {unsetCount > 0 && (
+          {/* "all 4" sat directly under "All my rooftops (11)" and read as
+              four ROOFTOPS. It always meant days. Both buttons now say so, and
+              both act on exactly the dates counted here — no more, which is
+              what stops a bulk tap closing the one store held open. */}
+          {unset.length > 0 && (
             <span className="flex items-center gap-3 text-xs font-bold">
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => run(() => ruleRemainingAction({ rooftopIds: scopeIds, closed: true }))}
+                onClick={() =>
+                  run(() =>
+                    ruleRemainingAction({
+                      rooftopIds: scopeIds,
+                      dates: unset.map((i) => ({ date: i.date, label: i.label })),
+                      closed: true,
+                    })
+                  )
+                }
                 className="text-ocean underline underline-offset-2 disabled:opacity-50"
               >
-                Closed on all {unsetCount}
+                Closed on {unset.length} unset {unset.length === 1 ? "day" : "days"}
               </button>
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => run(() => ruleRemainingAction({ rooftopIds: scopeIds, closed: false }))}
+                onClick={() =>
+                  run(() =>
+                    ruleRemainingAction({
+                      rooftopIds: scopeIds,
+                      dates: unset.map((i) => ({ date: i.date, label: i.label })),
+                      closed: false,
+                    })
+                  )
+                }
                 className="text-ink-soft underline underline-offset-2 disabled:opacity-50"
               >
-                Open on all {unsetCount}
+                Open on {unset.length === 1 ? "it" : "them"}
               </button>
             </span>
           )}

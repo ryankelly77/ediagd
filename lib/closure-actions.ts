@@ -110,15 +110,32 @@ export async function setClosureAction(input: {
 }
 
 /**
- * Rule every date still waiting, in one act.
+ * Rule a named set of dates in one act.
  *
- * The two answers a whole calendar usually has: "we close on all the usual
- * ones" and "we trade through them". Either way it settles the year in a tap
- * rather than eleven, and a date already ruled is left exactly as it is — a
- * decision somebody made is not swept up by a bulk one.
+ * ---------------------------------------------------------------------------
+ * THE CALLER NAMES THE DATES, AND THAT IS THE FIX
+ * ---------------------------------------------------------------------------
+ * This used to take no dates at all — it swept every row that was still
+ * `proposed` from today forward. The button above it said "Closed on all 4",
+ * meaning the four days left unruled THIS YEAR, and the action would have
+ * written fifteen dates across eleven rooftops. Ryan asked what the 4 referred
+ * to, which is how the mismatch surfaced.
+ *
+ * Worse than the count: a MIXED date is made of rooftops that are individually
+ * still `proposed`. Ten stores were marked shut for Labor Day and one was
+ * deliberately left open, and a blind sweep would have silently closed the
+ * eleventh — turning a decision somebody made into one nobody made.
+ *
+ * So the screen passes the exact dates its label is counting: the ones where
+ * NOBODY in scope has ruled. A date with any ruling on it, in either direction,
+ * is left alone.
+ *
+ * UPSERT rather than update, so a rooftop the seeder has not reached yet gets
+ * its row written rather than skipped.
  */
 export async function ruleRemainingAction(input: {
   rooftopIds: string[];
+  dates: { date: string; label: string }[];
   closed: boolean;
 }): Promise<ClosureResult> {
   const supabase = await createClient();
@@ -127,23 +144,42 @@ export async function ruleRemainingAction(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not signed in." };
   if (input.rooftopIds.length === 0) return { ok: false, error: "Pick a rooftop." };
+  if (input.dates.length === 0) return { ok: true };
+  if (input.dates.some((d) => !validDate(d.date))) {
+    return { ok: false, error: "One of those dates doesn't look right." };
+  }
 
-  /* Today's floor matches the screen's. Sweeping up a date from last January
-     would retroactively re-score days nobody was asked about. */
-  const today = new Date().toISOString().slice(0, 10);
   const now = new Date().toISOString();
+  const ruling = input.closed
+    ? {
+        status: "confirmed",
+        confirmed_at: now,
+        confirmed_by: user.id,
+        dismissed_at: null,
+        dismissed_by: null,
+      }
+    : {
+        status: "proposed",
+        confirmed_at: null,
+        confirmed_by: null,
+        dismissed_at: now,
+        dismissed_by: user.id,
+      };
 
-  const patch = input.closed
-    ? { status: "confirmed", confirmed_at: now, confirmed_by: user.id }
-    : { status: "proposed", dismissed_at: now, dismissed_by: user.id };
+  const rows = input.rooftopIds.flatMap((rooftopId) =>
+    input.dates.map((d) => ({
+      rooftop_id: rooftopId,
+      closed_on: d.date,
+      label: d.label,
+      origin: "federal",
+      created_by: user.id,
+      ...ruling,
+    }))
+  );
 
   const { error } = await supabase
     .from("rooftop_closed_day")
-    .update(patch)
-    .in("rooftop_id", input.rooftopIds)
-    .eq("status", "proposed")
-    .gte("closed_on", today)
-    .is("dismissed_at", null);
+    .upsert(rows, { onConflict: "rooftop_id,closed_on" });
 
   if (error) return { ok: false, error: error.message };
   revalidatePath(CLOSURES_PATH);

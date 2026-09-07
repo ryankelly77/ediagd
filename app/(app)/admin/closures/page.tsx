@@ -125,11 +125,6 @@ export default async function ClosuresPage({
     scopeCount: r.scopeCount,
   }));
 
-  /* Unset means nobody has ruled it. A MIXED row is a decision somebody made
-     differently per store, so "rule the rest" must not sweep it up. */
-  const yearEnd = `${today.slice(0, 4)}-12-31`;
-  const unsetCount = rows.filter((r) => r.state === "unset" && r.date <= yearEnd).length;
-
   /* Judged per rooftop and then across them: a group where ten stores are ruled
      and the eleventh is not is not ready, and an average would hide exactly the
      store that breaks. */
@@ -180,7 +175,6 @@ export default async function ClosuresPage({
           rooftops={rooftops}
           scope={scope}
           items={items}
-          unsetCount={unsetCount}
         />
       )}
     </main>
