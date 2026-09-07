@@ -29,6 +29,7 @@ import {
   handleAppLinks,
   isNative,
   readyShell,
+  PUSH_ENABLED,
   registerForPush,
 } from "@/lib/native/bridge";
 
@@ -63,6 +64,11 @@ export function NativeBridge() {
        * on the drive should never see an error toast because a token round-trip
        * lost a race with a network handover.
        */
+      /* DORMANT. See PUSH_ENABLED in lib/native/bridge.ts — the plugin is in
+         the binary so notifications later need no new build, but nothing here
+         may prompt, register or listen until that flag flips. */
+      if (!PUSH_ENABLED) return;
+
       const result = await registerForPush(
         async (token, platform) => {
           const { error } = await supabaseAuth.rpc("register_push_token", {

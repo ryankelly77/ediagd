@@ -1,0 +1,17 @@
+{
+  "fill" : { "solid" : "srgb:0.047,0.110,0.173,1.000" },
+  "groups" : [
+    {
+      "layers" : [ { "image-name" : "water.png", "name" : "1 Water" } ],
+      "translucency" : { "enabled" : true, "value" : 0.5 }
+    },
+    {
+      "layers" : [
+        { "image-name" : "sun.png",  "name" : "2 Sun" },
+        { "image-name" : "rays.png", "name" : "3 Rays" }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 }
+    }
+  ],
+  "supported-platforms" : { "circles" : [ "watchOS" ], "squares" : [ "iOS" ] }
+}

@@ -48,10 +48,34 @@ type Navigate = (route: string) => void;
  * Returns the permission outcome so a caller can decide whether to explain
  * itself and try again later.
  */
+/**
+ * PUSH IS DORMANT, AND THAT IS THE WHOLE POINT OF SHIPPING IT NOW.
+ *
+ * The Capacitor push plugin is compiled into the shell — it is in Package.swift
+ * and the binary — so the NATIVE half of notifications is already on every
+ * phone that installs this build. What is switched off is the web half: no
+ * permission prompt, no register() call, no listeners, nothing visible.
+ *
+ * That split is deliberate. Adding a native plugin later means a new binary, a
+ * new TestFlight round and Mitch re-installing; flipping this constant means a
+ * deploy. So the expensive half ships early and inert, and the day
+ * notifications are actually built it is web plus server work against a shell
+ * that already has the capability.
+ *
+ * Turning it on: set this true and deploy. Nothing else here changes — the
+ * whole registration path below is already written and tested.
+ */
+export const PUSH_ENABLED = false;
+
 export async function registerForPush(
   onToken: TokenSink,
   onOpen: Navigate
 ): Promise<"granted" | "denied" | "unavailable"> {
+  /* The flag is checked HERE as well as at the call site: a plugin that can
+     raise an OS permission prompt should not rely on every future caller
+     remembering to ask first. */
+  if (!PUSH_ENABLED) return "unavailable";
+
   if (!(await isNative())) return "unavailable";
 
   const platform = await nativePlatform();

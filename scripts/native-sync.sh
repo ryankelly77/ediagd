@@ -57,6 +57,21 @@ if [ -d ios ] || [ -d android ]; then
   # native — just litter from the generator's web target.
   rm -rf icons
   say "removed PWA output (README: no PWA plumbing)"
+
+  # ---- The app icon comes from AppIcon.icon, not from here ------------------
+  # @capacitor/assets writes a flat AppIcon.appiconset into the catalog. Since
+  # build 2 the iOS icon is a layered Icon Composer file at
+  # ios/App/App/AppIcon.icon, and Apple's docs are explicit that the .icon
+  # REPLACES the catalog's icon — you get one or the other, not both. Leaving
+  # the generated appiconset behind would mean two things named AppIcon and an
+  # icon nobody can predict.
+  #
+  # The splash imageset it also writes IS still wanted, so only the icon is
+  # removed. To go back to a flat icon, delete AppIcon.icon and drop this block.
+  if [ -d ios/App/App/Assets.xcassets/AppIcon.appiconset ] && [ -d ios/App/App/AppIcon.icon ]; then
+    rm -rf ios/App/App/Assets.xcassets/AppIcon.appiconset
+    say "ios: removed generated AppIcon.appiconset — AppIcon.icon owns the icon"
+  fi
 fi
 
 # Android 12+ splash colours — see the docstring in the script.
