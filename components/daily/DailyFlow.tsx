@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VideoNotReady } from "@/components/video/MuxVideo";
 import type { VideoRenditions } from "@/lib/mux/playback";
-import type { GateRecord } from "@/lib/watch-gate";
+import { creditedGate, gateFromWatch, type GateRecord } from "@/lib/watch-credit";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { WATCHED_PCT } from "@/lib/watch-coverage";
 import {
@@ -187,6 +187,38 @@ export function DailyFlow({
   const [lifestyleWatch, setLifestyleWatch] = useState<WatchState | null>(null);
 
   /*
+   * ---- THE GATE, HELD WHERE BOTH MOUNTS CAN SEE IT ------------------------
+   *
+   * The rest card and step 4 serve the SAME lifestyle video, and each one hands
+   * its player an `initialMet` so a gate opened earlier today starts open. Both
+   * used to read `lifestyle.gate` — a server prop, fetched once when the page
+   * loaded.
+   *
+   * "Take today's rep anyway" reveals the loop with no round trip, deliberately
+   * (see app/(app)/today/page.tsx). So an advisor who watched the video on the
+   * rest card and then took the rep met a step-4 player still holding the null
+   * the server sent before they pressed play, and was asked to watch the whole
+   * thing again. The gate row was written correctly; nothing on the client ever
+   * read it back.
+   *
+   * So the record lives here, above both, seeded from the server and updated
+   * the moment a gate opens in either place. Card first or loop first, the
+   * video is asked for once a day.
+   *
+   * PARTIAL COVERAGE DOES NOT CARRY, and that is a decision rather than an
+   * oversight. Coverage is session-only on purpose — it is what stops a watch
+   * being assembled out of five-second visits — and TrackedVideo explicitly
+   * refuses to seed its accumulator from a record, because a later partial
+   * watch could then resume from a full one. Lifting the session across an
+   * unmount would mean reversing that. Threshold-or-nothing: cross the bar on
+   * the card and the loop knows; stop halfway and the loop starts at zero.
+   */
+  const [lifestyleSessionGate, setLifestyleSessionGate] = useState<GateRecord | null>(null);
+  const [pitchSessionGate, setPitchSessionGate] = useState<GateRecord | null>(null);
+  const lifestyleGate = creditedGate(lifestyle?.gate ?? null, lifestyleSessionGate);
+  const pitchGate = creditedGate(pitchVideo?.gate ?? null, pitchSessionGate);
+
+  /*
    * ---- WRITING THE GATE DOWN ----------------------------------------------
    *
    * Fired once per video, the moment its gate opens. The action re-checks the
@@ -197,7 +229,21 @@ export function DailyFlow({
    * survival of a refresh.
    */
   const fileGate = useCallback(
-    (contentId: string | null, ticket: React.RefObject<string | null>, state: WatchState) => {
+    (
+      contentId: string | null,
+      ticket: React.RefObject<string | null>,
+      state: WatchState,
+      /** Where to remember this gate for the rest of the visit. */
+      remember: (gate: GateRecord) => void
+    ) => {
+      /*
+       * Remembered BEFORE the round trip, and kept even if the write is
+       * refused. The refusal path already says the advisor keeps the gate they
+       * earned in this session and only loses its survival of a refresh — a
+       * second mount of the same video in the same session is still that
+       * session, so it must not re-demand the watch either.
+       */
+      remember(gateFromWatch(state));
       void (async () => {
         try {
           await recordGateMetAction({
@@ -269,12 +315,14 @@ export function DailyFlow({
         kind={restDay.kind}
         greetingName={greetingName}
         quote={quote}
-        video={lifestyle}
+        video={lifestyle && { ...lifestyle, gate: lifestyleGate }}
         threshold={videoThreshold}
         streak={currentStreak}
         nextWorkDayLabel={nextWorkDayLabel}
         onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
-        onGateMet={(s) => fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s)}
+        onGateMet={(s) =>
+          fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s, setLifestyleSessionGate)
+        }
         onTakeTheRep={() => setRevealed(true)}
       />
     );
@@ -353,23 +401,25 @@ export function DailyFlow({
         */}
         {step === 3 && pitchVideo && (
           <PitchStep
-            video={pitchVideo}
+            video={{ ...pitchVideo, gate: pitchGate }}
             focus={focus}
             threshold={videoThreshold}
             onWatch={setPitchWatch}
             onFirstPlay={() => mintTicket(pitchVideo?.contentId ?? null, pitchTicket)}
-            onGateMet={(s) => fileGate(pitchVideo.contentId, pitchTicket, s)}
+            onGateMet={(s) => fileGate(pitchVideo.contentId, pitchTicket, s, setPitchSessionGate)}
             onNext={() => setStep(4)}
           />
         )}
 
         {step === 4 && (
           <LifestyleStep
-            video={lifestyle}
+            video={lifestyle && { ...lifestyle, gate: lifestyleGate }}
             threshold={videoThreshold}
             onWatch={setLifestyleWatch}
             onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
-            onGateMet={(s) => fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s)}
+            onGateMet={(s) =>
+              fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s, setLifestyleSessionGate)
+            }
             onNext={() => {
               // Mark the ritual as ours BEFORE the mutation fires, so the
               // server re-render it triggers can't bounce us to /advisor.

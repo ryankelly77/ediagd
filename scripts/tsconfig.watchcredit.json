@@ -1,0 +1,18 @@
+{
+  "//": "Standalone build for watch-credit-scenarios.ts. It imports the REAL creditedGate and gateFromWatch — the rule that decides whether a second player demands the video again. A paraphrase would prove nothing about the rewatch Ryan hit in TestFlight.",
+  "//strict": "strict matches the project build, so a null GateRecord narrows the way it does in DailyFlow.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-wc",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./watch-credit-scenarios.ts", "../lib/watch-credit.ts"]
+}

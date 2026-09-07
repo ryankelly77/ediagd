@@ -43,13 +43,16 @@ type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
-/** A gate already met today. */
-export type GateRecord = {
-  /** Coverage when it opened, or null when the failure valve opened it. */
-  pct: number | null;
-  /** Opened because the player broke, not because the video was watched. */
-  error: boolean;
-};
+/**
+ * A gate already met today.
+ *
+ * Defined in lib/watch-credit, which is client-safe, because the browser passes
+ * this shape between two players before any of it reaches a server. Re-exported
+ * here so the server-side callers that have always imported it from watch-gate
+ * still resolve.
+ */
+export type { GateRecord } from "@/lib/watch-credit";
+import type { GateRecord } from "@/lib/watch-credit";
 
 export type RecordGateMetOutcome =
   | { persisted: true }
