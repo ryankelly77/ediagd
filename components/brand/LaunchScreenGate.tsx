@@ -177,33 +177,18 @@ export function LaunchScreenGate() {
     };
 
     void (async () => {
-      let native = false;
       try {
         const { Capacitor } = await import("@capacitor/core");
-        native = Capacitor.isNativePlatform();
-      } catch {
-        /* No Capacitor: we are in a browser. */
-      }
-
-      if (!native) {
-        release(); // nothing is covering us; play the sequence
-        return;
-      }
-
-      /*
-       * NATIVE: no sequence. The splash has already shown the mark, so the
-       * overlay renders it settled and identical, the splash lifts onto it,
-       * and we dismiss as soon as the app is ready. Animating here would
-       * replay a mark the user has been looking at for a second and a half.
-       */
-      root.dataset.launchStatic = "1";
-      try {
+        if (!Capacitor.isNativePlatform()) {
+          release(); // browser: nothing is covering us
+          return;
+        }
         const { SplashScreen } = await import("@capacitor/splash-screen");
         await SplashScreen.hide();
       } catch {
-        /* Plugin unavailable — dismiss anyway rather than hold the screen. */
+        /* Not native, or the plugin is unavailable. */
       }
-      dismiss();
+      release();
     })();
 
     const failsafe = window.setTimeout(dismiss, MAX_HOLD_MS);
