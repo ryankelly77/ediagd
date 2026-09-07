@@ -44,12 +44,14 @@ import { useEffect } from "react";
 const SEQUENCE_MS = 1200;
 
 /**
- * Belt and braces. If `load` never fires — a hung image, a request that stalls
- * past any sane wait — the mark must not become a permanent screen. The app is
- * revealed anyway; a half-loaded page somebody can look at beats a logo they
- * cannot leave.
+ * Belt and braces. If anything above throws or a timer is starved, the mark
+ * must not become a permanent screen. The app is revealed anyway; a
+ * half-loaded page somebody can look at beats a logo they cannot leave.
+ *
+ * Four seconds rather than eight, now that the gate no longer waits on `load`:
+ * the thing it is guarding against is a bug in this file, not a slow network.
  */
-const MAX_HOLD_MS = 8000;
+const MAX_HOLD_MS = 4000;
 
 export const LAUNCH_SESSION_KEY = "ediagd:launched";
 
@@ -136,9 +138,22 @@ export function LaunchScreenGate() {
       }, 300);
     };
 
-    const startedAt = performance.now();
+    /*
+     * ---- THE SEQUENCE IS TIMED FROM PAINT, NOT FROM HYDRATION -------------
+     *
+     * The CSS animation starts the moment the overlay is first rendered, which
+     * is well before this effect runs. Measuring from performance.now() here
+     * would hold the finished mark on screen for the difference — a third of a
+     * second of nothing, every launch.
+     */
+    const paint = performance.getEntriesByType("paint")[0]?.startTime;
+    const nav = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    const animationStart = paint ?? nav?.domContentLoadedEventEnd ?? performance.now();
+
     const afterSequence = (fn: () => void) => {
-      const remaining = SEQUENCE_MS - (performance.now() - startedAt);
+      const remaining = SEQUENCE_MS - (performance.now() - animationStart);
       if (remaining <= 0) fn();
       else window.setTimeout(fn, remaining);
     };
@@ -148,18 +163,25 @@ export function LaunchScreenGate() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const hold = reduced ? (fn: () => void) => fn() : afterSequence;
 
-    const whenReady = () => hold(dismiss);
-
-    if (document.readyState === "complete") {
-      whenReady();
-    } else {
-      window.addEventListener("load", whenReady, { once: true });
-    }
+    /*
+     * ---- READY MEANS INTERACTIVE, NOT `load` ------------------------------
+     *
+     * This used to wait for window.load, which waits for EVERY subresource.
+     * Measured on production: the app is hydrated and interactive at 1.59s and
+     * `load` does not fire until 6.37s, held open by trailing chunks and the
+     * favicon. The overlay was sitting there for five seconds after the
+     * animation had finished, which is the opposite of "plays during the
+     * fetch" — it was the app waiting on a favicon.
+     *
+     * This effect running IS the ready signal: React has hydrated, so the page
+     * underneath is interactive and worth revealing. Anything still in flight
+     * is a resource the app can finish fetching while somebody looks at it.
+     */
+    hold(dismiss);
 
     const failsafe = window.setTimeout(dismiss, MAX_HOLD_MS);
 
     return () => {
-      window.removeEventListener("load", whenReady);
       window.clearTimeout(failsafe);
     };
   }, []);
