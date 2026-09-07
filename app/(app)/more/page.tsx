@@ -5,6 +5,7 @@ import { Card } from "@/components/brand/Card";
 import {
   ADMIN_PREVIEWS,
   ADMIN_TOOLS,
+  MANAGER_TOOLS,
   MEMBER_SECTIONS,
 } from "@/lib/navigation";
 import { BRAND } from "@/lib/brand";
@@ -25,6 +26,11 @@ export default async function MorePage() {
 
   const roles = new Set((memberships ?? []).map((m) => m.role as string));
   const isAdmin = roles.has("admin");
+  /* A MANAGER IS NOT AN ADMIN, and that distinction is the whole reason the
+     closure calendar was unreachable for the people who own it. The admin
+     block below gates on `admin`; anything a manager owns has to gate on
+     this instead. An admin manages too, so the roles are inclusive. */
+  const isManager = roles.has("manager") || isAdmin;
 
   const embed = memberships?.[0]?.app_user as unknown;
   const appUser = (Array.isArray(embed) ? embed[0] : embed) as
@@ -75,6 +81,24 @@ export default async function MorePage() {
           />
         </li>
       </ul>
+
+      {/* THE MANAGER'S TOOLS. Above the admin block and behind a different
+          flag, because a service manager holds neither `admin` nor the
+          platform-owner bit and would otherwise see none of this. */}
+      {isManager && (
+        <>
+          <h2 className="mt-6 px-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
+            Your store
+          </h2>
+          <ul className="mt-2 space-y-2">
+            {MANAGER_TOOLS.map((tool) => (
+              <li key={tool.href}>
+                <LinkRow {...tool} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {/* THE ADMIN HUB. Six peers, rendered from lib/navigation.ts — the same
           list `npm run check:nav` validates against the routes on disk.

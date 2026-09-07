@@ -20,7 +20,7 @@
 
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import { ADMIN_TOOLS, MEMBER_SECTIONS, NAV_EXEMPT } from "../lib/navigation";
+import { ADMIN_TOOLS, MANAGER_TOOLS, MEMBER_SECTIONS, NAV_EXEMPT } from "../lib/navigation";
 
 const APP_DIR = join(process.cwd(), "app", "(app)");
 
@@ -51,6 +51,10 @@ function routesUnder(dir: string, prefix: string): string[] {
 function main(): void {
   const registered = new Set([
     ...ADMIN_TOOLS.map((t) => t.href),
+    /* Manager-owned screens are reachable too — from /manager and the More
+       menu — just by a different audience. An orphan is a route NOBODY links
+       to, not one the platform owner's hub happens not to list. */
+    ...MANAGER_TOOLS.map((t) => t.href),
     ...MEMBER_SECTIONS.map((s) => s.href),
   ]);
 

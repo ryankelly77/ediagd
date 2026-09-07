@@ -39,6 +39,35 @@ export type AdminTool = {
  * fast path from the tab bar. The screens back out to /admin rather than to
  * each other, so nothing implies a hierarchy that doesn't exist.
  */
+/**
+ * The MANAGER's tools — a different audience from ADMIN_TOOLS.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS LIST HAD TO EXIST
+ * ---------------------------------------------------------------------------
+ * The closure calendar first shipped in ADMIN_TOOLS, which was wrong in a way
+ * that made it unreachable for the only people it is for. /admin gates on
+ * `hasAdminAccess` — the `admin` role or the platform owner — and a service
+ * manager is neither. The More menu renders ADMIN_TOOLS behind the same flag.
+ * So the screen a manager owns was visible to everybody except a manager, who
+ * could reach it only by typing the URL.
+ *
+ * The page itself was already right: it guards on managed_rooftops(), so a
+ * manager who arrived could always use it. Only the way in was missing.
+ *
+ * A tool goes here when the person who should act on it is the manager at a
+ * rooftop rather than somebody running the platform. Both lists are rendered
+ * for a platform owner, because the fallback is real: Mitch acts for a dealer
+ * that has not engaged yet.
+ */
+export const MANAGER_TOOLS: readonly AdminTool[] = [
+  {
+    href: "/admin/closures",
+    label: "Closure calendar",
+    hint: "Days your store is shut. Your team's streaks are safe on them.",
+  },
+];
+
 export const ADMIN_TOOLS: readonly AdminTool[] = [
   {
     href: "/admin/engagement",
@@ -60,11 +89,7 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     label: "Coaching Content",
     hint: "Cues, quotes and videos. Tap a type to open it.",
   },
-  {
-    href: "/admin/closures",
-    label: "Closure calendar",
-    hint: "Days your store is shut. Advisors' streaks are safe on them.",
-  },
+
   {
     href: "/admin/settings",
     label: "Gamification Settings",

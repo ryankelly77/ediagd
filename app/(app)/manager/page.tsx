@@ -3,7 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRoByAdvisor } from "@/lib/family-labor";
 import { Card } from "@/components/brand/Card";
+import Link from "next/link";
 import { TeamRoster } from "@/components/manager/TeamRoster";
+import {
+  calendarSettledThroughYearEnd,
+  openProposalCount,
+  type Closure,
+} from "@/lib/closures";
+import type { IsoDate } from "@/lib/gamification/streak";
 import {
   formatPct,
   type FamilyAttach,
@@ -63,6 +70,33 @@ export default async function ManagerPage() {
       .select("advisor_op_id, display_name")
       .eq("rooftop_id", rooftopId),
   ]);
+
+  /*
+   * ---- THE CLOSURE CALENDAR, READ BEFORE THE PERIOD GATE ------------------
+   *
+   * Deliberately above the `!period.id` return. A rooftop with no performance
+   * period loaded is a rooftop mid-onboarding, which is exactly when the
+   * calendar most needs ruling — gating the prompt behind a loaded period
+   * would hide it from every store during the only week anybody is setting
+   * things up.
+   */
+  const todayIso = new Date().toISOString().slice(0, 10) as IsoDate;
+  const { data: closureRows } = await supabase
+    .from("rooftop_closed_day")
+    .select("closed_on, status, dismissed_at")
+    .eq("rooftop_id", rooftopId)
+    .gte("closed_on", todayIso);
+
+  const closures: Pick<Closure, "date" | "status" | "dismissed">[] = (
+    (closureRows ?? []) as { closed_on: string; status: string; dismissed_at: string | null }[]
+  ).map((r) => ({
+    date: r.closed_on as IsoDate,
+    status: r.status === "confirmed" ? "confirmed" : "proposed",
+    dismissed: r.dismissed_at !== null,
+  }));
+
+  const calendarSettled = calendarSettledThroughYearEnd(todayIso, closures);
+  const calendarOpen = openProposalCount(todayIso, closures);
 
   if (!period?.id) {
     return <NoPeriod rooftopName={rooftop?.name ?? null} />;
@@ -223,6 +257,53 @@ export default async function ManagerPage() {
           Manager
         </span>
       </header>
+
+      {/*
+        ---- THE CLOSURE CALENDAR ------------------------------------------
+        THIS IS THE MANAGER'S ONBOARDING FOR IT, and it is a prompt rather
+        than a wizard on purpose. There is no manager onboarding flow to add a
+        step to — managers arrive at this page and start working — so the job
+        an onboarding step would do is done by a card that is loud while the
+        work is outstanding and quiet once it is finished, and that nobody has
+        to be told to look for.
+
+        LOUD MEANS CLAY, NOT GOLD. Gold is the thing the app is asking for on
+        the screen it is asking on; this is a nudge on somebody else's page,
+        and spending gold on it would put it in competition with the coaching
+        priorities immediately below, which are why they came here.
+      */}
+      {!calendarSettled ? (
+        <section className="mt-5">
+          <Link
+            href="/admin/closures"
+            className="block rounded-card border border-clay/40 bg-clay/5 p-5 transition hover:bg-clay/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-clay">
+              Needs you
+            </p>
+            <p className="mt-1 text-base font-extrabold text-navy">
+              {calendarOpen > 0
+                ? `Confirm the ${calendarOpen} day${calendarOpen === 1 ? "" : "s"} your store closes this year`
+                : "Set up your closure calendar"}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+              On a day you&apos;re shut, your team gets a rest card instead of
+              the daily loop and their streaks stay safe. Until you tell us,
+              every holiday counts as a day they missed. →
+            </p>
+          </Link>
+        </section>
+      ) : (
+        <p className="mt-5 px-1 text-xs text-ink-soft">
+          Closure calendar confirmed through year-end ·{" "}
+          <Link
+            href="/admin/closures"
+            className="font-bold text-ocean underline underline-offset-2"
+          >
+            edit
+          </Link>
+        </p>
+      )}
 
       {/* ---- Team coaching priorities ------------------------------------ */}
       <section className="mt-5 rounded-card bg-navy p-5 shadow-card">
