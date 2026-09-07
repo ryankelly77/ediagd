@@ -316,15 +316,8 @@ export function DailyFlow({
         kind={restDay.kind}
         closureLabel={restDay.label ?? null}
         greetingName={greetingName}
-        quote={quote}
-        video={lifestyle && { ...lifestyle, gate: lifestyleGate }}
-        threshold={videoThreshold}
         streak={currentStreak}
         nextWorkDayLabel={nextWorkDayLabel}
-        onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
-        onGateMet={(s) =>
-          fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s, setLifestyleSessionGate)
-        }
         onTakeTheRep={() => setRevealed(true)}
       />
     );
@@ -473,11 +466,18 @@ export function DailyFlow({
  * the advisor to either work their day off or guess. Saying it plainly is worth
  * more than every other pixel here.
  *
- * WHAT STAYS AVAILABLE, AND WHY IT IS NOT A LOOP
- * The quote and the video are still here and still free to read and play. What
- * is gone is the DEMAND: no step count, no Continue, no coaching cue about an
- * attach rate on a day they are not on the drive. A rest day is not an empty
- * day; it is a day with nothing owed.
+ * ONE MESSAGE, AND ONE WAY FORWARD. NOTHING ELSE.
+ * The quote and the video used to sit on this card too, free to read and play.
+ * They made the screen argue with itself: "nothing is owed today" printed
+ * directly above a video and a quote, which is content asking to be consumed.
+ * Ryan: "it's still confusing." He is right — an offer and a dismissal on the
+ * same page read as neither.
+ *
+ * So the card says the one thing it exists to say, and everything else lives
+ * BEHIND the button. Tapping it reveals the ordinary loop, where the quote is
+ * step 1 and the video is step 4 — the same content, in the place that already
+ * has a shape for it, rather than loose on a screen whose whole point is that
+ * nothing is being asked.
  *
  * ONE QUIET ACTION. "Take today's rep anyway" is a link, not a gold button —
  * the gold on every other screen is the thing the app is asking for, and on
@@ -488,27 +488,17 @@ function RestDayCard({
   kind,
   closureLabel,
   greetingName,
-  quote,
-  video,
-  threshold,
   streak,
   nextWorkDayLabel,
-  onFirstPlay,
-  onGateMet,
   onTakeTheRep,
 }: {
   kind: "day_off" | "island_time" | "store_closed";
   /** The manager's words for the closure — "Labor Day". Only when closed. */
   closureLabel: string | null;
   greetingName: string;
-  quote: Quote | null;
-  video: LifestyleVideo | null;
-  threshold: number;
   streak: number;
   /** Their next scheduled day, in words. Never "Monday" by assumption. */
   nextWorkDayLabel: string;
-  onFirstPlay: () => void;
-  onGateMet: (state: WatchState) => void;
   onTakeTheRep: () => void;
 }) {
   const island = kind === "island_time";
@@ -572,52 +562,6 @@ function RestDayCard({
           )}
         </p>
 
-        {/* Still here, still free. The quote is the one part of the ritual that
-            asks nothing of anybody. */}
-        {quote && (
-          <div className="mt-8 border-t border-line pt-6">
-            <PullQuote cite={citationFor(quote.voice) ?? undefined}>
-              <p>{quote.body ?? quote.title}</p>
-            </PullQuote>
-            {quote.nugget && (
-              <div className="mt-6 border-t border-line pt-5">
-                <Prose text={quote.nugget} />
-              </div>
-            )}
-            <div className="mt-6">
-              <SaveHeart contentId={quote.id} initialSaved={quote.saved} />
-            </div>
-          </div>
-        )}
-
-        {/*
-          `credit-only`, NOT `gate-continue`. There is no Continue to gate: the
-          watch is recorded like any other so the library and the engagement
-          numbers stay honest about who actually watched, but nothing on this
-          screen is waiting on it.
-        */}
-        {video && (
-          <div className="mt-8 border-t border-line pt-6">
-            <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-              If you want it
-            </p>
-            <h2 className="mt-1 text-xl font-extrabold text-navy">{video.title}</h2>
-            <div className="mt-4">
-              <TrackedVideo
-                policy="credit-only"
-                onFirstPlay={onFirstPlay}
-                contentId={video.contentId}
-                renditions={video.renditions}
-                title={video.title}
-                threshold={threshold}
-                initialWatchedPct={video.watchedPct}
-                initialPositionSec={video.positionSec}
-                initialMet={video.gate}
-                onGateMet={onGateMet}
-              />
-            </div>
-          </div>
-        )}
       </PhoneScreen.Body>
 
       <PhoneScreen.Footer>
