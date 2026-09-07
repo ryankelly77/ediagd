@@ -22,23 +22,43 @@
    the same filter is always in the same place.
 
    ---------------------------------------------------------------------------
-   NATIVE ON TOUCH, AND THAT IS A RULE RATHER THAN AN OVERSIGHT
+   THE STYLED MENU EVERYWHERE, INCLUDING TOUCH — AND WHY THAT CHANGED
    ---------------------------------------------------------------------------
-   On a coarse pointer this renders a real <select> and lets iOS show its sheet.
-   The OS picker is genuinely better there — it is thumb-height by default, it
-   scrolls with momentum, it dims the page, and it is what every other app on
-   the phone does. A hand-built listbox on a phone is a worse version of
-   something the platform already does well.
+   This first shipped with a stated rule: `(pointer: coarse)` got a real
+   <select> so iOS would show its sheet, which is genuinely better on a phone —
+   thumb-height, momentum scroll, dims the page.
 
-   So: `(pointer: fine)` gets this component's menu, everything else gets the
-   native one. The trigger is identical either way, which is the point — the
-   difference is only in what happens when you open it.
+   Ryan found the hole within the hour. Chrome DevTools device mode ALSO sets
+   pointer: coarse, so switching to mobile in Inspect handed back the native
+   control — but you are still in desktop Chrome, so what you get is the macOS
+   popup: 11px type, blue system highlight. The emulated preview was worse than
+   either real experience, and it made the mobile layout unreviewable. "I think
+   the issue is when i switch to mobile on Inspect."
 
-   BEFORE JAVASCRIPT RUNS, and on the server, this is a plain <select>. That is
-   not a fallback so much as the honest default: the control works without us.
+   There is no honest way around it. Device emulation fakes coarse pointers,
+   touch points and the user agent precisely so that media queries cannot tell
+   it apart from a phone; any detection good enough to see through it would also
+   be wrong on some real device.
+
+   So the trade got re-priced. This is ADMIN — Ryan and Mitch, mostly desktop
+   and iPad — so the iOS sheet was worth little, while being unable to see your
+   own design in device mode costs something every time anybody checks a screen.
+   One menu now, on every pointer. The 44px rows were always sized for a thumb.
+
+   WHAT SURVIVES: before JavaScript runs, and on the server, this is still a
+   plain <select>. Not a fallback so much as the honest default — the control
+   works without us, and the styled menu is an enhancement on top.
    ============================================================================ */
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 export type SelectOption = {
   value: string;
@@ -75,20 +95,24 @@ export const SELECT_TRIGGER_CLASS =
   "rounded-xl border border-line bg-cream-card p-3 text-left font-semibold text-navy " +
   "outline-none focus:ring-2 focus:ring-gold";
 
-/** True when the pointer is coarse — a finger, not a mouse. */
-function useCoarsePointer(): boolean | null {
-  /* null until measured. Rendering the custom menu and then swapping to native
-     would flash; rendering native first and enhancing does not, because the
-     trigger is the same box either way. */
-  const [coarse, setCoarse] = useState<boolean | null>(null);
-  useEffect(() => {
-    const mq = window.matchMedia("(pointer: coarse)");
-    const read = () => setCoarse(mq.matches);
-    read();
-    mq.addEventListener("change", read);
-    return () => mq.removeEventListener("change", read);
-  }, []);
-  return coarse;
+/**
+ * False until the component has mounted on the client.
+ *
+ * The server and the first client render must agree or React screams, so both
+ * emit the native <select>; the styled menu takes over on the next tick. No
+ * flash, because the trigger is the same box either way.
+ */
+const NEVER_CHANGES = () => () => {};
+
+function useMounted(): boolean {
+  /* useSyncExternalStore rather than setState-in-an-effect: it is the sanctioned
+     way to give the server one answer and the client another without a cascading
+     render, and the lint rule is right to reject the effect version. */
+  return useSyncExternalStore(
+    NEVER_CHANGES,
+    () => true,
+    () => false
+  );
 }
 
 export function Select({
@@ -124,8 +148,7 @@ export function Select({
   className?: string;
   triggerClassName?: string;
 }) {
-  const coarse = useCoarsePointer();
-  const custom = coarse === false;
+  const custom = useMounted();
   const width = fullWidth ? "w-full" : "";
 
   return custom ? (
@@ -141,7 +164,7 @@ export function Select({
       triggerClassName={triggerClassName}
     />
   ) : (
-    /* Touch, or not yet measured, or no JavaScript: the platform's control. */
+    /* Server, first paint, or no JavaScript: the platform's control. */
     <select
       id={id}
       aria-label={ariaLabel}
@@ -257,18 +280,24 @@ function StyledSelect({
     el?.scrollIntoView({ block: "nearest" });
   }, [open, active]);
 
-  /* A click anywhere else closes, WITHOUT stealing focus back — the person is
-     already on their way somewhere and yanking focus would fight them. */
+  /* A tap or click anywhere else closes, WITHOUT stealing focus back — the
+     person is already on their way somewhere and yanking focus would fight
+     them.
+
+     pointerdown, not mousedown: now that touch gets this menu too, a mousedown
+     listener would depend on the synthetic mouse event iOS fires AFTER the
+     touch settles, so tapping the page to dismiss would feel laggy or miss
+     entirely. pointerdown fires for a finger and a mouse alike, immediately. */
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (!panelRef.current?.contains(t) && !triggerRef.current?.contains(t)) {
         setOpen(false);
       }
     };
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
+    window.addEventListener("pointerdown", onDown);
+    return () => window.removeEventListener("pointerdown", onDown);
   }, [open]);
 
   /** Jump to the first option starting with what has been typed. */
