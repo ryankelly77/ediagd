@@ -1,17 +1,46 @@
 {
-  "fill" : { "solid" : "srgb:0.047,0.110,0.173,1.000" },
-  "groups" : [
+  "fill": {
+    "linear-gradient": [
+      "srgb:0.290,0.659,0.690,1.000",
+      "srgb:0.937,0.957,0.965,1.000"
+    ]
+  },
+  "groups": [
     {
-      "layers" : [ { "image-name" : "water.png", "name" : "1 Water" } ],
-      "translucency" : { "enabled" : true, "value" : 0.5 }
+      "layers": [
+        {
+          "image-name": "water.png",
+          "name": "1 Water"
+        }
+      ],
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
+      }
     },
     {
-      "layers" : [
-        { "image-name" : "sun.png",  "name" : "2 Sun" },
-        { "image-name" : "rays.png", "name" : "3 Rays" }
+      "layers": [
+        {
+          "image-name": "sun.png",
+          "name": "2 Sun"
+        },
+        {
+          "image-name": "rays.png",
+          "name": "3 Rays"
+        }
       ],
-      "shadow" : { "kind" : "neutral", "opacity" : 0.5 }
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      }
     }
   ],
-  "supported-platforms" : { "circles" : [ "watchOS" ], "squares" : [ "iOS" ] }
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": [
+      "iOS"
+    ]
+  }
 }
