@@ -6,6 +6,7 @@ import { VideoNotReady } from "@/components/video/MuxVideo";
 import type { VideoRenditions } from "@/lib/mux/playback";
 import { creditedGate, gateFromWatch, type GateRecord } from "@/lib/watch-credit";
 import type { RestDay } from "@/lib/work-schedule";
+import { RestingMark } from "@/components/brand/badges/RestingMark";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { WATCHED_PCT } from "@/lib/watch-coverage";
 import {
@@ -291,10 +292,27 @@ export function DailyFlow({
     []
   );
 
+  /*
+   * ---- THE RITUAL IS IMMERSIVE, THE ROUTE IS NOT -------------------------
+   *
+   * /today used to sit in IMMERSIVE_ROUTES, which made AppHeader and TabBar
+   * return null across the whole URL. That is right for the three minutes and
+   * wrong for the rest-day card, which has no Continue, no step dots and no
+   * close button — with the chrome gone, the only way off it was to take a rep
+   * the app had just said nobody owed.
+   *
+   * So the loop covers the bars instead of the route hiding them: fixed, above
+   * their z-40, exactly as full-bleed as it was. The rest card renders as an
+   * ordinary page underneath them and the tab bar is its way out.
+   */
+  const immersive = (node: React.ReactNode) => (
+    <div className="fixed inset-0 z-50">{node}</div>
+  );
+
   // Terminal screen: they've already done today. It WAITS — nothing here
   // navigates on its own.
   if (doneOnArrival && !ritualRun && !preview) {
-    return <DoneForTodayScreen streak={currentStreak} />;
+    return immersive(<DoneForTodayScreen streak={currentStreak} />);
   }
 
   /*
@@ -323,7 +341,7 @@ export function DailyFlow({
     );
   }
 
-  return (
+  return immersive(
     <PhoneScreen>
       {/* Below the island, with clear space.
 
@@ -509,62 +527,87 @@ function RestDayCard({
    * are the ones who know why the store is shut. A closure with no usable label
    * falls back to the plain fact rather than printing "Closed for ".
    */
-  const closureHeading =
-    closed && closureLabel?.trim() ? `Closed for ${closureLabel.trim()}` : "Store closed";
+  const heading = closed
+    ? closureLabel?.trim()
+      ? `Closed for ${closureLabel.trim()}`
+      : "Store closed"
+    : island
+      ? "Island Time"
+      : "Scheduled day off";
+
+  const because = closed
+    ? /* THE STORE decided this one, not them and not us. Said plainly, because
+         an advisor meeting a rest card on a Monday needs to know why before
+         they trust it. */
+      "Your store is closed today."
+    : island
+      ? "You booked today off."
+      : "Today isn't one of your work days.";
 
   return (
-    <PhoneScreen>
-      <PhoneScreen.Body>
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
+    /*
+     * A PAGE, NOT A PhoneScreen. The loop is the immersive thing and it now
+     * covers the chrome itself; this sits under the header and above the tab
+     * bar like any other destination, which is what makes the tab bar a way
+     * out and lets the close button stay off a screen that is not a modal.
+     *
+     * 72dvh so the column has something to balance inside: the hero centres in
+     * the space above the action instead of stacking at the top with a void
+     * under it, which is how a screen this sparse ends up reading as unfinished
+     * rather than as calm.
+     */
+    <main
+      className="mx-auto flex w-full max-w-app flex-col px-4 pb-8 pt-5"
+      style={{ minHeight: "72dvh" }}
+    >
+      {/*
+        THE GREETING TRAVELS WITH THE HERO. Left at the top of the column it
+        centred the panel and stranded itself — a line of type alone above a
+        gap, which is the "void" version of the same problem the layout was
+        meant to solve. Greeting and panel are one block, and the block is what
+        sits in the middle.
+      */}
+      <div className="flex flex-1 flex-col justify-center py-6">
+        <p className="mb-3 px-1 text-sm font-bold uppercase tracking-[0.18em] text-ocean">
           {BRAND.greeting}, {greetingName}
         </p>
-
-        {/* The whole message in one line, in the words somebody would use.
-            "Your streak is safe" rather than "this day is excluded from the
-            consecutive-scheduled-work-day calculation", which is the same fact
-            and no comfort at all. */}
-        <h1 className="mt-2 text-3xl font-extrabold leading-tight text-navy">
-          {closed ? closureHeading : island ? "Island Time" : "Scheduled day off"} — your
-          streak is safe
-        </h1>
-
         {/*
-          "COUNT" MEANS ONE THING ON THIS SCREEN.
-
-          This used to read "nothing is owed and nothing is counted" directly
-          above a footer promising "it counts in full". Both sentences were
-          true and they were about different things — the day is not counted
-          AGAINST you, and a voluntary rep IS counted FOR you — but an advisor
-          reading them ten lines apart has no way to know that, and the pair
-          reads as the app contradicting itself about whether today matters.
-
-          So the cost sentence stops using the word. "Skipping today costs you
-          nothing" says the same thing in the currency the reader cares about,
-          and leaves "counts" to mean earning, once, in the footer.
+          THE HERO, in the Streak screen's family — same navy card, same
+          rounded-card and shadow, same centred column with the mark on top.
+          A rest day and a Swell day are the same app talking about the same
+          streak, so they should not look like two products.
         */}
-        <p className="mt-3 text-base leading-relaxed text-ink-soft">
-          {closed
-            ? /* THE STORE decided this one, not them and not us. Said plainly,
-                 because an advisor who sees a rest card on a Monday needs to
-                 know why before they trust it. */
-              "Your store is closed today, so nothing is owed — skipping today costs you nothing."
-            : island
-              ? "You booked today off, so nothing is owed — skipping today costs you nothing."
-              : "Today isn't one of your work days, so nothing is owed — skipping today costs you nothing."}
+        <section className="rounded-card bg-navy p-7 text-center shadow-card">
+          <RestingMark variant={island ? "palm" : "sun"} size={96} className="mx-auto" />
+
+          <h1 className="mt-4 text-3xl font-extrabold leading-tight text-white">
+            {heading}
+          </h1>
+          <p className="mt-2 text-base font-bold text-gold">Your streak is safe</p>
+
+          <p className="mt-3 text-sm leading-relaxed text-ice-dim">
+            {because} Nothing is owed — skipping today costs you nothing.
+          </p>
+
+          {/*
+            THE GROUNDED CLOSER. Same treatment the Swell hero gives its
+            next-milestone line: set into the panel rather than floating under
+            it, because it is the sentence that answers "so what happens to my
+            streak" and it should land last.
+          */}
           {streak > 0 && (
-            <>
-              {" "}
-              <span className="font-bold text-navy">
-                Day {streak} is still Day {streak}{" "}
-                {island ? "when you're back" : `on ${nextWorkDayLabel}`}.
-              </span>
-            </>
+            <p className="mt-6 rounded-card bg-white/10 px-4 py-3 text-sm font-bold text-white">
+              Day {streak} is still Day {streak}{" "}
+              {island ? "when you're back" : `on ${nextWorkDayLabel}`}.
+            </p>
           )}
-        </p>
+        </section>
+      </div>
 
-      </PhoneScreen.Body>
-
-      <PhoneScreen.Footer>
+      {/* ONE QUIET ACTION. A bordered link, not a gold button — the gold on
+          every other screen is the thing the app is asking for, and on this
+          screen the app is asking for nothing. */}
+      <div>
         <button
           type="button"
           onClick={onTakeTheRep}
@@ -572,13 +615,12 @@ function RestDayCard({
         >
           Take today&apos;s rep anyway
         </button>
-        {/* The one place "counts" appears, and it means earning. Colon rather
-            than a dash: the button and this line read as a single sentence. */}
+        {/* The one place "counts" appears, and it means earning. */}
         <p className="mt-2 text-center text-xs text-ink-soft">
           It counts in full: Sand Dollars, Swell and all.
         </p>
-      </PhoneScreen.Footer>
-    </PhoneScreen>
+      </div>
+    </main>
   );
 }
 
