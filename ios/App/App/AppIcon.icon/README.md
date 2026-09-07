@@ -26,7 +26,18 @@ Ryan's verdict on that was "washed out too", and he was right: a light field
 pales the gold sun as well as the wave. Every element in this mark is a mid
 tone, so there is no light background they all survive.
 
-SHIPPED: TEAL AT THE TOP, NAVY AT THE BOTTOM. It is the only arrangement that
+SHIPPED: FLAT NAVY — Mitch's call, and the palm changed the arithmetic.
+
+The gradient rounds below were all run on the UNTREED mark, where every
+element was a mid tone and a dark field left the glass nothing to catch. The
+master's palm is drawn in cream, so the icon now has bright strokes on navy
+for the specular to ride. That is why the flat field works here and did not
+before: the artwork supplies the contrast the background used to have to.
+
+The reasoning from those rounds is kept below, because it is still true of any
+future fill and cost four builds to learn.
+
+WAS: TEAL AT THE TOP, NAVY AT THE BOTTOM. It is the only arrangement that
 serves both elements, and the reason is placement rather than taste — the sun
 sits high and needs a mid-tone behind it for the glass to catch, the wave sits
 low and needs something dark to bite against. A single flat colour cannot do

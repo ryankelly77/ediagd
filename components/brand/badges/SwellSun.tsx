@@ -7,13 +7,33 @@
  *
  * Flat Sunrise Gold on the water's teal — no gradients, per the brand book.
  *
+ * NOW IN THE MASTER'S COORDINATES, and carrying the master's palm. It used to
+ * be a simplified sun-and-two-lines in its own 100x100 space, which was fine
+ * while it was only a motif — but the mark grew a palm, and a motif that omits
+ * it is a second logo. Redrawing it against the master's 120x120 geometry means
+ * the sun, the water and the tree are literally the same paths the brand file
+ * uses, so this cannot drift from the logo again.
+ *
+ * The RING is still deliberately absent: this is the badge motif, and the frame
+ * is what the badge itself provides.
+ *
  * INKS COME FROM lib/brand-ink, NOT FROM THE UI TOKENS. This is artwork: it is
  * the brand's mark without its frame, so it follows the designer's master file
  * rather than the design language. The two differ by a couple of points — the
  * UI's gold is #E8B44C, the mark's sun is #e3b15c — and that gap is deliberate;
  * see the header of brand-ink.ts.
  */
-import { MARK_CREAM, MARK_PALM_PATHS, MARK_SUN, MARK_WAVE } from "@/lib/brand-ink";
+import {
+  MARK_CREAM,
+  MARK_PALM_PATHS,
+  MARK_RAYS,
+  MARK_SUN,
+  MARK_SUN_CIRCLE,
+  MARK_SWELL_PATHS,
+  MARK_VIEWBOX,
+  MARK_WAVE,
+  MARK_WAVE_PATH,
+} from "@/lib/brand-ink";
 
 export function SwellSun({
   size = 64,
@@ -27,7 +47,7 @@ export function SwellSun({
 }) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox={MARK_VIEWBOX}
       width={size}
       height={size}
       className={className}
@@ -36,32 +56,42 @@ export function SwellSun({
       aria-label={title}
     >
       <g strokeLinecap="round">
-        {/* rays */}
-        <g stroke={MARK_SUN} strokeWidth="5">
-          <path d="M50 14v9M26 24l6 6M74 24l-6 6M12 47h9M79 47h9" />
+        {/* The rays, thrown wide — this is the RISING sun, the one the app uses
+            where it is asking for something or celebrating it. RestingMark is
+            the same sun settled, for the days it is asking for nothing. */}
+        <g stroke={MARK_SUN} strokeWidth="2.2" fill="none">
+          {MARK_RAYS.map((r, i) => (
+            <line key={i} x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} />
+          ))}
         </g>
-        {/* the sun, rising */}
-        <path d="M31 60a19 19 0 0 1 38 0z" fill={MARK_SUN} />
-        {/*
-          The palm, from the master. Painted BEFORE the water so the trunk
-          tucks behind it exactly as the logo does — that occlusion is what
-          makes the two read as one drawing rather than a sun motif that has
-          had a tree added to it.
 
-          Cream, because this motif only ever appears on the navy hero and the
-          badge wall. There is no light-ground use to serve.
-        */}
-        <g fill="none" stroke={MARK_CREAM} strokeWidth="2.6">
+        <circle
+          cx={MARK_SUN_CIRCLE.cx}
+          cy={MARK_SUN_CIRCLE.cy}
+          r={MARK_SUN_CIRCLE.r}
+          fill={MARK_SUN}
+        />
+
+        {/* Painted before the water so the trunk tucks behind it, exactly as
+            the master does. That occlusion is what makes the two read as one
+            drawing rather than a motif with a tree added to it. */}
+        <g fill="none" stroke={MARK_CREAM} strokeWidth="2.4">
           {MARK_PALM_PATHS.map((d, i) => (
             <path key={i} d={d} />
           ))}
         </g>
 
-        {/* the water */}
-        <g fill="none" stroke={MARK_WAVE} strokeWidth="5">
-          <path d="M12 60h76" />
-          <path d="M16 74q9-8 18 0t18 0 18 0" />
-        </g>
+        <path d={MARK_WAVE_PATH} fill={MARK_WAVE} />
+        {MARK_SWELL_PATHS.map((d, i) => (
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke={MARK_WAVE}
+            strokeWidth="2.2"
+            opacity={i === 0 ? 1 : 0.6}
+          />
+        ))}
       </g>
     </svg>
   );
