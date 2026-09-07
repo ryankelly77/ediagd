@@ -3,6 +3,7 @@ import { BRAND } from "@/lib/brand";
 import "./globals.css";
 import { LaunchScreen } from "@/components/brand/LaunchScreen";
 import { LaunchScreenGate } from "@/components/brand/LaunchScreenGate";
+import { ChunkReload } from "@/components/ChunkReload";
 import { NativeBridge } from "@/components/native/NativeBridge";
 
 export const metadata: Metadata = {
@@ -87,6 +88,10 @@ export default function RootLayout({
             markup means it paints before the page it is covering. */}
         <LaunchScreen />
         <LaunchScreenGate />
+        {/* Recovers from a deploy landing mid-session: chunk filenames change,
+            an open tab still holds the old ones, and the next link click throws
+            ChunkLoadError. Reloads once, then stops. See ChunkReload.tsx. */}
+        <ChunkReload />
         {/* Capacitor shell only: hides the splash, routes notification taps and
             universal links, and registers for push once signed in. Renders null
             and does nothing at all in a browser.
