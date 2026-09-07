@@ -78,6 +78,42 @@ export function LaunchScreenGate() {
      */
     const root = document.documentElement;
 
+    /*
+     * ---- LIFT THE NATIVE SPLASH THE MOMENT WE HAVE PAINTED ----------------
+     *
+     * In the shell the native splash sits on top of the webview until
+     * something hides it, and capacitor.config sets launchShowDuration to
+     * 3000. NativeBridge does call hide(), but only after hydration and two
+     * dynamic imports, so in practice the 3s floor usually wins.
+     *
+     * The effect Ryan saw: "the opening screen has the navy blue for 2 to 3
+     * sec before the animation shows." The splash was covering the animation,
+     * so the sequence ran AFTER the wait instead of during it — which is
+     * precisely what this feature was supposed not to do.
+     *
+     * This effect runs as soon as the overlay has hydrated, and the overlay is
+     * already painted in the same #0C1C2C the splash is. So dropping the splash
+     * here is invisible — the field does not change, the mark simply begins to
+     * move — and the animation now plays over the rest of the load rather than
+     * being queued behind it.
+     *
+     * Fails silently and on purpose: in a browser there is no plugin, and a
+     * splash that will not hide must never stop the app being revealed. The
+     * config's launchAutoHide remains the backstop for the case where none of
+     * this JavaScript runs at all.
+     */
+    void (async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) return;
+        const { SplashScreen } = await import("@capacitor/splash-screen");
+        await SplashScreen.hide();
+      } catch {
+        /* Not native, or the plugin is unavailable. Nothing to lift. */
+      }
+    })();
+
+
     /* Written immediately, not on the way out: a reload DURING the animation is
        still a reload within the session, and it should not replay. */
     try {
