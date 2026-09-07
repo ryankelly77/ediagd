@@ -104,16 +104,6 @@ export function LaunchScreenGate() {
      * config's launchAutoHide remains the backstop for the case where none of
      * this JavaScript runs at all.
      */
-    void (async () => {
-      try {
-        const { Capacitor } = await import("@capacitor/core");
-        if (!Capacitor.isNativePlatform()) return;
-        const { SplashScreen } = await import("@capacitor/splash-screen");
-        await SplashScreen.hide();
-      } catch {
-        /* Not native, or the plugin is unavailable. Nothing to lift. */
-      }
-    })();
 
 
     /* Written immediately, not on the way out: a reload DURING the animation is
@@ -139,21 +129,14 @@ export function LaunchScreenGate() {
     };
 
     /*
-     * ---- THE SEQUENCE IS TIMED FROM PAINT, NOT FROM HYDRATION -------------
+     * ---- TIMED FROM RELEASE ----------------------------------------------
      *
-     * The CSS animation starts the moment the overlay is first rendered, which
-     * is well before this effect runs. Measuring from performance.now() here
-     * would hold the finished mark on screen for the difference — a third of a
-     * second of nothing, every launch.
+     * Not from paint: on device the overlay paints under the native splash, so
+     * paint is not when the mark becomes visible. The clock starts when the
+     * keyframes are released, which is the same instant the splash lifts.
      */
-    const paint = performance.getEntriesByType("paint")[0]?.startTime;
-    const nav = performance.getEntriesByType("navigation")[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-    const animationStart = paint ?? nav?.domContentLoadedEventEnd ?? performance.now();
-
     const afterSequence = (fn: () => void) => {
-      const remaining = SEQUENCE_MS - (performance.now() - animationStart);
+      const remaining = SEQUENCE_MS - (performance.now() - releasedAt);
       if (remaining <= 0) fn();
       else window.setTimeout(fn, remaining);
     };
@@ -177,7 +160,36 @@ export function LaunchScreenGate() {
      * underneath is interactive and worth revealing. Anything still in flight
      * is a resource the app can finish fetching while somebody looks at it.
      */
-    hold(dismiss);
+    /*
+     * Declared AFTER hold and dismiss, deliberately. release() closes over
+     * both, and it only worked above because its one call site sat behind an
+     * await — a future synchronous call would have been a temporal-dead-zone
+     * crash on every launch. Ordering it here makes that impossible rather
+     * than merely unlikely.
+     */
+    /** Releases the paused keyframes and starts the hold clock. */
+    let releasedAt = 0;
+    const release = () => {
+      if (releasedAt) return;
+      releasedAt = performance.now();
+      root.dataset.launchGo = "1";
+      hold(dismiss);
+    };
+
+    void (async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) {
+          release(); // browser: nothing is covering us
+          return;
+        }
+        const { SplashScreen } = await import("@capacitor/splash-screen");
+        await SplashScreen.hide();
+      } catch {
+        /* Not native, or the plugin is unavailable. */
+      }
+      release();
+    })();
 
     const failsafe = window.setTimeout(dismiss, MAX_HOLD_MS);
 

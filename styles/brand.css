@@ -334,6 +334,23 @@ html[data-launch-leaving="1"] #ediagd-launch {
  * — it simply never enters the block below. That also means a browser that
  * fails to run the animations shows a correct logo rather than an empty field.
  */
+/*
+ * ---- THE SEQUENCE STARTS WHEN IT CAN BE SEEN --------------------------------
+ *
+ * Measured on device: the overlay paints while the NATIVE SPLASH is still on
+ * top of it, so the animation was running behind a cover and only its tail was
+ * visible — 0.8s of a 1.2s sequence. Timing the dismissal from paint did not
+ * help, because paint is not the moment the mark becomes visible.
+ *
+ * So every keyframe starts PAUSED and is released by `data-launch-go`, which
+ * the gate sets once it has actually lifted the splash (or immediately, in a
+ * browser, where there is nothing covering it). Whatever the platform does
+ * first, the sequence is seen from its first frame.
+ */
+html:not([data-launch-go="1"]) #ediagd-launch * {
+  animation-play-state: paused !important;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .ediagd-launch__ring {
     opacity: 0;
