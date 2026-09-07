@@ -33,8 +33,15 @@
 
 import { useEffect } from "react";
 
-/** Matches the last keyframe in styles/brand.css, plus a beat to settle. */
-const SEQUENCE_MS = 1400;
+/**
+ * Matches the last keyframe in styles/brand.css, plus a beat to settle.
+ *
+ * 1200 rather than 1400 since the wordmark left: the swell was the last thing
+ * moving and it lands at 1.06s. Holding to 1.4s would have been ~350ms of a
+ * finished mark doing nothing, which reads as the app being slow rather than as
+ * a pause with intent.
+ */
+const SEQUENCE_MS = 1200;
 
 /**
  * Belt and braces. If `load` never fires — a hung image, a request that stalls
@@ -66,6 +73,10 @@ export function LaunchScreenGate() {
       if (done) return;
       done = true;
       el.setAttribute("data-leaving", "1");
+      /* Flips the inline `html` navy back off — see the critical style in
+         app/layout.tsx. Without this the navy would sit behind every cream
+         screen for the rest of the session and show through on overscroll. */
+      document.documentElement.dataset.launched = "1";
       /* Removed after the fade so it cannot swallow a tap, and so the DOM does
          not keep a full-screen element around for the rest of the session. */
       window.setTimeout(() => el.remove(), 300);

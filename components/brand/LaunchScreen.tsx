@@ -21,10 +21,9 @@
      0.15  the sun rises, with a slight overshoot and settle
      0.55  the rays bloom outward from the sun that just arrived
      0.60  one swell passes through the water
-     0.95  the wordmark fades in beneath
-     1.35  settled
+     1.06  settled
 
-   Under 1.4s end to end. Long enough to read as deliberate, short enough that
+   Under 1.2s end to end. Long enough to read as deliberate, short enough that
    somebody opening the app on a service drive does not wait for it — and it
    never runs in ADDITION to the fetch, only during it. See LaunchScreenGate.
 
@@ -106,8 +105,6 @@ export function LaunchScreen() {
             />
           </g>
         </svg>
-
-        <p className="ediagd-launch__wordmark">EDIAGD</p>
       </div>
     </div>
   );

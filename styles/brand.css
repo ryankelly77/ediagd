@@ -279,14 +279,20 @@ html[data-launched="1"] #ediagd-launch {
   gap: 1.25rem;
 }
 
-.ediagd-launch__wordmark {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 400;
-  letter-spacing: 0.2em;
-  /* The cream the ring is drawn in, so the lockup reads as one object. */
-  color: #f5f1e8;
+/*
+ * THE MARK CARRIES THE SCREEN ALONE.
+ *
+ * The wordmark used to sit beneath it, which capped how big the mark could be
+ * without the pair becoming a wall. With the type gone the mark is the whole
+ * composition, so it is sized against the VIEWPORT rather than in pixels —
+ * 78vw is most of the phone's width, which is what "launch screen" means when
+ * the mark is the only thing on it — the first cut at 64vw still read as a logo
+ * placed on a field rather than as the field itself. The 460px ceiling stops it
+ * becoming a billboard on an iPad or in a desktop browser.
+ */
+.ediagd-launch__mark {
+  width: min(78vw, 460px);
+  height: auto;
 }
 
 /*
@@ -328,10 +334,6 @@ html[data-launched="1"] #ediagd-launch {
   .ediagd-launch__swell--2 {
     animation: ediagd-swell 460ms ease-in-out 700ms both;
   }
-
-  .ediagd-launch__wordmark {
-    animation: ediagd-wordmark 400ms cubic-bezier(0.22, 1, 0.36, 1) 950ms both;
-  }
 }
 
 @keyframes ediagd-ring {
@@ -355,9 +357,4 @@ html[data-launched="1"] #ediagd-launch {
   0%   { transform: translateY(0); }
   45%  { transform: translateY(-2.5px); }
   100% { transform: translateY(0); }
-}
-
-@keyframes ediagd-wordmark {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
 }

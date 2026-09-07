@@ -52,6 +52,35 @@ export default function RootLayout({
             __html: `try{if(sessionStorage.getItem('ediagd:launched'))document.documentElement.dataset.launched='1'}catch(e){}`,
           }}
         />
+        {/*
+          CRITICAL, AND INLINE, BECAUSE AN EXTERNAL STYLESHEET IS A SECOND
+          ROUND TRIP.
+
+          The overlay's real rules live in styles/brand.css, which the browser
+          cannot apply until it has fetched it. Between our HTML arriving and
+          that file arriving the document has no background — which is white,
+          and which showed up on a cold Safari load as a flash before the navy.
+          Ryan: "duolingo doesn't do that." Duolingo is native and its splash
+          covers that gap; the Capacitor shell does the same. Safari has no such
+          cover, so the navy has to be in the FIRST bytes.
+
+          These are only the declarations that decide what colour the screen is
+          in the first frame. Everything else — the stage, the animation, the
+          fade-out — stays in the stylesheet where it belongs.
+
+          The html rule is scoped to :not([data-launched]) so it applies during
+          launch and stops the moment the gate marks the session launched. A
+          permanent navy html would sit behind every cream screen in the app and
+          show through on rubber-band scroll.
+        */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              "html:not([data-launched='1']){background:#0c1c2c}" +
+              "#ediagd-launch{position:fixed;inset:0;z-index:90;display:flex;" +
+              "align-items:center;justify-content:center;background:#0c1c2c}",
+          }}
+        />
       </head>
       <body className="ediagd-app min-h-full" suppressHydrationWarning>
         {/* First in the body: it covers everything, and being early in the
