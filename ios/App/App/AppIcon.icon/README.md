@@ -21,13 +21,21 @@ recording: it was judged at 3x upscale, where it looked best. At true icon size
 the teal wave sat on teal ground and vanished. An icon has to be judged at the
 size it is seen.
 
-The gradient is therefore inverted: TEAL AT THE TOP, near-white at the bottom.
-That is not a colour preference, it is contrast placement — the sun is high in
-the frame and needs a mid-tone behind it, the wave is low and needs a light one.
-Turning the same two colours the other way up is the whole fix.
+Inverting it — teal at the top, near-white at the bottom — fixed the wave but
+Ryan's verdict on that was "washed out too", and he was right: a light field
+pales the gold sun as well as the wave. Every element in this mark is a mid
+tone, so there is no light background they all survive.
 
-Teal-to-navy was the runner-up and has more contrast still; it is one line away
-if the light icon ever reads as too soft.
+SHIPPED: TEAL AT THE TOP, NAVY AT THE BOTTOM. It is the only arrangement that
+serves both elements, and the reason is placement rather than taste — the sun
+sits high and needs a mid-tone behind it for the glass to catch, the wave sits
+low and needs something dark to bite against. A single flat colour cannot do
+both, which is why the original navy looked flat and the light versions looked
+washed.
+
+If this ever still reads soft, the next lever is the ARTWORK — deepen the wave's
+teal or warm the sun — not the background. The background has been through four
+rounds and this is where it lands.
 
 A lighter icon is also the more honest brand choice. The login screen is a
 bright sunrise, the mark is navy on cream, and every app surface is cream — the
