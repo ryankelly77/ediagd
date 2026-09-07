@@ -281,9 +281,24 @@ export default async function ManagerPage() {
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-clay">
               Needs you
             </p>
+            {/*
+              NO COUNT IN THE HEADLINE, for two reasons that both bit.
+
+              It disagreed with its own destination. openProposalCount is
+              windowed to year-end, because that is what "confirmed through
+              year-end" means for readiness — so this said 5 and the screen it
+              opens listed 16, being everything from today through next year.
+              A number that changes meaning between a link and its target is
+              worse than no number.
+
+              And it asserted the answer. "The 5 days your store closes" tells
+              a manager what their store does, which is the one thing we do not
+              know and the entire reason these are proposals — several of them
+              will be days they trade.
+            */}
             <p className="mt-1 text-base font-extrabold text-navy">
               {calendarOpen > 0
-                ? `Confirm the ${calendarOpen} day${calendarOpen === 1 ? "" : "s"} your store closes this year`
+                ? "Confirm the days your store closes"
                 : "Set up your closure calendar"}
             </p>
             <p className="mt-1 text-sm leading-relaxed text-ink-soft">

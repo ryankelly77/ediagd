@@ -74,7 +74,7 @@ check("Thanksgiving 2026 is the fourth Thursday",
 check("Memorial Day 2026 is the LAST Monday in May",
   federalHolidays(2026).find((h) => h.label === "Memorial Day")?.date, "2026-05-25");
 check("MLK Day 2027 is the third Monday in January",
-  federalHolidays(2027).find((h) => h.label === "Martin Luther King Jr. Day")?.date,
+  federalHolidays(2027).find((h) => h.label === "MLK Day")?.date,
   "2027-01-18");
 check("eleven of them", federalHolidays(2026).length, 11);
 /* Actual dates, not observed: 4 July 2026 is a Saturday and stays there. */

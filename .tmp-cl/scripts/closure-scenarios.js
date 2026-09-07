@@ -52,7 +52,7 @@ console.log("\n  The federal list\n");
 check("Labor Day 2026 is the first Monday in September", (0, closures_1.federalHolidays)(2026).find((h) => h.label === "Labor Day")?.date, LABOR_DAY);
 check("Thanksgiving 2026 is the fourth Thursday", (0, closures_1.federalHolidays)(2026).find((h) => h.label === "Thanksgiving")?.date, "2026-11-26");
 check("Memorial Day 2026 is the LAST Monday in May", (0, closures_1.federalHolidays)(2026).find((h) => h.label === "Memorial Day")?.date, "2026-05-25");
-check("MLK Day 2027 is the third Monday in January", (0, closures_1.federalHolidays)(2027).find((h) => h.label === "Martin Luther King Jr. Day")?.date, "2027-01-18");
+check("MLK Day 2027 is the third Monday in January", (0, closures_1.federalHolidays)(2027).find((h) => h.label === "MLK Day")?.date, "2027-01-18");
 check("eleven of them", (0, closures_1.federalHolidays)(2026).length, 11);
 /* Actual dates, not observed: 4 July 2026 is a Saturday and stays there. */
 check("Independence Day is not shifted off its Saturday", (0, closures_1.federalHolidays)(2026).find((h) => h.label === "Independence Day")?.date, "2026-07-04");

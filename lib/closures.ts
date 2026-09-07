@@ -76,7 +76,10 @@ function lastWeekday(year: number, month: number, weekday: number): IsoDate {
 export function federalHolidays(year: number): ClosureProposal[] {
   return [
     { date: iso(year, 1, 1), label: "New Year's Day" },
-    { date: nthWeekday(year, 1, 1, 3), label: "Martin Luther King Jr. Day" },
+    /* "MLK Day", not the full name: at 24 characters it wrapped to two lines
+       in the manager's list and on the rest card's "Closed for ___" heading.
+       It is also what people say. */
+    { date: nthWeekday(year, 1, 1, 3), label: "MLK Day" },
     { date: nthWeekday(year, 2, 1, 3), label: "Presidents' Day" },
     { date: lastWeekday(year, 5, 1), label: "Memorial Day" },
     { date: iso(year, 6, 19), label: "Juneteenth" },
