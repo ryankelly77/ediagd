@@ -230,3 +230,134 @@
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
+
+/* ============================================================================
+   Cold-start launch animation — see components/brand/LaunchScreen.tsx
+   ========================================================================= */
+
+/*
+ * #0C1C2C is not a token here on purpose. It is the SAME LITERAL the iOS
+ * launch image was generated with (@capacitor/assets --splashBackgroundColor)
+ * and the same one capacitor.config.ts hands the shell. Three places have to
+ * agree for the handoff to be seamless, and a theme variable that some future
+ * palette edit shifts by two points would put a visible seam between Apple's
+ * splash and ours with nothing pointing at the cause.
+ */
+#ediagd-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0c1c2c;
+  /* Its own inset padding: the field must reach the physical edges under the
+     island and the home indicator, exactly as the native splash does. */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+/* Set before first paint by the inline script in app/layout.tsx when this
+   session has already launched. `display:none` rather than a fade, because a
+   mid-session reload must show nothing at all. */
+html[data-launched="1"] #ediagd-launch {
+  display: none;
+}
+
+/* The fade-out, driven by the gate once the app is ready AND the sequence has
+   finished. Pointer-events go first so a tap during the fade reaches the app. */
+#ediagd-launch[data-leaving="1"] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms ease-out;
+}
+
+.ediagd-launch__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.ediagd-launch__wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  /* The cream the ring is drawn in, so the lockup reads as one object. */
+  color: #f5f1e8;
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * THE SETTLED STATE IS THE DEFAULT
+ * ---------------------------------------------------------------------------
+ * Everything above describes the FINISHED mark. Nothing is hidden, offset or
+ * scaled by default, so `prefers-reduced-motion: reduce` needs no rules at all
+ * — it simply never enters the block below. That also means a browser that
+ * fails to run the animations shows a correct logo rather than an empty field.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .ediagd-launch__ring {
+    opacity: 0;
+    transform-origin: 48px 48px;
+    animation: ediagd-ring 360ms cubic-bezier(0.22, 1, 0.36, 1) 0ms both;
+  }
+
+  /*
+   * The sun starts 34 units down — below the waterline, behind the wave that
+   * is painted over it — and overshoots by a couple of units before settling.
+   * The overshoot is what stops it reading as a slide; a sun coming up has
+   * momentum.
+   */
+  .ediagd-launch__sun {
+    animation: ediagd-sun 620ms cubic-bezier(0.34, 1.42, 0.64, 1) 150ms both;
+  }
+
+  .ediagd-launch__rays {
+    transform-origin: 60px 33px;
+    animation: ediagd-rays 420ms cubic-bezier(0.22, 1, 0.36, 1) 550ms both;
+  }
+
+  /* ONE swell, not a loop. A repeating wave would turn a launch into an
+     idle animation, and this screen is a doorway rather than a place. */
+  .ediagd-launch__swell--1 {
+    animation: ediagd-swell 460ms ease-in-out 600ms both;
+  }
+  .ediagd-launch__swell--2 {
+    animation: ediagd-swell 460ms ease-in-out 700ms both;
+  }
+
+  .ediagd-launch__wordmark {
+    animation: ediagd-wordmark 400ms cubic-bezier(0.22, 1, 0.36, 1) 950ms both;
+  }
+}
+
+@keyframes ediagd-ring {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ediagd-sun {
+  from { opacity: 0; transform: translateY(34px); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ediagd-rays {
+  from { opacity: 0; transform: scale(0.55); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* A swell passes THROUGH the water — a small lift and return, not a bounce. */
+@keyframes ediagd-swell {
+  0%   { transform: translateY(0); }
+  45%  { transform: translateY(-2.5px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes ediagd-wordmark {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
