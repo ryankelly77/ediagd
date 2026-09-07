@@ -37,8 +37,28 @@ export function AppHeader({
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-line bg-surface-card/95 backdrop-blur"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      /*
+        THE SURFACE RUNS THROUGH THE TOP INSET.
+        The inset is padding INSIDE this element, so its own background paints
+        the status-bar area — never a margin above it, which would leave a band
+        of the body colour between the system clock and the app.
+        Opaque, for the same reason the tab bar is: at /95 the strip behind the
+        status bar took a wash of the page gradient, which on a device reads as
+        a seam rather than as translucency.
+      */
+      className="sticky top-0 z-40 border-b border-line bg-surface-card"
+      /*
+       * ALL THREE INSETS, not just the top. In landscape on a notched phone the
+       * notch moves to the SIDE — about 59px of it — and the header's own px-4
+       * is 16. The wordmark would have sat under it. The padding goes on this
+       * element, the one carrying the background, so the surface still runs
+       * edge to edge while the content steps clear.
+       */
+      style={{
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        paddingLeft: "env(safe-area-inset-left, 0px)",
+        paddingRight: "env(safe-area-inset-right, 0px)",
+      }}
     >
       {/* py-1: the mark sets the height, so vertical padding stays minimal. */}
       <div className="mx-auto flex max-w-app items-center gap-2 px-4 py-1">

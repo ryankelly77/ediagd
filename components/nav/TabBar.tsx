@@ -31,6 +31,19 @@ export type Tab = {
 };
 
 /**
+ * How tall the bar's CONTENT is, above the home-indicator inset.
+ *
+ * ONE NUMBER, USED TWICE, because it was previously two and they disagreed:
+ * the spacer reserved 4.5rem (72px) while the tabs were min-h 3.5rem (56px),
+ * so every scrollable screen ended with 16px of dead space nobody could
+ * explain. A fixed bar and the gap it leaves behind are the same measurement.
+ *
+ * 60 rather than 56: a 24px glyph, a 13px label and the active underline do not
+ * fit in 56 without crowding, and this audience is not the one to crowd.
+ */
+const BAR_CONTENT_PX = 60;
+
+/**
  * Fixed bottom tab bar. Mobile-first: safe-area aware, 56px+ targets.
  * The tab list is computed server-side in the (app) layout — this only decides
  * which one is active and whether to show at all.
@@ -63,29 +76,59 @@ export function TabBar({
       {/* Spacer so fixed-position chrome never covers the last row of content. */}
       <div
         aria-hidden="true"
-        style={{ height: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
+        style={{ height: `calc(${BAR_CONTENT_PX}px + env(safe-area-inset-bottom, 0px))` }}
       />
 
+      {/*
+        THE SURFACE RUNS TO THE PHYSICAL EDGE.
+        The inset is padding INSIDE this element, so its background paints the
+        whole home-indicator area. It is also fully opaque now: at /95 over the
+        body's gradient the last few pixels above the indicator took a faint
+        wash of the page colour, which on a device reads as a seam between the
+        app and the phone. Cream-on-cream buys nothing from a blur, and an
+        opaque bar is the more legible one to put a 13px label on.
+      */}
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface-card/95 backdrop-blur"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface-card"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          /* Landscape puts the notch on one side and the home indicator on the
+             other. Five equal tabs measured against the full width would push
+             the outer two under both. */
+          paddingLeft: "env(safe-area-inset-left, 0px)",
+          paddingRight: "env(safe-area-inset-right, 0px)",
+        }}
       >
-        <ul className="mx-auto flex max-w-app items-stretch">
+        <ul
+          className="mx-auto flex max-w-app items-stretch"
+          style={{ height: BAR_CONTENT_PX }}
+        >
           {tabs.map((tab, i) => {
             const active = i === activeIndex;
             return (
-              <li key={tab.label} className="flex-1">
+              /* An equal fifth of the width, and the FULL height of the bar —
+                 the tap target is the whole cell rather than the glyph and its
+                 caption, so a thumb landing anywhere in the column works. */
+              <li key={tab.label} className="flex flex-1">
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className="flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 px-1 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                  className="flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
                 >
                   <TabGlyph icon={tab.icon} active={active} />
+                  {/*
+                    13px, and `ink` rather than `ink-soft` when inactive.
+                    11px was below the floor Ryan set for this audience, and
+                    ink-soft on the bar measured 4.77:1 — over AA by a margin
+                    thin enough that any future tint change breaks it silently.
+                    ink is 11.2:1. Active stays navy, and the gold underline and
+                    teal glyph carry the state, so nothing depended on the
+                    inactive label being the faint one.
+                  */}
                   <span
-                    className={`text-[11px] font-bold tracking-wide ${
-                      active ? "text-navy" : "text-ink-soft"
-                    }`}
+                    className={`font-bold tracking-wide ${active ? "text-navy" : "text-ink"}`}
+                    style={{ fontSize: 13, lineHeight: "16px" }}
                   >
                     {tab.label}
                   </span>
@@ -114,8 +157,10 @@ export function TabBar({
 function TabGlyph({ icon, active }: { icon: TabIcon; active: boolean }) {
   const color = active ? "var(--color-teal)" : "var(--color-ink-soft)";
   const common = {
-    width: 22,
-    height: 22,
+    /* Up from 22 with the label, so the glyph and its caption grow together
+       rather than the icon shrinking against bigger type. */
+    width: 24,
+    height: 24,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: color,
