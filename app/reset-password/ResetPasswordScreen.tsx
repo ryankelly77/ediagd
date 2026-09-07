@@ -35,9 +35,39 @@ import { MIN_PASSWORD_LENGTH, validateNewPassword } from "@/lib/auth-password";
 
 type State = "checking" | "ready" | "invalid" | "done";
 
+/**
+ * The same screen serves two arrivals, and they are not the same moment.
+ *
+ * A RESET is somebody locked out of an account they already have. An INVITE is
+ * somebody's first contact with EDIAGD — they have never seen it, nobody has
+ * told them a password to forget, and "Reset your password" would be the first
+ * thing the product ever said to them. It reads as an error about an account
+ * they do not know they have.
+ *
+ * Supabase distinguishes them with `type` in the link, so the copy follows it.
+ * Nothing else differs: same verification, same rules, same form.
+ */
+const COPY = {
+  recovery: {
+    title: "Set a new password",
+    expiredTitle: "That link has expired",
+    expiredBody:
+      "Reset links last an hour and can only be used once. Ask for a fresh one and it'll be with you in a minute.",
+    doneTitle: "Password updated",
+  },
+  invite: {
+    title: "Choose your password",
+    expiredTitle: "That invite has expired",
+    expiredBody:
+      "Invite links don't last forever. Ask whoever invited you to send a new one and you'll be in shortly.",
+    doneTitle: "Welcome to EDIAGD",
+  },
+} as const;
+
 export function ResetPasswordScreen() {
   const supabase = createClient();
   const [state, setState] = useState<State>("checking");
+  const [kind, setKind] = useState<"recovery" | "invite">("recovery");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -67,19 +97,22 @@ export function ResetPasswordScreen() {
     const hasCode = url.searchParams.has("code");
     const hasAccessToken = hash.has("access_token");
     const hasLink = Boolean(tokenHash) || hasCode || hasAccessToken;
+    /* Captured, not stored: writing it synchronously here is a cascading
+       render, and nothing rendered before the first callback depends on it —
+       the checking state says the same thing either way. */
+    const linkKind: "recovery" | "invite" = type === "invite" ? "invite" : "recovery";
 
     /* The token_hash form is ours to exchange; the others supabase-js does. */
     if (hasLink && tokenHash) {
       supabase.auth
-        .verifyOtp({ token_hash: tokenHash, type: (type as "recovery") ?? "recovery" })
+        .verifyOtp({
+          token_hash: tokenHash,
+          type: type === "invite" ? "invite" : "recovery",
+        })
         .then(({ data, error: otpError }) => {
-          if (otpError || !data.session) {
-            settled = true;
-            setState("invalid");
-          } else {
-            settled = true;
-            setState("ready");
-          }
+          settled = true;
+          setKind(linkKind);
+          setState(otpError || !data.session ? "invalid" : "ready");
         });
     }
 
@@ -87,6 +120,7 @@ export function ResetPasswordScreen() {
       supabase.auth.getSession().then(({ data }) => {
         if (data.session) {
           settled = true;
+          setKind(linkKind);
           setState("ready");
         }
       });
@@ -95,6 +129,7 @@ export function ResetPasswordScreen() {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (hasLink && session) {
         settled = true;
+        setKind(linkKind);
         setState("ready");
       }
     });
@@ -106,7 +141,9 @@ export function ResetPasswordScreen() {
        cascading-render rule rejects and is right to. */
     const timer = window.setTimeout(
       () => {
-        if (!settled) setState("invalid");
+        if (settled) return;
+        setKind(linkKind);
+        setState("invalid");
       },
       hasLink ? 3000 : 0
     );
@@ -149,14 +186,13 @@ export function ResetPasswordScreen() {
     return (
       <AuthShell>
         <div className="space-y-4">
-          <h1 className="text-xl font-extrabold text-navy">That link has expired</h1>
-          <p className="text-base leading-relaxed text-ink">
-            Reset links last an hour and can only be used once. Ask for a fresh
-            one and it&apos;ll be with you in a minute.
-          </p>
-          <Link href="/forgot-password" className={AUTH_BUTTON + " block text-center"}>
-            Send a new link
-          </Link>
+          <h1 className="text-xl font-extrabold text-navy">{COPY[kind].expiredTitle}</h1>
+          <p className="text-base leading-relaxed text-ink">{COPY[kind].expiredBody}</p>
+          {kind === "invite" ? null : (
+            <Link href="/forgot-password" className={AUTH_BUTTON + " block text-center"}>
+              Send a new link
+            </Link>
+          )}
           <Link href="/login" className={AUTH_QUIET_LINK}>
             Back to sign in
           </Link>
@@ -169,14 +205,16 @@ export function ResetPasswordScreen() {
     return (
       <AuthShell>
         <div className="space-y-4">
-          <h1 className="text-xl font-extrabold text-navy">Password updated</h1>
+          <h1 className="text-xl font-extrabold text-navy">{COPY[kind].doneTitle}</h1>
           {/*
             THE SENTENCE THAT STOPS SOMEBODY BEING STRANDED. They are in Safari
             because that is where an email link opens; the app is a separate
             icon on their home screen and nothing here can put them back in it.
           */}
           <p className="text-base leading-relaxed text-ink">
-            Go back to the EDIAGD app and sign in with your new password.
+            {kind === "invite"
+              ? "You're all set. Open the EDIAGD app and sign in with the password you just chose."
+              : "Go back to the EDIAGD app and sign in with your new password."}
           </p>
           <p className="text-sm leading-relaxed text-ink-soft">
             On this browser instead? You can sign in here too.
@@ -192,7 +230,7 @@ export function ResetPasswordScreen() {
   return (
     <AuthShell>
       <div className="space-y-4">
-        <h1 className="text-xl font-extrabold text-navy">Set a new password</h1>
+        <h1 className="text-xl font-extrabold text-navy">{COPY[kind].title}</h1>
         <p className="text-sm leading-relaxed text-ink-soft">
           At least {MIN_PASSWORD_LENGTH} characters.
         </p>
