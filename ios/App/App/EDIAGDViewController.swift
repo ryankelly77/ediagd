@@ -30,6 +30,31 @@ final class EDIAGDViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
 
+        /*
+         * ---- SWIPE BACK, THE WAY EVERY OTHER APP ON THE PHONE DOES ---------
+         *
+         * A Capacitor shell is ONE webview with no navigation controller, so
+         * the edge-swipe every iPhone user reaches for lands on nothing. The
+         * only way back was the breadcrumb — Ryan, on the admin video screens:
+         * "instead of tapping on the small breadcrumb up top". A small target
+         * at the top of a large phone is the least reachable place on the
+         * screen, and it is the one place the app made mandatory.
+         *
+         * WKWebView keeps its own back/forward list, and Next's client-side
+         * navigations are pushState entries in it, so turning this on gives
+         * the real gesture — interactive, with the rubber-band and the
+         * cancel-if-you-let-go — over routes the app already has. Not a
+         * JavaScript imitation of it: a touch handler cannot preview the
+         * previous screen or follow the finger back, and on an admin screen
+         * full of horizontally scrolling tables it would have to guess whether
+         * a drag was a swipe or a scroll. The system gesture starts at the
+         * screen edge and never has to guess.
+         *
+         * Forward comes with it, which is correct — a back gesture that cannot
+         * be undone is a worse deal than the one iOS ships.
+         */
+        bridge?.webView?.allowsBackForwardNavigationGestures = true
+
         guard let controller = bridge?.webView?.configuration.userContentController else {
             // No webview means no page, which means no ready signal will ever
             // arrive — the overlay's own cap will clear it. Nothing to do here
