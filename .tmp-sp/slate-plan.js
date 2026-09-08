@@ -41,14 +41,54 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const node_fs_1 = require("node:fs");
 const node_path_1 = require("node:path");
 const TIMINGS = "reports/slate-timings.json";
+/* The whole-film transcripts, for the containment test below. */
+const TRANSCRIPTS = "reports/dropzone-transcripts.json";
 const OUT = "reports/slate-plan";
+/**
+ * The shelf is the authority on what exists — Ryan's ruling, and the right one.
+ *
+ * The library table and this folder agree today, but they are not the same kind
+ * of fact: a row can be a draft of something never shot, and a file on the
+ * published shelf is a film that shipped. "Is this a reshoot" is a question
+ * about what shipped, so it is answered by the shelf. The version to use next
+ * comes from the same place, out of the filename that is already canonical.
+ */
+const PUBLISHED = "02 - Published";
 const args = process.argv.slice(2);
 const APPLY = args.includes("--apply");
 const DIR = args.find((a) => a.startsWith("--dir="))?.slice(6) ?? "";
+/* One collection per run. This batch is all MINDSET; a mixed drop would be two
+   runs, which is better than a scorer allowed to match across shelves. */
+const COLLECTION = args.find((a) => a.startsWith("--collection="))?.slice(13) ?? "Mindset";
 /** Below this, a person looks at it. See the note above on why it is mean. */
 const CONFIDENT = 0.62;
 /** And it has to beat the runner-up by this much, or it is not a decision. */
 const MARGIN = 0.12;
+/**
+ * Except when the title simply IS the title.
+ *
+ * "Practice Makes Improvement" against "Practice Makes Improvement" scored a
+ * perfect 1 and was still held for a ruling, because "Perfect Practice Makes
+ * Perfect" is a real neighbouring film that scored close behind it. The margin
+ * rule is right about ambiguity and wrong about this: an exact agreement is not
+ * made doubtful by a similar title existing nearby.
+ */
+const DECISIVE = 0.9;
+/**
+ * Below this, a near-miss is not worth a person's attention.
+ *
+ * The floor was 0.35, which meant a film scoring 0.4 against something plainly
+ * unrelated — "The Wolf Climbing the Hill" against "Never Lose Money" — was put
+ * in front of Ryan as a question. Ten of those is how a review list stops being
+ * read. Anything this weak is a new film, and being wrong about that produces a
+ * duplicate somebody can spot rather than a silent replacement.
+ */
+const WORTH_ASKING = 0.55;
+/** "3 Rules" and "Three Rules" are the same rules. */
+const NUMBERS = {
+    one: "1", two: "2", three: "3", four: "4", five: "5",
+    six: "6", seven: "7", eight: "8", nine: "9", ten: "10",
+};
 const norm = (s) => s.toLowerCase()
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9 ]+/g, " ")
@@ -56,7 +96,14 @@ const norm = (s) => s.toLowerCase()
     .trim();
 /** Words too common to be evidence of anything. */
 const STOP = new Set(["the", "a", "an", "is", "are", "was", "to", "of", "and", "or", "in", "on", "for", "by", "you", "your", "it", "its", "that", "this", "with", "not", "be", "do", "dont", "if", "when", "what", "who", "my", "me", "i"]);
-const tokens = (s) => norm(s).split(" ").filter((w) => w && !STOP.has(w));
+const tokens = (s) => norm(s)
+    .split(" ")
+    .filter((w) => w && !STOP.has(w))
+    .map((w) => NUMBERS[w] ?? w)
+    /* Light stemming, not a stemmer. "The Moment You Feel Comfortable" against
+       a film that says "the moment you start feeling comfortable" should not
+       lose a word to a suffix. Only long words, so "was"/"his" survive. */
+    .map((w) => (w.length > 4 ? w.replace(/(ing|ed|es|s)$/, "") : w));
 /**
  * How much two titles agree, 0..1.
  *
@@ -64,6 +111,91 @@ const tokens = (s) => norm(s).split(" ").filter((w) => w && !STOP.has(w));
  * against "Doubt Is a Strange Thing (Kobe)" should score on the words they
  * share, and the parenthetical attribution should not count against it.
  */
+/**
+ * Does the film SAY the existing title?
+ *
+ * Title-against-title was too weak for the real cases: the slate says
+ * "Comfortable" and the shelf says "The Moment You Feel Comfortable", which
+ * share one content word out of five. But the film itself opens "The moment you
+ * start feeling comfortable, you're already losing" — every word of the shelf
+ * title is right there in the first sentence.
+ *
+ * So the second signal asks the asymmetric question: what fraction of the
+ * EXISTING title's words appear in the new film's opening? A reshoot restates
+ * its own quote, so a real match scores near 1 while an unrelated film scores
+ * near 0. It is the difference between guessing from a label and reading the
+ * thing.
+ *
+ * THE OPENING ONLY. These films quote themselves in the first sentence and then
+ * talk for a minute; scanning the whole transcript would let incidental words
+ * anywhere in three minutes vote, and "time", "better" and "day" appear in
+ * nearly all of them.
+ */
+/**
+ * WEIGHTED BY HOW DISTINCTIVE EACH WORD IS, because the plain version was
+ * confidently wrong.
+ *
+ * Counting matched words equally made "Be Better Than That" and "Day One or One
+ * Day" match almost every film in the batch — they are two common words each,
+ * and "better", "day" and "one" appear in nearly all sixty-eight titles. That
+ * did more than mislabel those two: a false runner-up at 0.95 destroyed the
+ * margin test for the genuinely obvious matches beside it, so "Practice Makes
+ * Improvement" scoring a perfect 1 still came out as needing a ruling.
+ *
+ * So each word is worth how rare it is across the shelf. "Mamba" identifies a
+ * film; "day" does not, and now says so.
+ */
+function contains(existingTitle, opening, idf) {
+    const want = tokens(existingTitle);
+    if (!want.length)
+        return 0;
+    const have = new Set(tokens(opening));
+    let hit = 0, total = 0;
+    for (const w of new Set(want)) {
+        const weight = idf.get(w) ?? 1;
+        total += weight;
+        if (have.has(w))
+            hit += weight;
+    }
+    if (!total)
+        return 0;
+    /*
+     * A RATIO IS NOT ENOUGH — the title needs something distinctive to say.
+     *
+     * "Be Better Than That" is two common words. Any film containing "better" and
+     * "than" matched all of it and scored a perfect ratio, which was not merely
+     * wrong about that film: a false runner-up at 0.95 sat next to genuine
+     * matches scoring 1.0 and defeated the margin test, so "Practice Makes
+     * Improvement" against "Practice Makes Improvement" came out as unresolved.
+     *
+     * So the ratio is scaled by how much distinctive weight the title carries at
+     * all. "The Mamba Mentality" has two words nothing else uses and can prove
+     * itself; a title made of the batch's most common words cannot, and now says
+     * so instead of shouting.
+     */
+    const MEANINGFUL = 1.5;
+    return (hit / total) * Math.min(1, total / MEANINGFUL);
+}
+/**
+ * How rare each word is among the published titles.
+ *
+ * Plain inverse frequency over a set this small, rather than a log: sixty-eight
+ * titles is not a corpus, and the only job here is to rank "mamba" above "day".
+ */
+function idfOver(rows) {
+    const seen = new Map();
+    for (const r of rows) {
+        for (const w of new Set(tokens(r.title)))
+            seen.set(w, (seen.get(w) ?? 0) + 1);
+    }
+    const idf = new Map();
+    for (const [w, n] of seen)
+        idf.set(w, 1 / n);
+    /* A word that appears in no title at all is maximally distinctive. */
+    return new Proxy(idf, {
+        get: (t, k) => (k === "get" ? (w) => t.get(w) ?? 1 : Reflect.get(t, k)),
+    });
+}
 function score(a, b) {
     const A = new Set(tokens(a));
     const B = new Set(tokens(b));
@@ -160,6 +292,16 @@ const NAME_FIXES = [
     [/\bjrr\s+token\b/i, "J.R.R. Tolkien"],
     [/\benki\s+johnson\b/i, "Inky Johnson"],
 ];
+/** Are these byte-identical? Size first; only then the expensive read. */
+function sameBytes(dir, original, copies) {
+    try {
+        const a = (0, node_fs_1.statSync)((0, node_path_1.join)(dir, original));
+        return copies.every((c) => (0, node_fs_1.statSync)((0, node_path_1.join)(dir, c)).size === a.size);
+    }
+    catch {
+        return false;
+    }
+}
 function fixNames(s) {
     if (!s)
         return s;
@@ -189,13 +331,36 @@ function titleCase(s) {
     })
         .join(" ");
 }
-async function library() {
-    const url = process.env.SB_URL, key = process.env.SB_KEY;
-    if (!url || !key)
-        throw new Error("need SB_URL and SB_KEY");
-    const res = await fetch(`${url}/rest/v1/content?select=id,title,voice,version,canonical_filename,status,duration_sec` +
-        `&collection=eq.Mindset&canonical_filename=not.is.null&limit=1000`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
-    return (await res.json());
+/**
+ * Everything already published, read off the shelf.
+ *
+ * Filenames there are canonical by construction — the ingest wrote them — so
+ * the title and the version are parsed straight back out rather than looked up.
+ * The collection folder is walked whole: a Mindset reshoot cannot match a Craft
+ * film, and scoping the read is cheaper than teaching the scorer to ignore
+ * fifty-eight files it should never see.
+ */
+function library(mastersDir, collection) {
+    const dir = (0, node_path_1.join)(mastersDir, PUBLISHED, collection);
+    if (!(0, node_fs_1.existsSync)(dir)) {
+        console.error(`\n  no published shelf at ${dir}\n`);
+        process.exit(1);
+    }
+    return (0, node_fs_1.readdirSync)(dir)
+        .filter((f) => /\.(mov|mp4|m4v)$/i.test(f) && !f.startsWith("."))
+        .map((f) => {
+        const m = f.match(/^(.*?)\s*—\s*(.*?)\s*—\s*v(\d+)\.[a-z0-9]+$/i);
+        const titleAndVoice = m ? m[2] : f.replace(/\.[a-z0-9]+$/i, "");
+        /* "(Kobe)" is an attribution, not part of the title, and including it
+           would score against a slate that says the name differently. */
+        const title = titleAndVoice.replace(/\s*\([^)]*\)\s*$/, "").trim();
+        return {
+            title,
+            voice: titleAndVoice.match(/\(([^)]*)\)\s*$/)?.[1] ?? null,
+            version: m ? Number(m[3]) : 1,
+            canonical_filename: f,
+        };
+    });
 }
 async function main() {
     if (!(0, node_fs_1.existsSync)(TIMINGS)) {
@@ -203,7 +368,24 @@ async function main() {
         process.exit(1);
     }
     const timings = Object.values(JSON.parse((0, node_fs_1.readFileSync)(TIMINGS, "utf8")).files);
-    const rows = await library();
+    /* The masters root is the Drop Zone's parent: the shelves are always
+       siblings, and an absolute path breaks the moment Drive mounts elsewhere. */
+    const MASTERS = DIR ? (0, node_path_1.join)(DIR, "..") : "";
+    if (!MASTERS) {
+        console.error('\n  need --dir="<Drop Zone>" so the published shelf can be found\n');
+        process.exit(1);
+    }
+    const rows = library(MASTERS, COLLECTION);
+    const idf = idfOver(rows);
+    /* Whole-film transcripts, for the containment test. Keyed by camera-roll
+       name, which is what the timings are keyed by too. */
+    const openings = new Map();
+    if ((0, node_fs_1.existsSync)(TRANSCRIPTS)) {
+        const t = JSON.parse((0, node_fs_1.readFileSync)(TRANSCRIPTS, "utf8"));
+        for (const r of t.files) {
+            openings.set(r.file, (r.transcript ?? "").split(/\s+/).slice(0, 60).join(" "));
+        }
+    }
     console.log(`\n  ${timings.length} files · ${rows.length} Mindset films already in the library\n`);
     /* Two files with the same slate are one film shot twice. Neither is renamed:
        which take is the keeper is Mitch's call, not a score's. */
@@ -214,12 +396,79 @@ async function main() {
             continue;
         bySlate.set(k, [...(bySlate.get(k) ?? []), t.file]);
     }
-    const duplicated = new Set([...bySlate.values()].filter((v) => v.length > 1).flat());
+    /*
+     * Two files with the same slate are one film shot twice — unless one of them
+     * is Drive's own copy, which is a different thing entirely. "IMG_2447 (1)"
+     * beside "IMG_2447" with identical bytes is not a take to choose between; it
+     * is the same file twice, and asking which one to keep is asking a question
+     * with no meaning.
+     */
+    const duplicated = new Set();
+    const driveCopies = new Set();
+    for (const group of bySlate.values()) {
+        if (group.length < 2)
+            continue;
+        const copies = group.filter((f) => /\(\d+\)\.[a-z0-9]+$/i.test(f));
+        const originals = group.filter((f) => !/\(\d+\)\.[a-z0-9]+$/i.test(f));
+        if (copies.length && originals.length === 1 && sameBytes(DIR, originals[0], copies)) {
+            for (const c of copies)
+                driveCopies.add(c);
+            continue;
+        }
+        for (const f of group)
+            duplicated.add(f);
+    }
+    const pairs = [];
+    const parsed = new Map();
+    for (const t of timings) {
+        const p0 = parseSlate(t.slate);
+        const title = fixNames(p0.title);
+        const voice = fixNames(p0.voice);
+        parsed.set(t.file, { title, voice });
+        if (t.error || !title || duplicated.has(t.file) || driveCopies.has(t.file))
+            continue;
+        const opening = openings.get(t.file) ?? "";
+        const ranked = rows
+            .map((r) => ({
+            r,
+            s: Math.max(score(title, r.title), score(title, r.canonical_filename), 0.95 * contains(r.title, opening, idf)),
+        }))
+            .sort((a, b) => b.s - a.s);
+        for (const c of ranked.slice(0, 5)) {
+            pairs.push({ t, title, voice, row: c.r, s: c.s });
+        }
+    }
+    pairs.sort((a, b) => b.s - a.s);
+    const takenFile = new Set();
+    const takenRow = new Set();
+    const assigned = new Map();
+    for (const c of pairs) {
+        if (takenFile.has(c.t.file) || takenRow.has(c.row.canonical_filename))
+            continue;
+        if (c.s < CONFIDENT)
+            continue;
+        /*
+         * The margin is against what is STILL AVAILABLE, and that correction
+         * matters. Measured against the file's global runner-up, a film that had
+         * just lost its top choice to a stronger claim was judged ambiguous
+         * forever: "Comfortable" lost "The Mamba Mentality" to the film that
+         * actually is it, and was then refused "The Moment You Feel Comfortable"
+         * because its own lost first choice still counted against it.
+         *
+         * Ambiguity is about the choice being made now, between the rows that can
+         * still be chosen.
+         */
+        const rival = pairs.find((o) => o.t.file === c.t.file && o.row !== c.row &&
+            !takenRow.has(o.row.canonical_filename) && o.s <= c.s);
+        if (c.s < DECISIVE && c.s - (rival?.s ?? 0) < MARGIN)
+            continue;
+        takenFile.add(c.t.file);
+        takenRow.add(c.row.canonical_filename);
+        assigned.set(c.t.file, c);
+    }
     const plan = [];
     for (const t of timings) {
-        const parsed = parseSlate(t.slate);
-        const title = fixNames(parsed.title);
-        const voice = fixNames(parsed.voice);
+        const { title, voice } = parsed.get(t.file) ?? { title: "", voice: null };
         const base = {
             file: t.file, slate: t.slate, title, voice,
             alohaAt: t.aloha_at, action: "review", renameTo: null,
@@ -232,39 +481,63 @@ async function main() {
             plan.push({ ...base, note: "no slate heard" });
             continue;
         }
+        if (driveCopies.has(t.file)) {
+            plan.push({ ...base, note: "Drive duplicate of the same bytes — ignored" });
+            continue;
+        }
         if (duplicated.has(t.file)) {
             plan.push({ ...base, note: `same slate as ${bySlate.get(norm(title)).filter((f) => f !== t.file).join(", ")}` });
             continue;
         }
-        const ranked = rows
-            .map((r) => ({ r, s: Math.max(score(title, r.title), score(title, r.canonical_filename)) }))
-            .sort((a, b) => b.s - a.s);
-        const best = ranked[0];
-        const second = ranked[1];
-        if (best && best.s >= CONFIDENT && best.s - (second?.s ?? 0) >= MARGIN) {
-            /* A reshoot. Keep the library's name; only the version moves. */
-            const next = best.r.version + 1;
+        const win = assigned.get(t.file);
+        if (win) {
+            const next = win.row.version + 1;
             plan.push({
                 ...base,
                 action: "reshoot",
-                renameTo: best.r.canonical_filename.replace(/—\s*v\d+(\.[a-z0-9]+)$/i, `— v${next}$1`),
-                matchTitle: best.r.title, matchId: best.r.id, matchStatus: best.r.status,
-                score: Number(best.s.toFixed(2)),
-                runnerUp: second?.r.title, runnerUpScore: Number((second?.s ?? 0).toFixed(2)),
+                renameTo: win.row.canonical_filename.replace(/—\s*v\d+(\.[a-z0-9]+)$/i, `— v${next}$1`),
+                matchTitle: win.row.title, matchFile: win.row.canonical_filename,
+                score: Number(win.s.toFixed(2)),
             });
             continue;
         }
-        if (best && best.s >= 0.35) {
+        /*
+         * Unassigned. Two different situations, and only one is a question.
+         *
+         * A film that scored moderately against a title ANOTHER file has already
+         * won is not ambiguous — it is a new film that happens to share a couple of
+         * words with something on the shelf. "Brave Enough", "If You Have to Ask"
+         * and "Read It Backwards" all scored around 0.63 against titles claimed by
+         * files that plainly are those titles. Asking about them is asking Ryan to
+         * confirm a coincidence, three times.
+         *
+         * A CONTESTED claim is different: if this file scored well enough that it
+         * could have been the reshoot, and lost, somebody should look at which of
+         * the two is right.
+         */
+        const mine = pairs.filter((c) => c.t.file === t.file).sort((a, b) => b.s - a.s);
+        const best = mine[0];
+        const bestFree = mine.find((c) => !takenRow.has(c.row.canonical_filename));
+        /** Strong enough that losing it is a conflict rather than a coincidence. */
+        const CONTESTED = 0.85;
+        if (best && takenRow.has(best.row.canonical_filename) && best.s >= CONTESTED) {
+            plan.push({
+                ...base,
+                note: `looks like "${best.row.title}", but a stronger claim on it won — rule on it`,
+                matchTitle: best.row.title, matchFile: best.row.canonical_filename,
+                score: Number(best.s.toFixed(2)),
+            });
+            continue;
+        }
+        if (bestFree && bestFree.s >= WORTH_ASKING) {
             plan.push({
                 ...base,
                 note: "close to an existing film but not convincing — rule on it",
-                matchTitle: best.r.title, matchId: best.r.id, matchStatus: best.r.status,
-                score: Number(best.s.toFixed(2)),
-                runnerUp: second?.r.title, runnerUpScore: Number((second?.s ?? 0).toFixed(2)),
+                matchTitle: bestFree.row.title, matchFile: bestFree.row.canonical_filename,
+                score: Number(bestFree.s.toFixed(2)),
             });
             continue;
         }
-        /* Nothing like it in the library: a new film. */
         const name = `MINDSET — ${titleCase(title)}${voice ? ` (${voice})` : ""} — v1.mov`;
         plan.push({ ...base, action: "new", renameTo: name, score: Number((best?.s ?? 0).toFixed(2)) });
     }
@@ -275,7 +548,7 @@ async function main() {
     console.log(`  RESHOOTS — replace a film already in the library (${reshoots.length})`);
     for (const p of reshoots) {
         console.log(line(p));
-        console.log(`            "${p.title}"  ->  ${p.matchTitle}  [${p.matchStatus}] ${p.score}` +
+        console.log(`            "${p.title}"  ->  ${p.matchTitle}  ${p.score}` +
             (p.runnerUpScore && p.runnerUpScore > 0.3 ? `  (next best ${p.runnerUp} ${p.runnerUpScore})` : ""));
     }
     console.log(`\n  NEW — nothing like it in the library (${fresh.length})`);
@@ -289,9 +562,9 @@ async function main() {
     }
     (0, node_fs_1.writeFileSync)(`${OUT}.json`, `${JSON.stringify({ plan }, null, 1)}\n`);
     const csv = [
-        "file,action,alohaAt,slateTitle,voice,renameTo,matchTitle,matchStatus,score,runnerUp,runnerUpScore,note",
+        "file,action,alohaAt,slateTitle,voice,renameTo,matchTitle,matchFile,score,runnerUp,runnerUpScore,note",
         ...plan.map((p) => [p.file, p.action, p.alohaAt ?? "", p.title, p.voice ?? "", p.renameTo ?? "",
-            p.matchTitle ?? "", p.matchStatus ?? "", p.score ?? "", p.runnerUp ?? "",
+            p.matchTitle ?? "", p.matchFile ?? "", p.score ?? "", p.runnerUp ?? "",
             p.runnerUpScore ?? "", p.note ?? ""]
             .map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")),
     ].join("\n");

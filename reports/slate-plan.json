@@ -9,11 +9,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Doubt Is a Strange Thing (Kobe) — v2.mov",
    "matchTitle": "Doubt Is a Strange Thing",
-   "matchId": "9b914935-bf90-4eec-8e4c-9b7522454106",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "The One Thing You Can Control Every Day Is Your Attitude",
-   "runnerUpScore": 0.2
+   "matchFile": "MINDSET — Doubt Is a Strange Thing (Kobe) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2323.MOV",
@@ -21,15 +18,11 @@
    "title": "You lose when you stay down",
    "voice": "Mickey and Rocky",
    "alohaAt": 5.86,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — You Don't Lose When You Get Knocked Down — v2.mov",
    "matchTitle": "You Don't Lose When You Get Knocked Down",
-   "matchId": "55ca4cc8-3238-4ee9-ab2a-6e9e62c023e0",
-   "matchStatus": "published",
-   "score": 0.57,
-   "runnerUp": "Never Lose Money",
-   "runnerUpScore": 0.33
+   "matchFile": "MINDSET — You Don't Lose When You Get Knocked Down — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2324.MOV",
@@ -40,11 +33,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Always Keep Going (Kobe) — v2.mov",
    "matchTitle": "Always Keep Going",
-   "matchId": "84b33595-e671-4e53-ba8e-45e0e3291b82",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Always Keep Going (Kobe) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2325.MOV",
@@ -55,11 +45,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — This Too Shall Pass — v2.mov",
    "matchTitle": "This Too Shall Pass",
-   "matchId": "160bcb52-c4ea-4fa0-b39c-cd0fdaa13a65",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — This Too Shall Pass — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2327.MOV",
@@ -67,15 +54,11 @@
    "title": "Saban's Three Rules",
    "voice": "Nick Saban",
    "alohaAt": 5,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — Nick Saban's 3 Rules — v2.mov",
    "matchTitle": "Nick Saban's 3 Rules",
-   "matchId": "a2f38fd9-6b65-4e22-9d8b-d2b6b38e6f33",
-   "matchStatus": "published",
-   "score": 0.57,
-   "runnerUp": "Three Things in a Teammate, Dependable, Skilled, Selfless",
-   "runnerUpScore": 0.22
+   "matchFile": "MINDSET — Nick Saban's 3 Rules — v1.mov",
+   "score": 0.86
   },
   {
    "file": "IMG_2328.MOV",
@@ -86,11 +69,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Be Better Than That — v2.mov",
    "matchTitle": "Be Better Than That",
-   "matchId": "8457eb59-ec58-49fa-a770-0bc864efa634",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Hang With People Better Than You",
-   "runnerUpScore": 0.67
+   "matchFile": "MINDSET — Be Better Than That — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2330.MOV",
@@ -101,11 +81,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Hard Worker vs. Working Hard — v2.mov",
    "matchTitle": "Hard Worker vs. Working Hard",
-   "matchId": "15d25cd8-5419-48b0-844b-7ac29db7eb6b",
-   "matchStatus": "published",
-   "score": 0.67,
-   "runnerUp": "Work Hard in the Dark, Shine in the Light",
-   "runnerUpScore": 0.29
+   "matchFile": "MINDSET — Hard Worker vs. Working Hard — v1.mov",
+   "score": 0.86
   },
   {
    "file": "IMG_2332.MOV",
@@ -113,9 +90,11 @@
    "title": "Great fighters",
    "voice": "Apollo Creed",
    "alohaAt": 4.72,
-   "action": "new",
-   "renameTo": "MINDSET — Great Fighters (Apollo Creed) — v1.mov",
-   "score": 0.33
+   "action": "reshoot",
+   "renameTo": "MINDSET — You Fight Great, But I'm a Great Fighter — v2.mov",
+   "matchTitle": "You Fight Great, But I'm a Great Fighter",
+   "matchFile": "MINDSET — You Fight Great, But I'm a Great Fighter — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2333.MOV",
@@ -126,11 +105,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Compare Yourself to Yesterday — v2.mov",
    "matchTitle": "Compare Yourself to Yesterday",
-   "matchId": "4bb67043-850a-471f-8b3c-982f1dd7f581",
-   "matchStatus": "published",
-   "score": 0.8,
-   "runnerUp": "Promise Yourself",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — Compare Yourself to Yesterday — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2340.MOV",
@@ -138,15 +114,11 @@
    "title": "Comfortable",
    "voice": "Kobe Bryant",
    "alohaAt": 4.9,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — The Moment You Feel Comfortable (Kobe) — v2.mov",
    "matchTitle": "The Moment You Feel Comfortable",
-   "matchId": "4b9bc0d6-48fa-4e36-b4d7-cf00a023571f",
-   "matchStatus": "published",
-   "score": 0.5,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — The Moment You Feel Comfortable (Kobe) — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2341.MOV",
@@ -157,11 +129,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Practice Makes Improvement (Les Brown) — v2.mov",
    "matchTitle": "Practice Makes Improvement",
-   "matchId": "e25c6fc8-a784-4386-b6d6-0ea415fbaa34",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Perfect Practice Makes Perfect",
-   "runnerUpScore": 0.67
+   "matchFile": "MINDSET — Practice Makes Improvement (Les Brown) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2345.MOV",
@@ -172,11 +141,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Perfect Practice Makes Perfect — v2.mov",
    "matchTitle": "Perfect Practice Makes Perfect",
-   "matchId": "5e111343-8126-41fe-ac5b-1234cebd5b4c",
-   "matchStatus": "published",
-   "score": 0.8,
-   "runnerUp": "Practice Makes Improvement",
-   "runnerUpScore": 0.4
+   "matchFile": "MINDSET — Perfect Practice Makes Perfect — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2346.MOV",
@@ -187,11 +153,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — You Are Not Tired (Kobe) — v2.mov",
    "matchTitle": "You Are Not Tired",
-   "matchId": "4961a7af-948b-4896-92ec-8602059126c5",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — You Are Not Tired (Kobe) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2347.MOV",
@@ -202,11 +165,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — The Mamba Mentality (Kobe) — v2.mov",
    "matchTitle": "The Mamba Mentality",
-   "matchId": "72cd1340-4f14-42cf-9787-2b7bbfd43ae8",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — The Mamba Mentality (Kobe) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2348.MOV",
@@ -217,11 +177,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Work Hard in the Dark, Shine in the Light (Kobe) — v2.mov",
    "matchTitle": "Work Hard in the Dark, Shine in the Light",
-   "matchId": "51e9507b-092b-40a5-ba65-4fe8c5ce3f3f",
-   "matchStatus": "published",
-   "score": 0.75,
-   "runnerUp": "Hard Worker vs. Working Hard",
-   "runnerUpScore": 0.29
+   "matchFile": "MINDSET — Work Hard in the Dark, Shine in the Light (Kobe) — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2349.MOV",
@@ -232,11 +189,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Demand Excellence (Kobe) — v2.mov",
    "matchTitle": "Demand Excellence",
-   "matchId": "2b1d3bb6-2562-4e4b-bb93-8dd9bf0e158c",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Demand Excellence (Kobe) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2351.MOV",
@@ -244,15 +198,11 @@
    "title": "WIN",
    "voice": "Lou Holtz",
    "alohaAt": 5.26,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — WIN: What's Important Now (Lou Holtz) — v2.mov",
    "matchTitle": "WIN: What's Important Now",
-   "matchId": "5bb17681-a1ec-4989-9552-e66908e9a2d4",
-   "matchStatus": "published",
-   "score": 0.4,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — WIN: What's Important Now (Lou Holtz) — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2352.MOV",
@@ -263,11 +213,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Did I Get Better Today? (Kobe) — v2.mov",
    "matchTitle": "Did I Get Better Today?",
-   "matchId": "d2f9dc9a-5ae7-443d-86d8-be3ddf61b1d8",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Get Better",
-   "runnerUpScore": 0.67
+   "matchFile": "MINDSET — Did I Get Better Today? (Kobe) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2353.MOV",
@@ -278,11 +225,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Day One or One Day — v2.mov",
    "matchTitle": "Day One or One Day",
-   "matchId": "cf4336ad-e6f5-4e1b-a66c-a6c7833737a7",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "One Focus",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — Day One or One Day — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2354.MOV",
@@ -293,11 +237,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Every Day Is a Great Day to Be Mitch (Mitch Hardt) — v2.mov",
    "matchTitle": "Every Day Is a Great Day to Be Mitch",
-   "matchId": "44a94a4d-5a5f-4fc3-82aa-53d573d2c576",
-   "matchStatus": "draft",
-   "score": 1,
-   "runnerUp": "The One Thing You Can Control Every Day Is Your Attitude",
-   "runnerUpScore": 0.38
+   "matchFile": "MINDSET — Every Day Is a Great Day to Be Mitch (Mitch Hardt) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2355.MOV",
@@ -308,11 +249,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Get Better (Kobe Bryant) — v2.mov",
    "matchTitle": "Get Better",
-   "matchId": "e77fed18-e04c-41ad-b6ed-6daeff39cb72",
-   "matchStatus": "draft",
-   "score": 0.67,
-   "runnerUp": "Did I Get Better Today?",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — Get Better (Kobe Bryant) — v1.mov",
+   "score": 0.67
   },
   {
    "file": "IMG_2357.MOV",
@@ -320,15 +258,11 @@
    "title": "3 Things in a teammate",
    "voice": "Chad Wright, Navy SEAL",
    "alohaAt": 6.5,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — Three Things in a Teammate, Dependable, Skilled, Selfless (Chad Wright, Navy SEAL) — v2.mov",
    "matchTitle": "Three Things in a Teammate, Dependable, Skilled, Selfless",
-   "matchId": "2c520ac0-44dd-4bcf-b927-eb63523dd32c",
-   "matchStatus": "draft",
-   "score": 0.44,
-   "runnerUp": "Nick Saban's 3 Rules",
-   "runnerUpScore": 0.29
+   "matchFile": "MINDSET — Three Things in a Teammate, Dependable, Skilled, Selfless (Chad Wright, Navy SEAL) — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2358.MOV",
@@ -338,7 +272,7 @@
    "alohaAt": 5.08,
    "action": "new",
    "renameTo": "MINDSET — If You Want Average (Tim Grover) — v1.mov",
-   "score": 0
+   "score": 0.35
   },
   {
    "file": "IMG_2360.MOV",
@@ -348,7 +282,7 @@
    "alohaAt": 4.22,
    "action": "new",
    "renameTo": "MINDSET — Don't Tell Me You Can't (Mitch Hardt) — v1.mov",
-   "score": 0.29
+   "score": 0.47
   },
   {
    "file": "IMG_2361.MOV",
@@ -358,7 +292,7 @@
    "alohaAt": 4.62,
    "action": "new",
    "renameTo": "MINDSET — Language of Gratitude (Inky Johnson) — v1.mov",
-   "score": 0
+   "score": 0.32
   },
   {
    "file": "IMG_2363.MOV",
@@ -368,7 +302,7 @@
    "alohaAt": 3.86,
    "action": "new",
    "renameTo": "MINDSET — The Invoice (Kobe Bryant) — v1.mov",
-   "score": 0
+   "score": 0.32
   },
   {
    "file": "IMG_2365.MOV",
@@ -379,11 +313,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Confidence (Vince Lombardi) — v2.mov",
    "matchTitle": "Confidence",
-   "matchId": "7d39c83f-581d-4bd5-97cd-07725e79f173",
-   "matchStatus": "draft",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Confidence (Vince Lombardi) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2367.MOV",
@@ -394,11 +325,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Mediocre People Don't Like High Achievers (Nick Saban) — v2.mov",
    "matchTitle": "Mediocre People Don't Like High Achievers",
-   "matchId": "d5975457-4859-472e-8d55-f9e4e4eca267",
-   "matchStatus": "draft",
-   "score": 1,
-   "runnerUp": "Hang With People Better Than You",
-   "runnerUpScore": 0.22
+   "matchFile": "MINDSET — Mediocre People Don't Like High Achievers (Nick Saban) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2368.MOV",
@@ -409,11 +337,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Buffalos and the Cows — v2.mov",
    "matchTitle": "Buffalos and the Cows",
-   "matchId": "9fd634f3-82af-4e04-a250-a9ed85fec4bb",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Buffalos and the Cows — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2369.MOV",
@@ -421,15 +346,11 @@
    "title": "Your lowest points",
    "voice": "Alan Watts",
    "alohaAt": 5.62,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — The Lowest Point Is the Doorway (Watts) — v2.mov",
    "matchTitle": "The Lowest Point Is the Doorway",
-   "matchId": "995686c1-4a3f-45c6-bf30-1b5f71c27888",
-   "matchStatus": "published",
-   "score": 0.4,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — The Lowest Point Is the Doorway (Watts) — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2372.MOV",
@@ -440,11 +361,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Planted, Not Buried — v2.mov",
    "matchTitle": "Planted, Not Buried",
-   "matchId": "0407e024-a8fe-437a-a333-07353487d630",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Planted, Not Buried — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2374.MOV",
@@ -452,9 +370,11 @@
    "title": "Don't quit",
    "voice": "Popular motivational quote",
    "alohaAt": 7.62,
-   "action": "new",
-   "renameTo": "MINDSET — Don't Quit (Popular motivational quote) — v1.mov",
-   "score": 0.33
+   "action": "reshoot",
+   "renameTo": "MINDSET — Don't Quit, Someone Needs Who You're Becoming — v2.mov",
+   "matchTitle": "Don't Quit, Someone Needs Who You're Becoming",
+   "matchFile": "MINDSET — Don't Quit, Someone Needs Who You're Becoming — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2376.MOV",
@@ -465,11 +385,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Your Toughest Opponent Is Staring at You — v2.mov",
    "matchTitle": "Your Toughest Opponent Is Staring at You",
-   "matchId": "704a5728-23e1-444d-b724-7b8888e54e77",
-   "matchStatus": "published",
-   "score": 0.67,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Your Toughest Opponent Is Staring at You — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2379.MOV",
@@ -477,9 +394,11 @@
    "title": "The Optimist Creed by Christian D",
    "voice": "Larson",
    "alohaAt": 5.32,
-   "action": "new",
-   "renameTo": "MINDSET — The Optimist Creed by Christian D (Larson) — v1.mov",
-   "score": 0
+   "action": "reshoot",
+   "renameTo": "MINDSET — Promise Yourself — v2.mov",
+   "matchTitle": "Promise Yourself",
+   "matchFile": "MINDSET — Promise Yourself — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2380.MOV",
@@ -490,11 +409,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Four Things You Can't Get Back — v2.mov",
    "matchTitle": "Four Things You Can't Get Back",
-   "matchId": "4701a64c-61a5-40b1-b254-443dce8c5e8d",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Four Things You Can Stop Doing",
-   "runnerUpScore": 0.4
+   "matchFile": "MINDSET — Four Things You Can't Get Back — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2381.MOV",
@@ -505,11 +421,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Four Things You Can Stop Doing — v2.mov",
    "matchTitle": "Four Things You Can Stop Doing",
-   "matchId": "c95e46ba-22d7-414e-8284-76cf924ae7ab",
-   "matchStatus": "published",
-   "score": 0.89,
-   "runnerUp": "Four Things You Can't Get Back",
-   "runnerUpScore": 0.44
+   "matchFile": "MINDSET — Four Things You Can Stop Doing — v1.mov",
+   "score": 0.89
   },
   {
    "file": "IMG_2382.MOV",
@@ -520,11 +433,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — I Looked in Your Cup — v2.mov",
    "matchTitle": "I Looked in Your Cup",
-   "matchId": "a573a024-1856-4923-8d6c-dc1b81fc69b4",
-   "matchStatus": "published",
-   "score": 0.67,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — I Looked in Your Cup — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2383.MOV",
@@ -535,11 +445,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Happy Kid, Happier Manager — v2.mov",
    "matchTitle": "Happy Kid, Happier Manager",
-   "matchId": "1e113952-a332-4284-862e-193ae05dbeb8",
-   "matchStatus": "published",
-   "score": 0.75,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Happy Kid, Happier Manager — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2388.MOV",
@@ -547,15 +454,11 @@
    "title": "Amateur vs. Professional, Harold Kraxton. It doesn't matter",
    "voice": "because it's the intro",
    "alohaAt": 8.3,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — Amateur vs. Professional — v2.mov",
    "matchTitle": "Amateur vs. Professional",
-   "matchId": "3447a746-5f14-4ac0-b63b-af9749ca7a91",
-   "matchStatus": "published",
-   "score": 0.6,
-   "runnerUp": "Tomorrow Me vs. Today Me",
-   "runnerUpScore": 0.2
+   "matchFile": "MINDSET — Amateur vs. Professional — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2390.MOV",
@@ -585,7 +488,7 @@
    "alohaAt": 5.84,
    "action": "new",
    "renameTo": "MINDSET — It Couldn't Be Done (Edgar Guest) — v1.mov",
-   "score": 0
+   "score": 0.22
   },
   {
    "file": "IMG_2394.MOV",
@@ -596,11 +499,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Lazy People vs. Winners — v2.mov",
    "matchTitle": "Lazy People vs. Winners",
-   "matchId": "06ca8eaf-79df-4095-88d1-4a6f7fd54abb",
-   "matchStatus": "published",
-   "score": 0.86,
-   "runnerUp": "Tomorrow Me vs. Today Me",
-   "runnerUpScore": 0.33
+   "matchFile": "MINDSET — Lazy People vs. Winners — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2398.MOV",
@@ -608,9 +508,11 @@
    "title": "Discipline from the modern Internet",
    "voice": null,
    "alohaAt": 5.2,
-   "action": "new",
-   "renameTo": "MINDSET — Discipline From the Modern Internet — v1.mov",
-   "score": 0.29
+   "action": "reshoot",
+   "renameTo": "MINDSET — Discipline, Addictive Discipline, Obsession — v2.mov",
+   "matchTitle": "Discipline, Addictive Discipline, Obsession",
+   "matchFile": "MINDSET — Discipline, Addictive Discipline, Obsession — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2399.MOV",
@@ -618,9 +520,11 @@
    "title": "Parish Attempting the Possible",
    "voice": "Nietzsche",
    "alohaAt": 6.32,
-   "action": "new",
-   "renameTo": "MINDSET — Parish Attempting the Possible (Nietzsche) — v1.mov",
-   "score": 0.29
+   "action": "reshoot",
+   "renameTo": "MINDSET — Perish Attempting the Great and Impossible — v2.mov",
+   "matchTitle": "Perish Attempting the Great and Impossible",
+   "matchFile": "MINDSET — Perish Attempting the Great and Impossible — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2400.MOV",
@@ -631,11 +535,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — The Biggest Mistake in Life — v2.mov",
    "matchTitle": "The Biggest Mistake in Life",
-   "matchId": "26f68ccd-cdd9-4a7b-a547-76e0770e9ee9",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Create the Life You Can't Wait to Wake Up To",
-   "runnerUpScore": 0.22
+   "matchFile": "MINDSET — The Biggest Mistake in Life — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2401.MOV",
@@ -646,11 +547,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Decide What to Do With the Time Given — v2.mov",
    "matchTitle": "Decide What to Do With the Time Given",
-   "matchId": "7a47f2f6-c0d4-45e1-af1f-23b798c29c55",
-   "matchStatus": "published",
-   "score": 0.8,
-   "runnerUp": "Print Money, Not Time",
-   "runnerUpScore": 0.4
+   "matchFile": "MINDSET — Decide What to Do With the Time Given — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2403.MOV",
@@ -661,11 +559,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Where Are You Living? — v2.mov",
    "matchTitle": "Where Are You Living?",
-   "matchId": "0b630f0c-856f-43a8-8d5e-12e656ad0e2d",
-   "matchStatus": "published",
-   "score": 0.67,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Where Are You Living? — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2406.MOV",
@@ -676,11 +571,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Today Is the Tomorrow You Were Worried About — v2.mov",
    "matchTitle": "Today Is the Tomorrow You Were Worried About",
-   "matchId": "392bee05-aa41-40b3-a11e-8f3bcc257393",
-   "matchStatus": "published",
-   "score": 0.8,
-   "runnerUp": "Tomorrow Me vs. Today Me",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — Today Is the Tomorrow You Were Worried About — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2407.MOV",
@@ -691,11 +583,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Print Money, Not Time — v2.mov",
    "matchTitle": "Print Money, Not Time",
-   "matchId": "a0d34297-be7b-4e9e-a4b4-dbad3625b29f",
-   "matchStatus": "published",
-   "score": 0.8,
-   "runnerUp": "The Money Mindset",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — Print Money, Not Time — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2408.MOV",
@@ -706,11 +595,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Start Today — v2.mov",
    "matchTitle": "Start Today",
-   "matchId": "818eb449-fb61-4357-9c0d-7446adac041b",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Tomorrow Me vs. Today Me",
-   "runnerUpScore": 0.4
+   "matchFile": "MINDSET — Start Today — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2409.MOV",
@@ -721,11 +607,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — The Money Mindset — v2.mov",
    "matchTitle": "The Money Mindset",
-   "matchId": "6c13d7a5-c927-44ae-9bff-3a5cebc182a4",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "Print Money, Not Time",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — The Money Mindset — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2411.MOV",
@@ -736,11 +619,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Carpe Diem — v2.mov",
    "matchTitle": "Carpe Diem",
-   "matchId": "9eef4b4f-2fa2-46f2-95a7-dbedf4f5a8bc",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Carpe Diem — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2412.MOV",
@@ -751,11 +631,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Create the Life You Can't Wait to Wake Up To — v2.mov",
    "matchTitle": "Create the Life You Can't Wait to Wake Up To",
-   "matchId": "66d633b5-8d4d-409a-a51a-8245ffb4d35b",
-   "matchStatus": "published",
-   "score": 0.86,
-   "runnerUp": "The Biggest Mistake in Life",
-   "runnerUpScore": 0.18
+   "matchFile": "MINDSET — Create the Life You Can't Wait to Wake Up To — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2413.MOV",
@@ -766,11 +643,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — I Do It Anyways — v2.mov",
    "matchTitle": "I Do It Anyways",
-   "matchId": "041268c6-8823-49d0-888d-37e64c791220",
-   "matchStatus": "published",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — I Do It Anyways — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2414.MOV",
@@ -781,12 +655,9 @@
    "action": "review",
    "renameTo": null,
    "note": "close to an existing film but not convincing — rule on it",
-   "matchTitle": "Tomorrow Me vs. Today Me",
-   "matchId": "acd957ea-5769-476d-9afb-7e8e46190147",
-   "matchStatus": "draft",
-   "score": 0.57,
-   "runnerUp": "Today Is the Tomorrow You Were Worried About",
-   "runnerUpScore": 0.44
+   "matchTitle": "Choices",
+   "matchFile": "MINDSET — Choices — v1.mov",
+   "score": 0.63
   },
   {
    "file": "IMG_2415.MOV",
@@ -797,11 +668,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — One Focus (Mitch Hardt) — v2.mov",
    "matchTitle": "One Focus",
-   "matchId": "7427bf10-cc75-4c1b-87e8-698edc0ce32c",
-   "matchStatus": "draft",
-   "score": 1,
-   "runnerUp": "Day One or One Day",
-   "runnerUpScore": 0.5
+   "matchFile": "MINDSET — One Focus (Mitch Hardt) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2416.MOV",
@@ -812,11 +680,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — The One Thing You Can Control Every Day Is Your Attitude (Mitch Hardt) — v2.mov",
    "matchTitle": "The One Thing You Can Control Every Day Is Your Attitude",
-   "matchId": "ee3148e1-5659-4f57-9ad8-f1b73e7c18aa",
-   "matchStatus": "draft",
-   "score": 0.73,
-   "runnerUp": "Day One or One Day",
-   "runnerUpScore": 0.33
+   "matchFile": "MINDSET — The One Thing You Can Control Every Day Is Your Attitude (Mitch Hardt) — v1.mov",
+   "score": 0.83
   },
   {
    "file": "IMG_2421.MOV",
@@ -837,11 +702,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — The Most Dangerous Person (Bruce Lee) — v2.mov",
    "matchTitle": "The Most Dangerous Person",
-   "matchId": "b822e731-6522-4f55-930b-722ad575b965",
-   "matchStatus": "draft",
-   "score": 0.86,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — The Most Dangerous Person (Bruce Lee) — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2428.MOV",
@@ -852,11 +714,8 @@
    "action": "reshoot",
    "renameTo": "MINDSET — Everybody, Anybody, Somebody and Nobody (Charles Swindle) — v2.mov",
    "matchTitle": "Everybody, Anybody, Somebody and Nobody",
-   "matchId": "0e52ecf5-1d70-4faa-9222-af5bf3ea4491",
-   "matchStatus": "draft",
-   "score": 1,
-   "runnerUp": "All for One and One for All Versus Every Man for Himself",
-   "runnerUpScore": 0
+   "matchFile": "MINDSET — Everybody, Anybody, Somebody and Nobody (Charles Swindle) — v1.mov",
+   "score": 1
   },
   {
    "file": "IMG_2430.MOV",
@@ -866,7 +725,7 @@
    "alohaAt": 6.72,
    "action": "new",
    "renameTo": "MINDSET — You'll Never Feel Ready (Maggie Breitenbach) — v1.mov",
-   "score": 0.29
+   "score": 0.52
   },
   {
    "file": "IMG_2432.MOV",
@@ -876,7 +735,7 @@
    "alohaAt": 5.42,
    "action": "new",
    "renameTo": "MINDSET — Brave Enough (Sarah Bahada) — v1.mov",
-   "score": 0
+   "score": 0.63
   },
   {
    "file": "IMG_2433.MOV",
@@ -884,15 +743,9 @@
    "title": "If your life was a movie",
    "voice": "internet quote",
    "alohaAt": 6.94,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
-   "matchTitle": "The Biggest Mistake in Life",
-   "matchId": "26f68ccd-cdd9-4a7b-a547-76e0770e9ee9",
-   "matchStatus": "published",
-   "score": 0.4,
-   "runnerUp": "Create the Life You Can't Wait to Wake Up To",
-   "runnerUpScore": 0.25
+   "action": "new",
+   "renameTo": "MINDSET — If Your Life Was a Movie (internet quote) — v1.mov",
+   "score": 0.4
   },
   {
    "file": "IMG_2435.MOV",
@@ -902,7 +755,7 @@
    "alohaAt": 5.78,
    "action": "new",
    "renameTo": "MINDSET — Greatness Is Inside (Mitch Hardt) — v1.mov",
-   "score": 0
+   "score": 0.47
   },
   {
    "file": "IMG_2436.MOV",
@@ -912,7 +765,7 @@
    "alohaAt": 5.62,
    "action": "new",
    "renameTo": "MINDSET — If You Have to Ask (author unknown) — v1.mov",
-   "score": 0
+   "score": 0.63
   },
   {
    "file": "IMG_2437.MOV",
@@ -922,7 +775,7 @@
    "alohaAt": 5.1,
    "action": "new",
    "renameTo": "MINDSET — The More Things You Give (Mitch Hardt) — v1.mov",
-   "score": 0.25
+   "score": 0.54
   },
   {
    "file": "IMG_2438.MOV",
@@ -930,9 +783,11 @@
    "title": "Nothing in return",
    "voice": "Mitch Hardt",
    "alohaAt": 4.5,
-   "action": "new",
-   "renameTo": "MINDSET — Nothing in Return (Mitch Hardt) — v1.mov",
-   "score": 0
+   "action": "reshoot",
+   "renameTo": "MINDSET — Be the Reason Someone Believes — v2.mov",
+   "matchTitle": "Be the Reason Someone Believes",
+   "matchFile": "MINDSET — Be the Reason Someone Believes — v1.mov",
+   "score": 0.95
   },
   {
    "file": "IMG_2444.MOV",
@@ -942,7 +797,7 @@
    "alohaAt": 6.18,
    "action": "new",
    "renameTo": "MINDSET — Every Step of the Road (Ralph Waldo Emerson) — v1.mov",
-   "score": 0.29
+   "score": 0.52
   },
   {
    "file": "IMG_2446.MOV",
@@ -952,7 +807,7 @@
    "alohaAt": 6.46,
    "action": "new",
    "renameTo": "MINDSET — A Tree Grows in Two Directions (Internet) — v1.mov",
-   "score": 0
+   "score": 0.47
   },
   {
    "file": "IMG_2447 (1).MOV",
@@ -962,7 +817,7 @@
    "alohaAt": 7.62,
    "action": "review",
    "renameTo": null,
-   "note": "same slate as IMG_2447.MOV"
+   "note": "Drive duplicate of the same bytes — ignored"
   },
   {
    "file": "IMG_2447.MOV",
@@ -970,9 +825,9 @@
    "title": "Have patience with yourself",
    "voice": "Author unknown",
    "alohaAt": 7.62,
-   "action": "review",
-   "renameTo": null,
-   "note": "same slate as IMG_2447 (1).MOV"
+   "action": "new",
+   "renameTo": "MINDSET — Have Patience with Yourself (Author unknown) — v1.mov",
+   "score": 0.4
   },
   {
    "file": "IMG_2451.MOV",
@@ -982,7 +837,7 @@
    "alohaAt": 6.88,
    "action": "new",
    "renameTo": "MINDSET — Consistency Doesn't Guarantee Success (Chris Williamson) — v1.mov",
-   "score": 0.33
+   "score": 0.47
   },
   {
    "file": "IMG_2453.MOV",
@@ -992,7 +847,7 @@
    "alohaAt": 5.8,
    "action": "new",
    "renameTo": "MINDSET — Results Happen Over Time (Germany Kent) — v1.mov",
-   "score": 0.29
+   "score": 0.79
   },
   {
    "file": "IMG_2454.MOV",
@@ -1002,7 +857,7 @@
    "alohaAt": 4.82,
    "action": "new",
    "renameTo": "MINDSET — The Haves (TikTok) — v1.mov",
-   "score": 0
+   "score": 0.25
   },
   {
    "file": "IMG_2455.MOV",
@@ -1012,7 +867,7 @@
    "alohaAt": 4.66,
    "action": "new",
    "renameTo": "MINDSET — Read It Backwards (Author Unknown) — v1.mov",
-   "score": 0
+   "score": 0.63
   },
   {
    "file": "IMG_2457.MOV",
@@ -1022,7 +877,7 @@
    "alohaAt": 5.38,
    "action": "new",
    "renameTo": "MINDSET — The Wolf Climbing the Hill (author unknown) — v1.mov",
-   "score": 0
+   "score": 0.52
   }
  ]
 }
