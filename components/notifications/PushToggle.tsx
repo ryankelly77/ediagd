@@ -52,7 +52,7 @@ export function PushToggle({
      feels broken even when it is working. */
   const [on, setOn] = useState(enabled);
   const [registered, setRegistered] = useState(hasDevice);
-  const [denied, setDenied] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   async function change(next: boolean) {
@@ -61,6 +61,7 @@ export function PushToggle({
       void setPushEnabled(next);
     });
 
+    setProblem(null);
     if (!next || registered) return;
 
     /* No token yet. Ask — this is the one place left that can, once the
@@ -79,12 +80,29 @@ export function PushToggle({
     );
 
     /*
-     * "denied" means iOS has been asked before and told no, so the dialog will
-     * not appear again. Saying so is the only useful thing left: the switch is
-     * on, the preference is saved, and nothing will arrive until they change it
-     * in Settings. Silence here is how somebody concludes the app is broken.
+     * Say what happened. Every one of these used to be silence, and silence is
+     * how a shell with no push entitlement looked identical to a working one
+     * for weeks.
      */
-    if (outcome === "denied") setDenied(true);
+    if (outcome === "denied") {
+      setProblem(
+        "iOS is blocking notifications for EDIAGD. Open Settings → Notifications " +
+          "→ EDIAGD and allow them, and this will start working straight away."
+      );
+    } else if (outcome === "no_token") {
+      setProblem(
+        "iOS did not return a device token. Check the connection and try the " +
+          "switch again; if it keeps happening the build is missing its push " +
+          "entitlement."
+      );
+    } else if (typeof outcome === "string" && outcome.startsWith("failed:")) {
+      setProblem(`iOS refused to register this device — ${outcome.slice(8)}`);
+    } else if (outcome === "unavailable") {
+      setProblem(
+        "Notifications only work in the EDIAGD app on your phone, not in a " +
+          "browser. Your preference is saved either way."
+      );
+    }
   }
 
   return (
@@ -105,11 +123,9 @@ export function PushToggle({
         />
       </div>
 
-      {denied && on && (
+      {problem && on && (
         <p className="mt-3 rounded-xl bg-navy/5 p-3 text-xs leading-relaxed text-navy/80">
-          iOS is still blocking notifications for EDIAGD. Open Settings →
-          Notifications → EDIAGD and allow them, and this will start working
-          straight away.
+          {problem}
         </p>
       )}
     </div>

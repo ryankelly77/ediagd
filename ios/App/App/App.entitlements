@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  THE PLUGIN BEING IN THE BINARY IS NOT ENOUGH.
+
+	  Push shipped "dormant" in an earlier build: the Capacitor plugin was
+	  compiled in so that turning notifications on later would be web and server
+	  work against a shell that already had the capability. The SPM package was
+	  added and this file was not, so registerForRemoteNotifications() failed
+	  with "no valid aps-environment entitlement string found" — and it fails
+	  QUIETLY, as a registrationError delivered to a listener, long after the
+	  permission dialog has already been shown and accepted. From the app there
+	  is no difference between that and a slow network.
+
+	  development, not production, and that is correct for both. Xcode swaps this
+	  for "production" when the archive is signed with a distribution profile,
+	  which is what TestFlight and the App Store get. Hardcoding production here
+	  breaks running from Xcode onto an attached device and buys nothing.
+	-->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

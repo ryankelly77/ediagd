@@ -87,7 +87,9 @@ export async function registerForPush(
   onToken: TokenSink,
   onOpen: Navigate,
   options: { prompt?: boolean } = {}
-): Promise<"granted" | "denied" | "unavailable" | "not_asked"> {
+): Promise<
+  "granted" | "denied" | "unavailable" | "not_asked" | "no_token" | `failed: ${string}`
+> {
   /* The flag is checked HERE as well as at the call site: a plugin that can
      raise an OS permission prompt should not rely on every future caller
      remembering to ask first. */
@@ -114,12 +116,35 @@ export async function registerForPush(
 
   await PushNotifications.addListener("registration", async (t) => {
     await onToken(t.value, platform);
+    settle?.("granted");
+  });
+
+  /*
+   * A REGISTRATION ERROR MUST REACH A PERSON, NOT A CONSOLE.
+   *
+   * This used to console.error and return "granted" regardless, because
+   * register() resolves as soon as the request is made and the token arrives
+   * later on a listener. So the two states "you have notifications" and "iOS
+   * refused to issue a token" were indistinguishable from the caller — and the
+   * second one is what happened for weeks: the shell shipped with the plugin
+   * compiled in but no aps-environment entitlement, so every registration
+   * failed with "no valid aps-environment entitlement string found" and the app
+   * reported success. The only symptom anywhere was a device_push_token table
+   * that never gained a row.
+   *
+   * The listeners stay for the life of the app — a token can rotate at any time
+   * — and the race below exists only to give THIS call something to report.
+   */
+  let settle: ((outcome: string) => void) | undefined;
+  const outcome = new Promise<string>((resolve) => {
+    settle = resolve;
   });
 
   await PushNotifications.addListener("registrationError", (err) => {
-    // Not fatal: the app works without push. Logged so it is visible in a
-    // device console rather than silently swallowed.
-    console.error("[ediagd] push registration failed", err);
+    const detail =
+      typeof err?.error === "string" ? err.error : JSON.stringify(err ?? {});
+    console.error("[ediagd] push registration failed", detail);
+    settle?.(`failed: ${detail}`);
   });
 
   /*
@@ -132,7 +157,22 @@ export async function registerForPush(
   });
 
   await PushNotifications.register();
-  return "granted";
+
+  /*
+   * Ten seconds, then give up on REPORTING — not on registering. The listeners
+   * are still attached, so a token that arrives late is still stored; all this
+   * bounds is how long a person watches a spinner before being told something
+   * honest. APNs is normally sub-second on a working connection, so ten seconds
+   * without an answer is a real problem rather than a slow one.
+   */
+  const timeout = new Promise<string>((resolve) =>
+    setTimeout(() => resolve("no_token"), 10_000)
+  );
+
+  return (await Promise.race([outcome, timeout])) as
+    | "granted"
+    | "no_token"
+    | `failed: ${string}`;
 }
 
 /** Sign-out, or handing the phone to somebody else. */
