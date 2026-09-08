@@ -80,14 +80,20 @@ export async function POST() {
     .from("device_push_token")
     .select("token, platform, last_seen")
     .eq("user_id", user.id)
-    .is("retired_at", null);
+    .is("retired_at", null)
+    /* APNs is the only transport v1 has. Sending an Android token here earns a
+       guaranteed BadDeviceToken — which is exactly what the first real attempt
+       did, against an FCM token from August. See 0106. */
+    .eq("platform", "ios");
 
   if (!devices || devices.length === 0) {
     return NextResponse.json({
       ok: false,
       reason:
-        "No live device on file for you. Open the app in the shell and turn " +
+        "No live iOS device on file for you. Open the app in the TestFlight " +
+        "shell on your iPhone — not a browser and not the simulator — and turn " +
         "Streak reminders on in /profile, then allow the iOS prompt.",
+      config: describeApnsConfig(),
     });
   }
 

@@ -232,6 +232,10 @@ function describeApnsConfig() {
         keyHasHeader: cfg.key.includes("BEGIN PRIVATE KEY"),
         keyHasFooter: cfg.key.includes("END PRIVATE KEY"),
         keyLineCount: cfg.key.split("\n").length,
+        /* A P-256 .p8 lands around 241 characters. Anything far short of that is a
+           TRUNCATED value rather than a malformed one, and no reformatting can
+           recover it — so say which of the two it is. */
+        looksTruncated: cfg.key.length < 180,
         jwt: "token" in minted ? "minted ok" : minted.reason,
     };
 }
