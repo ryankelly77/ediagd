@@ -1469,6 +1469,10 @@ function LeaveConfirm({
   onStay: () => void;
   onLeave: () => void;
 }) {
+  /* Latched, not toggled: leaving is one-way, and a second tap while the
+     navigation is in flight would push the route twice. */
+  const [leaving, setLeaving] = useState(false);
+
   // Escape closes it, because a sheet that can only be dismissed by choosing
   // one of two things is a trap of a smaller kind.
   useEffect(() => {
@@ -1487,9 +1491,13 @@ function LeaveConfirm({
       aria-labelledby="ediagd-leave-title"
     >
       {/* Tapping the scrim stays, matching Escape and the phone convention. */}
+      {/* data-no-press: the global press state is right for controls and wrong
+          for a full-bleed scrim, where dimming and scaling read as the sheet
+          itself flinching. Dismissing is the feedback here. */}
       <button
         type="button"
         aria-label="Keep going"
+        data-no-press
         onClick={onStay}
         className="absolute inset-0 bg-navy/40"
       />
@@ -1511,12 +1519,23 @@ function LeaveConfirm({
 
         <div className="mt-5 space-y-2">
           <PrimaryButton onClick={onStay}>Keep going</PrimaryButton>
+          {/*
+            THE PRESS STATE IS GLOBAL NOW; THE WAIT IS THIS BUTTON'S PROBLEM.
+            Leaving is a client navigation to /advisor, and that takes a beat.
+            With nothing said in the meantime the sheet just sits there, which
+            is the half of "you can tap it and not know if you did" that a
+            press state alone does not answer.
+          */}
           <button
             type="button"
-            onClick={onLeave}
-            className="w-full rounded-xl p-3 text-base font-bold text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            onClick={() => {
+              setLeaving(true);
+              onLeave();
+            }}
+            disabled={leaving}
+            className="w-full rounded-xl p-3 text-base font-bold text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:opacity-70"
           >
-            Leave for now
+            {leaving ? "Leaving…" : "Leave for now"}
           </button>
         </div>
       </div>

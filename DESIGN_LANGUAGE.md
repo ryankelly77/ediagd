@@ -86,6 +86,25 @@ Per brand book: **a circle, a dotted inner ring, one motif from the brand's worl
 - Don't add harsh gray shadows or hard outlines — warm, soft, navy-tinted depth.
 - Don't make every card a navy hero — one hero per screen (the headline), the rest quieter.
 - Don't over-motif — the sun/wave texture is a whisper, not wallpaper.
+### Every control acknowledges a tap
+
+- A phone has **no hover**. `hover:` alone is not feedback on the device this
+  product is used on — it is feedback for the laptop it was written on. An audit
+  found 142 controls and not one with an `active:` state; the daily loop's
+  "Leave for now" was the one somebody finally noticed.
+- The press state is **global**, in `styles/brand.css`, not per button. A rule
+  per call site is a rule that drifts, because the next button copies the one
+  beside it.
+- Subtle: a slight dim and a scale small enough to feel rather than watch. A
+  control should acknowledge a finger, not perform.
+- Opt out with `data-no-press` where a press state would be wrong — a full-bleed
+  scrim, where dimming reads as the sheet flinching.
+- **If tapping starts something slow, say so.** A press state acknowledges the
+  tap; it does not cover a second of navigation. Anything that leaves the screen
+  gets a pending label.
+- iOS only sends `:active` once the document has a touch listener. There is one
+  in `app/layout.tsx` and it exists for no other reason.
+
 - Don't break the mobile-first rule — depth must not cost legibility or tap-target size on a phone.
 
 ---

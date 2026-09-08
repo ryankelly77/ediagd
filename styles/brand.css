@@ -269,3 +269,82 @@
    The web app now owns no launch visual on any platform. It only tells the
    shell when it has painted; see the script in app/layout.tsx.
    ========================================================================= */
+
+/* ============================================================================
+   Press feedback — because a phone has no hover
+
+   ---------------------------------------------------------------------------
+   WHAT WAS WRONG
+   ---------------------------------------------------------------------------
+   An audit of every interactive element in the app found 142 of them and NOT
+   ONE with an `active:` state. 105 had `hover:` only and 37 had nothing at all.
+   Hover does not exist on a touchscreen, so on the device this product is built
+   for, tapping most controls produced no acknowledgement whatsoever.
+
+   Ryan found it on the daily loop's "Leave for now": "you can tap it and not
+   know if you did or not." That is the whole class of bug in one sentence, and
+   it is worst exactly there — a quiet secondary action that does not navigate
+   immediately, on a sheet somebody is trying to dismiss.
+
+   ---------------------------------------------------------------------------
+   ONE RULE, NOT 142 EDITS
+   ---------------------------------------------------------------------------
+   Adding `active:` to every call site would fix today and drift by next month,
+   because the next button somebody writes will copy the one beside it. So the
+   press state is a property of being a control, applied here once.
+
+   Subtle on purpose: a control should acknowledge a finger, not perform. The
+   scale is small enough to feel rather than watch, and the dimming carries it
+   on the elements where a transform would be wrong.
+
+   ---------------------------------------------------------------------------
+   iOS NEEDS PERMISSION TO SEND :active AT ALL
+   ---------------------------------------------------------------------------
+   Safari and WKWebView only apply :active to elements once the document has a
+   touch listener. Without one this entire block is dead on the device it was
+   written for — see the touchstart line in app/layout.tsx, which exists for no
+   other reason.
+   ============================================================================ */
+
+/* We own the feedback, so the OS grey flash is turned off rather than allowed
+   to double up with it. */
+.ediagd-app button,
+.ediagd-app a,
+.ediagd-app [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ediagd-app button:not(:disabled):not([aria-disabled="true"]):not([data-no-press]):active,
+.ediagd-app a:not([data-no-press]):active,
+.ediagd-app [role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
+  opacity: 0.72;
+  transform: scale(0.985);
+  /* No transition INTO the press: feedback that eases in is feedback that
+     arrives after the finger has already lifted. The ease is on the way out,
+     which is where it reads as a release rather than a lag. */
+  transition: none;
+}
+
+/*
+ * NO BASE TRANSITION HERE, DELIBERATELY.
+ *
+ * Setting one would out-specify Tailwind's `transition` utility on every
+ * control in the app — `.ediagd-app button` beats `.transition` — and quietly
+ * replace the colour fades those buttons already have. Tailwind's own
+ * transition property list already includes opacity and transform, so a button
+ * that has it eases out of the press for free, and one that does not simply
+ * snaps back. Both are fine; neither is a regression somebody has to find.
+ */
+
+/*
+ * Reduced motion keeps the acknowledgement and drops the movement. Somebody who
+ * has asked for less motion still needs to know the tap landed — removing the
+ * feedback entirely would be reading the preference as "tell me less".
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ediagd-app button:not(:disabled):not([aria-disabled="true"]):not([data-no-press]):active,
+  .ediagd-app a:not([data-no-press]):active,
+  .ediagd-app [role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
+    transform: none;
+  }
+}

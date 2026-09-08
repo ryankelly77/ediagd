@@ -61,6 +61,13 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
+              // iOS ONLY SENDS :active IF THE DOCUMENT LISTENS FOR TOUCH.
+              // Safari and WKWebView suppress the active state on every element
+              // until something has registered a touch handler, so without this
+              // one empty listener the press-feedback rules in styles/brand.css
+              // are dead on the device this product is built for. Passive, so it
+              // costs nothing and cannot block a scroll.
+              "document.addEventListener('touchstart',function(){},{passive:true});" +
               "(function(){var fired=false;function ready(){if(fired)return;fired=true;" +
               "try{window.webkit.messageHandlers.ediagdLaunchReady.postMessage(1)}catch(e){}}" +
               "function afterPaint(){requestAnimationFrame(function(){requestAnimationFrame(ready)})}" +

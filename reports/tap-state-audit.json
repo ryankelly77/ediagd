@@ -1,0 +1,1271 @@
+[
+ {
+  "file": "app/(app)/admin/content/page.tsx",
+  "line": 173,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/page.tsx",
+  "line": 213,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/page.tsx",
+  "line": 237,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/page.tsx",
+  "line": 261,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/page.tsx",
+  "line": 274,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/search/page.tsx",
+  "line": 128,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/search/page.tsx",
+  "line": 144,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/service/[service]/page.tsx",
+  "line": 102,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/content/service/[service]/page.tsx",
+  "line": 207,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/dms/page.tsx",
+  "line": 111,
+  "tag": "Link",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/impact/page.tsx",
+  "line": 238,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/impact/quadrant/[quadrant]/page.tsx",
+  "line": 133,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/impact/quadrant/[quadrant]/page.tsx",
+  "line": 170,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/aliases/page.tsx",
+  "line": 163,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/confirm/page.tsx",
+  "line": 254,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/confirm/page.tsx",
+  "line": 362,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/confirm/page.tsx",
+  "line": 373,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/lock/page.tsx",
+  "line": 134,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/lock/page.tsx",
+  "line": 190,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/lock/page.tsx",
+  "line": 217,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/op-code/page.tsx",
+  "line": 170,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/op-code/page.tsx",
+  "line": 184,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 162,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 243,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 263,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 267,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 519,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 528,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 738,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 746,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 757,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/dealer-codes/page.tsx",
+  "line": 856,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/families/confirm/page.tsx",
+  "line": 169,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/families/confirm/page.tsx",
+  "line": 205,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/families/confirm/page.tsx",
+  "line": 216,
+  "tag": "Link",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/families/page.tsx",
+  "line": 200,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/op-codes/page.tsx",
+  "line": 148,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/op-codes/page.tsx",
+  "line": 181,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/mapping/page.tsx",
+  "line": 91,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/page.tsx",
+  "line": 61,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/admin/pricing/page.tsx",
+  "line": 110,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/group/page.tsx",
+  "line": 91,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/island-time/page.tsx",
+  "line": 145,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/joe-the-pro/[make]/page.tsx",
+  "line": 100,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/joe-the-pro/[make]/page.tsx",
+  "line": 129,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/[course]/page.tsx",
+  "line": 44,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/m/[module]/quiz/page.tsx",
+  "line": 82,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/m/[module]/quiz/page.tsx",
+  "line": 136,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/m/[module]/quiz/page.tsx",
+  "line": 195,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/m/[module]/quiz/page.tsx",
+  "line": 203,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/m/[module]/quiz/page.tsx",
+  "line": 258,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/library/page.tsx",
+  "line": 55,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/manager/page.tsx",
+  "line": 277,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/manager/page.tsx",
+  "line": 314,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/meetings/page.tsx",
+  "line": 141,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/meetings/page.tsx",
+  "line": 165,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/more/page.tsx",
+  "line": 146,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/more/page.tsx",
+  "line": 175,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/notifications/page.tsx",
+  "line": 77,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/notifications/page.tsx",
+  "line": 120,
+  "tag": "a",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/notifications/page.tsx",
+  "line": 159,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/profile/page.tsx",
+  "line": 206,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/profile/page.tsx",
+  "line": 245,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/sand-dollars/page.tsx",
+  "line": 94,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/sand-dollars/page.tsx",
+  "line": 134,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/sand-dollars/page.tsx",
+  "line": 150,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/streak/paddle-out/page.tsx",
+  "line": 62,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/streak/page.tsx",
+  "line": 86,
+  "tag": "Link",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/streak/page.tsx",
+  "line": 101,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/streak/page.tsx",
+  "line": 161,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "app/(app)/streak/page.tsx",
+  "line": 184,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/AdminPageHeader.tsx",
+  "line": 59,
+  "tag": "Link",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/AdminSearch.tsx",
+  "line": 47,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/AdminSearch.tsx",
+  "line": 78,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/DistributionDonut.tsx",
+  "line": 122,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/DistributionDonut.tsx",
+  "line": 150,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/EngagementList.tsx",
+  "line": 79,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/EngagementList.tsx",
+  "line": 127,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/ImpactV2.tsx",
+  "line": 440,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/ImpactV2.tsx",
+  "line": 455,
+  "tag": "Link",
+  "hover": false,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/RoiPieces.tsx",
+  "line": 255,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/RollupStamp.tsx",
+  "line": 38,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/TypedConfirm.tsx",
+  "line": 63,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentDetail.tsx",
+  "line": 138,
+  "tag": "a",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentDetail.tsx",
+  "line": 527,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentDetail.tsx",
+  "line": 714,
+  "tag": "Link",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentEditor.tsx",
+  "line": 298,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentEditor.tsx",
+  "line": 307,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentResultRow.tsx",
+  "line": 26,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentSearchBar.tsx",
+  "line": 90,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ContentSearchBar.tsx",
+  "line": 101,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/DuplicateGroupCard.tsx",
+  "line": 127,
+  "tag": "a",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ReviewItem.tsx",
+  "line": 83,
+  "tag": "a",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/ReviewItem.tsx",
+  "line": 165,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/TwinProposalCard.tsx",
+  "line": 49,
+  "tag": "a",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/content/TwinProposalCard.tsx",
+  "line": 69,
+  "tag": "a",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/dms/DmsUploader.tsx",
+  "line": 309,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/dms/DmsUploader.tsx",
+  "line": 317,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/dms/DmsUploader.tsx",
+  "line": 356,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/settings/GameSettingsForm.tsx",
+  "line": 106,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/swag/SwagAdmin.tsx",
+  "line": 414,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/admin/swag/SwagAdmin.tsx",
+  "line": 421,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/advisor/PitchDialog.tsx",
+  "line": 130,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/advisor/PitchDialog.tsx",
+  "line": 189,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/advisor/ServiceList.tsx",
+  "line": 176,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/badges/BadgeGrid.tsx",
+  "line": 108,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/badges/BadgeGrid.tsx",
+  "line": 232,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/brand/Modal.tsx",
+  "line": 84,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/brand/StatusDot.tsx",
+  "line": 95,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/daily/DailyFlow.tsx",
+  "line": 625,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/daily/DailyFlow.tsx",
+  "line": 1497,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": true
+ },
+ {
+  "file": "components/daily/DailyFlow.tsx",
+  "line": 1623,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/daily/DailyFlow.tsx",
+  "line": 1649,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/daily/SaveHeart.tsx",
+  "line": 67,
+  "tag": "button",
+  "hover": false,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CoursePieces.tsx",
+  "line": 42,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CueDeck.tsx",
+  "line": 829,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CueDeck.tsx",
+  "line": 837,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CueDeck.tsx",
+  "line": 859,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CueDeck.tsx",
+  "line": 887,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CueDeck.tsx",
+  "line": 907,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/CueDeck.tsx",
+  "line": 944,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/LibraryPieces.tsx",
+  "line": 176,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/library/LibraryPieces.tsx",
+  "line": 200,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/nav/AppHeader.tsx",
+  "line": 66,
+  "tag": "Link",
+  "hover": false,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/nav/AppHeader.tsx",
+  "line": 90,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/nav/AppHeader.tsx",
+  "line": 124,
+  "tag": "Link",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/nav/TabBar.tsx",
+  "line": 114,
+  "tag": "Link",
+  "hover": false,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/notifications/PushSelfTest.tsx",
+  "line": 85,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/notifications/SoftAsk.tsx",
+  "line": 116,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/notifications/SoftAsk.tsx",
+  "line": 124,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/onboarding/OnboardingFlow.tsx",
+  "line": 178,
+  "tag": "button",
+  "hover": false,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/onboarding/OnboardingFlow.tsx",
+  "line": 189,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/onboarding/WelcomeGift.tsx",
+  "line": 111,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/schedule/IslandTimePanel.tsx",
+  "line": 204,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/schedule/ScheduleForm.tsx",
+  "line": 107,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/schedule/ScheduleForm.tsx",
+  "line": 279,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/schedule/ScheduleForm.tsx",
+  "line": 306,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/swag/SwagShack.tsx",
+  "line": 157,
+  "tag": "button",
+  "hover": true,
+  "focus": true,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/swag/SwagShack.tsx",
+  "line": 328,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ },
+ {
+  "file": "components/swag/SwagShack.tsx",
+  "line": 354,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": false,
+  "opt_out": false
+ },
+ {
+  "file": "components/swag/SwagShack.tsx",
+  "line": 442,
+  "tag": "button",
+  "hover": true,
+  "focus": false,
+  "disabled_style": true,
+  "opt_out": false
+ }
+]
