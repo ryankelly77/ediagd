@@ -233,30 +233,74 @@ async function main() {
       video_quality: "premium",
       max_resolution_tier: "2160p",
       normalize_audio: true,
-      inputs: [{ generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }],
+      /*
+       * ---- NO CAPTIONS ON AN UPLOAD THAT IS ABOUT TO BE TRIMMED -----------
+       *
+       * Mux refuses to clip an asset whose text track is still generating —
+       * "Asset to clip has a pending text track, try again in a few minutes" —
+       * and waitForAsset only waits for the ASSET to be ready, which it is,
+       * captions or not. Every replacement in the first run of Ryan's batch
+       * died there, after uploading a full 4K master each time.
+       *
+       * Waiting for the track would fix the error and buy nothing: the clip
+       * below requests its own subtitles, and the intermediate's would be
+       * discarded anyway because their timings are wrong by exactly the length
+       * of the cut. So they are not requested at all — one fewer failure mode
+       * and one fewer caption job billed per film.
+       */
+      ...(trimStart != null || trimEnd != null
+        ? {}
+        : { inputs: [{ generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }] }),
     },
   });
 
-  let sent = 0;
-  let lastPct = -1;
-  const stream = createReadStream(file!);
-  stream.on("data", (chunk) => {
-    sent += chunk.length;
-    const pct = Math.floor((sent / bytes) * 100);
-    if (pct !== lastPct && pct % 10 === 0) {
-      lastPct = pct;
-      process.stdout.write(`    ${pct}%\n`);
-    }
-  });
+  /*
+   * ---- RETRIED, BECAUSE ONE 503 IS NOT A REASON TO LOSE A FILM ------------
+   *
+   * A single transient 503 from the upload endpoint killed one film outright
+   * in the first run of Ryan's batch. Over seventy-six uploads of a couple of
+   * hundred megabytes each, a transient 5xx is not an exception, it is a
+   * matter of time.
+   *
+   * A fresh read stream per attempt: a consumed one cannot be replayed, and
+   * retrying with the old one uploads nothing and reports success.
+   *
+   * Only 5xx and network faults. A 4xx is Mux telling us the request is wrong,
+   * and repeating a wrong request three times is just a slower failure.
+   */
+  const ATTEMPTS = 3;
+  for (let attempt = 1; ; attempt++) {
+    let sent = 0;
+    let lastPct = -1;
+    const stream = createReadStream(file!);
+    stream.on("data", (chunk) => {
+      sent += chunk.length;
+      const pct = Math.floor((sent / bytes) * 100);
+      if (pct !== lastPct && pct % 10 === 0) {
+        lastPct = pct;
+        process.stdout.write(`    ${pct}%\n`);
+      }
+    });
 
-  const put = await fetch(upload.url!, {
-    method: "PUT",
-    body: Readable.toWeb(stream) as unknown as BodyInit,
-    // @ts-expect-error duplex is required for a streaming body, absent from DOM types
-    duplex: "half",
-    headers: { "content-length": String(bytes) },
-  });
-  if (!put.ok) throw new Error(`upload failed HTTP ${put.status}`);
+    try {
+      const put = await fetch(upload.url!, {
+        method: "PUT",
+        body: Readable.toWeb(stream) as unknown as BodyInit,
+        // @ts-expect-error duplex is required for a streaming body, absent from DOM types
+        duplex: "half",
+        headers: { "content-length": String(bytes) },
+      });
+      if (put.ok) break;
+      if (put.status < 500 || attempt >= ATTEMPTS) {
+        throw new Error(`upload failed HTTP ${put.status}`);
+      }
+      console.log(`    HTTP ${put.status} — retrying (${attempt}/${ATTEMPTS - 1})`);
+    } catch (e) {
+      if (attempt >= ATTEMPTS) throw e;
+      console.log(`    ${e instanceof Error ? e.message : e} — retrying (${attempt}/${ATTEMPTS - 1})`);
+    }
+    await new Promise((r) => setTimeout(r, 5000 * attempt));
+  }
 
   for (let i = 0; i < 120; i++) {
     await new Promise((r) => setTimeout(r, 5000));
