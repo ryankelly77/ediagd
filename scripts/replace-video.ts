@@ -157,6 +157,53 @@ async function archiveOldMaster(row: {
   }
 }
 
+/**
+ * Put the new master on the shelf the old one just left.
+ *
+ * ---------------------------------------------------------------------------
+ * ARCHIVING THE OLD ONE WAS ONLY HALF OF IT
+ * ---------------------------------------------------------------------------
+ * This script moved the superseded master into 04 - Archive and left the
+ * replacement wherever it was dropped. After fifty-four reshoots that produced
+ * a Published/Mindset folder with fourteen films in it and a Drop Zone holding
+ * fifty-four finished masters — the shelf understating the library by two
+ * thirds, and the Drop Zone reading as fifty-four open items when none of them
+ * were.
+ *
+ * The ingest has always filed its own finished masters for exactly the reason
+ * in its comment: the Drop Zone should answer "what still needs a decision"
+ * without anybody cross-referencing a database. A replacement is a finished
+ * master too.
+ *
+ * BEST EFFORT, AFTER THE SWAP. The row is already correct and the video is
+ * already live; a file that will not move is a note to a person, not a reason
+ * to fail a run that has succeeded.
+ */
+async function fileNewMaster(row: { collection: string | null }, from: string) {
+  try {
+    const shelf = path.join(
+      path.dirname(path.dirname(from)),
+      "02 - Published",
+      row.collection ?? "Mindset"
+    );
+    await mkdir(shelf, { recursive: true });
+    const to = path.join(shelf, path.basename(from));
+    /* Never overwrite: two files that disagree is worse than one in the wrong
+       folder, and the wrong folder is visible. */
+    try {
+      await stat(to);
+      console.log(`\n  already on the shelf, left in place: ${path.basename(to)}`);
+      return;
+    } catch {
+      /* not there — good */
+    }
+    await rename(from, to);
+    console.log(`\n  filed the new master -> 02 - Published/${row.collection}/${path.basename(to)}`);
+  } catch (e) {
+    console.log(`\n  could not file the new master: ${e instanceof Error ? e.message : e}`);
+  }
+}
+
 async function main() {
   /* ---- 1. What are we replacing? ---------------------------------------- */
   const { data: row, error } = await sb
@@ -339,11 +386,25 @@ async function main() {
   if (!playback) throw new Error("new asset has no signed playback id");
 
   /* ---- 5. Swap ------------------------------------------------------------ */
+  /*
+   * The version and the name move with the asset — but only for a real
+   * replacement. A --trim-only run is the SAME take cut differently, and
+   * bumping it would invent a take that was never shot. See 0107, which was
+   * written after fifty-four reshoots left their rows claiming v1 of a file
+   * that had already been archived under another name.
+   */
+  const newCanonical = trimOnly ? null : path.basename(file!);
+  const newVersion = trimOnly
+    ? null
+    : Number(newCanonical!.match(/—\s*v(\d+)\.[a-z0-9]+$/i)?.[1] ?? row.version + 1);
+
   const { data: swapped, error: swapErr } = await sb.rpc("replace_master_asset", {
     _content_id: contentId,
     _new_asset_id: newAssetId,
     _new_playback_id: playback.id,
     _new_duration: asset.duration ? Math.round(asset.duration) : null,
+    _new_version: newVersion,
+    _new_canonical: newCanonical,
   });
   if (swapErr) throw new Error(swapErr.message);
   console.log(`\n  Swapped. ${JSON.stringify(swapped)}`);
@@ -368,7 +429,10 @@ async function main() {
   /* Only a REPLACEMENT supersedes a master on the shelf. A trim produces a new
      Mux asset from one already ingested; the file in Drive is still the master
      it came from and archiving it would be a lie about what happened. */
-  if (!trimOnly) await archiveOldMaster(row);
+  if (!trimOnly) {
+    await archiveOldMaster(row);
+    await fileNewMaster(row, file!);
+  }
 
   const { data: after } = await sb
     .from("content")
