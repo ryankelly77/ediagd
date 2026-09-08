@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
 import { DayRollover } from "@/components/nav/DayRollover";
 import type { IsoDate } from "@/lib/gamification/streak";
+import { SwipeBack } from "@/components/native/SwipeBack";
 
 /** First letter of the name (or email) for the avatar. */
 function initialsFor(name: string): string {
@@ -158,6 +159,10 @@ export default async function AppLayout({
       {renderedDate && rooftopTz && (
         <DayRollover serverDate={renderedDate} timezone={rooftopTz} />
       )}
+      {/* The edge-swipe back. Renders nothing; the native gesture enabled in
+          build 10 does not fire for client-side navigations, which is all of
+          them. See components/native/SwipeBack.tsx. */}
+      <SwipeBack />
       <AppHeader
         initials={initialsFor(displayName)}
         balance={balance}
