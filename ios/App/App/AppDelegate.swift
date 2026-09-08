@@ -33,6 +33,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
+    // MARK: - Remote notifications
+
+    /*
+     * ---- THE TOKEN ARRIVES HERE, AND NOTHING WAS CARRYING IT ANY FURTHER ----
+     *
+     * Capacitor's push plugin does not hook UIApplicationDelegate. It cannot:
+     * only one object can be the app delegate, and that object is this file.
+     * So APNs hands the device token to iOS, iOS hands it to the method below,
+     * and the plugin learns about it ONLY if this file posts it on the
+     * notification centre the plugin is listening to.
+     *
+     * These two methods were never added. The plugin was compiled in, the
+     * entitlement was added, permission was granted — and then the token landed
+     * in an app delegate that dropped it on the floor. That is why registration
+     * produced neither a token nor an error for weeks: the failure was not a
+     * failure, it was a message with nowhere to go.
+     *
+     * Both halves matter. Without the second one a genuine APNs failure is just
+     * as silent as success was, which is the state this whole feature has spent
+     * a day escaping.
+     */
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(
+            name: .capacitorDidRegisterForRemoteNotifications,
+            object: deviceToken
+        )
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(
+            name: .capacitorDidFailToRegisterForRemoteNotifications,
+            object: error
+        )
+    }
+
     func application(_ application: UIApplication,
                      configurationForConnecting connectingSceneSession: UISceneSession,
                      options: UIScene.ConnectionOptions) -> UISceneConfiguration {
