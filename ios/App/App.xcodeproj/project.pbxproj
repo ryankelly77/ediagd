@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		98322448B46C69A90F0BA725 /* BrandInk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F24D313A817466834239C63 /* BrandInk.swift */; };
+		2671D78BED64E17E50E35822 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98268315A5EB95A765790ED6 /* SVGPath.swift */; };
+		2865FA29B9D83BEA9775D6E5 /* LaunchOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7DB3558896316F3287BE5DC /* LaunchOverlayView.swift */; };
+		86371B6B2C510C9A5B5D0750 /* LaunchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23AAFEE0E35A876C07EAF95 /* LaunchOverlay.swift */; };
+		3AFD9B2CB94EAB8BDC9F0A94 /* EDIAGDViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02623003EB617F72AD9A33 /* EDIAGDViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -20,6 +25,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5F24D313A817466834239C63 /* BrandInk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandInk.swift; sourceTree = "<group>"; };
+		98268315A5EB95A765790ED6 /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
+		C7DB3558896316F3287BE5DC /* LaunchOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOverlayView.swift; sourceTree = "<group>"; };
+		B23AAFEE0E35A876C07EAF95 /* LaunchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOverlay.swift; sourceTree = "<group>"; };
+		2E02623003EB617F72AD9A33 /* EDIAGDViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EDIAGDViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -69,6 +79,11 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				5F24D313A817466834239C63 /* BrandInk.swift */,
+				98268315A5EB95A765790ED6 /* SVGPath.swift */,
+				C7DB3558896316F3287BE5DC /* LaunchOverlayView.swift */,
+				B23AAFEE0E35A876C07EAF95 /* LaunchOverlay.swift */,
+				2E02623003EB617F72AD9A33 /* EDIAGDViewController.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				A1C0N0001FEDCBA000000001 /* AppIcon.icon */,
@@ -163,6 +178,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				98322448B46C69A90F0BA725 /* BrandInk.swift in Sources */,
+				2671D78BED64E17E50E35822 /* SVGPath.swift in Sources */,
+				2865FA29B9D83BEA9775D6E5 /* LaunchOverlayView.swift in Sources */,
+				86371B6B2C510C9A5B5D0750 /* LaunchOverlay.swift in Sources */,
+				3AFD9B2CB94EAB8BDC9F0A94 /* EDIAGDViewController.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -304,7 +324,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = PGU9MA5HRB;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -327,7 +347,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = PGU9MA5HRB;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
