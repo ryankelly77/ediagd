@@ -15,9 +15,9 @@
    greeting off the short ones and leave dead air on the long ones, and both are
    visible on the very first frame an advisor sees.
 
-   The timestamp comes from the transcript, which the batch already produces in
-   order to name the files. Nothing new is measured; something already measured
-   is used twice.
+   The timestamp comes from scripts/slate-timings.py, which reads word-level
+   positions out of the first thirty seconds of each file — the same pass that
+   reads the slate the film is named from. One measurement, used twice.
 
    ---------------------------------------------------------------------------
    IT TRIMS ROWS, NOT FILES
@@ -45,8 +45,22 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 
-const TRANSCRIPTS = "reports/dropzone-transcripts.json";
-const PLAN = "reports/dropzone-rename-plan.json";
+/*
+ * BOTH FACTS COME FROM slate-plan.json, and that is a correction.
+ *
+ * This first read the whole-film transcripts for the cut point, and those
+ * timestamps are SEGMENT starts. The slate is spoken — "Doubt is a strange
+ * thing by Kobe Bryant." — and Whisper puts it in the same segment as the
+ * "Aloha" that follows it, so the segment start is the start of the SLATE.
+ * Measured on this batch: about 1.1s where the truth is about 5s. Trimming
+ * there would have cut a second of silence and kept the entire thing this job
+ * exists to remove, and the result would have looked deliberate.
+ *
+ * slate-timings.py gets the word-level position of "Aloha" from the first
+ * thirty seconds, and slate-plan.ts carries it through beside the name it
+ * chose. One file, both facts, and they cannot disagree about which film.
+ */
+const PLAN = "reports/slate-plan.json";
 const LEDGER = "reports/slate-trims.json";
 
 const args = process.argv.slice(2);
@@ -57,10 +71,10 @@ const ONLY = args.find((a) => a.startsWith("--only="))?.slice(7);
 /**
  * A beat before the word, so the "A" is not clipped.
  *
- * Whisper reports where a SEGMENT starts, and its boundary sits fractionally
- * inside the first phoneme often enough to matter on a word this short. A third
- * of a second of room costs nothing — the slate is silent — and removes the one
- * failure mode a viewer would actually notice.
+ * Word timestamps land fractionally inside the first phoneme often enough to
+ * matter on a word this short, and a clipped "loha" is the one failure a viewer
+ * notices instantly. A third of a second of room costs nothing: what sits there
+ * is the tail of the slate, which is a pause.
  */
 const LEAD_IN = 0.35;
 
@@ -74,8 +88,13 @@ const LEAD_IN = 0.35;
  */
 const MAX_SLATE = 20;
 
-type Transcript = { file: string; aloha_at?: number | null; seconds?: number; transcript?: string };
-type PlanFile = { driveTitle: string; renameTo?: string | null; action?: string };
+type PlanFile = {
+  file: string;
+  renameTo: string | null;
+  alohaAt: number | null;
+  action: "reshoot" | "new" | "review";
+  title?: string;
+};
 
 function load<T>(path: string, what: string): T {
   if (!existsSync(path)) {
@@ -100,26 +119,22 @@ async function main() {
     process.exit(1);
   }
 
-  const transcripts = load<{ files: Transcript[] }>(
-    TRANSCRIPTS,
-    "run transcribe-dropzone.py first"
-  ).files;
-  const plan = load<{ files: PlanFile[] }>(
+  const plan = load<{ plan: PlanFile[] }>(
     PLAN,
-    "run identify:videos first — it maps camera-roll names to canonical ones"
-  ).files;
+    "run slate:plan first — it maps camera-roll names to canonical ones and carries the cut point"
+  ).plan;
 
   const ledger: Record<string, { trimmedAt: string; startTime: number }> = existsSync(LEDGER)
     ? JSON.parse(readFileSync(LEDGER, "utf8"))
     : {};
 
-  /* The cut point, keyed by the name the file was given. */
-  const alohaBySource = new Map<string, Transcript>();
-  for (const t of transcripts) alohaBySource.set(t.file, t);
-
-  const canonicalToSource = new Map<string, string>();
+  /* Only films this batch actually renamed. Anything left for a ruling has no
+     canonical name yet and nothing to trim against. */
+  const byCanonical = new Map<string, PlanFile>();
   for (const p of plan) {
-    if (p.renameTo) canonicalToSource.set(p.renameTo.replace(/\.[a-z0-9]+$/i, ""), p.driveTitle);
+    if (p.renameTo && p.action !== "review") {
+      byCanonical.set(p.renameTo.replace(/\.[a-z0-9]+$/i, ""), p);
+    }
   }
 
   /* Everything in the library that this batch could have produced. */
@@ -138,8 +153,9 @@ async function main() {
 
   for (const row of rows) {
     const stem = row.canonical_filename.replace(/\.[a-z0-9]+$/i, "");
-    const source = canonicalToSource.get(stem);
-    if (!source) continue; // not from this batch
+    const entry = byCanonical.get(stem);
+    if (!entry) continue; // not from this batch
+    const source = entry.file;
     if (ONLY && !row.canonical_filename.toLowerCase().includes(ONLY.toLowerCase())) continue;
 
     if (ledger[row.id] && !FORCE) {
@@ -151,20 +167,19 @@ async function main() {
       continue;
     }
 
-    const t = alohaBySource.get(source);
-    if (!t || t.aloha_at == null) {
+    if (entry.alohaAt == null) {
       skipped.push({ what: row.title, because: `no "Aloha" found in ${source} — trim by hand` });
       continue;
     }
-    if (t.aloha_at > MAX_SLATE) {
+    if (entry.alohaAt > MAX_SLATE) {
       skipped.push({
         what: row.title,
-        because: `first "Aloha" at ${t.aloha_at}s is too late to be a greeting`,
+        because: `first "Aloha" at ${entry.alohaAt}s is too late to be a greeting`,
       });
       continue;
     }
 
-    const start = Math.max(0, Number((t.aloha_at - LEAD_IN).toFixed(2)));
+    const start = Math.max(0, Number((entry.alohaAt - LEAD_IN).toFixed(2)));
     if (start <= 0) {
       skipped.push({ what: row.title, because: "starts on the greeting already — nothing to cut" });
       continue;
