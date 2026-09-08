@@ -59,9 +59,34 @@ const file = arg("file");
 const trimStart = arg("trim-start") ? Number(arg("trim-start")) : null;
 const trimEnd = arg("trim-end") ? Number(arg("trim-end")) : null;
 const dry = args.includes("--dry");
+/*
+ * ---- TRIM SOMETHING ALREADY HERE -----------------------------------------
+ *
+ * The batch that prompted this arrives with a spoken slate on the front of
+ * every film — a few seconds before Mitch says "Aloha" — and the cut point is
+ * different in each one, so it comes from the transcript rather than from a
+ * constant.
+ *
+ * Those films reach Mux through two different doors: a new film is a fresh
+ * ingest, a reshoot is a replacement. Trimming them would have meant a trim in
+ * the ingest path as well as this one — two implementations of clip → swap →
+ * re-derive, and the ingest copy would have been the one that eventually
+ * forgot the derive.
+ *
+ * So neither door trims. Everything lands untrimmed, and then this runs once
+ * per film against the row that is already there. `--trim-only` is this whole
+ * script minus its first half: no file, no upload, the CURRENT master as the
+ * clip source, and the same swap and re-derive afterwards.
+ */
+const trimOnly = args.includes("--trim-only");
 
-if (!contentId || !file) {
+if (!contentId || (!file && !trimOnly)) {
   console.error("  need --id=<content uuid> and --file=<path>");
+  console.error("  or:  --id=<content uuid> --trim-start=<seconds> --trim-only");
+  process.exit(1);
+}
+if (trimOnly && trimStart == null && trimEnd == null) {
+  console.error("  --trim-only needs --trim-start and/or --trim-end");
   process.exit(1);
 }
 
@@ -149,7 +174,24 @@ async function main() {
   console.log(`    current master  ${String(row.mux_asset_id).slice(0, 14)}…  ${row.duration_sec}s`);
   console.log(`    current vertical ${row.vertical_status}`);
 
-  /* ---- 2. What are we replacing it with? -------------------------------- */
+  /* ---- 2. What are we replacing it with? --------------------------------
+     Nothing, when only trimming: the source is the master already on the row,
+     and everything between here and the clip is about getting a new file in. */
+  let newAssetId: string | null = null;
+  let asset;
+
+  if (trimOnly) {
+    /* Narrowed into a const: newAssetId is nullable for the upload path, and
+       waitForAsset takes a string. */
+    const current = row.mux_asset_id;
+    if (!current) throw new Error("row has no master asset to trim");
+    newAssetId = current;
+    asset = await waitForAsset(current, "current master");
+    console.log(`\n  Trim only. Source is the current master.`);
+    console.log(`    ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s`);
+    console.log(`    trim: ${trimStart ?? 0}s -> ${trimEnd ?? "end"}`);
+    if (dry) { console.log("\n  --dry, stopping here.\n"); return; }
+  } else {
   const { stdout } = await run("ffprobe", [
     "-v", "error", "-select_streams", "v:0",
     "-show_entries", "stream=width,height,r_frame_rate,codec_name",
@@ -216,7 +258,6 @@ async function main() {
   });
   if (!put.ok) throw new Error(`upload failed HTTP ${put.status}`);
 
-  let newAssetId: string | null = null;
   for (let i = 0; i < 120; i++) {
     await new Promise((r) => setTimeout(r, 5000));
     const u = await mux.video.uploads.retrieve(upload.id);
@@ -225,8 +266,9 @@ async function main() {
   }
   if (!newAssetId) throw new Error("timed out waiting for an asset id");
 
-  let asset = await waitForAsset(newAssetId, "new asset");
+  asset = await waitForAsset(newAssetId, "new asset");
   console.log(`    asset ready   ${newAssetId.slice(0, 14)}…  ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s`);
+  }
 
   /* ---- 4. Trim, if asked — BEFORE the swap, so both formats share the cut - */
   if (trimStart != null || trimEnd != null) {
@@ -279,7 +321,10 @@ async function main() {
      reported and left alone: the replacement is already live and the row is
      already correct, so failing the run here would be worse than a stale file
      on a shelf. */
-  await archiveOldMaster(row);
+  /* Only a REPLACEMENT supersedes a master on the shelf. A trim produces a new
+     Mux asset from one already ingested; the file in Drive is still the master
+     it came from and archiving it would be a lie about what happened. */
+  if (!trimOnly) await archiveOldMaster(row);
 
   const { data: after } = await sb
     .from("content")

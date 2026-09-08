@@ -41,6 +41,51 @@ import {
   type Proposal,
 } from "../lib/video/transcript-match";
 
+/**
+ * What is already in the library, so a reshoot is named as a reshoot.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS SCRIPT NOW READS THE DATABASE
+ * ---------------------------------------------------------------------------
+ * It used to propose v1 for everything, which was right when the library was
+ * empty and silently wrong the moment it was not. The ingest treats a version
+ * that is not HIGHER than the live take as "already have this" and skips the
+ * file — so a batch of reshoots named v1 does not fail, it does nothing, and
+ * reports that it did nothing in a line that reads like success.
+ *
+ * Ryan's batch is largely reshoots. So the version is no longer a constant: it
+ * is one more than whatever is on the shelf for that same idea, and a film
+ * nobody has seen before still gets v1 because there is nothing to be higher
+ * than.
+ *
+ * IDENTITY IGNORES THE VERSION AND KEEPS THE COLLECTION — the same rule
+ * ingest-videos.ts uses, because these two have to agree about what "the same
+ * film, re-shot" means or the version they choose is meaningless.
+ */
+async function liveVersions(): Promise<Map<string, number>> {
+  const url = process.env.SB_URL, key = process.env.SB_KEY;
+  const map = new Map<string, number>();
+  if (!url || !key) {
+    console.log("  no SB_URL / SB_KEY — every proposal will be v1\n");
+    return map;
+  }
+  const res = await fetch(
+    `${url}/rest/v1/content?select=canonical_filename,version&canonical_filename=not.is.null`,
+    { headers: { apikey: key, authorization: `Bearer ${key}` } }
+  );
+  const rows = (await res.json()) as { canonical_filename: string; version: number | null }[];
+  if (!Array.isArray(rows)) return map;
+  for (const r of rows) {
+    const identity = r.canonical_filename
+      .replace(/\s*—\s*v\d+\.[a-z0-9]+$/i, "")
+      .trim()
+      .toLowerCase();
+    const v = Number(r.version ?? 1);
+    if (!map.has(identity) || v > (map.get(identity) as number)) map.set(identity, v);
+  }
+  return map;
+}
+
 const TRANSCRIPTS = "reports/dropzone-transcripts.json";
 const VOCABULARY = "data/deck-vocabulary.json";
 const SCRIPTS = "data/teleprompter-films.json";
@@ -106,7 +151,8 @@ function opening(text: string, chars = 150): string {
   return clean.length <= chars ? clean : `${clean.slice(0, chars)}…`;
 }
 
-function main() {
+async function main() {
+  const LIVE = await liveVersions();
   const { rows, profiles, scripts } = load();
   const usable = rows.filter((r) => r.transcript && r.transcript.length > 0);
 
@@ -121,7 +167,11 @@ function main() {
   /** The one place a file's proposed name is decided — ruling or matcher. */
   const nameFor = (m: (typeof matched)[number]): string | null => {
     const r = RULINGS[m.file];
-    return r ? `${r.code} — ${r.title} — v1` : proposedName(m.proposal);
+    const stem = r ? `${r.code} — ${r.title}` : proposedName(m.proposal, 0)?.replace(/ — v0$/, "");
+    if (!stem) return null;
+    /* One past whatever is live for this same idea. Nothing live means v1. */
+    const live = LIVE.get(stem.trim().toLowerCase()) ?? 0;
+    return `${stem} — v${live + 1}`;
   };
 
   /* Takes first: a pair is one film, and naming both would put two v1s of the
@@ -338,5 +388,5 @@ function main() {
  * first wants to.
  */
 if (require.main === module) {
-  main();
+  void main();
 }

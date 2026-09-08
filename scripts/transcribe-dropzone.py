@@ -177,11 +177,32 @@ def main() -> int:
                 segments, info = model.transcribe(
                     wav, beam_size=1, vad_filter=True, initial_prompt=prompt
                 )
-                text = " ".join(s.text.strip() for s in segments).strip()
+                # Materialise once: `segments` is a generator and the timings
+                # below need a second pass over it.
+                segs = [{"start": round(s.start, 2), "end": round(s.end, 2),
+                         "text": s.text.strip()} for s in segments]
+                text = " ".join(s["text"] for s in segs).strip()
             asr = time.time() - t0
 
+            # ---- WHERE THE SLATE ENDS ---------------------------------------
+            # These films open with a few seconds of slate and then Mitch says
+            # "Aloha". That word is the first frame of the actual film, so its
+            # timestamp is the trim point — and it has to come from the audio,
+            # because the slate is a different length every time and a fixed
+            # two-second cut would clip the greeting off some and leave dead air
+            # on others.
+            #
+            # The FIRST occurrence only. "Aloha" recurs mid-film in some scripts
+            # and the last thing wanted is a trim that removes half the lesson.
+            aloha_at = None
+            for s in segs[:6]:
+                if "aloha" in s["text"].lower():
+                    aloha_at = s["start"]
+                    break
+
             row = {"file": name, "seconds": round(info.duration, 1),
-                   "transcript": text, "words": len(text.split())}
+                   "transcript": text, "words": len(text.split()),
+                   "aloha_at": aloha_at, "segments": segs}
         except Exception as exc:  # noqa: BLE001 — one bad file must not end the run
             row = {"file": name, "error": str(exc)[:300], "transcript": ""}
             print(f"  {name}  FAILED: {exc}", file=sys.stderr, flush=True)
