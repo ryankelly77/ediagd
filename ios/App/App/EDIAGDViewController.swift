@@ -52,6 +52,17 @@ final class EDIAGDViewController: CAPBridgeViewController {
          *
          * Forward comes with it, which is correct — a back gesture that cannot
          * be undone is a worse deal than the one iOS ships.
+         *
+         * CONFIRMED WORKING on build 10, including for client-side routes. I
+         * had shipped this doubting whether the back/forward list includes
+         * same-document pushState entries, and briefly wrote a JavaScript
+         * handler on the assumption that it does not. It does. The doubt was
+         * worth stating and the replacement was not worth keeping — the system
+         * gesture renders the previous screen behind the thumb and cancels
+         * properly, and nothing written in JavaScript can do either.
+         *
+         * The only thing it needs from a person is knowing to start AT the
+         * edge, which is iOS's convention rather than ours.
          */
         bridge?.webView?.allowsBackForwardNavigationGestures = true
 
