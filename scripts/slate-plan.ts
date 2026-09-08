@@ -140,6 +140,51 @@ function parseSlate(slate: string): { title: string; voice: string | null } {
 }
 
 /**
+ * Names Whisper gets wrong, and the ones it gets right.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY A LIST AND NOT A CLEVERER MODEL
+ * ---------------------------------------------------------------------------
+ * Speech recognition is confident and wrong about proper nouns in a way it is
+ * not about ordinary words: "Hardt" comes back "Hart" every time, not
+ * sometimes. That is not noise to be smoothed, it is a fixed substitution, and
+ * a fixed substitution is fixed by a list.
+ *
+ * In Mitch's case it will never stop happening — the d is silent, so "Hart" is
+ * a correct transcription of what was said and no better model will ever
+ * decide otherwise. This entry is permanent, not a workaround for a weak
+ * model, and it belongs to every batch from here on.
+ *
+ * ONLY NAMES SOMEBODY HAS CONFIRMED OR THAT ARE UNAMBIGUOUS PUBLIC FIGURES.
+ * Ryan confirmed Mitch Hardt. The rest here are people whose names are a matter
+ * of record and whose quotes these are — Saban, Hormozi, Serhant, Swindoll,
+ * Tolkien, Gregorek, Inky Johnson. Anything I would be guessing at is left
+ * exactly as heard and reported, because a wrongly "corrected" attribution is
+ * worse than a transcription error: it looks authoritative.
+ */
+const NAME_FIXES: [RegExp, string][] = [
+  [/\bmitch\s+hart\b/i, "Mitch Hardt"],
+  [/\bcoach\s+hardt\b/i, "Coach Hardt"],
+  /* Bare, so the possessive is caught too: the slate says "Sabin's Three
+     Rules" as often as it says "by Nick Sabin". */
+  [/\bsabin\b/i, "Saban"],
+  [/\bnick\s+saban\b/i, "Nick Saban"],
+  [/\balex\s+herm[oa]si\b/i, "Alex Hormozi"],
+  [/\bcharles\s+swindle\b/i, "Charles Swindoll"],
+  [/\bryan\s+sirhant\b/i, "Ryan Serhant"],
+  [/\bjersey\s+gregorick\b/i, "Jerzy Gregorek"],
+  [/\bjrr\s+token\b/i, "J.R.R. Tolkien"],
+  [/\benki\s+johnson\b/i, "Inky Johnson"],
+];
+
+function fixNames(s: string | null): string | null {
+  if (!s) return s;
+  let out = s;
+  for (const [re, to] of NAME_FIXES) out = out.replace(re, to);
+  return out;
+}
+
+/**
  * Title Case in the library's own style, which is not the generic one.
  *
  * "Is" and "You" are CAPITALISED there — "Doubt Is a Strange Thing", "You Are
@@ -214,7 +259,9 @@ async function main() {
   const plan: Plan[] = [];
 
   for (const t of timings) {
-    const { title, voice } = parseSlate(t.slate);
+    const parsed = parseSlate(t.slate);
+    const title = fixNames(parsed.title) as string;
+    const voice = fixNames(parsed.voice);
     const base: Plan = {
       file: t.file, slate: t.slate, title, voice,
       alohaAt: t.aloha_at, action: "review", renameTo: null,
