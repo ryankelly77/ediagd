@@ -79,7 +79,25 @@ export default function RootLayout({
             __html:
               "html:not([data-launched='1']){background:#0c1c2c}" +
               "#ediagd-launch{position:fixed;inset:0;z-index:90;display:flex;" +
-              "align-items:center;justify-content:center;background:#0c1c2c}",
+              "align-items:center;justify-content:center;background:#0c1c2c;" +
+              "padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}" +
+              "html[data-launched='1'] #ediagd-launch{display:none}" +
+              "html[data-launch-leaving='1'] #ediagd-launch{opacity:0;pointer-events:none;transition:opacity 260ms ease-out}" +
+              ".ediagd-launch__stage{display:flex;flex-direction:column;align-items:center;gap:1.25rem}" +
+              ".ediagd-launch__mark{width:min(78vw,460px);height:auto}" +
+              "html:not([data-launch-go='1']) #ediagd-launch *{animation-play-state:paused!important}" +
+              "@media (prefers-reduced-motion:no-preference){" +
+              ".ediagd-launch__ring{opacity:0;transform-origin:48px 48px;animation:ediagd-ring 360ms cubic-bezier(.22,1,.36,1) 0ms both}" +
+              ".ediagd-launch__sun{animation:ediagd-sun 620ms cubic-bezier(.34,1.42,.64,1) 150ms both}" +
+              ".ediagd-launch__rays{transform-origin:60px 33px;animation:ediagd-rays 420ms cubic-bezier(.22,1,.36,1) 550ms both}" +
+              ".ediagd-launch__palm{transform-origin:80px 78px;animation:ediagd-palm-sway 620ms ease-in-out 700ms both}" +
+              ".ediagd-launch__swell--1{animation:ediagd-swell 460ms ease-in-out 600ms both}" +
+              ".ediagd-launch__swell--2{animation:ediagd-swell 460ms ease-in-out 700ms both}}" +
+              "@keyframes ediagd-ring{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}" +
+              "@keyframes ediagd-sun{from{opacity:0;transform:translateY(31px)}60%{opacity:1}to{opacity:1;transform:translateY(0)}}" +
+              "@keyframes ediagd-rays{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}" +
+              "@keyframes ediagd-palm-sway{0%{transform:rotate(0)}45%{transform:rotate(-2.5deg)}100%{transform:rotate(0)}}" +
+              "@keyframes ediagd-swell{0%{transform:translateY(0)}45%{transform:translateY(-2.5px)}100%{transform:translateY(0)}}",
           }}
         />
       </head>
@@ -112,39 +130,26 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html:
               "(function(){var d=document.documentElement;" +
-              // START THE SEQUENCE HERE TOO, not in the React effect. The
-              // keyframes are paused until data-launch-go, so the overlay
-              // painted a mark whose every element is still at its opening
-              // value — ring at zero opacity, sun below the horizon. That is
-              // an empty navy field, and it lasted for the whole hydration:
-              // 0.9s on a local server, longer on a phone over cellular.
-              // Releasing at first paint is the feature as specified — the
-              // animation plays DURING the fetch. The timestamp is left for
-              // the gate so its hold is measured from the first moving frame.
+              // START THE SEQUENCE HERE, not in the React effect.
+              //
+              // The keyframes are paused until data-launch-go, so until
+              // something sets it the overlay paints a mark with every element
+              // still at its opening value — ring at zero opacity, sun below
+              // the horizon. That is an empty navy field. Setting it here, as
+              // the body parses, is what makes the sequence start on the first
+              // painted frame instead of waiting for React to hydrate.
+              //
+              // The timestamp is left behind for the gate, so its hold is
+              // measured from the first moving frame rather than from whenever
+              // hydration happened to catch up.
               "if(d.dataset.launched!=='1'){d.dataset.launchGo='1';" +
               "window.__ediagdLaunchAt=performance.now()}" +
-              // Poll, do not try once. A single rAF fires before Capacitor has
-              // registered its plugin proxies, so the call threw and we silently
-              // fell back to the gate at hydration — measured 1.8s of blank navy.
-              // 40 tries at 25ms hides within a frame of the bridge being ready,
-              // and gives up after a second rather than spinning.
-                            "(function(){var d=document.documentElement;" +
-              // START THE SEQUENCE HERE, not in the React effect. The keyframes
-              // are paused until data-launch-go, so the overlay used to paint a
-              // mark with every element still at its opening value — ring at zero
-              // opacity, sun below the horizon. That is an empty navy field, and
-              // it lasted the whole hydration: 0.9s on a local server, longer on a
-              // phone. Releasing at first paint is the feature as specified — the
-              // animation plays DURING the fetch, not after it. The timestamp is
-              // left for the gate so its hold is measured from the first moving
-              // frame rather than from whenever React caught up.
-              "if(d.dataset.launched!=='1'){d.dataset.launchGo='1';" +
-              "window.__ediagdLaunchAt=performance.now()}" +
-              // And lift the native splash. Best-effort: the bridge may not have
-              // registered its plugin proxies this early, and the config's short
-              // launchShowDuration is the real floor. Never let a splash that
-              // will not hide stop the app being revealed.
-              "try{window.Capacitor.Plugins.SplashScreen.hide()}catch(e){}})();",
+              // And lift the native splash. Best-effort: the bridge may not
+              // have registered its plugin proxies this early, and the config's
+              // short launchShowDuration is the real floor. A splash that will
+              // not hide must never be able to strand the app.
+              "try{window.Capacitor.Plugins.SplashScreen.hide()}catch(e){}" +
+              "})();",
           }}
         />
         <LaunchScreenGate />
