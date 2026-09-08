@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PushToggle } from "@/components/notifications/PushToggle";
-import { loadPushPref } from "@/lib/notifications/push-prefs";
+import { hasLiveToken, loadPushPref } from "@/lib/notifications/push-prefs";
+import { PushSelfTest } from "@/components/notifications/PushSelfTest";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
@@ -68,8 +69,13 @@ export default async function ProfilePage() {
         .limit(100),
     ]);
 
-  /* Their own row, or the defaults for somebody who has never been asked. */
-  const pushPref = await loadPushPref(supabase, user.id);
+  /* Their own row, or the defaults for somebody who has never been asked, plus
+     whether there is a device to actually reach — the toggle needs to know
+     whether turning it on has to raise the iOS prompt first. */
+  const [pushPref, pushDevice] = await Promise.all([
+    loadPushPref(supabase, user.id),
+    hasLiveToken(supabase, user.id),
+  ]);
 
   const displayName = profile?.full_name ?? user.email ?? "Your account";
   const initial = displayName.trim()[0]?.toUpperCase() ?? "?";
@@ -225,7 +231,8 @@ export default async function ProfilePage() {
           turning it back on is instant and silent. */}
       <Card className="mt-3">
         <div className="p-5">
-          <PushToggle enabled={pushPref.pushEnabled} />
+          <PushToggle enabled={pushPref.pushEnabled} hasDevice={pushDevice} />
+          {profile?.is_platform_owner && <PushSelfTest />}
         </div>
       </Card>
 
