@@ -107,6 +107,13 @@ const mangled = {
 for (const [name, input] of Object.entries(mangled)) {
     check(name, (0, apns_1.normalisePrivateKey)(input), CANONICAL);
 }
+/*
+ * The envelope. This is the one that matters, because it is the only form that
+ * cannot be truncated into something that still looks like a key: a short PEM
+ * parses as a short PEM, whereas a short base64 blob fails to decode.
+ */
+check("a base64 envelope of the whole file", (0, apns_1.normalisePrivateKey)(Buffer.from(CANONICAL, "utf8").toString("base64")), CANONICAL);
+check("an envelope with line breaks in it", (0, apns_1.normalisePrivateKey)((Buffer.from(CANONICAL, "utf8").toString("base64").match(/.{1,40}/g) ?? []).join("\n")), CANONICAL);
 /* ---- The SQL half -------------------------------------------------------- */
 async function acceptance() {
     const url = process.env.SB_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;

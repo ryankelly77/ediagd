@@ -91,6 +91,34 @@ export type ApnsMessage = {
 export function normalisePrivateKey(raw: string): string {
   let key = raw.trim();
 
+  /*
+   * ---- A SINGLE-LINE ENVELOPE, BECAUSE MULTI-LINE PASTES GET TRUNCATED ----
+   *
+   * Reformatting fixed the shapes where the bytes survived and the layout did
+   * not. It cannot fix the case that actually happened: the variable arrived
+   * holding its header, its footer and fifteen characters of body. A multi-line
+   * secret crossing a text editor, a clipboard and a browser form has too many
+   * places to lose its middle, and no amount of re-wrapping recovers bytes that
+   * are not there.
+   *
+   * So the whole file may also be handed over base64-encoded — one line, no
+   * newlines to lose, and any truncation corrupts the decode instead of quietly
+   * producing a shorter key that looks plausible.
+   *
+   *   base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n' | pbcopy
+   *
+   * Detected rather than configured: if the value carries no BEGIN marker but
+   * decodes to something that does, it was the envelope.
+   */
+  if (!key.includes("-----BEGIN")) {
+    try {
+      const decoded = Buffer.from(key, "base64").toString("utf8");
+      if (decoded.includes("-----BEGIN")) key = decoded.trim();
+    } catch {
+      /* Not base64. Fall through and treat it as a bare key body. */
+    }
+  }
+
   /* Some shells and some paste targets keep the surrounding quotes. */
   if (
     (key.startsWith('"') && key.endsWith('"')) ||
@@ -233,6 +261,10 @@ export function describeApnsConfig(): Record<string, unknown> {
     keyHasHeader: cfg.key.includes("BEGIN PRIVATE KEY"),
     keyHasFooter: cfg.key.includes("END PRIVATE KEY"),
     keyLineCount: cfg.key.split("\n").length,
+    /* A P-256 .p8 lands around 241 characters. Anything far short of that is a
+       TRUNCATED value rather than a malformed one, and no reformatting can
+       recover it — so say which of the two it is. */
+    looksTruncated: cfg.key.length < 180,
     jwt: "token" in minted ? "minted ok" : minted.reason,
   };
 }
