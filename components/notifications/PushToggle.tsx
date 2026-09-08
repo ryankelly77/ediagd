@@ -47,10 +47,26 @@ export function PushToggle({
   /** A live token on file. False means turning on has to ask iOS first. */
   hasDevice: boolean;
 }) {
-  /* Optimistic: the switch moves under the thumb and the write follows. A
-     preference toggle that waits for a round trip on a phone with one bar
-     feels broken even when it is working. */
-  const [on, setOn] = useState(enabled);
+  /*
+   * ON MEANS "THIS WILL ACTUALLY ARRIVE", NOT "A COLUMN SAYS TRUE".
+   *
+   * push_enabled defaults to true, so for anybody who has never registered a
+   * device this switch rendered as already-on while nothing could possibly be
+   * delivered. That is a lie in itself, and it also created a dead end: the
+   * registration prompt fires on an off→on transition, and a switch that is
+   * already on has no transition to make. There was no route from "I want
+   * these" to "iOS has issued a token" — the only other path is the soft-ask
+   * card, which appears at most twice and only on the done-for-today screen.
+   *
+   * So a preference of true with no device on file reads as OFF, because
+   * functionally it IS off. Turning it on then does the thing the label
+   * promises: asks iOS, stores the token, and starts delivery.
+   *
+   * Optimistic, still: the switch moves under the thumb and the write follows.
+   * A preference toggle that waits for a round trip on a phone with one bar
+   * feels broken even when it is working.
+   */
+  const [on, setOn] = useState(enabled && hasDevice);
   const [registered, setRegistered] = useState(hasDevice);
   const [problem, setProblem] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -126,6 +142,16 @@ export function PushToggle({
       {problem && on && (
         <p className="mt-3 rounded-xl bg-navy/5 p-3 text-xs leading-relaxed text-navy/80">
           {problem}
+        </p>
+      )}
+
+      {/* No device yet, and the switch is off because of it. Say why, so the
+          state reads as a step to take rather than as a setting somebody has
+          already dealt with. */}
+      {!registered && !on && (
+        <p className="mt-3 text-xs leading-relaxed text-navy/60">
+          This iPhone isn&rsquo;t set up for reminders yet. Turn the switch on and
+          allow the prompt.
         </p>
       )}
     </div>
