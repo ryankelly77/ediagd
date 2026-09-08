@@ -652,12 +652,11 @@
    "title": "Hard Today, Easy Tomorrow",
    "voice": "Jersey Gregorik",
    "alohaAt": 8.66,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
+   "action": "reshoot",
+   "renameTo": "MINDSET — Choices — v2.mov",
    "matchTitle": "Choices",
    "matchFile": "MINDSET — Choices — v1.mov",
-   "score": 0.63
+   "score": 1
   },
   {
    "file": "IMG_2415.MOV",

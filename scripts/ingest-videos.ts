@@ -43,6 +43,7 @@
    ============================================================================ */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readdir, stat, readFile, copyFile, rm, mkdtemp, mkdir, rename } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -276,6 +277,39 @@ function parseName(file: string, knownVoices: Iterable<string> = SEED_VOICES): P
  */
 function identityOf(canonical: string): string {
   return canonical.replace(/\s*—\s*v\d+\.[a-z0-9]+$/i, "").trim().toLowerCase();
+}
+
+/**
+ * The cut point for a file, from the slate plan, keyed by its canonical name.
+ *
+ * Read lazily and tolerantly: a batch with no plan beside it — a hand-dropped
+ * file, an older folder — still ingests, it just ingests whole. The plan is an
+ * enhancement to this script, not a dependency of it.
+ */
+const SLATE_PLAN = "reports/slate-plan.json";
+let trims: Map<string, number> | null = null;
+
+function trimFor(canonicalFile: string): number | null {
+  if (!trims) {
+    trims = new Map();
+    try {
+      const raw = readFileSync(SLATE_PLAN, "utf8");
+      const plan = (JSON.parse(raw) as {
+        plan: { renameTo: string | null; alohaAt: number | null; action: string }[];
+      }).plan;
+      for (const p of plan) {
+        if (!p.renameTo || p.alohaAt == null || p.action === "review") continue;
+        /* The same lead-in trim:slates uses, and for the same reason: word
+           timings land fractionally inside the first phoneme, and a clipped
+           "loha" is the one thing a viewer notices instantly. */
+        const start = Number((p.alohaAt - 0.35).toFixed(2));
+        if (start > 0) trims.set(p.renameTo, start);
+      }
+    } catch {
+      /* No plan, no trims. */
+    }
+  }
+  return trims.get(canonicalFile) ?? null;
 }
 
 /** Run a child command, inheriting stdio so its own reporting is the reporting. */
@@ -608,13 +642,34 @@ async function main() {
    * itself gives for shelling out to derive:vertical.
    */
   for (const r of replacements) {
-    console.log(`  REPLACE  ${r.file}  v${r.from} -> v${r.to}  (content ${r.contentId.slice(0, 8)})`);
+    /*
+     * ---- A REPLACEMENT TRIMS ON THE WAY IN ---------------------------------
+     *
+     * Not afterwards. A reshoot lands on a row that is usually PUBLISHED, and
+     * replace:video swaps the master the moment the asset is ready — so an
+     * untrimmed swap puts the slate on an advisor's screen for however long the
+     * trim pass takes to reach it. On a batch this size that is hours.
+     *
+     * replace:video already trims BEFORE the swap when asked, so the cut is
+     * simply passed through and both formats are derived from the trimmed
+     * master. It is also cheaper: trimming afterwards means a second clip and a
+     * second encode of every one of these.
+     *
+     * A file with no cut point recorded goes in untrimmed rather than being
+     * held back — the slate is a blemish, a missing reshoot is a gap.
+     */
+    const cut = trimFor(r.file);
+    console.log(
+      `  REPLACE  ${r.file}  v${r.from} -> v${r.to}  (content ${r.contentId.slice(0, 8)})` +
+        (cut != null ? `  trim ${cut}s` : "  NO TRIM — no cut point on file")
+    );
     if (DRY) continue;
     try {
       await run("npm", [
         "run", "replace:video", "--",
         `--id=${r.contentId}`,
         `--file=${path.join(SRC, r.file)}`,
+        ...(cut != null ? [`--trim-start=${cut}`] : []),
       ]);
       done.push({ file: r.file, uploadId: `replaced:${r.contentId}` });
     } catch (e) {

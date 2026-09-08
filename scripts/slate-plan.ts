@@ -379,6 +379,25 @@ function library(mastersDir: string, collection: string): Row[] {
     });
 }
 
+/**
+ * Ryan's rulings, where the evidence could not decide.
+ *
+ * ---------------------------------------------------------------------------
+ * A RULING IS NOT A TUNING
+ * ---------------------------------------------------------------------------
+ * "Hard Today, Easy Tomorrow" is Jerzy Gregorek's line — "easy choices, hard
+ * life; hard choices, easy life" — and the shelf calls that film "Choices". No
+ * scorer reaches that: the slate and the title share nothing, and the film says
+ * "choices" once. Lowering a threshold until it matched would have dragged a
+ * dozen unrelated films over the line with it.
+ *
+ * So it is recorded as what it is — a person knowing something the transcript
+ * does not say — keyed by file, and applied before the scoring runs.
+ */
+const RULINGS: Record<string, string> = {
+  "IMG_2414.MOV": "MINDSET — Choices — v1.mov",
+};
+
 type Plan = {
   file: string;
   slate: string;
@@ -507,6 +526,17 @@ async function main() {
   const takenFile = new Set<string>();
   const takenRow = new Set<string>();
   const assigned = new Map<string, Cand>();
+
+  /* Rulings first, so a person's decision cannot be outbid by a score. */
+  for (const [file, canonical] of Object.entries(RULINGS)) {
+    const row = rows.find((r) => r.canonical_filename === canonical);
+    const t = timings.find((x) => x.file === file);
+    if (!row || !t) continue;
+    const p0 = parsed.get(file) ?? { title: "", voice: null };
+    takenFile.add(file);
+    takenRow.add(canonical);
+    assigned.set(file, { t, title: p0.title, voice: p0.voice, row, s: 1 });
+  }
 
   for (const c of pairs) {
     if (takenFile.has(c.t.file) || takenRow.has(c.row.canonical_filename)) continue;
