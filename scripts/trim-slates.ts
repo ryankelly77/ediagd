@@ -42,7 +42,7 @@
    retry.
    ============================================================================ */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from "node:fs";
 import { spawn } from "node:child_process";
 
 /*
@@ -62,6 +62,20 @@ import { spawn } from "node:child_process";
  */
 const PLAN = "reports/slate-plan.json";
 const LEDGER = "reports/slate-trims.json";
+/**
+ * One run at a time, enforced.
+ *
+ * The ledger stops a film being trimmed twice by SEPARATE runs. It cannot stop
+ * two CONCURRENT runs both picking the same film before either has written —
+ * and that is not theoretical: two overlapping runs cut "Have Patience with
+ * Yourself" twice, taking 14.5 seconds off a film whose slate was 7.3, and the
+ * result still plays. It just starts mid-sentence, which is the damage nobody
+ * reports.
+ *
+ * The lock holds the pid so a stale one from a killed run can be identified and
+ * cleared rather than becoming a permanent refusal.
+ */
+const LOCK = "reports/.trim-slates.lock";
 
 const args = process.argv.slice(2);
 const APPLY = args.includes("--apply");
@@ -112,6 +126,24 @@ function run(cmd: string, argv: string[]): Promise<void> {
 }
 
 async function main() {
+  if (existsSync(LOCK) && !args.includes("--force-unlock")) {
+    const held = readFileSync(LOCK, "utf8").trim();
+    const alive = (() => {
+      try { process.kill(Number(held), 0); return true; } catch { return false; }
+    })();
+    if (alive) {
+      console.error(`\n  another trim run is in progress (pid ${held}).\n` +
+        `  Two at once cut the same film twice — that has already happened once.\n`);
+      process.exit(1);
+    }
+    console.log(`  clearing a stale lock from pid ${held}\n`);
+  }
+  writeFileSync(LOCK, String(process.pid));
+  const release = () => { try { unlinkSync(LOCK); } catch { /* already gone */ } };
+  process.on("exit", release);
+  process.on("SIGINT", () => { release(); process.exit(130); });
+  process.on("SIGTERM", () => { release(); process.exit(143); });
+
   const url = process.env.SB_URL;
   const key = process.env.SB_KEY;
   if (!url || !key) {

@@ -181,6 +181,22 @@ async function archiveOldMaster(row: {
  */
 async function fileNewMaster(row: { collection: string | null }, from: string) {
   try {
+    /*
+     * ALREADY ON THE SHELF IS NOT A MOVE.
+     *
+     * The destination used to be derived as "the parent of the parent, plus
+     * 02 - Published" — right when the file comes from the Drop Zone and wrong
+     * when it comes from the shelf itself, which happens whenever a film is
+     * repaired from its own master. That produced
+     * "02 - Published/02 - Published/Mindset" and an ENOENT, and it did it
+     * AFTER archiveOldMaster had already moved the file, so the master ended up
+     * in 04 - Archive labelled "superseded by v2" when nothing had superseded
+     * it. Two wrong moves from one wrong assumption about where a file lives.
+     */
+    if (from.includes(`${path.sep}02 - Published${path.sep}`)) {
+      console.log(`\n  master is already on the shelf; left where it is`);
+      return;
+    }
     const shelf = path.join(
       path.dirname(path.dirname(from)),
       "02 - Published",
@@ -429,7 +445,14 @@ async function main() {
   /* Only a REPLACEMENT supersedes a master on the shelf. A trim produces a new
      Mux asset from one already ingested; the file in Drive is still the master
      it came from and archiving it would be a lie about what happened. */
-  if (!trimOnly) {
+  /*
+   * Nor is repairing a film from its own master a supersession. archiveOldMaster
+   * renames the shelf copy "(superseded by vN+1)" and moves it away, which is
+   * a lie when the replacement IS that file — and it leaves the shelf without
+   * the master it still needs.
+   */
+  const fromTheShelf = !trimOnly && file!.includes(`${path.sep}02 - Published${path.sep}`);
+  if (!trimOnly && !fromTheShelf) {
     await archiveOldMaster(row);
     await fileNewMaster(row, file!);
   }
