@@ -31,13 +31,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { isApnsConfigured, sendToTokens } from "@/lib/notifications/apns";
+import {
+  describeApnsConfig,
+  isApnsConfigured,
+  sendToTokens,
+} from "@/lib/notifications/apns";
 import { PUSH_COPY } from "@/lib/notifications/push-copy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+/* The default is ten seconds. A TLS handshake to Apple that never completes
+   would otherwise be killed mid-flight and answer with an empty 500, which is
+   the least informative failure this route can produce. */
+export const maxDuration = 30;
 
 export async function POST() {
+  try {
   const supabase = await createClient();
   const {
     data: { user },
@@ -97,6 +106,7 @@ export async function POST() {
   return NextResponse.json({
     ok: [...results.values()].some((r) => r.ok),
     devices: devices.length,
+    config: describeApnsConfig(),
     results: [...results.entries()].map(([token, r]) => ({
       device: token.slice(-6),
       ok: r.ok,
@@ -104,4 +114,24 @@ export async function POST() {
       reason: r.reason ?? null,
     })),
   });
+
+  /*
+   * NOTHING MAY ESCAPE THIS HANDLER.
+   *
+   * An unhandled throw in a Next route handler answers 500 with an empty body,
+   * and that is exactly what happened the first time this ran: a real, specific
+   * error about the signing key arrived at the phone as nothing at all. A
+   * diagnostic endpoint that can fail silently is worse than no endpoint,
+   * because it makes the configuration look fine.
+   */
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        reason: `Server error: ${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}`,
+        config: describeApnsConfig(),
+      },
+      { status: 200 }
+    );
+  }
 }

@@ -116,18 +116,70 @@ function sign(payload: object, header: object, privateKeyPem: string): string {
 
 let cached: { token: string; mintedAt: number } | null = null;
 
-function providerToken(): string | null {
+/**
+ * Mints the provider JWT, or explains why it cannot.
+ *
+ * Returns a reason instead of throwing because the throw was the bug: a
+ * malformed .p8 made createPrivateKey raise, the exception escaped the route
+ * handler, and Next answered with a 500 and an EMPTY BODY. From the outside
+ * that is indistinguishable from a crash, a timeout, or a bad deploy — the one
+ * failure this whole feature is most likely to hit was also the one it could
+ * say the least about.
+ */
+function providerToken(): { token: string } | { reason: string } {
   const cfg = config();
-  if (!cfg) return null;
-  if (cached && Date.now() - cached.mintedAt < TOKEN_TTL_MS) return cached.token;
+  if (!cfg) return { reason: "ApnsNotConfigured" };
+  if (cached && Date.now() - cached.mintedAt < TOKEN_TTL_MS) {
+    return { token: cached.token };
+  }
 
-  const token = sign(
-    { iss: cfg.teamId, iat: Math.floor(Date.now() / 1000) },
-    { alg: "ES256", kid: cfg.keyId },
-    cfg.key
-  );
-  cached = { token, mintedAt: Date.now() };
-  return token;
+  try {
+    const token = sign(
+      { iss: cfg.teamId, iat: Math.floor(Date.now() / 1000) },
+      { alg: "ES256", kid: cfg.keyId },
+      cfg.key
+    );
+    cached = { token, mintedAt: Date.now() };
+    return { token };
+  } catch (error) {
+    /* Almost always the key itself: pasted without its BEGIN/END lines, or
+       with the newlines flattened. Never include cfg.key in the message. */
+    return {
+      reason: `KeyRejected: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+/**
+ * What is configured, in terms safe to show on a screen.
+ *
+ * Deliberately reports SHAPE, never content: whether each variable is present,
+ * how long the key is, whether it has the PEM header and footer, and whether
+ * node:crypto will actually accept it. That is everything needed to diagnose a
+ * paste error and nothing that would leak the key.
+ */
+export function describeApnsConfig(): Record<string, unknown> {
+  const cfg = config();
+  if (!cfg) {
+    return {
+      configured: false,
+      APNS_KEY_ID: Boolean(process.env.APNS_KEY_ID),
+      APNS_TEAM_ID: Boolean(process.env.APNS_TEAM_ID),
+      APNS_KEY_P8: Boolean(process.env.APNS_KEY_P8),
+    };
+  }
+  const minted = providerToken();
+  return {
+    configured: true,
+    host: cfg.host,
+    keyIdLength: cfg.keyId.length,
+    teamId: cfg.teamId,
+    keyLength: cfg.key.length,
+    keyHasHeader: cfg.key.includes("BEGIN PRIVATE KEY"),
+    keyHasFooter: cfg.key.includes("END PRIVATE KEY"),
+    keyLineCount: cfg.key.split("\n").length,
+    jwt: "token" in minted ? "minted ok" : minted.reason,
+  };
 }
 
 /* ---- Sending -------------------------------------------------------------- */
@@ -149,14 +201,16 @@ export async function sendToTokens(
 ): Promise<Map<string, ApnsResult>> {
   const results = new Map<string, ApnsResult>();
   const cfg = config();
-  const jwt = providerToken();
+  const minted = providerToken();
 
-  if (!cfg || !jwt) {
-    for (const t of tokens) {
-      results.set(t, { ok: false, status: 0, reason: "ApnsNotConfigured" });
-    }
+  if (!cfg || !("token" in minted)) {
+    const reason = !cfg
+      ? "ApnsNotConfigured"
+      : (minted as { reason: string }).reason;
+    for (const t of tokens) results.set(t, { ok: false, status: 0, reason });
     return results;
   }
+  const jwt = minted.token;
   if (tokens.length === 0) return results;
 
   const payload = JSON.stringify({
