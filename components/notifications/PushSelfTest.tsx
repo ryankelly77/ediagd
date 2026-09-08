@@ -32,11 +32,48 @@ export function PushSelfTest() {
   async function send() {
     setBusy(true);
     setResult(null);
+
+    /*
+     * READ THE BODY AS TEXT FIRST, THEN PARSE.
+     *
+     * The first version did `await response.json()` inside a try and showed
+     * error.message, which turned every possible failure — a 500 returning an
+     * HTML error page, an empty body, a redirect to /login, a blocked request —
+     * into one indistinguishable sentence with no status code and no body. That
+     * is not a diagnostic, it is a shrug.
+     *
+     * An ABSOLUTE url, too. A relative fetch inside the shell resolves against
+     * whatever the webview currently considers its base, and this is the one
+     * button whose whole job is to be unambiguous about what failed.
+     */
+    const url = `${window.location.origin}/api/push/test`;
+    let status = 0;
     try {
-      const response = await fetch("/api/push/test", { method: "POST" });
-      setResult((await response.json()) as Result);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { accept: "application/json" },
+        /* Same-origin credentials explicitly: the route resolves the signed-in
+           user from the session cookie, and a request without it is a 401 that
+           looks like a bug. */
+        credentials: "same-origin",
+      });
+      status = response.status;
+      const raw = await response.text();
+
+      try {
+        setResult(JSON.parse(raw) as Result);
+      } catch {
+        setResult({
+          error: `HTTP ${status} — response was not JSON: ${raw.slice(0, 200) || "(empty body)"}`,
+        });
+      }
     } catch (error) {
-      setResult({ error: error instanceof Error ? error.message : "failed" });
+      setResult({
+        error:
+          `Request failed${status ? ` after HTTP ${status}` : ""} — ` +
+          (error instanceof Error ? `${error.name}: ${error.message}` : String(error)) +
+          ` (url: ${url})`,
+      });
     } finally {
       setBusy(false);
     }
