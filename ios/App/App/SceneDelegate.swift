@@ -8,8 +8,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = CAPBridgeViewController()
+        window?.rootViewController = EDIAGDViewController()
         window?.makeKeyAndVisible()
+
+        /*
+         * THE LAUNCH MARK, BEFORE THE WEBVIEW HAS ANYTHING.
+         *
+         * Presented on the window rather than inside the view controller, so it
+         * sits above the whole hierarchy including the Capacitor splash view.
+         * This runs when a scene CONNECTS, which is a cold start — a resume
+         * from the background never reaches here, so there is no overlay on
+         * resume and nothing to suppress.
+         *
+         * It dismisses on a signal from the web app, or at its own cap if that
+         * signal never comes. See LaunchOverlay.
+         */
+        if let window {
+            LaunchOverlay.shared.present(in: window)
+        }
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
     }
