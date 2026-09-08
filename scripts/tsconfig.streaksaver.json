@@ -9,12 +9,22 @@
     "skipLibCheck": true,
     "outDir": "../.tmp-ss",
     "baseUrl": "..",
-    "paths": { "@/*": ["./*"] },
-    "lib": ["ES2022", "DOM"],
-    "types": ["node"]
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "./streak-saver-scenarios.ts",
-    "../lib/notifications/push-prefs.ts"
+    "../lib/notifications/push-prefs.ts",
+    "../lib/notifications/apns.ts"
   ]
 }

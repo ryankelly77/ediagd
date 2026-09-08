@@ -1,3 +1,4 @@
+"use strict";
 /* ============================================================================
    EDIAGD — talking to Apple directly
 
@@ -27,35 +28,24 @@
    attached device is sandbox. Development is opt-in via APNS_SANDBOX, and the
    default is the one that is right for everybody Ryan will actually test with.
    ============================================================================ */
-
-import { createSign, createPrivateKey } from "node:crypto";
-import http2 from "node:http2";
-
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.APNS_TOPIC = void 0;
+exports.normalisePrivateKey = normalisePrivateKey;
+exports.isApnsConfigured = isApnsConfigured;
+exports.describeApnsConfig = describeApnsConfig;
+exports.sendToTokens = sendToTokens;
+exports.isDeadToken = isDeadToken;
+const node_crypto_1 = require("node:crypto");
+const node_http2_1 = __importDefault(require("node:http2"));
 const PRODUCTION_HOST = "https://api.push.apple.com";
 const SANDBOX_HOST = "https://api.sandbox.push.apple.com";
-
 /** The shell's bundle id. APNs calls this the topic. */
-export const APNS_TOPIC = "ai.ediagd.app";
-
+exports.APNS_TOPIC = "ai.ediagd.app";
 /** Apple rejects tokens older than an hour; renew with room to spare. */
 const TOKEN_TTL_MS = 45 * 60 * 1000;
-
-export type ApnsResult = {
-  ok: boolean;
-  status: number;
-  /** Apple's machine-readable reason, e.g. "Unregistered", "BadDeviceToken". */
-  reason?: string;
-  /** Apple's id for the delivery, for a support conversation with them. */
-  apnsId?: string;
-};
-
-export type ApnsMessage = {
-  title: string;
-  body: string;
-  /** In-app route the tap lands on. Read by the listener in lib/native/bridge. */
-  deepLink: string;
-};
-
 /**
  * The three secrets, read at call time rather than at module load.
  *
@@ -88,66 +78,53 @@ export type ApnsMessage = {
  * wrapped in quotes, one with CRLFs, and a bare base64 body with no header at
  * all — and produces the same bytes from all of them.
  */
-export function normalisePrivateKey(raw: string): string {
-  let key = raw.trim();
-
-  /* Some shells and some paste targets keep the surrounding quotes. */
-  if (
-    (key.startsWith('"') && key.endsWith('"')) ||
-    (key.startsWith("'") && key.endsWith("'"))
-  ) {
-    key = key.slice(1, -1);
-  }
-
-  key = key.replace(/\\r/g, "").replace(/\\n/g, "\n").replace(/\r/g, "");
-
-  /* Apple ships PKCS#8 ("PRIVATE KEY"), but read the label rather than assume
-     it — a key exported another way should fail on its contents, not because
-     this function guessed the wrong word. */
-  const label = key.match(/-----BEGIN ([A-Z0-9 ]+)-----/)?.[1] ?? "PRIVATE KEY";
-  const header = `-----BEGIN ${label}-----`;
-  const footer = `-----END ${label}-----`;
-
-  let body = key;
-  const start = key.indexOf(header);
-  const end = key.indexOf(footer);
-  if (start !== -1 && end !== -1) {
-    body = key.slice(start + header.length, end);
-  }
-
-  /* Everything that is not base64 is layout. */
-  body = body.replace(/[^A-Za-z0-9+/=]/g, "");
-  const wrapped = body.match(/.{1,64}/g) ?? [];
-
-  return `${header}\n${wrapped.join("\n")}\n${footer}\n`;
+function normalisePrivateKey(raw) {
+    let key = raw.trim();
+    /* Some shells and some paste targets keep the surrounding quotes. */
+    if ((key.startsWith('"') && key.endsWith('"')) ||
+        (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+    }
+    key = key.replace(/\\r/g, "").replace(/\\n/g, "\n").replace(/\r/g, "");
+    /* Apple ships PKCS#8 ("PRIVATE KEY"), but read the label rather than assume
+       it — a key exported another way should fail on its contents, not because
+       this function guessed the wrong word. */
+    const label = key.match(/-----BEGIN ([A-Z0-9 ]+)-----/)?.[1] ?? "PRIVATE KEY";
+    const header = `-----BEGIN ${label}-----`;
+    const footer = `-----END ${label}-----`;
+    let body = key;
+    const start = key.indexOf(header);
+    const end = key.indexOf(footer);
+    if (start !== -1 && end !== -1) {
+        body = key.slice(start + header.length, end);
+    }
+    /* Everything that is not base64 is layout. */
+    body = body.replace(/[^A-Za-z0-9+/=]/g, "");
+    const wrapped = body.match(/.{1,64}/g) ?? [];
+    return `${header}\n${wrapped.join("\n")}\n${footer}\n`;
 }
-
 function config() {
-  const keyId = process.env.APNS_KEY_ID?.trim();
-  const teamId = process.env.APNS_TEAM_ID?.trim();
-  const key = process.env.APNS_KEY_P8;
-  if (!keyId || !teamId || !key) return null;
-  return {
-    keyId,
-    teamId,
-    key: normalisePrivateKey(key),
-    host: process.env.APNS_SANDBOX === "1" ? SANDBOX_HOST : PRODUCTION_HOST,
-  };
+    const keyId = process.env.APNS_KEY_ID?.trim();
+    const teamId = process.env.APNS_TEAM_ID?.trim();
+    const key = process.env.APNS_KEY_P8;
+    if (!keyId || !teamId || !key)
+        return null;
+    return {
+        keyId,
+        teamId,
+        key: normalisePrivateKey(key),
+        host: process.env.APNS_SANDBOX === "1" ? SANDBOX_HOST : PRODUCTION_HOST,
+    };
 }
-
-export function isApnsConfigured(): boolean {
-  return config() !== null;
+function isApnsConfigured() {
+    return config() !== null;
 }
-
 /* ---- The JWT -------------------------------------------------------------- */
-
-const base64url = (input: Buffer | string) =>
-  Buffer.from(input)
+const base64url = (input) => Buffer.from(input)
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
-
 /**
  * ES256 signatures come out of OpenSSL as DER and JOSE wants the raw pair.
  *
@@ -156,21 +133,18 @@ const base64url = (input: Buffer | string) =>
  * option is easy to miss and the failure it prevents is a 403 InvalidProviderToken
  * with nothing to indicate the signature shape was the problem.
  */
-function sign(payload: object, header: object, privateKeyPem: string): string {
-  const signingInput =
-    `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(payload))}`;
-  const signer = createSign("SHA256");
-  signer.update(signingInput);
-  signer.end();
-  const signature = signer.sign({
-    key: createPrivateKey(privateKeyPem),
-    dsaEncoding: "ieee-p1363",
-  });
-  return `${signingInput}.${base64url(signature)}`;
+function sign(payload, header, privateKeyPem) {
+    const signingInput = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(payload))}`;
+    const signer = (0, node_crypto_1.createSign)("SHA256");
+    signer.update(signingInput);
+    signer.end();
+    const signature = signer.sign({
+        key: (0, node_crypto_1.createPrivateKey)(privateKeyPem),
+        dsaEncoding: "ieee-p1363",
+    });
+    return `${signingInput}.${base64url(signature)}`;
 }
-
-let cached: { token: string; mintedAt: number } | null = null;
-
+let cached = null;
 /**
  * Mints the provider JWT, or explains why it cannot.
  *
@@ -181,30 +155,26 @@ let cached: { token: string; mintedAt: number } | null = null;
  * failure this whole feature is most likely to hit was also the one it could
  * say the least about.
  */
-function providerToken(): { token: string } | { reason: string } {
-  const cfg = config();
-  if (!cfg) return { reason: "ApnsNotConfigured" };
-  if (cached && Date.now() - cached.mintedAt < TOKEN_TTL_MS) {
-    return { token: cached.token };
-  }
-
-  try {
-    const token = sign(
-      { iss: cfg.teamId, iat: Math.floor(Date.now() / 1000) },
-      { alg: "ES256", kid: cfg.keyId },
-      cfg.key
-    );
-    cached = { token, mintedAt: Date.now() };
-    return { token };
-  } catch (error) {
-    /* Almost always the key itself: pasted without its BEGIN/END lines, or
-       with the newlines flattened. Never include cfg.key in the message. */
-    return {
-      reason: `KeyRejected: ${error instanceof Error ? error.message : String(error)}`,
-    };
-  }
+function providerToken() {
+    const cfg = config();
+    if (!cfg)
+        return { reason: "ApnsNotConfigured" };
+    if (cached && Date.now() - cached.mintedAt < TOKEN_TTL_MS) {
+        return { token: cached.token };
+    }
+    try {
+        const token = sign({ iss: cfg.teamId, iat: Math.floor(Date.now() / 1000) }, { alg: "ES256", kid: cfg.keyId }, cfg.key);
+        cached = { token, mintedAt: Date.now() };
+        return { token };
+    }
+    catch (error) {
+        /* Almost always the key itself: pasted without its BEGIN/END lines, or
+           with the newlines flattened. Never include cfg.key in the message. */
+        return {
+            reason: `KeyRejected: ${error instanceof Error ? error.message : String(error)}`,
+        };
+    }
 }
-
 /**
  * What is configured, in terms safe to show on a screen.
  *
@@ -213,32 +183,30 @@ function providerToken(): { token: string } | { reason: string } {
  * node:crypto will actually accept it. That is everything needed to diagnose a
  * paste error and nothing that would leak the key.
  */
-export function describeApnsConfig(): Record<string, unknown> {
-  const cfg = config();
-  if (!cfg) {
+function describeApnsConfig() {
+    const cfg = config();
+    if (!cfg) {
+        return {
+            configured: false,
+            APNS_KEY_ID: Boolean(process.env.APNS_KEY_ID),
+            APNS_TEAM_ID: Boolean(process.env.APNS_TEAM_ID),
+            APNS_KEY_P8: Boolean(process.env.APNS_KEY_P8),
+        };
+    }
+    const minted = providerToken();
     return {
-      configured: false,
-      APNS_KEY_ID: Boolean(process.env.APNS_KEY_ID),
-      APNS_TEAM_ID: Boolean(process.env.APNS_TEAM_ID),
-      APNS_KEY_P8: Boolean(process.env.APNS_KEY_P8),
+        configured: true,
+        host: cfg.host,
+        keyIdLength: cfg.keyId.length,
+        teamId: cfg.teamId,
+        keyLength: cfg.key.length,
+        keyHasHeader: cfg.key.includes("BEGIN PRIVATE KEY"),
+        keyHasFooter: cfg.key.includes("END PRIVATE KEY"),
+        keyLineCount: cfg.key.split("\n").length,
+        jwt: "token" in minted ? "minted ok" : minted.reason,
     };
-  }
-  const minted = providerToken();
-  return {
-    configured: true,
-    host: cfg.host,
-    keyIdLength: cfg.keyId.length,
-    teamId: cfg.teamId,
-    keyLength: cfg.key.length,
-    keyHasHeader: cfg.key.includes("BEGIN PRIVATE KEY"),
-    keyHasFooter: cfg.key.includes("END PRIVATE KEY"),
-    keyLineCount: cfg.key.split("\n").length,
-    jwt: "token" in minted ? "minted ok" : minted.reason,
-  };
 }
-
 /* ---- Sending -------------------------------------------------------------- */
-
 /**
  * Send one message to many device tokens over a single HTTP/2 connection.
  *
@@ -250,60 +218,50 @@ export function describeApnsConfig(): Record<string, unknown> {
  * on the fourth; every device gets a result object and the caller decides what
  * to record. A rejected token is data, not an exception.
  */
-export async function sendToTokens(
-  tokens: string[],
-  message: ApnsMessage
-): Promise<Map<string, ApnsResult>> {
-  const results = new Map<string, ApnsResult>();
-  const cfg = config();
-  const minted = providerToken();
-
-  if (!cfg || !("token" in minted)) {
-    const reason = !cfg
-      ? "ApnsNotConfigured"
-      : (minted as { reason: string }).reason;
-    for (const t of tokens) results.set(t, { ok: false, status: 0, reason });
-    return results;
-  }
-  const jwt = minted.token;
-  if (tokens.length === 0) return results;
-
-  const payload = JSON.stringify({
-    aps: {
-      alert: { title: message.title, body: message.body },
-      sound: "default",
-    },
-    /* Read by pushNotificationActionPerformed in lib/native/bridge.ts. The key
-       matches what the generator writes in 0056. */
-    deep_link: message.deepLink,
-  });
-
-  const client = http2.connect(cfg.host);
-
-  /* A connection-level failure is every token's failure, not a thrown error. */
-  const connectionError = new Promise<Error | null>((resolve) => {
-    client.once("error", (err) => resolve(err));
-    client.once("connect", () => resolve(null));
-  });
-
-  const failed = await connectionError;
-  if (failed) {
-    client.close();
-    for (const t of tokens) {
-      results.set(t, { ok: false, status: 0, reason: `Connect: ${failed.message}` });
+async function sendToTokens(tokens, message) {
+    const results = new Map();
+    const cfg = config();
+    const minted = providerToken();
+    if (!cfg || !("token" in minted)) {
+        const reason = !cfg
+            ? "ApnsNotConfigured"
+            : minted.reason;
+        for (const t of tokens)
+            results.set(t, { ok: false, status: 0, reason });
+        return results;
     }
-    return results;
-  }
-
-  await Promise.all(
-    tokens.map(
-      (token) =>
-        new Promise<void>((resolve) => {
-          const req = client.request({
+    const jwt = minted.token;
+    if (tokens.length === 0)
+        return results;
+    const payload = JSON.stringify({
+        aps: {
+            alert: { title: message.title, body: message.body },
+            sound: "default",
+        },
+        /* Read by pushNotificationActionPerformed in lib/native/bridge.ts. The key
+           matches what the generator writes in 0056. */
+        deep_link: message.deepLink,
+    });
+    const client = node_http2_1.default.connect(cfg.host);
+    /* A connection-level failure is every token's failure, not a thrown error. */
+    const connectionError = new Promise((resolve) => {
+        client.once("error", (err) => resolve(err));
+        client.once("connect", () => resolve(null));
+    });
+    const failed = await connectionError;
+    if (failed) {
+        client.close();
+        for (const t of tokens) {
+            results.set(t, { ok: false, status: 0, reason: `Connect: ${failed.message}` });
+        }
+        return results;
+    }
+    await Promise.all(tokens.map((token) => new Promise((resolve) => {
+        const req = client.request({
             ":method": "POST",
             ":path": `/3/device/${token}`,
             authorization: `bearer ${jwt}`,
-            "apns-topic": APNS_TOPIC,
+            "apns-topic": exports.APNS_TOPIC,
             "apns-push-type": "alert",
             /* 10 = deliver now. This is a time-of-day message about today; at
                priority 5 iOS may hold it past the moment it is about. */
@@ -313,43 +271,37 @@ export async function sendToTokens(
                notification about a day that has already ended. */
             "apns-expiration": String(Math.floor(Date.now() / 1000) + 3600),
             "content-type": "application/json",
-          });
-
-          let status = 0;
-          let apnsId: string | undefined;
-          let raw = "";
-
-          req.on("response", (headers) => {
+        });
+        let status = 0;
+        let apnsId;
+        let raw = "";
+        req.on("response", (headers) => {
             status = Number(headers[":status"] ?? 0);
-            apnsId = headers["apns-id"] as string | undefined;
-          });
-          req.on("data", (chunk) => (raw += chunk));
-          req.on("end", () => {
-            let reason: string | undefined;
+            apnsId = headers["apns-id"];
+        });
+        req.on("data", (chunk) => (raw += chunk));
+        req.on("end", () => {
+            let reason;
             if (raw) {
-              try {
-                reason = (JSON.parse(raw) as { reason?: string }).reason;
-              } catch {
-                reason = raw.slice(0, 120);
-              }
+                try {
+                    reason = JSON.parse(raw).reason;
+                }
+                catch {
+                    reason = raw.slice(0, 120);
+                }
             }
             results.set(token, { ok: status === 200, status, reason, apnsId });
             resolve();
-          });
-          req.on("error", (err) => {
+        });
+        req.on("error", (err) => {
             results.set(token, { ok: false, status: 0, reason: err.message });
             resolve();
-          });
-
-          req.end(payload);
-        })
-    )
-  );
-
-  client.close();
-  return results;
+        });
+        req.end(payload);
+    })));
+    client.close();
+    return results;
 }
-
 /**
  * Is this response Apple telling us the device is gone for good?
  *
@@ -357,7 +309,8 @@ export async function sendToTokens(
  * cost somebody their token — retiring on a transient failure would silently
  * unsubscribe a working phone, and nothing in the product would ever say so.
  */
-export function isDeadToken(result: ApnsResult): boolean {
-  if (result.status === 410) return true;
-  return result.reason === "Unregistered" || result.reason === "BadDeviceToken";
+function isDeadToken(result) {
+    if (result.status === 410)
+        return true;
+    return result.reason === "Unregistered" || result.reason === "BadDeviceToken";
 }

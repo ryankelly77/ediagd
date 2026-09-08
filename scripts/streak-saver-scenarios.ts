@@ -19,6 +19,7 @@
      npm run test:streak-saver
    ============================================================================ */
 
+import { normalisePrivateKey } from "@/lib/notifications/apns";
 import {
   DEFAULT_PUSH_PREF,
   SECOND_ASK_STREAK,
@@ -120,6 +121,41 @@ check(
    OS dialog is the opt-in, so sends are on once a token exists. */
 check("a person with no row has been asked nothing", DEFAULT_PUSH_PREF.softAskCount, 0);
 check("and is not opted out by default", DEFAULT_PUSH_PREF.pushEnabled, true);
+
+/* ---- The signing key ----------------------------------------------------- */
+
+/*
+ * A .p8 does not survive being pasted. PEM is whitespace-significant, so a key
+ * whose newlines were flattened between a text editor, a clipboard and an
+ * environment variable is unparseable even though every character of the secret
+ * is intact — and OpenSSL's answer is `DECODER routines::unsupported`, which
+ * names neither the cause nor the fix. It cost a deploy cycle to find.
+ *
+ * The layout of a PEM carries no information, so it is regenerated rather than
+ * required. These are the shapes a paste actually produces; the round trip is
+ * proven against a real P-256 key in the harness that wrote this list.
+ */
+console.log("\n  THE SIGNING KEY SURVIVES BEING PASTED\n");
+
+const PEM_BODY =
+  "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg" +
+  "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKL=";
+const CANONICAL = `-----BEGIN PRIVATE KEY-----\n${PEM_BODY.slice(0, 64)}\n${PEM_BODY.slice(64)}\n-----END PRIVATE KEY-----\n`;
+
+const mangled: Record<string, string> = {
+  "a correct PEM is unchanged": CANONICAL,
+  "flattened onto one line": CANONICAL.replace(/\n/g, " "),
+  "flattened with no spaces": CANONICAL.replace(/\n/g, ""),
+  "escaped newline literals": CANONICAL.replace(/\n/g, "\\n"),
+  "CRLF line endings": CANONICAL.replace(/\n/g, "\r\n"),
+  "wrapped in quotes": `"${CANONICAL}"`,
+  "bare base64, no header": PEM_BODY,
+  "padded with blank lines": `\n\n  ${CANONICAL}  \n\n`,
+};
+
+for (const [name, input] of Object.entries(mangled)) {
+  check(name, normalisePrivateKey(input), CANONICAL);
+}
 
 /* ---- The SQL half -------------------------------------------------------- */
 

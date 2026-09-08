@@ -22,6 +22,7 @@ type Result = {
   reason?: string;
   devices?: number;
   results?: { device: string; ok: boolean; status: number; reason: string | null }[];
+  config?: Record<string, unknown>;
   error?: string;
 };
 
@@ -111,6 +112,15 @@ export function PushSelfTest() {
                 ))}
               </ul>
             </>
+          )}
+
+          {/* The key's SHAPE, never its content. This is what turns "Apple
+              refused every device" into a sentence somebody can act on, and
+              it is the difference between a diagnostic and a shrug. */}
+          {result.config && (
+            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all border-t border-navy/10 pt-2 text-[11px] leading-relaxed">
+              {JSON.stringify(result.config, null, 1)}
+            </pre>
           )}
         </div>
       )}
