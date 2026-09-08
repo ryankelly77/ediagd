@@ -298,8 +298,9 @@
   "startTime": 5.43
  },
  "5d710955-50bc-42ef-837f-79b4cebadb7b": {
-  "trimmedAt": "2026-09-08T22:03:24.271Z",
-  "startTime": 7.27
+  "trimmedAt": "2026-09-08T17:56:15.253754",
+  "startTime": 7.27,
+  "note": "repaired after a double cut; ledger written explicitly so no pass can take it again"
  },
  "85085368-78e0-499a-a1dc-d4e978d0ccf3": {
   "trimmedAt": "2026-09-08T22:05:49.571Z",
@@ -324,5 +325,37 @@
  "cb4c57bf-71b6-401c-bca7-8a664f1bb0cc": {
   "trimmedAt": "2026-09-08T22:22:01.272Z",
   "startTime": 4.31
+ },
+ "5eaeaf5b-8b32-4f55-9f11-b5091f3f57bf": {
+  "trimmedAt": "2026-09-08T22:24:58.998Z",
+  "startTime": 5.45
+ },
+ "1ca0f20a-1e26-46ff-8d46-a3290c905f87": {
+  "trimmedAt": "2026-09-08T22:28:04.273Z",
+  "startTime": 4.47
+ },
+ "2fa2e131-1135-4206-b846-c1b9e1434a4a": {
+  "trimmedAt": "2026-09-08T22:31:03.775Z",
+  "startTime": 6.27
+ },
+ "e6e53adf-5bad-4afb-bd96-11a7f6052f14": {
+  "trimmedAt": "2026-09-08T22:33:57.012Z",
+  "startTime": 3.51
+ },
+ "e89f11a4-bd83-4551-bd85-2fc93f0e13a8": {
+  "trimmedAt": "2026-09-08T22:36:14.045Z",
+  "startTime": 4.75
+ },
+ "b5ce203f-4539-4faa-9744-b7823ac112a9": {
+  "trimmedAt": "2026-09-08T22:38:59.245Z",
+  "startTime": 3.83
+ },
+ "434f020e-95bd-446e-9b53-d5ffd6c7961e": {
+  "trimmedAt": "2026-09-08T22:41:55.428Z",
+  "startTime": 5.03
+ },
+ "7fe42abc-6d77-4e60-8e7a-1e3428a02403": {
+  "trimmedAt": "2026-09-08T22:44:59.044Z",
+  "startTime": 6.37
  }
 }

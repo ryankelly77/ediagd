@@ -68,6 +68,96 @@ const ROUTES = {
 
 /* ---- Supabase: a session for the demo account -------------------------- */
 
+/**
+ * A real session, obtained by using the real login form.
+ *
+ * The first attempt used an admin-generated magic link and every route
+ * redirected to /login — because this app has NO auth callback route at all.
+ * It is password-only. A magic link had nowhere to land, so nine screens were
+ * audited as the login page.
+ *
+ * So: set a throwaway password on the demo account, then type it into the form
+ * Chrome is already sitting in front of. That way the app establishes its own
+ * cookies through its own code path, and this script does not have to know or
+ * guess the shape of a Supabase session cookie — a shape that would drift on
+ * the next dependency bump and fail silently in exactly this way again.
+ */
+async function signIn(send, sleep) {
+  const url = process.env.SB_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SB_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const want = WHO === "manager" ? "Demo Manager" : "Demo Advisor";
+
+  const rows = await (await fetch(
+    `${url}/rest/v1/app_user?select=id,full_name&full_name=eq.${encodeURIComponent(want)}`,
+    { headers: { apikey: key, authorization: `Bearer ${key}` } }
+  )).json();
+  if (!rows[0]) throw new Error(`no user called ${want}`);
+
+  const users = await (await fetch(`${url}/auth/v1/admin/users?per_page=200`, {
+    headers: { apikey: key, authorization: `Bearer ${key}` },
+  })).json();
+  const u = (users.users ?? []).find((x) => x.id === rows[0].id);
+  if (!u?.email) throw new Error(`${want} has no email on file`);
+
+  /* Random every run: a fixed one would be a credential living in the repo. */
+  const password = `audit-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+  const set = await fetch(`${url}/auth/v1/admin/users/${u.id}`, {
+    method: "PUT",
+    headers: { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  if (!set.ok) throw new Error(`could not set a password: ${(await set.text()).slice(0, 160)}`);
+  console.log(`  signing in as ${want} through the login form`);
+
+  await send("Page.navigate", { url: `${BASE}/login` });
+  await sleep(4000);
+
+  /* React owns these inputs, so the value has to go in through the native
+     setter and be announced, or the component never sees it. */
+  const fill = (selector, value) => `(() => {
+    const el = document.querySelector('${selector}');
+    if (!el) return 'missing ${selector}';
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(el, ${JSON.stringify(value)});
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    return 'ok';
+  })()`;
+
+  const a = await send("Runtime.evaluate", { expression: fill('input[type="email"]', u.email), returnByValue: true });
+  const b = await send("Runtime.evaluate", { expression: fill('input[type="password"]', password), returnByValue: true });
+  if (a.result.value !== "ok" || b.result.value !== "ok") {
+    throw new Error(`login form not as expected: ${a.result.value} / ${b.result.value}`);
+  }
+
+  /* There is no <form> here — the button carries an onClick — so submitting
+     the form finds nothing and a [type=submit] selector matches nothing. Find
+     it by what it says, which is the one thing that will not change silently. */
+  const clicked = await send("Runtime.evaluate", {
+    expression: `(() => {
+      const b = [...document.querySelectorAll('button')]
+        .find((x) => (x.textContent || '').trim().toLowerCase().startsWith('sign in'));
+      if (!b) return 'no sign-in button';
+      b.click();
+      return 'clicked';
+    })()`,
+    returnByValue: true,
+  });
+  if (clicked.result.value !== "clicked") throw new Error(clicked.result.value);
+  await sleep(9000);
+
+  const at = await send("Runtime.evaluate", { expression: "location.pathname", returnByValue: true });
+  if (at.result.value === "/login") {
+    /* Say WHY. The screen puts the reason on itself and reading it back is the
+       difference between a fix and another guess. */
+    const why = await send("Runtime.evaluate", {
+      expression: `(document.body.innerText || '').split('\\n').filter(Boolean).slice(0, 12).join(' | ')`,
+      returnByValue: true,
+    });
+    throw new Error(`still on /login — page says: ${why.result.value}`);
+  }
+  console.log(`  signed in, landed on ${at.result.value}`);
+}
+
 async function magicLink() {
   const url = process.env.SB_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SB_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -129,15 +219,39 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /* ---- The detector, run inside the page --------------------------------- */
 
 const DETECT = `(() => {
-  const out = { clipped: [], spilling: [], pageWide: 0 };
+  /*
+   * THREE FAILURES, NOT ONE, because they need different fixes.
+   *
+   *   TRUNCATED  the text is ellipsised — a .truncate that fitted at 100% and
+   *              does not at 125%. Handled gracefully and still information
+   *              lost, which on a tagline is cosmetic and on a film title is
+   *              not.
+   *   CLIPPED    overflow hidden with no ellipsis: words simply vanish, and
+   *              the screen still looks composed.
+   *   SPILLING   content genuinely wider than its box, overlapping or cut.
+   *
+   * Two exclusions, both learned from the first run reporting today's shipping
+   * state as broken:
+   *   - under 8px is rounding, not a layout failure
+   *   - a box overflowed only by an ABSOLUTELY POSITIONED child is decorative
+   *     bleed, which is what .ediagd-hero's motif does on purpose
+   */
+  const out = { truncated: [], clipped: [], spilling: [], pageWide: 0 };
   const de = document.documentElement;
   out.pageWide = Math.max(0, de.scrollWidth - de.clientWidth);
+  const SLOP = 8;
 
   const describe = (el) => {
-    const t = (el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 70);
-    const cls = typeof el.className === "string" ? el.className.slice(0, 60) : "";
-    return el.tagName.toLowerCase() + (cls ? "." + cls.split(" ").slice(0, 3).join(".") : "") + (t ? "  “" + t + "”" : "");
+    const t = (el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 60);
+    const cls = typeof el.className === "string" ? el.className.split(" ").slice(0, 3).join(".") : "";
+    return el.tagName.toLowerCase() + (cls ? "." + cls : "") + (t ? '  "' + t + '"' : "");
   };
+
+  const decorative = (el) =>
+    [...el.children].some((c) => {
+      const p = getComputedStyle(c).position;
+      return p === "absolute" || p === "fixed";
+    });
 
   for (const el of document.querySelectorAll("body *")) {
     const cs = getComputedStyle(el);
@@ -146,24 +260,28 @@ const DETECT = `(() => {
     const hiddenY = cs.overflowY === "hidden" || cs.overflow === "hidden";
     const hiddenX = cs.overflowX === "hidden" || cs.overflow === "hidden";
     const scrollsX = cs.overflowX === "auto" || cs.overflowX === "scroll";
+    const overW = el.scrollWidth - el.clientWidth;
+    const overH = el.scrollHeight - el.clientHeight;
 
-    // Text taller than its box, with nowhere to go.
-    if (hiddenY && el.scrollHeight > el.clientHeight + 2 && el.children.length < 12) {
-      out.clipped.push(describe(el) + "  [" + el.clientHeight + "px box, " + el.scrollHeight + "px of content]");
+    if (cs.textOverflow === "ellipsis" && overW > 1) {
+      out.truncated.push(describe(el) + "  [" + el.clientWidth + "px box, " + el.scrollWidth + "px of text]");
+      continue;
     }
-    // Content wider than its box, and the box is not a deliberate scroller.
-    if (!scrollsX && el.scrollWidth > el.clientWidth + 2 && (hiddenX || cs.overflowX === "visible")) {
+    if (hiddenY && overH > SLOP && el.children.length < 12) {
+      out.clipped.push(describe(el) + "  [" + el.clientHeight + "px box, " + el.scrollHeight + "px of content]");
+      continue;
+    }
+    if (!scrollsX && overW > SLOP && (hiddenX || cs.overflowX === "visible") && !decorative(el)) {
       out.spilling.push(describe(el) + "  [" + el.clientWidth + "px box, " + el.scrollWidth + "px of content]");
     }
   }
-  out.clipped = [...new Set(out.clipped)].slice(0, 6);
-  out.spilling = [...new Set(out.spilling)].slice(0, 6);
+  out.truncated = [...new Set(out.truncated)].slice(0, 8);
+  out.clipped = [...new Set(out.clipped)].slice(0, 8);
+  out.spilling = [...new Set(out.spilling)].slice(0, 8);
   return JSON.stringify(out);
 })()`;
 
 async function main() {
-  const link = await magicLink();
-
   const chrome = spawn(CHROME, [
     `--remote-debugging-port=${PORT}`,
     "--headless=new",
@@ -174,8 +292,20 @@ async function main() {
     "about:blank",
   ], { stdio: "ignore" });
 
-  await sleep(2500);
-  const targets = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
+  /* Poll rather than guess. The first run of this failed with a bare "fetch
+     failed" because it assumed Chrome would be listening in 2.5 seconds and it
+     was not — a fixed sleep is a race dressed up as a delay. */
+  let targets = null;
+  for (let i = 0; i < 40; i++) {
+    try {
+      targets = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
+      if (targets.some((t) => t.type === "page")) break;
+    } catch {
+      /* not up yet */
+    }
+    await sleep(500);
+  }
+  if (!targets) throw new Error(`Chrome never opened a debugger on ${PORT}`);
   const page = targets.find((t) => t.type === "page");
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((r) => ws.addEventListener("open", r));
@@ -187,9 +317,7 @@ async function main() {
     width: 402, height: 874, deviceScaleFactor: 2, mobile: true,
   });
 
-  console.log("  authenticating…");
-  await send("Page.navigate", { url: link });
-  await sleep(6000);
+  await signIn(send, sleep);
 
   const results = [];
   if (SHOT && !existsSync("reports/larger-text")) mkdirSync("reports/larger-text", { recursive: true });
@@ -203,6 +331,18 @@ async function main() {
       });
       await sleep(1200);
 
+      /*
+       * WHERE DID WE ACTUALLY LAND? The first run reported identical failures
+       * on nine different routes, which is not nine coincidences — it is one
+       * page measured nine times. Every route had redirected to /login because
+       * the session never took. An audit that cannot tell you what it looked
+       * at is worse than no audit: it produces a table.
+       */
+      const where = await send("Runtime.evaluate", {
+        expression: "location.pathname", returnByValue: true,
+      });
+      const landed = where.result.value;
+
       let data;
       try {
         const r = await send("Runtime.evaluate", { expression: DETECT, returnByValue: true });
@@ -210,11 +350,17 @@ async function main() {
       } catch (e) {
         data = { clipped: [], spilling: [], pageWide: 0, error: String(e).slice(0, 120) };
       }
+      data.landed = landed;
+      if (landed !== route) {
+        console.log(`  SKIP   ${scale.label.padEnd(5)} ${route.padEnd(30)} redirected to ${landed}`);
+        results.push({ route, scale: scale.label, ...data, broken: 0, skipped: true });
+        continue;
+      }
 
-      const broken = data.clipped.length + data.spilling.length + (data.pageWide > 1 ? 1 : 0);
+      const broken = data.truncated.length + data.clipped.length + data.spilling.length + (data.pageWide > 1 ? 1 : 0);
       results.push({ route, scale: scale.label, ...data, broken });
       const flag = broken === 0 ? "ok  " : "BREAKS";
-      console.log(`  ${flag}  ${scale.label.padEnd(5)} ${route.padEnd(30)} clipped ${data.clipped.length}, spilling ${data.spilling.length}, page +${data.pageWide}px`);
+      console.log(`  ${flag}  ${scale.label.padEnd(5)} ${route.padEnd(26)} truncated ${data.truncated.length}, clipped ${data.clipped.length}, spilling ${data.spilling.length}, page +${data.pageWide}px`);
 
       if (SHOT && broken) {
         const shot = await send("Page.captureScreenshot", { format: "png" });

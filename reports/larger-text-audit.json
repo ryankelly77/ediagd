@@ -1,0 +1,484 @@
+{
+ "base": "https://app.ediagd.ai",
+ "who": "advisor",
+ "results": [
+  {
+   "route": "/today",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 0
+  },
+  {
+   "route": "/today",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 2
+  },
+  {
+   "route": "/today",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 2
+  },
+  {
+   "route": "/today",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 2
+  },
+  {
+   "route": "/advisor",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/advisor",
+   "broken": 0
+  },
+  {
+   "route": "/advisor",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/advisor",
+   "broken": 2
+  },
+  {
+   "route": "/advisor",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [
+    "div  \"ELR$175.36\"  [85px box, 108px of content]",
+    "dd.ediagd-numeral.mt-1.text-xl  \"$175.36\"  [85px box, 108px of content]"
+   ],
+   "pageWide": 0,
+   "landed": "/advisor",
+   "broken": 4
+  },
+  {
+   "route": "/advisor",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [
+    "main.mx-auto.max-w-app.px-4  \"Aloha, DemoHere are your numbersDoggett Chrysler Dodge Jeep \"  [402px box, 443px of content]",
+    "div  \"ELR$175.36\"  [75px box, 145px of content]",
+    "dd.ediagd-numeral.mt-1.text-xl  \"$175.36\"  [75px box, 145px of content]",
+    "div  \"Labor GP70.8%\"  [75px box, 118px of content]",
+    "dd.ediagd-numeral.mt-1.text-xl  \"70.8%\"  [75px box, 118px of content]",
+    "section.mt-8  \"Your servicesHVACPursue›FiltersClose›Tires & RotationClose›D\"  [338px box, 411px of content]",
+    "div.ediagd-card.mt-3.px-4  \"HVACPursue›FiltersClose›Tires & RotationClose›DifferentialCl\"  [336px box, 410px of content]",
+    "ul.divide-y.divide-line  \"HVACPursue›FiltersClose›Tires & RotationClose›DifferentialCl\"  [272px box, 378px of content]"
+   ],
+   "pageWide": 42,
+   "landed": "/advisor",
+   "broken": 11
+  },
+  {
+   "route": "/streak",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 0
+  },
+  {
+   "route": "/streak",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 2
+  },
+  {
+   "route": "/streak",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 2
+  },
+  {
+   "route": "/streak",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [
+    "div.mt-4.grid.grid-cols-2  \"Longest Swell1 daysSand Dollars›00 earned all time\"  [338px box, 358px of content]",
+    "p.text-xs.font-bold.uppercase  \"Longest Swell\"  [91px box, 119px of content]",
+    "p.mt-1.text-2xl.font-extrabold  \"1 days\"  [91px box, 108px of content]",
+    "div.rounded-card.border.border-line  \"Sand Dollars›00 earned all time\"  [155px box, 176px of content]",
+    "a.block.h-full.p-4  \"Sand Dollars›00 earned all time\"  [155px box, 176px of content]",
+    "span.flex.items-center.gap-2  \"Sand Dollars›\"  [91px box, 144px of content]"
+   ],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 8
+  },
+  {
+   "route": "/library",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 0
+  },
+  {
+   "route": "/library",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]",
+    "span.block.truncate.text-base  \"The Multi-Point Inspection\"  [234px box, 252px of text]",
+    "span.block.truncate.text-base  \"The MOC Warranty Program\"  [234px box, 269px of text]",
+    "span.block.truncate.text-base  \"Six-Step Advanced Selling\"  [234px box, 251px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 5
+  },
+  {
+   "route": "/library",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]",
+    "span.block.truncate.text-base  \"The Multi-Point Inspection\"  [201px box, 302px of text]",
+    "span.block.truncate.text-base  \"Objection Handling\"  [201px box, 220px of text]",
+    "span.block.truncate.text-base  \"The Success Cycle\"  [201px box, 217px of text]",
+    "span.block.truncate.text-base  \"The MOC Warranty Program\"  [201px box, 323px of text]",
+    "span.block.truncate.text-base  \"Six-Step Advanced Selling\"  [201px box, 301px of text]",
+    "span.block.truncate.text-base  \"Mindset & Philosophy\"  [201px box, 248px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 8
+  },
+  {
+   "route": "/library",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]",
+    "span.block.truncate.text-base  \"The Multi-Point Inspection\"  [135px box, 403px of text]",
+    "span.block.truncate.text-base  \"Start Here\"  [135px box, 155px of text]",
+    "span.block.truncate.text-base  \"Objection Handling\"  [135px box, 293px of text]",
+    "span.block.truncate.text-base  \"Active Delivery\"  [135px box, 226px of text]",
+    "span.block.truncate.text-base  \"The Success Cycle\"  [135px box, 289px of text]",
+    "span.block.truncate.text-base  \"The 4-Step Close\"  [135px box, 263px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 8
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 0
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 2
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 2
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 2
+  },
+  {
+   "route": "/swag",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 0
+  },
+  {
+   "route": "/swag",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 2
+  },
+  {
+   "route": "/swag",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 2
+  },
+  {
+   "route": "/swag",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 2
+  },
+  {
+   "route": "/profile",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 0
+  },
+  {
+   "route": "/profile",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 2
+  },
+  {
+   "route": "/profile",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]",
+    "p.truncate.text-sm.text-ink-soft  \"demo.advisor@ediagd.test\"  [184px box, 250px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 3
+  },
+  {
+   "route": "/profile",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]",
+    "p.truncate.text-lg.font-extrabold  \"Demo Advisor\"  [112px box, 242px of text]",
+    "p.truncate.text-sm.text-ink-soft  \"demo.advisor@ediagd.test\"  [112px box, 333px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 4
+  },
+  {
+   "route": "/notifications",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 0
+  },
+  {
+   "route": "/notifications",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 2
+  },
+  {
+   "route": "/notifications",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 2
+  },
+  {
+   "route": "/notifications",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 2
+  },
+  {
+   "route": "/island-time",
+   "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 0
+  },
+  {
+   "route": "/island-time",
+   "scale": "125%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [102px box, 116px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [102px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 2
+  },
+  {
+   "route": "/island-time",
+   "scale": "150%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [45px box, 139px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [45px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 2
+  },
+  {
+   "route": "/island-time",
+   "scale": "200%",
+   "truncated": [
+    "span.block.truncate.font-display  \"EDIAGD\"  [0px box, 185px of text]",
+    "span.mt-[3px].block.truncate  \"Every Day Is A Great Day\"  [0px box, 129px of text]"
+   ],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 2
+  }
+ ]
+}
