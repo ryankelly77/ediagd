@@ -16,6 +16,7 @@ import {
 } from "@/app/(app)/daily/actions";
 import { BadgeCelebration } from "./BadgeCelebration";
 import { MILESTONES } from "@/lib/gamification/streak";
+import { SoftAsk } from "@/components/notifications/SoftAsk";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
@@ -85,8 +86,19 @@ export function DailyFlow({
   videoThreshold,
   restDay = null,
   nextWorkDayLabel = "",
+  offerSoftAsk = false,
 }: {
   alreadyCompleteOnLoad: boolean;
+  /**
+   * Put the notification soft-ask on the "done for today" screen.
+   *
+   * Server-decided (lib/notifications/push-prefs.ts) because the two-ask budget
+   * is a fact about a person rather than about a browser. Deliberately NOT on
+   * the celebration that immediately follows the ritual: that screen is the
+   * payoff, and a permission request stapled to a reward is the pattern this
+   * whole flow is written to avoid.
+   */
+  offerSoftAsk?: boolean;
   currentStreak: number;
   today: string;
   greetingName: string;
@@ -312,7 +324,9 @@ export function DailyFlow({
   // Terminal screen: they've already done today. It WAITS — nothing here
   // navigates on its own.
   if (doneOnArrival && !ritualRun && !preview) {
-    return immersive(<DoneForTodayScreen streak={currentStreak} />);
+    return immersive(
+      <DoneForTodayScreen streak={currentStreak} offerSoftAsk={offerSoftAsk} />
+    );
   }
 
   /*
@@ -1516,7 +1530,13 @@ function LeaveConfirm({
  * Shown when the ritual is already complete for today. Deliberately has NO
  * auto-navigation — /today never moves the user off a screen they're reading.
  */
-function DoneForTodayScreen({ streak }: { streak: number }) {
+function DoneForTodayScreen({
+  streak,
+  offerSoftAsk = false,
+}: {
+  streak: number;
+  offerSoftAsk?: boolean;
+}) {
   const router = useRouter();
   return (
     <main className="min-h-screen bg-cream">
@@ -1535,6 +1555,15 @@ function DoneForTodayScreen({ streak }: { streak: number }) {
         <p className="mt-3 text-base leading-relaxed text-ink-soft">
           Come back tomorrow to keep it rolling.
         </p>
+
+        {/* Below the streak, above the sign-off: they have just seen what the
+            number is, which is the only argument the card has. Renders nothing
+            outside the native shell. */}
+        {offerSoftAsk && (
+          <div className="mt-8 text-left">
+            <SoftAsk />
+          </div>
+        )}
 
         <p
           className="mt-8 text-4xl text-teal"

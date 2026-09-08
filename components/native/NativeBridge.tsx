@@ -64,11 +64,18 @@ export function NativeBridge() {
        * on the drive should never see an error toast because a token round-trip
        * lost a race with a network handover.
        */
-      /* DORMANT. See PUSH_ENABLED in lib/native/bridge.ts — the plugin is in
-         the binary so notifications later need no new build, but nothing here
-         may prompt, register or listen until that flag flips. */
       if (!PUSH_ENABLED) return;
 
+      /*
+       * NO PROMPT ON LAUNCH. This resumes an existing grant — attaching the tap
+       * listener and refreshing a rotated token — and returns "not_asked"
+       * without showing anything if permission has never been given.
+       *
+       * The iOS dialog is one-shot, so it belongs behind the soft-ask card in
+       * components/notifications/SoftAsk.tsx, at a moment we have chosen and
+       * explained. Firing it here would spend it on whatever moment the app
+       * happened to be opened.
+       */
       const result = await registerForPush(
         async (token, platform) => {
           const { error } = await supabaseAuth.rpc("register_push_token", {
@@ -77,7 +84,8 @@ export function NativeBridge() {
           });
           if (error) console.error("[ediagd] register_push_token", error.message);
         },
-        go
+        go,
+        { prompt: false }
       );
 
       if (result === "denied") {

@@ -62,15 +62,32 @@ type Navigate = (route: string) => void;
  * notifications are actually built it is web plus server work against a shell
  * that already has the capability.
  *
- * Turning it on: set this true and deploy. Nothing else here changes — the
- * whole registration path below is already written and tested.
+ * AWAKE AS OF THE STREAK SAVER. The dormancy above is the history of this
+ * constant, kept because it explains why the whole path below was written
+ * months before anything used it.
  */
-export const PUSH_ENABLED = false;
+export const PUSH_ENABLED = true;
 
+/**
+ * ASKING AND REGISTERING ARE NOT THE SAME ACT, and separating them is the
+ * entire permission design.
+ *
+ * iOS shows its notification dialog ONCE per install. Calling this on every
+ * launch — which is what the original single function did — would fire that
+ * one-shot dialog at whatever moment the app happened to open, cold, with no
+ * explanation in front of it. A "no" there is permanent.
+ *
+ *   prompt: false  the launch path. Resumes an EXISTING grant silently, so a
+ *                  rotated token still reaches us, and does nothing at all if
+ *                  permission has never been given. Never raises a dialog.
+ *   prompt: true   called only from the soft-ask card, after somebody has said
+ *                  yes to our own card in our own words.
+ */
 export async function registerForPush(
   onToken: TokenSink,
-  onOpen: Navigate
-): Promise<"granted" | "denied" | "unavailable"> {
+  onOpen: Navigate,
+  options: { prompt?: boolean } = {}
+): Promise<"granted" | "denied" | "unavailable" | "not_asked"> {
   /* The flag is checked HERE as well as at the call site: a plugin that can
      raise an OS permission prompt should not rely on every future caller
      remembering to ask first. */
@@ -86,6 +103,8 @@ export async function registerForPush(
   const existing = await PushNotifications.checkPermissions();
   let status = existing.receive;
   if (status === "prompt" || status === "prompt-with-rationale") {
+    /* The one-shot dialog. Only from the soft-ask. */
+    if (!options.prompt) return "not_asked";
     status = (await PushNotifications.requestPermissions()).receive;
   }
   if (status !== "granted") return "denied";

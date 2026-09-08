@@ -20,6 +20,11 @@ import {
 } from "@/lib/work-schedule";
 import { mintDayStamp } from "@/lib/day-stamp";
 import { firstName } from "@/lib/advisor";
+import {
+  hasLiveToken,
+  loadPushPref,
+  shouldOfferSoftAsk,
+} from "@/lib/notifications/push-prefs";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
 import { TechnicianDay } from "@/components/daily/TechnicianDay";
@@ -28,8 +33,13 @@ import type { IsoDate } from "@/lib/gamification/streak";
 export default async function TodayPage({
   searchParams,
 }: {
-  searchParams: Promise<{ preview?: string }>;
+  searchParams: Promise<{ preview?: string; opened_via?: string }>;
 }) {
+  /* Awaited once, at the top: the attribution param is read long before the
+     preview flag is, and two awaits of the same promise is two chances to
+     drift. */
+  const params = await searchParams;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -128,6 +138,52 @@ export default async function TodayPage({
     .eq("user_id", user.id)
     .maybeSingle();
   const currentStreak = Number(swellRow?.current_len ?? 0);
+
+  /*
+   * ---- THE STREAK SAVER LANDED -------------------------------------------
+   *
+   * The push carries ?opened_via=streak_saver, which is the only thing that
+   * separates "they opened the app at 7:04pm" from "they opened the app
+   * because we asked them to". Stamped here rather than in a client effect so
+   * it happens on the render the link caused, once, before anything can
+   * navigate away.
+   *
+   * Idempotent in SQL and scoped to the caller's own row, so a refresh, a
+   * double tap or a back-and-forward cannot inflate the number.
+   */
+  if (params.opened_via === "streak_saver") {
+    await supabase.rpc("mark_push_opened", { _kind: "streak_keeper" });
+  }
+
+  /*
+   * ---- SHOULD WE ASK ABOUT NOTIFICATIONS? --------------------------------
+   *
+   * Decided on the server because the two-ask budget belongs to the person,
+   * not the handset — see lib/notifications/push-prefs.ts. The card itself
+   * adds the last condition, which only the client can answer: is this the
+   * native shell.
+   *
+   * Skipped entirely for anybody who already has a live device on file. They
+   * have been through the dialog; asking again would be asking a question we
+   * already have the answer to.
+   */
+  const [pushPref, alreadyRegistered, completionCount] = await Promise.all([
+    loadPushPref(supabase, user.id),
+    hasLiveToken(supabase, user.id),
+    supabase
+      .from("daily_completion")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then((r: { count: number | null }) => r.count ?? 0),
+  ]);
+
+  const offerSoftAsk =
+    !alreadyRegistered &&
+    shouldOfferSoftAsk({
+      completions: completionCount,
+      streak: currentStreak,
+      pref: pushPref,
+    });
 
   /*
    * ---- IS TODAY A DAY THEY WERE ASKED TO WORK? ---------------------------
@@ -298,9 +354,8 @@ export default async function TodayPage({
   // written, the "already done today" screen is skipped, and it can be run as
   // often as you like. Admins only — for anyone else the flag is ignored, so
   // it can never be used to fake a completion.
-  const { preview: previewParam } = await searchParams;
   const isPreview =
-    previewParam === "1" && (await isAdminViewer(supabase, user.id));
+    params.preview === "1" && (await isAdminViewer(supabase, user.id));
 
   let previewResult = null;
   if (isPreview) {
@@ -338,6 +393,7 @@ export default async function TodayPage({
       lifestyle={lifestyle}
       videoThreshold={videoThreshold}
       alreadyCompleteOnLoad={alreadyCompleteOnLoad}
+      offerSoftAsk={offerSoftAsk}
       /*
        * A rest day opens as a card, not a ritual. The whole day is still
        * assembled above and handed down — the quote, the video, the stamp — so

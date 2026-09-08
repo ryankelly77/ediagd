@@ -1,0 +1,20 @@
+{
+  "//": "Standalone build for streak-saver-scenarios.ts. It imports the REAL push-prefs module through the @/ alias, because a paraphrase of the two-ask budget would prove nothing about the budget the app actually enforces.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-ss",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./streak-saver-scenarios.ts",
+    "../lib/notifications/push-prefs.ts"
+  ]
+}

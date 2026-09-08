@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PushToggle } from "@/components/notifications/PushToggle";
+import { loadPushPref } from "@/lib/notifications/push-prefs";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
@@ -65,6 +67,9 @@ export default async function ProfilePage() {
         .order("start_date", { ascending: true })
         .limit(100),
     ]);
+
+  /* Their own row, or the defaults for somebody who has never been asked. */
+  const pushPref = await loadPushPref(supabase, user.id);
 
   const displayName = profile?.full_name ?? user.email ?? "Your account";
   const initial = displayName.trim()[0]?.toUpperCase() ?? "?";
@@ -210,6 +215,18 @@ export default async function ProfilePage() {
             ›
           </span>
         </Link>
+      </Card>
+
+      {/* ---- Notifications -----------------------------------------------
+          Here rather than in iOS Settings, and that is the point. The OS
+          permission dialog is one-shot: if the only way to stop a notification
+          were Settings, the cost of one unwanted buzz would be the permission
+          itself, permanently. This stops the sends and keeps the tokens, so
+          turning it back on is instant and silent. */}
+      <Card className="mt-3">
+        <div className="p-5">
+          <PushToggle enabled={pushPref.pushEnabled} />
+        </div>
       </Card>
 
       <AccountForms

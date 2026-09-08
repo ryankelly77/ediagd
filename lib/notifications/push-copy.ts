@@ -94,9 +94,25 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
 
   streak_keeper: {
     kind: "streak_keeper",
-    title: "Your streak is still going",
-    body: "{days} days so far. One three-minute session keeps it going.",
-    deepLink: "/today",
+    /*
+     * THE NUMBER DOES THE PERSUADING.
+     *
+     * No emoji, no exclamation point, no "don't lose it". A person on day
+     * fourteen already knows what fourteen is worth, and telling them raises
+     * the temperature of a message that works better cold. "On the line" is
+     * the strongest phrasing allowed here: it names the stake without
+     * assigning blame for it, and the sentence after it is an open door
+     * rather than a countdown.
+     *
+     * "One rep" rather than "one session" because a rep is what a service
+     * advisor does all day — it is their word, and it makes three minutes
+     * sound like the small thing it is.
+     */
+    title: "Day {days} is on the line",
+    body: "One rep keeps the streak alive — today's is still open.",
+    /* Into today's block, not home, and carrying its own attribution so an
+       open can be told apart from somebody who opened the app anyway. */
+    deepLink: "/today?opened_via=streak_saver",
     tokens: ["{days}"],
     why:
       "Fires only while the Swell is ALIVE, on a day they were scheduled to " +
