@@ -3,7 +3,6 @@ import { BRAND } from "@/lib/brand";
 import "./globals.css";
 import { ChunkReload } from "@/components/ChunkReload";
 import { NativeBridge } from "@/components/native/NativeBridge";
-import { AuthHashRouter } from "@/components/auth/AuthHashRouter";
 
 export const metadata: Metadata = {
   title: BRAND.name,
@@ -68,6 +67,24 @@ export default function RootLayout({
               // one empty listener the press-feedback rules in styles/brand.css
               // are dead on the device this product is built for. Passive, so it
               // costs nothing and cannot block a scroll.
+              // A CREDENTIAL THAT LANDED ON THE WRONG SCREEN, FORWARDED BEFORE
+              // ANYTHING ELSE RUNS.
+              //
+              // Supabase falls back to the Site URL when a redirect_to is not
+              // allow-listed — silently — so an invite arrives at "/" with the
+              // token in the hash and the root sends the person to /login.
+              // Traced with curl on a real invite.
+              //
+              // This has to happen in the HEAD, not in a React effect. The
+              // effect version worked and still failed: by the time it ran, the
+              // Supabase client had already consumed the hash on the root page,
+              // so /reset-password received a credential that had been spent
+              // and told an invited person their invite had expired. Racing the
+              // auth client is not something to attempt; this simply goes first.
+              "(function(){try{var h=location.hash;if(h.length>1){" +
+              "var p=new URLSearchParams(h.slice(1));var t=p.get('type');" +
+              "if((t==='invite'||t==='recovery')&&(p.get('access_token')||p.get('token_hash'))" +
+              "&&location.pathname!=='/reset-password'){location.replace('/reset-password'+h);}}}catch(e){}})();" +
               "document.addEventListener('touchstart',function(){},{passive:true});" +
               "(function(){var fired=false;function ready(){if(fired)return;fired=true;" +
               "try{window.webkit.messageHandlers.ediagdLaunchReady.postMessage(1)}catch(e){}}" +
@@ -81,10 +98,6 @@ export default function RootLayout({
         {/* Recovers from a deploy landing mid-session: chunk filenames change,
             an open tab still holds the old ones, and the next link click throws
             ChunkLoadError. Reloads once, then stops. See ChunkReload.tsx. */}
-        {/* An invite or recovery credential that landed on the wrong screen —
-            Supabase falls back to the Site URL when a redirect is not
-            allow-listed, and the root has no handler. See AuthHashRouter. */}
-        <AuthHashRouter />
         <ChunkReload />
         {/* Capacitor shell only: hides the splash, routes notification taps and
             universal links, and registers for push once signed in. Renders null
