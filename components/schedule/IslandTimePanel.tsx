@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/brand/Button";
 import { addIslandTime, removeIslandTime } from "@/lib/schedule-actions";
 import { formatDayLabel, type IslandTimeEntry } from "@/lib/work-schedule";
 import { quoteRange, quoteSentence, yearOf } from "@/lib/island-budget";
@@ -88,12 +89,13 @@ export function IslandTimePanel({
 
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-        Island Time
-      </p>
-      <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-        Heading out? Tell us and your Swell holds. Days you&apos;re away
-        don&apos;t count as missed and cost you nothing.
+      {/* The page's own heading already says "Island Time" and the hero above
+          says how much is left. A third "ISLAND TIME" in the same scroll was
+          two thirds of what made this screen read as a form. What belongs here
+          is the reason to tap the button, once. */}
+      <p className="text-sm leading-relaxed text-ink-soft">
+        Heading out? Tell us and your Swell holds — days you&apos;re away
+        don&apos;t count as missed.
       </p>
 
       {message && (
@@ -107,8 +109,21 @@ export function IslandTimePanel({
         </p>
       )}
 
+      {/* The section header stays put whether or not anything is booked. An
+          empty list that renders nothing at all leaves the advisor unsure
+          whether the screen has loaded or they have simply never booked — the
+          same complaint Ryan raised about the drafts list in admin. */}
+      <p className="ediagd-eyebrow mt-4">
+        {entries.length > 1 ? `Booked · ${entries.length}` : "Booked"}
+      </p>
+      {entries.length === 0 && (
+        <p className="mt-1 text-sm text-ink-soft">
+          Nothing booked yet — your next trip goes here.
+        </p>
+      )}
+
       {entries.length > 0 && (
-        <ul className="mt-3 divide-y divide-line">
+        <ul className="mt-1 divide-y divide-line">
           {entries.map((entry) => {
             const running = entry.start <= today;
             return (
@@ -201,13 +216,18 @@ export function IslandTimePanel({
           )}
 
           <div className="mt-4 flex gap-2">
-            <button
+            {/* Stays gold once the form is open. DESIGN_LANGUAGE §1: "a flow
+                that switches primary colour partway reads as a bug, not as a
+                distinction" — the same note that keeps the daily loop's Continue
+                gold on all five steps. */}
+            <Button
+              variant="primary"
               onClick={submit}
               disabled={pending || !start || quote?.affordable === false}
-              className="flex-1 rounded-xl bg-navy p-3 font-extrabold text-white transition hover:brightness-110 disabled:opacity-60"
+              className="flex-1 py-3 disabled:opacity-60"
             >
               {pending ? "Booking…" : "Book Island Time"}
-            </button>
+            </Button>
             <button
               onClick={() => {
                 setAdding(false);
@@ -220,15 +240,21 @@ export function IslandTimePanel({
           </div>
         </div>
       ) : (
-        <button
+        /* GOLD, because this is the one thing the screen is for.
+           DESIGN_LANGUAGE §1: gold is reserved for wins and "the single primary
+           action on a screen". Booking time off is the whole reason /island-time
+           exists, and it was a cream outline indistinguishable from the Remove
+           buttons beside it. There is exactly one gold thing on this screen. */
+        <Button
+          variant="primary"
           onClick={() => {
             setAdding(true);
             setMessage(null);
           }}
-          className="mt-3 w-full rounded-xl border border-line bg-surface-card p-3 text-sm font-extrabold text-navy transition hover:bg-teal-soft/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          className="mt-4 w-full py-3"
         >
           Add Island Time
-        </button>
+        </Button>
       )}
     </div>
   );

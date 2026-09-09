@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
+import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
 import { IslandTimePanel } from "@/components/schedule/IslandTimePanel";
 import {
   loadIslandBudgetContext,
@@ -90,44 +91,56 @@ export default async function IslandTimePage() {
         Island Time
       </h1>
 
-      {/* ---- What's left, first ---------------------------------------- */}
-      <Card className="mt-3 p-5">
-        <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-          {year}
-        </p>
-        {none ? (
-          <p className="mt-1 text-base font-extrabold text-navy">
-            Island Time isn&apos;t available at your store right now.
-          </p>
-        ) : (
-          <>
-            <p className="mt-1 flex items-baseline gap-2">
-              <span className="ediagd-numeral text-4xl font-extrabold text-navy">
-                {usage.remaining}
-              </span>
-              <span className="text-sm font-bold text-ink-soft">
-                of {usage.cap} days left
-              </span>
+      {/* ---- What's left, first, and as the screen's one hero ------------
+          DESIGN_LANGUAGE §3: the headline of a screen is a navy gradient
+          surface with a faint sun/wave motif and one large confident number.
+          This was two identical cream cards stacked on a mostly empty page —
+          functional, and the doc's opening line is about exactly that. The
+          budget is the headline here, so it gets the hero and the booking panel
+          stays a quiet standard card. One hero per screen. */}
+      <section className="ediagd-hero mt-3" data-intentional-bleed>
+        <SunWaveMotif />
+
+        <div className="relative">
+          <p className="ediagd-eyebrow">{year}</p>
+          {none ? (
+            <p className="mt-2 text-base font-extrabold text-white">
+              Island Time isn&apos;t available at your store right now.
             </p>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              {usage.used === 0
-                ? "You haven't booked any Island Time this year."
-                : `You've used ${usage.used} of ${usage.cap} this year.`}{" "}
-              Only days you were scheduled to work count — a{" "}
-              {describeSchedule(schedule)} advisor spends nothing on a weekend
-              inside a booked fortnight.
-            </p>
-            {usage.used > usage.cap && (
-              /* Grandfathered ranges can start somebody over. The honest thing
-                 is to say so rather than round the number down to the cap. */
-              <p className="mt-2 text-sm font-bold text-clay">
-                That&apos;s over the {usage.cap}-day limit — everything already
-                booked stands, and nothing new can be added this year.
+          ) : (
+            <>
+              <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
+                <span className="ediagd-figure text-white">{usage.remaining}</span>
+                <span className="text-sm font-bold text-ice-dim">
+                  of {usage.cap} days left
+                </span>
               </p>
-            )}
-          </>
-        )}
-      </Card>
+
+              <DayMeter cap={usage.cap} used={usage.used} />
+
+              <p className="mt-4 text-sm leading-relaxed text-ice-dim">
+                {usage.used === 0
+                  ? "You haven't booked any Island Time this year."
+                  : `You've used ${usage.used} of ${usage.cap} this year.`}{" "}
+                Only days you were scheduled to work count — a{" "}
+                {describeSchedule(schedule)} advisor spends nothing on a weekend
+                inside a booked fortnight.
+              </p>
+              {usage.used > usage.cap && (
+                /* Grandfathered ranges can start somebody over. The honest thing
+                   is to say so rather than round the number down to the cap.
+                   Clay for attention per the palette, but as a tinted panel —
+                   clay TEXT on midnight is too dark to read, and gold is spoken
+                   for. */
+                <p className="mt-3 rounded-card bg-clay/30 px-3 py-2 text-sm font-bold text-white">
+                  That&apos;s over the {usage.cap}-day limit — everything already
+                  booked stands, and nothing new can be added this year.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </section>
 
       {/* ---- Book it --------------------------------------------------- */}
       <Card className="mt-3 p-5">
@@ -148,5 +161,56 @@ export default async function IslandTimePage() {
         .
       </p>
     </main>
+  );
+}
+
+/**
+ * The year's allowance, one mark per day.
+ *
+ * The sentence above already says "11 of 15 days left", so this is decoration
+ * in the strict sense — aria-hidden, and it tells a screen reader nothing the
+ * words did not. What it buys a sighted advisor is the shape of the number: 4
+ * spent out of 15 is a glance rather than a subtraction, and a budget you can
+ * see going down is the point of showing it at all.
+ *
+ * Seafoam for what is left, and the marks deplete from the right. Not gold —
+ * days off are not a win, and DESIGN_LANGUAGE §1 keeps gold for the Swell,
+ * milestones and the one primary action, which on this screen is the button.
+ */
+function DayMeter({ cap, used }: { cap: number; used: number }) {
+  const left = Math.max(0, cap - used);
+  if (cap <= 0) return null;
+
+  /*
+   * Past a month's worth the segments are thinner than the gaps between them
+   * and the row stops reading as a quantity. A single proportional bar says the
+   * same thing at any cap, so the segmented version stays for the sizes it
+   * actually suits. 15 is the setting today; this is for the day somebody sets
+   * it to 60.
+   */
+  if (cap > 31) {
+    return (
+      <div className="mt-4" aria-hidden="true">
+        <div className="h-2 w-full overflow-hidden rounded-pill bg-white/15">
+          <div
+            className="h-full rounded-pill bg-teal-soft"
+            style={{ width: `${Math.max(2, Math.min(100, (left / cap) * 100))}%` }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex gap-1" aria-hidden="true">
+      {Array.from({ length: cap }, (_, i) => (
+        <span
+          key={i}
+          className={`h-2 flex-1 rounded-pill ${
+            i < left ? "bg-teal-soft" : "bg-white/15"
+          }`}
+        />
+      ))}
+    </div>
   );
 }
