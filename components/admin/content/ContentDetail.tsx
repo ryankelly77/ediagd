@@ -192,6 +192,8 @@ export function ContentDetail({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ tone: "ok" | "bad"; text: string } | null>(null);
+  /* Un-retiring asks first. See the dialog at the foot of this component. */
+  const [confirmUnretire, setConfirmUnretire] = useState(false);
 
   const id = item.id as string;
   const isVideo = item.format === "video";
@@ -210,6 +212,12 @@ export function ContentDetail({
    */
   const isQuote = item.format === "quote";
   const retired = Boolean(item.retired_at);
+  /* `item` is a Record<string, unknown> here, so the date is narrowed once
+     rather than cast at the point of use. */
+  const retiredOn =
+    typeof item.retired_at === "string"
+      ? new Date(item.retired_at).toLocaleDateString()
+      : null;
 
   const [draft, setDraft] = useState<DetailDraft>({
     title: (item.title as string) ?? "",
@@ -672,10 +680,23 @@ export function ContentDetail({
         {/* RETIRE, NOT DELETE. See retireContent() — a hard delete cascades
             saves, progress and open review items, and daily_completion refuses
             it outright. There is no delete path on this screen. */}
+        {/*
+          RETIRING IS ONE TAP; RETURNING IS NOT.
+          Retiring withdraws something and unpublishes it — reversible, and the
+          line below says so. Returning puts content BACK into a library
+          somebody deliberately removed it from, and the reason it was removed
+          is not on this screen. It is also the direction that bit us: a
+          retired video reached advisors through a bulk publish because nothing
+          asked twice.
+        */}
         <button
           type="button"
           disabled={pending}
-          onClick={() => run(() => retireContent(id, !retired), retired ? "Back in the library." : "Retired.")}
+          onClick={() =>
+            retired
+              ? setConfirmUnretire(true)
+              : run(() => retireContent(id, true), "Retired.")
+          }
           className="w-full rounded-xl border border-line p-4 text-base font-bold text-ink-soft transition hover:bg-cream-card disabled:opacity-50"
         >
           {retired ? "Return to the library" : "Retire"}
@@ -685,6 +706,60 @@ export function ContentDetail({
           lesson credit, saves and view history all survive, and it can be returned.
         </p>
       </div>
+
+      {confirmUnretire && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ediagd-unretire-title"
+        >
+          {/* data-no-press: the global press state is for controls, and a
+              full-bleed scrim dimming reads as the sheet flinching. */}
+          <button
+            type="button"
+            aria-label="Cancel"
+            data-no-press
+            onClick={() => setConfirmUnretire(false)}
+            className="absolute inset-0 bg-navy/40"
+          />
+          <div
+            className="relative w-full max-w-app rounded-t-card bg-cream p-5 shadow-card"
+            style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
+          >
+            <p id="ediagd-unretire-title" className="text-xl font-extrabold leading-snug text-navy">
+              Return this to the library?
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              <span className="font-bold text-navy">{String(item.title ?? "This item")}</span>{" "}
+              was retired{retiredOn ? ` on ${retiredOn}` : ""}. Returning it makes it available
+              again — it comes back as a draft, so nothing reaches an advisor until it is
+              published.
+            </p>
+
+            <div className="mt-5 space-y-2">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setConfirmUnretire(false);
+                  run(() => retireContent(id, false), "Back in the library.");
+                }}
+                className="w-full rounded-xl bg-gold p-4 text-base font-extrabold text-navy transition hover:brightness-95 disabled:opacity-60"
+              >
+                Yes, return it
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmUnretire(false)}
+                className="w-full rounded-xl p-3 text-base font-bold text-ink-soft transition hover:bg-cream-card"
+              >
+                Keep it retired
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

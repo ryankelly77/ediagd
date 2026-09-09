@@ -51,7 +51,9 @@ export default async function ContentServicePage({
   const tierFilter = (filters.tier ?? "") as ContentTier | "";
   // Default status is "all" — Mitch usually wants the whole picture; the drafts
   // shortcut on the landing page arrives with ?status=draft already set.
-  const statusFilter = (filters.status ?? "") as ContentStatus | "";
+  /* "retired" is a pseudo-status: the column says draft, retired_at says the
+     rest. Kept out of ContentStatus so nothing else has to pretend it is one. */
+  const statusFilter = (filters.status ?? "") as ContentStatus | "retired" | "";
 
   let query = supabase
     .from("content")
@@ -63,7 +65,8 @@ export default async function ContentServicePage({
 
   if (typeFilter) query = query.eq("type", typeFilter);
   if (tierFilter) query = query.eq("tier", tierFilter);
-  if (statusFilter) query = query.eq("status", statusFilter);
+  if (statusFilter === "retired") query = query.not("retired_at", "is", null);
+  else if (statusFilter) query = query.eq("status", statusFilter);
 
   /*
    * ---- RETIRED IS NOT DRAFT, THOUGH IT WEARS THE SAME STATUS -------------
@@ -124,7 +127,11 @@ export default async function ContentServicePage({
         back={{ href: "/admin/content", label: "All services" }}
         title={heading}
         subtitle={`${total.toLocaleString()} ${total === 1 ? "item" : "items"}${
-          statusFilter ? ` · ${STATUS_META[statusFilter].label.toLowerCase()}` : ""
+          statusFilter === "retired"
+            ? " · retired"
+            : statusFilter
+              ? ` · ${STATUS_META[statusFilter].label.toLowerCase()}`
+              : ""
         }`}
         action={
           <Link

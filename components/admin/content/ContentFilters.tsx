@@ -90,6 +90,11 @@ export function ContentFilters({
           options={[
             { value: "", label: "All statuses" },
             ...CONTENT_STATUSES.map((s) => ({ value: s, label: STATUS_META[s].label })),
+            /* Retired is not a status column — it is retired_at — but it is
+               exactly what somebody means when they reach for this control.
+               129 retired rows were invisible here, indistinguishable from
+               drafts, until one of them was published by accident. */
+            { value: "retired", label: "Retired" },
           ]}
         />
       </Field>
