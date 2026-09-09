@@ -81,6 +81,42 @@ export function bookedDays(
   return all;
 }
 
+/**
+ * How many of the year's spent days each range is responsible for.
+ *
+ * WHY THIS IS NOT "count each range's chargeable days". Ranges may overlap —
+ * the engine only ever asks "is this date inside ANY range" — so a day inside
+ * two of them is spent once. Counting each range independently would produce a
+ * list of trips that adds up to more than usageForYear reports, and a list that
+ * contradicts the total printed above it is worse than no list at all.
+ *
+ * So a day belongs to the FIRST range that claims it, walking in start order.
+ * The result: these values always sum to exactly `usageForYear(...).used`.
+ * A range that only re-covers days an earlier one already bought reports 0,
+ * which is the truth — it cost nothing.
+ *
+ * Zero is also the honest answer for a Mon–Fri advisor's weekend away, for the
+ * same reason the budget charges work days and not calendar days.
+ */
+export function attributeDays(
+  ranges: (IslandTime & { id: string })[],
+  schedule: WorkSchedule | null,
+  year: number
+): Map<string, number> {
+  const claimed = new Set<IsoDate>();
+  const out = new Map<string, number>();
+  for (const r of [...ranges].sort((a, b) => a.start.localeCompare(b.start))) {
+    let n = 0;
+    for (const d of chargeableDays(r.start, r.end, schedule)) {
+      if (yearOf(d) !== year || claimed.has(d)) continue;
+      claimed.add(d);
+      n++;
+    }
+    out.set(r.id, n);
+  }
+  return out;
+}
+
 export type YearUsage = {
   year: number;
   cap: number;

@@ -7,9 +7,10 @@ import { IslandTimePanel } from "@/components/schedule/IslandTimePanel";
 import {
   loadIslandBudgetContext,
   describeSchedule,
+  formatDayLabel,
   type IslandTimeEntry,
 } from "@/lib/work-schedule";
-import { usageForYear, yearOf } from "@/lib/island-budget";
+import { attributeDays, usageForYear, yearOf } from "@/lib/island-budget";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /* ============================================================================
@@ -72,16 +73,39 @@ export default async function IslandTimePage() {
     .order("start_date", { ascending: true })
     .limit(100);
 
-  /* Only what is still ahead or running — a finished absence is history, and
-     the budget line above already counts it. */
-  const entries: IslandTimeEntry[] = ((islandRows ?? []) as {
+  const all: IslandTimeEntry[] = ((islandRows ?? []) as {
     id: string;
     start_date: string;
     end_date: string;
     note: string | null;
-  }[])
-    .map((r) => ({ id: r.id, start: r.start_date, end: r.end_date, note: r.note }))
-    .filter((e) => e.end >= today);
+  }[]).map((r) => ({ id: r.id, start: r.start_date, end: r.end_date, note: r.note }));
+
+  /* Still ahead or running. These are the only ones with controls — a range
+     under way cannot be removed, and one that has finished certainly cannot. */
+  const entries = all.filter((e) => e.end >= today);
+
+  /*
+   * ---- WHAT THE YEAR ACTUALLY WENT ON --------------------------------------
+   *
+   * The hero says "11 of 15 days left" and, until now, the only list on the
+   * screen was of trips that had not happened yet. So the four days already
+   * spent were a number with nothing behind it: an advisor could see the
+   * balance had moved and had no way to see what moved it.
+   *
+   * The arithmetic is attributeDays in lib/island-budget.ts, not a loop here.
+   * That file's whole reason for existing is that the panel's quote, the server
+   * action's refusal and the manager's report must not each compute their own
+   * answer — and per-trip costs are the same question again. Its values sum to
+   * exactly the `used` printed above, including when ranges overlap.
+   */
+  const costOf = attributeDays(all, schedule, year);
+
+  /* Finished, and touching this year. A trip that ran 28 Dec – 4 Jan belongs on
+     both years' screens, charged to each — so the test is whether the range
+     intersects the year, not which year it started in. */
+  const earlier = all
+    .filter((e) => e.end < today && (yearOf(e.start as IsoDate) === year || yearOf(e.end as IsoDate) === year))
+    .reverse();
 
   const none = budget.cap === 0;
 
@@ -152,6 +176,40 @@ export default async function IslandTimePage() {
           booked={ranges}
         />
       </Card>
+
+      {/* ---- Where the year went --------------------------------------- */}
+      {earlier.length > 0 && (
+        <Card className="mt-3 p-5">
+          <p className="ediagd-eyebrow">Earlier this year</p>
+          <ul className="mt-2 divide-y divide-line">
+            {earlier.map((e) => {
+              const spent = costOf.get(e.id) ?? 0;
+              return (
+                <li key={e.id} className="flex items-baseline gap-3 py-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-extrabold text-navy">
+                      {formatDayLabel(e.start, today)}
+                      {e.end !== e.start && <> – {formatDayLabel(e.end, today)}</>}
+                    </span>
+                    {e.note && (
+                      <span className="mt-0.5 block text-xs text-ink-soft">{e.note}</span>
+                    )}
+                  </span>
+                  {/*
+                    Zero is a real answer, not a missing one: a Mon–Fri advisor
+                    who took a Saturday off spent nothing, which is the whole
+                    point of charging work days. Saying "0 days" out loud is
+                    better than an empty column that looks like a bug.
+                  */}
+                  <span className="ediagd-numeral shrink-0 text-xs font-bold text-ink-soft">
+                    {spent} {spent === 1 ? "day" : "days"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
 
       <p className="mt-4 px-1 text-xs leading-relaxed text-ink-soft">
         Your work schedule decides which days count.{" "}
