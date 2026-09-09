@@ -102,6 +102,33 @@ export function ResetPasswordScreen() {
        the checking state says the same thing either way. */
     const linkKind: "recovery" | "invite" = type === "invite" ? "invite" : "recovery";
 
+    /*
+     * ---- THE HASH FORM IS OURS TOO, AND THAT WAS THE BUG -----------------
+     *
+     * createBrowserClient defaults to the PKCE flow, which looks for `?code=`.
+     * An invite from generate_link arrives in the IMPLICIT shape —
+     * `#access_token=…&refresh_token=…&type=invite` — and the client simply
+     * ignores it. So the screen sat waiting for a session that was never going
+     * to appear and, after three seconds, told an invited person their invite
+     * had expired. Verified end to end against a real invite: correct screen,
+     * correct copy, no password field.
+     *
+     * setSession is explicit and does not depend on which flow the client was
+     * constructed with, which is the point — an account-recovery path should
+     * not turn on a default in a dependency.
+     */
+    const accessToken = hash.get("access_token");
+    const refreshToken = hash.get("refresh_token");
+    if (hasLink && accessToken && refreshToken) {
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ data, error: sessionError }) => {
+          settled = true;
+          setKind(linkKind);
+          setState(sessionError || !data.session ? "invalid" : "ready");
+        });
+    }
+
     /* The token_hash form is ours to exchange; the others supabase-js does. */
     if (hasLink && tokenHash) {
       supabase.auth
