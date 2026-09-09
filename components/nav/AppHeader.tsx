@@ -98,14 +98,26 @@ export function AppHeader({
           />
 
           <span className="min-w-0">
-            {/* NEVER WRAPS, NEVER TRUNCATES. If it cannot fit beside the status
-                cluster, the cluster is what moves — see flex-wrap above. */}
-            <span className="block whitespace-nowrap font-display text-lg font-normal leading-none tracking-[0.2em] text-navy">
+            {/*
+              CAPPED, FOR THE SAME REASON THE MARK IS: this is artwork, not
+              content. Left to scale it reached 185px at 200% and pushed the
+              account cluster onto a second row — Ryan saw the wrap and asked
+              whether the wordmark should be hidden at large sizes.
+              It should not: the ruling is that the wordmark never disappears,
+              and it does not have to. Text scaling exists so words can be READ,
+              and "EDIAGD" is a logo — nobody turned their text up in order to
+              see the brand name bigger. Holding it at its designed size keeps
+              the header one row and keeps the identity intact, which is both
+              halves of what was asked for.
+            */}
+            <span
+              className="block whitespace-nowrap font-display font-normal leading-none tracking-[0.2em] text-navy"
+              style={{ fontSize: "min(1.125rem, 18px)" }}
+            >
               {BRAND.name}
             </span>
-            {/* The tagline yields first: it is allowed to wrap onto a second
-                line rather than being cut, which is the one of the two that can
-                afford to take up room. */}
+            {/* Already in px, so it never grew — and it still yields first if
+                anything ever has to: it is allowed to wrap rather than be cut. */}
             <span className="mt-[3px] block text-[8px] font-semibold uppercase leading-tight tracking-[0.1em] text-teal">
               {BRAND.tagline}
             </span>

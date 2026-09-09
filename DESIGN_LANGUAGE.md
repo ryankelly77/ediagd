@@ -86,6 +86,31 @@ Per brand book: **a circle, a dotted inner ring, one motif from the brand's worl
 - Don't add harsh gray shadows or hard outlines — warm, soft, navy-tinted depth.
 - Don't make every card a navy hero — one hero per screen (the headline), the rest quieter.
 - Don't over-motif — the sun/wave texture is a whisper, not wallpaper.
+### Text scales, artwork does not
+
+- The app must be whole at **125%**, which is the slider in Display & Brightness
+  — for advisors on a service drive it may be the median setting, not an
+  accessibility edge case. 100–150% is clean; 200% is structurally sound
+  (nothing clipped, no sideways scroll) even if it is not pretty.
+- **Containers grow, text wraps.** `truncate` is only allowed where the full
+  value is somewhere else on the same screen. A library that hides its own film
+  titles has stopped doing its job.
+- **Grids reflow, they do not squeeze.** `auto-fit` with a minimum, so a row of
+  three becomes two and then one rather than crushing a currency figure out of
+  its box.
+- **Artwork is capped.** The mark, the wordmark and the step dots are held at
+  their designed size with `min(Xrem, Xpx)`. Somebody who turned text up did it
+  to read words; a logo half again as large is not a better logo. Anything that
+  is a fixed optical nudge — a negative margin pulling an icon to an edge — is a
+  constant in px, never a rem that grows into a page-level overflow.
+- **Touch targets are the exception that SHOULD grow.** The bell and the avatar
+  get bigger with the text, and that is right; if the header has to become two
+  rows to allow it, it becomes two rows.
+- `npm run test:larger-text` enforces all of this. It drives headless Chrome at
+  an iPhone viewport through every advisor route at four sizes and fails on
+  measured truncation, clipping or overflow. A screen that breaks at 125% fails
+  there, not in somebody's hand.
+
 ### Every control acknowledges a tap
 
 - A phone has **no hover**. `hover:` alone is not feedback on the device this
