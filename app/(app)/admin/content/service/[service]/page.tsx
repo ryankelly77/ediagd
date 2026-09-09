@@ -139,9 +139,23 @@ export default async function ContentServicePage({
         and "select all" would claim more than it does. The drafts view is the
         one the landing page's "Everything unpublished" already links to.
       */}
-      {statusFilter === "draft" && drafts.length > 0 && (
+      {statusFilter === "draft" && (
         <div className="mt-4">
-          <BulkPublish ids={drafts} labels={draftLabels} />
+          {drafts.length > 0 ? (
+            <BulkPublish ids={drafts} labels={draftLabels} />
+          ) : (
+            /* SAY SO. An empty drafts list with no message reads as a screen
+               that failed to load — the reader cannot tell "nothing is waiting"
+               from "something went wrong". */
+            <Card className="p-5">
+              <p className="text-base font-extrabold text-navy">
+                Nothing waiting to publish
+              </p>
+              <p className="mt-1 text-sm text-ink-soft">
+                Every item here is already published.
+              </p>
+            </Card>
+          )}
         </div>
       )}
 

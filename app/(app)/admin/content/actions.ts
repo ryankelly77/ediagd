@@ -192,14 +192,14 @@ export async function publishMany(ids: string[]): Promise<BulkPublishResult> {
 
   const { data, error: readError } = await ctx.supabase
     .from("content")
-    .select("id, title, type, status, service_family, mux_playback_id, duration_sec, vertical_status")
+    .select("id, title, type, status, service_family, mux_playback_id, video_url, duration_sec, vertical_status")
     .in("id", wanted);
   if (readError) return { ok: false, published: 0, held: [], error: readError.message };
 
   const rows = (data ?? []) as {
     id: string; title: string; type: string; status: string;
     service_family: string | null; mux_playback_id: string | null;
-    duration_sec: number | null; vertical_status: string | null;
+    video_url: string | null; duration_sec: number | null; vertical_status: string | null;
   }[];
 
   const held: BulkPublishResult["held"] = [];
@@ -210,15 +210,23 @@ export async function publishMany(ids: string[]): Promise<BulkPublishResult> {
     if (row.status === "published") continue; // already there; not an error
     const isVideo = row.type.endsWith("_video") || row.type === "joe_the_pro";
 
-    if (isVideo && !row.mux_playback_id) {
+    /*
+     * EITHER SOURCE COUNTS. A video plays from Mux OR from a plain video_url —
+     * CueDeck renders the second directly — and the first version of this guard
+     * only knew about Mux, so it refused a row that was perfectly playable and
+     * said "no video is attached" about a video that was attached. Ryan hit it
+     * on the first thing he tried to publish.
+     */
+    if (isVideo && !row.mux_playback_id && !row.video_url) {
       held.push({ id: row.id, title: row.title, because: "no video is attached yet" });
       continue;
     }
-    if (isVideo && !row.duration_sec) {
+    if (isVideo && row.mux_playback_id && !row.duration_sec) {
       held.push({ id: row.id, title: row.title, because: "still transcoding — no duration yet" });
       continue;
     }
-    if (isVideo && (row.vertical_status === "stale" || row.vertical_status === "failed")) {
+    /* Only a Mux video has a vertical to be stale about. */
+    if (isVideo && row.mux_playback_id && (row.vertical_status === "stale" || row.vertical_status === "failed")) {
       held.push({
         id: row.id, title: row.title,
         because: `its 9:16 is ${row.vertical_status} — rebuild it first`,
