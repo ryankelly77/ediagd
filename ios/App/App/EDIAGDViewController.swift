@@ -26,6 +26,7 @@ final class EDIAGDViewController: CAPBridgeViewController {
     static let readyMessageName = "ediagdLaunchReady"
 
     private let readyHandler = LaunchReadyHandler()
+    private let textScaleHandler = TextScaleQueryHandler()
 
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
@@ -75,6 +76,38 @@ final class EDIAGDViewController: CAPBridgeViewController {
         }
 
         controller.add(readyHandler, name: Self.readyMessageName)
+
+        /*
+         * ---- DYNAMIC TYPE ---------------------------------------------------
+         *
+         * Ryan: "App doesn't appear to be reacting to font changes in iOS
+         * settings." It never could — a WKWebView does not receive Dynamic Type,
+         * and nothing here was forwarding it. See DynamicType.swift.
+         *
+         * The user script goes in BEFORE the first page load so the document
+         * starts at the right size rather than being resized after paint. The
+         * reply handler answers its follow-up question about the live value.
+         */
+        controller.addScriptMessageHandler(textScaleHandler,
+                                           contentWorld: .page,
+                                           name: DynamicType.queryMessageName)
+        controller.addUserScript(DynamicType.bootstrapScript())
+
+        /*
+         * Changing the setting leaves the app running, so the open page has to
+         * be told. UIKit posts this on returning to the foreground after a
+         * change too, which is the common case — the setting lives in Settings,
+         * and getting to it means leaving here.
+         */
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(contentSizeCategoryDidChange),
+            name: UIContentSizeCategory.didChangeNotification,
+            object: nil)
+    }
+
+    @objc private func contentSizeCategoryDidChange() {
+        DynamicType.push(to: bridge?.webView)
     }
 
     deinit {
@@ -84,6 +117,9 @@ final class EDIAGDViewController: CAPBridgeViewController {
         // a rule that only holds by accident.
         bridge?.webView?.configuration.userContentController
             .removeScriptMessageHandler(forName: Self.readyMessageName)
+        bridge?.webView?.configuration.userContentController
+            .removeScriptMessageHandler(forName: DynamicType.queryMessageName)
+        NotificationCenter.default.removeObserver(self)
     }
 }
 

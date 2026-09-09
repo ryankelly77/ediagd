@@ -306,10 +306,21 @@ export default async function AdvisorPage() {
           its cell and took the page 42px wider than the phone. auto-fit with a
           minimum lets the row become two columns, then one, as the text grows.
           The number is the point of the tile; the layout is what gives.
+
+          THE MINIMUM HAS TO FIT THREE AT 100%, WHICH 9rem DID NOT. 144px x 3
+          plus two 16px gaps is 464, and the card's interior is about 365 on a
+          430pt phone — so auto-fit dropped to two columns at DEFAULT text size
+          and left ROs alone on a second row looking like an afterthought.
+          5.5rem x 3 + gaps is 296, which fits three even on a 375pt SE, and the
+          1fr lets them spread to fill the row rather than sitting at 88px.
+
+          It still gives way on schedule: the floor is in rem, so at 125% it is
+          110px and the SE goes to two columns, and by 150% every phone does.
+          That was the point of the original change and it is unchanged.
         */}
         <dl
           className="mt-6 grid gap-4 border-t border-line pt-4"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(9rem, 100%), 1fr))" }}
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(5.5rem, 100%), 1fr))" }}
         >
           <SecondaryStat
             label="ELR"

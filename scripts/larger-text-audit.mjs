@@ -381,7 +381,10 @@ async function main() {
       if (SHOT && broken) {
         const shot = await send("Page.captureScreenshot", { format: "png" });
         writeFileSync(
-          `reports/larger-text/${route.replace(/\\//g, "_")}${scale.label}.png`,
+          /* /\//g, not /\\//g — the latter is a regex matching a backslash
+             followed by a division by `g`, which threw "g is not defined" and
+             meant --shot had never once produced a screenshot. */
+          `reports/larger-text/${route.replace(/\//g, "_")}${scale.label}.png`,
           Buffer.from(shot.data, "base64")
         );
       }

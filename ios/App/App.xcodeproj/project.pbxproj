@@ -11,6 +11,7 @@
 		2671D78BED64E17E50E35822 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98268315A5EB95A765790ED6 /* SVGPath.swift */; };
 		2865FA29B9D83BEA9775D6E5 /* LaunchOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7DB3558896316F3287BE5DC /* LaunchOverlayView.swift */; };
 		86371B6B2C510C9A5B5D0750 /* LaunchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23AAFEE0E35A876C07EAF95 /* LaunchOverlay.swift */; };
+		9F3C1A0D4E7B21C85D06A31F /* DynamicType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7E92B15C0D48F3A6B1E7D2 /* DynamicType.swift */; };
 		3AFD9B2CB94EAB8BDC9F0A94 /* EDIAGDViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E02623003EB617F72AD9A33 /* EDIAGDViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
@@ -30,6 +31,7 @@
 		98268315A5EB95A765790ED6 /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
 		C7DB3558896316F3287BE5DC /* LaunchOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOverlayView.swift; sourceTree = "<group>"; };
 		B23AAFEE0E35A876C07EAF95 /* LaunchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOverlay.swift; sourceTree = "<group>"; };
+		4A7E92B15C0D48F3A6B1E7D2 /* DynamicType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicType.swift; sourceTree = "<group>"; };
 		2E02623003EB617F72AD9A33 /* EDIAGDViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EDIAGDViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 				98268315A5EB95A765790ED6 /* SVGPath.swift */,
 				C7DB3558896316F3287BE5DC /* LaunchOverlayView.swift */,
 				B23AAFEE0E35A876C07EAF95 /* LaunchOverlay.swift */,
+				4A7E92B15C0D48F3A6B1E7D2 /* DynamicType.swift */,
 				2E02623003EB617F72AD9A33 /* EDIAGDViewController.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
@@ -184,6 +187,7 @@
 				2671D78BED64E17E50E35822 /* SVGPath.swift in Sources */,
 				2865FA29B9D83BEA9775D6E5 /* LaunchOverlayView.swift in Sources */,
 				86371B6B2C510C9A5B5D0750 /* LaunchOverlay.swift in Sources */,
+				9F3C1A0D4E7B21C85D06A31F /* DynamicType.swift in Sources */,
 				3AFD9B2CB94EAB8BDC9F0A94 /* EDIAGDViewController.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 			);
@@ -327,7 +331,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = PGU9MA5HRB;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -351,7 +355,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = PGU9MA5HRB;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
