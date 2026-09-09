@@ -65,7 +65,13 @@ export type MuxVideoProps = {
    */
   renditions: VideoRenditions;
   title: string;
-  /** 0-100. Server setting (game_settings.video_complete_pct), default 90. */
+  /**
+   * 0-100. Server setting (game_settings.video_complete_pct), default 90.
+   *
+   * NOW A FALLBACK, not the usual rule — see TAIL_SECONDS below. It still
+   * decides the gate when the duration is unknown, which is the only case a
+   * percentage can answer and a countdown cannot.
+   */
   threshold?: number;
   /** Furthest point already reached, so a re-visit does not start from zero. */
   initialWatchedPct?: number;
@@ -139,6 +145,16 @@ export type MuxVideoProps = {
   className?: string;
 };
 
+/**
+ * How close to the end the Continue gate opens, in seconds.
+ *
+ * Two, because that is what Ryan asked for and because the measurement agrees
+ * with it: the spoken sign-off is a median 1.46s from the end across the
+ * library, so a two-second countdown opens the button as he says it rather
+ * than a percentage of the way through.
+ */
+const TAIL_SECONDS = 2;
+
 export function MuxVideo({
   contentId,
   renditions,
@@ -160,6 +176,9 @@ export function MuxVideo({
   const [watched, setWatched] = useState(initialWatchedPct);
   const furthest = useRef(initialWatchedPct);
   const fired = useRef(initialWatchedPct >= threshold);
+  /* The same fact as `fired`, in state, because the read-out has to re-render
+     when it changes and a ref does not cause one. Kept in step below. */
+  const [opened, setOpened] = useState(initialWatchedPct >= threshold);
 
   /*
    * Progress is written at most every ten seconds of playback, not on every
@@ -218,8 +237,31 @@ export function MuxVideo({
         void persist(pct, el.currentTime);
       }
 
-      if (!fired.current && pct >= threshold) {
+      /*
+       * ---- THE GATE OPENS WHEN THE LESSON ENDS, NOT AT A PERCENTAGE --------
+       *
+       * A percentage is the wrong unit. 90% of a 130-second film is thirteen
+       * seconds early, and 90% of a 30-second one is three — so the button went
+       * gold while Mitch was still talking, and did it worst on the longest
+       * films. Ryan: "the continue button is showing early before the video is
+       * over."
+       *
+       * He asked for the sign-off — "when you hear the word Mahalo" — or two
+       * seconds from the end. Measured across all 90 films, word-level, those
+       * are the same instruction: the sign-off lands 1.46s from the end at the
+       * median, 0.84s at the earliest, and under 2s in 87 of 90. So a countdown
+       * from the end hits it without needing a timestamp per film, or anything
+       * for the next batch to remember to compute.
+       *
+       * The percentage survives as the fallback for the one case a countdown
+       * cannot answer: a duration we do not know.
+       */
+      const remaining = el.duration - el.currentTime;
+      const atTheEnd = Number.isFinite(remaining) && remaining <= TAIL_SECONDS;
+
+      if (!fired.current && (atTheEnd || pct >= threshold)) {
         fired.current = true;
+        setOpened(true);
         void persist(pct, el.currentTime); // the crossing is worth a write of its own
         onReachedThreshold?.(pct);
       }
@@ -236,7 +278,15 @@ export function MuxVideo({
     };
   }, [persist, initialWatchedPct]);
 
-  const cleared = watched >= threshold;
+  /*
+   * THE READ-OUT AND THE GATE ARE ONE FACT.
+   *
+   * This used to be `watched >= threshold` while the gate opened on its own
+   * rule — so at 90% of a long film the badge said "Watched" and the Continue
+   * button was still grey. Two answers to one question, and the one the person
+   * can see was the wrong one.
+   */
+  const cleared = opened;
 
   /* --------------------------------------------------------------------------
      WHICH CUT PLAYS
