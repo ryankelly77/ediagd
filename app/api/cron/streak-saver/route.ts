@@ -86,11 +86,13 @@ export async function GET(request: Request) {
      * key lands. Reported loudly so a silent "why did nobody get it" cannot
      * happen.
      */
-    return NextResponse.json({
+    const summary = {
       generated,
       delivered: 0,
       note: "APNs not configured — rows queued, nothing sent",
-    });
+    };
+    await supabase.rpc("note_cron_run", { _job: "streak-saver", _detail: summary });
+    return NextResponse.json(summary);
   }
 
   const { data: dueRows, error: dueError } = await supabase
@@ -184,12 +186,25 @@ export async function GET(request: Request) {
    */
   const { data: expired } = await supabase.rpc("expire_stale_outbox");
 
-  return NextResponse.json({
+  const summary = {
     generated,
     messages: byMessage.size,
     sent,
     skipped,
     retired,
     expired: expired ?? 0,
-  });
+  };
+
+  /*
+   * Leave a mark even when nothing happened — especially then.
+   *
+   * An empty outbox is the expected state on almost every day, so silence
+   * cannot distinguish "ran and found nobody eligible" from "did not run".
+   * Without this the streak saver could stop working in January and the first
+   * evidence would be somebody asking why they never get notifications. See
+   * 0108.
+   */
+  await supabase.rpc("note_cron_run", { _job: "streak-saver", _detail: summary });
+
+  return NextResponse.json(summary);
 }
