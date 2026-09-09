@@ -6,6 +6,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { ContentFilters } from "@/components/admin/content/ContentFilters";
 import { ContentResultRow } from "@/components/admin/content/ContentResultRow";
+import { BulkPublish } from "@/components/admin/content/BulkPublish";
 import {
   ALL_SERVICES,
   NO_SERVICE,
@@ -68,6 +69,14 @@ export default async function ContentServicePage({
   const { data, count, error } = await query.range(from, from + PAGE_SIZE - 1);
 
   const rows = (data ?? []) as ContentRow[];
+
+  /* What the bulk control may act on: the drafts actually rendered here. The
+     ids come from the page rather than from the filter, so the number in the
+     button is the number that moves. */
+  const drafts = rows.filter((r) => r.status === "draft").map((r) => r.id);
+  const draftLabels = Object.fromEntries(
+    rows.filter((r) => r.status === "draft").map((r) => [r.id, r.title])
+  );
   const total = count ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -121,6 +130,19 @@ export default async function ContentServicePage({
             Couldn&apos;t load content: {error.message}
           </p>
         </Card>
+      )}
+
+      {/*
+        BULK PUBLISH, ONLY WHERE IT MAKES SENSE.
+        Shown when the list is filtered to drafts — publishing a list that
+        already contains published items would mean ticking boxes to no effect,
+        and "select all" would claim more than it does. The drafts view is the
+        one the landing page's "Everything unpublished" already links to.
+      */}
+      {statusFilter === "draft" && drafts.length > 0 && (
+        <div className="mt-4">
+          <BulkPublish ids={drafts} labels={draftLabels} />
+        </div>
       )}
 
       {rows.length > 0 ? (
