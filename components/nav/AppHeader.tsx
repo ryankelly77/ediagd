@@ -11,12 +11,23 @@ import { isImmersive } from "./routes";
  * your account. Pairs with the footer TabBar — footer is navigation, header is
  * identity and status.
  *
- * SIZING IS THE CONSTRAINT. At 375px the right cluster (balance pill + avatar +
- * gaps) takes ~134px and the page padding 32px, leaving ~209px for the lockup.
- * With a 56px mark and its gap, the text block has ~145px. The tagline is 24
- * characters, so it sits at 8px with 0.1em tracking (~139px) — 9px or looser
- * tracking overflows into the pill. `truncate` is a last-resort guard only; the
- * type is sized to fit rather than relying on it.
+ * SIZING IS THE CONSTRAINT, AND IT USED TO BE SOLVED THE WRONG WAY. The lockup
+ * was flex-1 with `truncate` on both lines, so when the right cluster grew the
+ * text column was squeezed and the words were cut. That is invisible at the
+ * default text size and catastrophic above it: the audit measured the wordmark's
+ * column at 102px of a needed 116 at 125%, 45px at 150%, and ZERO at 200% — the
+ * brand name gone from every screen in the app.
+ *
+ * `truncate` was described here as "a last-resort guard only". It was not a
+ * guard; it was the mechanism, and it fired for anybody who had turned text up
+ * one notch in Display & Brightness — which for this audience is not an
+ * accessibility edge case, it is a common setting.
+ *
+ * So nothing truncates now and the header GROWS instead. The row wraps: when
+ * the lockup and the status cluster cannot share a line, the cluster drops to a
+ * second one and the header gets taller. The hierarchy when space runs out is
+ * explicit — the tagline wraps first, and the wordmark never shrinks, never
+ * clips and never disappears.
  *
  * The greeting used to live here. It moved out rather than becoming a third
  * line — see the layout note in the report.
@@ -60,27 +71,42 @@ export function AppHeader({
         paddingRight: "env(safe-area-inset-right, 0px)",
       }}
     >
-      {/* py-1: the mark sets the height, so vertical padding stays minimal. */}
-      <div className="mx-auto flex max-w-app items-center gap-2 px-4 py-1">
+      {/* WRAPS RATHER THAN SQUEEZES. flex-wrap is what lets the header grow a
+          row instead of crushing the lockup; py-1.5 and the gap give the two
+          rows breathing room on the sizes where that happens. */}
+      <div className="mx-auto flex max-w-app flex-wrap items-center gap-x-2 gap-y-1 px-4 py-1.5">
         {/* ---- The lockup ------------------------------------------------ */}
+        {/* mr-auto rather than flex-1: the lockup takes the width it needs and
+            pushes the cluster right, instead of being the thing that gives. */}
         <Link
           href="/"
           aria-label={`${BRAND.name} — ${BRAND.tagline}`}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-[10px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          className="mr-auto flex items-center gap-2 rounded-[10px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           {/* -primary-light is the navy-inked mark — the one for light surfaces. */}
+          {/*
+            CAPPED, because a logo is not type. h-14 is 3.5rem, so at 200% text
+            the mark would render 112px tall and own the screen. min() keeps it
+            at its designed size once the text passes 100% — the words scale for
+            legibility, the artwork does not need to.
+          */}
           <img
             src="/brand/svg/ediagd-mark-primary-light.svg"
             alt=""
-            className="h-14 w-auto shrink-0"
+            className="w-auto shrink-0"
+            style={{ height: "min(3.5rem, 56px)" }}
           />
 
-          {/* Two lines, tight: leading-none on both, 2px between. */}
           <span className="min-w-0">
-            <span className="block truncate font-display text-lg font-normal leading-none tracking-[0.2em] text-navy">
+            {/* NEVER WRAPS, NEVER TRUNCATES. If it cannot fit beside the status
+                cluster, the cluster is what moves — see flex-wrap above. */}
+            <span className="block whitespace-nowrap font-display text-lg font-normal leading-none tracking-[0.2em] text-navy">
               {BRAND.name}
             </span>
-            <span className="mt-[3px] block truncate text-[8px] font-semibold uppercase leading-none tracking-[0.1em] text-teal">
+            {/* The tagline yields first: it is allowed to wrap onto a second
+                line rather than being cut, which is the one of the two that can
+                afford to take up room. */}
+            <span className="mt-[3px] block text-[8px] font-semibold uppercase leading-tight tracking-[0.1em] text-teal">
               {BRAND.tagline}
             </span>
           </span>

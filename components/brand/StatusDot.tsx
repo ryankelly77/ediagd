@@ -92,12 +92,25 @@ export function StatusRow({
   const s = serviceStatus(rate, storeAvg);
   const color = `rgb(var(${STATUS_META[s].cssVar}))`;
   return (
+    /*
+     * WRAPS INSTEAD OF WIDENING. A single flex row of dot + name + verdict +
+     * chevron cannot fit "Transmission Fluid Exchange" beside "Pursue" at 200%
+     * text, and because nothing was allowed to give, the row pushed its list,
+     * its card, its section and finally the page 42px wider than the phone —
+     * the one structural failure in the whole audit.
+     *
+     * flex-wrap lets the verdict drop under the name at the sizes where they
+     * cannot share a line. The dot and the chevron stay put; the name is what
+     * takes the second row, because it is the part worth reading in full.
+     */
     <button
       onClick={onClick}
-      className="flex min-h-[3.5rem] w-full items-center gap-4 px-1.5 py-4 text-left transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className="flex min-h-[3.5rem] w-full flex-wrap items-center gap-x-4 gap-y-1 px-1.5 py-4 text-left transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
       <StatusDot status={s} />
-      <span className="flex-1 text-base font-bold text-navy">{service}</span>
+      <span className="min-w-0 flex-1 break-words text-base font-bold text-navy">
+        {service}
+      </span>
       <span className="text-sm font-bold" style={{ color }}>
         {STATUS_META[s].label}
       </span>

@@ -3,6 +3,7 @@ import { BRAND } from "@/lib/brand";
 import "./globals.css";
 import { ChunkReload } from "@/components/ChunkReload";
 import { NativeBridge } from "@/components/native/NativeBridge";
+import { AuthHashRouter } from "@/components/auth/AuthHashRouter";
 
 export const metadata: Metadata = {
   title: BRAND.name,
@@ -80,6 +81,10 @@ export default function RootLayout({
         {/* Recovers from a deploy landing mid-session: chunk filenames change,
             an open tab still holds the old ones, and the next link click throws
             ChunkLoadError. Reloads once, then stops. See ChunkReload.tsx. */}
+        {/* An invite or recovery credential that landed on the wrong screen —
+            Supabase falls back to the Site URL when a redirect is not
+            allow-listed, and the root has no handler. See AuthHashRouter. */}
+        <AuthHashRouter />
         <ChunkReload />
         {/* Capacitor shell only: hides the splash, routes notification taps and
             universal links, and registers for push once signed in. Renders null

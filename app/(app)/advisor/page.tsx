@@ -300,7 +300,17 @@ export default async function AdvisorPage() {
           {formatCurrency(Number(totals.total_labor_sales ?? 0))}
         </p>
 
-        <dl className="mt-6 grid grid-cols-3 gap-4 border-t border-line pt-4">
+        {/*
+          REFLOWS RATHER THAN SQUEEZES. Three fixed columns gave each figure a
+          75px box at 200%, and "$175.36" needs 145 — so the currency spilled
+          its cell and took the page 42px wider than the phone. auto-fit with a
+          minimum lets the row become two columns, then one, as the text grows.
+          The number is the point of the tile; the layout is what gives.
+        */}
+        <dl
+          className="mt-6 grid gap-4 border-t border-line pt-4"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(9rem, 100%), 1fr))" }}
+        >
           <SecondaryStat
             label="ELR"
             value={
@@ -327,7 +337,7 @@ export default async function AdvisorPage() {
 
       {/* ---- Eddie's Pick: the one hero ---------------------------------- */}
       {canCoach && pick && (
-        <section className="ediagd-hero mt-6">
+        <section className="ediagd-hero mt-6" data-intentional-bleed>
           <SunWaveMotif />
 
           <div className="relative">
@@ -414,10 +424,12 @@ export default async function AdvisorPage() {
 function SecondaryStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+      <dt className="text-[11px] font-bold uppercase leading-tight tracking-wide text-ink-soft">
         {label}
       </dt>
-      <dd className="ediagd-numeral mt-1 text-xl font-extrabold text-navy">
+      {/* break-words so a long currency figure wraps inside its tile instead
+          of pushing the tile wider than the screen. */}
+      <dd className="ediagd-numeral mt-1 break-words text-xl font-extrabold text-navy">
         {value}
       </dd>
     </div>

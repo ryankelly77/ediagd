@@ -215,7 +215,7 @@ function Screen1({
 }) {
   return (
     <Narrative onNext={onNext} cta="Show me">
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">Welcome to</p>
@@ -259,7 +259,7 @@ function Screen1({
 function Screen2({ onNext }: { onNext: () => void }) {
   return (
     <Narrative onNext={onNext} cta="What's in it">
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">The whole thing</p>
@@ -295,7 +295,7 @@ function Screen2({ onNext }: { onNext: () => void }) {
 function Screen3({ onNext }: { onNext: () => void }) {
   return (
     <Narrative onNext={onNext} cta="What can I earn?">
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">Every morning</p>
@@ -353,7 +353,7 @@ function LoopStep({
 function Screen4({ onNext }: { onNext: () => void }) {
   return (
     <Narrative onNext={onNext} cta="Set up my week">
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">Show up, it adds up</p>
@@ -445,7 +445,7 @@ function Screen5({
        place under the progress bar rather than riding up against it. */
     <>
       <PhoneScreen.Body>
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">One thing from you</p>

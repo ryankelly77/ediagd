@@ -373,14 +373,27 @@ export function DailyFlow({
           of this file has always said so. Step 5 has no × — the day is already
           complete by then and it has its own way onward. */}
       <PhoneScreen.Rail>
-        <div className="flex items-center justify-between gap-3">
-          <StepDots step={step} total={pitchVideo ? 5 : 4} />
+        {/* The dots are rem-sized, so at 150% they outgrew the row by 6px and
+            pushed against the close button. min-w-0 lets the dot strip give,
+            and flex-wrap is the escape hatch at the largest sizes — the × must
+            never be squeezed, it is the way out of the loop. */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <StepDots step={step} total={pitchVideo ? 5 : 4} />
+          </div>
           {step < 5 && (
             <button
               type="button"
               onClick={() => setConfirmLeave(true)}
               aria-label="Leave the daily loop"
-              className="-mr-1 shrink-0 rounded-full p-2 text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              /* A fixed -4px, not -mr-1. The nudge exists to pull the icon's
+                 own padding back so it optically aligns with the rail edge —
+                 an optical correction, which is a constant, not type. As a rem
+                 it grew to 6px at 150% and hung the button past its container,
+                 which is a page-level overflow measured in something nobody
+                 chose. */
+              style={{ marginRight: "-4px" }}
+              className="shrink-0 rounded-full p-2 text-ink-soft transition hover:bg-cream-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                 <path
@@ -764,13 +777,30 @@ function LifestyleStep({
 function StepDots({ step, total }: { step: number; total: number }) {
   const active = total === 4 && step >= 4 ? step - 1 : step;
   return (
+    /*
+     * CAPPED, LIKE THE LOGO — a progress indicator is not type.
+     *
+     * w-8 and w-4 are rem, so at 150% the five dots and their gaps grew to
+     * 348px inside a 342px rail and spilled. Wrapping the parent could not
+     * help: a single child wider than its container overflows whatever the
+     * parent does.
+     *
+     * These dots exist to say "four steps, you are on two". That reading does
+     * not improve when they are half again as long, and somebody who has
+     * turned text up did it to read words. So min() holds them at their
+     * designed size once the scale passes 100%.
+     */
     <div className="flex items-center justify-center gap-2" aria-hidden="true">
       {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
         <span
           key={n}
-          className={`h-1.5 rounded-pill transition-all ${
-            n === active ? "w-8 bg-gold" : n < active ? "w-4 bg-teal" : "w-4 bg-line"
+          className={`rounded-pill transition-all ${
+            n === active ? "bg-gold" : n < active ? "bg-teal" : "bg-line"
           }`}
+          style={{
+            height: "min(0.375rem, 6px)",
+            width: n === active ? "min(2rem, 32px)" : "min(1rem, 16px)",
+          }}
         />
       ))}
     </div>

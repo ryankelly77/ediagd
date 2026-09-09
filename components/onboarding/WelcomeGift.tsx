@@ -58,7 +58,7 @@ export function WelcomeGift({
        trailing the content. */
     <>
       <PhoneScreen.Body>
-      <section className="ediagd-hero relative flex flex-1 flex-col justify-center overflow-hidden">
+      <section className="ediagd-hero relative flex flex-1 flex-col justify-center overflow-hidden" data-intentional-bleed>
         <div className="relative flex flex-col items-center px-2 py-6 text-center">
           <ConfettiBurst topOffset={64} />
 

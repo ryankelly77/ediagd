@@ -43,7 +43,7 @@ export function HeadlineCard({
   motif?: boolean;
 }) {
   return (
-    <section className="ediagd-hero relative overflow-hidden">
+    <section className="ediagd-hero relative overflow-hidden" data-intentional-bleed>
       {motif && <SunWaveMotif />}
       <div className="relative">
         {kicker && (

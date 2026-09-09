@@ -70,7 +70,8 @@
     "test:streak-saver": "rm -rf .tmp-ss && tsc -p scripts/tsconfig.streaksaver.json && mkdir -p .tmp-ss/node_modules && ln -sfn .. .tmp-ss/node_modules/@ && node .tmp-ss/scripts/streak-saver-scenarios.js",
     "trim:slates": "rm -rf .tmp-ts && tsc scripts/trim-slates.ts --outDir .tmp-ts --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-ts/trim-slates.js",
     "slate:plan": "rm -rf .tmp-sp && tsc scripts/slate-plan.ts --outDir .tmp-sp --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-sp/slate-plan.js",
-    "audit:larger-text": "node scripts/larger-text-audit.mjs"
+    "audit:larger-text": "node scripts/larger-text-audit.mjs",
+    "test:larger-text": "node scripts/larger-text-audit.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

@@ -72,7 +72,7 @@ export default async function SandDollarsPage({
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
       {/* ---- Hero: the two numbers ------------------------------------- */}
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">Sand Dollars</p>

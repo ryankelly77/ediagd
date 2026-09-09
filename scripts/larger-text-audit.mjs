@@ -218,6 +218,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* ---- The detector, run inside the page --------------------------------- */
 
+/** Under this, it is sub-pixel rounding rather than a layout failure. */
+const SLOP_PX = 5;
+
 const DETECT = `(() => {
   /*
    * THREE FAILURES, NOT ONE, because they need different fixes.
@@ -239,7 +242,7 @@ const DETECT = `(() => {
   const out = { truncated: [], clipped: [], spilling: [], pageWide: 0 };
   const de = document.documentElement;
   out.pageWide = Math.max(0, de.scrollWidth - de.clientWidth);
-  const SLOP = 8;
+  const SLOP = ${SLOP_PX};
 
   const describe = (el) => {
     const t = (el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 60);
@@ -247,7 +250,20 @@ const DETECT = `(() => {
     return el.tagName.toLowerCase() + (cls ? "." + cls : "") + (t ? '  "' + t + '"' : "");
   };
 
+  /*
+   * Two exemptions, both learned the hard way when this reported today's
+   * shipping state as broken:
+   *
+   *   data-intentional-bleed  an explicit annotation. The hero motif paints
+   *                           outside its box on purpose, and a script cannot
+   *                           tell design from defect — so the design says so.
+   *   an absolutely positioned child
+   *                           the same thing, unannotated, which is how most
+   *                           decorative overflow happens.
+   */
   const decorative = (el) =>
+    el.hasAttribute("data-intentional-bleed") ||
+    el.closest("[data-intentional-bleed]") !== null ||
     [...el.children].some((c) => {
       const p = getComputedStyle(c).position;
       return p === "absolute" || p === "fixed";
@@ -391,6 +407,42 @@ async function main() {
   const clean = (ROUTES[WHO] ?? ROUTES.advisor).filter((r) => !byRoute.has(r));
   console.log(`  survives 200%: ${clean.length ? clean.join(", ") : "none"}`);
   console.log("\n  detail -> reports/larger-text-audit.json\n");
+
+  /*
+   * ---- THE BAR, AND WHY IT IS TWO BARS ----------------------------------
+   *
+   * 100-150% must be CLEAN: nothing truncated, nothing clipped, nothing
+   * spilling. 125% is the slider in Display & Brightness — for advisors on a
+   * service drive it may be the median setting, not an accessibility edge
+   * case, and a screen that fails there fails for ordinary people.
+   *
+   * 200% only has to be STRUCTURALLY sound: no clipping, no page-level
+   * horizontal scroll. Text may wrap oddly and cards may be tall. Somebody at
+   * 200% has accepted that things look different; they have not accepted
+   * losing words or having to scroll sideways to read a sentence.
+   */
+  const strict = results.filter((r) => !r.skipped && r.scale !== "200%");
+  const strictFails = strict.filter(
+    (r) => r.truncated.length + r.clipped.length + r.spilling.length > 0
+  );
+  const huge = results.filter((r) => !r.skipped && r.scale === "200%");
+  const hugeFails = huge.filter((r) => r.clipped.length > 0 || r.pageWide > SLOP_PX);
+
+  console.log(`  100-150%  ${strictFails.length} failing of ${strict.length} checks`);
+  console.log(`  200%      ${hugeFails.length} structural failures of ${huge.length}`);
+  for (const f of [...strictFails, ...hugeFails]) {
+    const what = [
+      ...f.truncated.map((x) => `truncated ${x}`),
+      ...f.clipped.map((x) => `clipped ${x}`),
+      ...f.spilling.map((x) => `spilling ${x}`),
+    ];
+    console.log(`\n  FAIL ${f.scale} ${f.route}${f.pageWide > SLOP_PX ? `  page +${f.pageWide}px` : ""}`);
+    what.slice(0, 4).forEach((w) => console.log(`       ${w}`));
+  }
+
+  const failed = strictFails.length + hugeFails.length;
+  console.log(failed ? `\n  ${failed} FAILING\n` : "\n  all clear\n");
+  if (failed) process.exit(1);
 }
 
 main().catch((e) => { console.error("\n  " + e.message + "\n"); process.exit(1); });

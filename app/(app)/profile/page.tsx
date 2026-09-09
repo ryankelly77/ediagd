@@ -130,10 +130,12 @@ export default async function ProfilePage() {
             {initial}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-lg font-extrabold text-navy">
+            {/* A person's own name and email are the two things this card is
+                for; at 200% they were cut to a 112px box. They wrap now. */}
+            <p className="break-words text-lg font-extrabold text-navy">
               {displayName}
             </p>
-            <p className="truncate text-sm text-ink-soft">{user.email}</p>
+            <p className="break-all text-sm text-ink-soft">{user.email}</p>
           </div>
         </div>
 

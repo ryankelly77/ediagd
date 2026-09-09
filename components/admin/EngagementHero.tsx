@@ -34,7 +34,7 @@ export function EngagementHero({
   const meetsTarget = (score ?? 0) >= ENGAGEMENT_TARGET;
 
   return (
-    <section className="ediagd-hero">
+    <section className="ediagd-hero" data-intentional-bleed>
       <SunWaveMotif />
       <div className="relative flex items-center gap-5">
         <svg

@@ -81,7 +81,7 @@ export default async function SwagPage() {
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
-      <section className="ediagd-hero">
+      <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">Swag Shack</p>

@@ -92,7 +92,12 @@ export default async function StreakPage() {
         </section>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      {/* Two fixed columns gave "Longest Swell" a 91px box against 119px of
+          label at 200%. Same rule as the advisor tiles: the grid reflows. */}
+      <div
+        className="mt-4 grid gap-3"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(10rem, 100%), 1fr))" }}
+      >
         <Stat label="Longest Swell" value={longest > 0 ? `${longest} days` : "—"} />
 
         {/* Balance is what you can spend; total earned only ever climbs.

@@ -57,7 +57,11 @@ export default async function LibraryPage() {
                         className="flex min-h-[3.5rem] items-center gap-3 py-3.5 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                       >
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-base font-bold text-navy">
+                          {/* WRAPS, NEVER TRUNCATES. Telling somebody what the film is called
+    is this screen's whole job, and at 150% the box was 201px against
+    302px of title — "The Multi-Point Ins…". A card can afford to be
+    two lines taller; a library that hides its own titles cannot. */}
+                          <span className="block text-base font-bold text-navy">
                             {c.name}
                           </span>
                           <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
