@@ -74,7 +74,7 @@ export function AppHeader({
       {/* WRAPS RATHER THAN SQUEEZES. flex-wrap is what lets the header grow a
           row instead of crushing the lockup; py-1.5 and the gap give the two
           rows breathing room on the sizes where that happens. */}
-      <div className="mx-auto flex max-w-app flex-wrap items-center gap-x-2 gap-y-1 px-4 py-1.5">
+      <div className="ediagd-header-bar mx-auto flex max-w-app flex-wrap items-center gap-x-2 gap-y-1 px-4 py-1.5">
         {/* ---- The lockup ------------------------------------------------ */}
         {/* mr-auto rather than flex-1: the lockup takes the width it needs and
             pushes the cluster right, instead of being the thing that gives. */}
@@ -146,7 +146,10 @@ export function AppHeader({
               ? `Notifications — ${unreadCount} unread`
               : "Notifications"
           }
-          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-pill text-navy transition hover:bg-teal-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          /* Yields SECOND. An unread badge is the only thing up here that
+             tells somebody something happened without being asked; it survives
+             one step longer than the avatar. Duplicated on More. */
+          className="ediagd-yields-second relative flex h-9 w-9 shrink-0 items-center justify-center rounded-pill text-navy transition hover:bg-teal-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <BellIcon />
           {unreadCount > 0 && (
@@ -159,10 +162,13 @@ export function AppHeader({
           )}
         </Link>
 
+        {/* Yields FIRST. This is a shortcut to a screen More already offers, so
+            losing it costs a tap rather than a capability — and it is the only
+            thing up here of which that is true. */}
         <Link
           href="/profile"
           aria-label="Your account"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-teal text-sm font-extrabold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          className="ediagd-yields-first flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-teal text-sm font-extrabold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           {initials}
         </Link>

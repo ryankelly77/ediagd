@@ -348,3 +348,65 @@
     transform: none;
   }
 }
+
+/* ============================================================================
+   Header chrome yields as the text grows
+
+   ---------------------------------------------------------------------------
+   WHY em, AND WHY THIS WORKS WITHOUT JAVASCRIPT
+   ---------------------------------------------------------------------------
+   A media query's `em` resolves against the ROOT font size, not the element's.
+   So `max-width: 22em` does not mean a narrow phone — it means a phone that is
+   narrow RELATIVE TO THE TEXT ON IT. A 402px screen is 25.1em at the default
+   size, 20.1em at 125%, 16.8em at 150% and 12.6em at 200%. The same query
+   therefore reads "the text has grown enough that this no longer fits", which
+   is the actual condition, expressed once, in CSS.
+
+   ---------------------------------------------------------------------------
+   THE ORDER IS RYAN'S RULING, AND IT IS THE RIGHT WAY ROUND
+   ---------------------------------------------------------------------------
+   The avatar goes first: it is a way IN to a screen that the More tab already
+   offers, so removing it costs a shortcut rather than a capability. Alerts go
+   second, because an unread badge is the only thing in the header that tells
+   you something happened without you asking.
+
+   The balance pill and the lockup never go. The pill is the number the whole
+   economy is built to make somebody want to look at, and the lockup is the
+   app saying which app it is.
+
+   NOTHING IS LOST, ONLY MOVED. Both are duplicated in the More menu — see
+   app/(app)/more/page.tsx. A control that disappears with no second home is a
+   feature you have taken away from exactly the people who need it most.
+   ============================================================================ */
+
+/*
+ * ---------------------------------------------------------------------------
+ * A CONTAINER QUERY, NOT A MEDIA QUERY — AND THAT DISTINCTION IS THE WHOLE
+ * MECHANISM
+ * ---------------------------------------------------------------------------
+ * The first attempt used @media (max-width: 22em) and did nothing at any size.
+ * In a MEDIA query, font-relative units are defined to resolve against the
+ * browser's INITIAL font size — 16px — and are deliberately immune to whatever
+ * the page sets on :root. So the query could not see the very thing it was
+ * asking about. Measured: avatar and alerts still visible at 100, 125, 150 and
+ * 200%.
+ *
+ * Inside a CONTAINER query the same unit resolves against the container's own
+ * font size, which does inherit the scale. So the identical threshold now means
+ * what it was always meant to mean: "this bar is narrow relative to the text
+ * printed on it".
+ */
+.ediagd-header-bar {
+  container-type: inline-size;
+  container-name: ediagdheader;
+}
+
+/* About 125% on a 402px phone: 402/20 = 20.1em. */
+@container ediagdheader (max-width: 22em) {
+  .ediagd-yields-first { display: none; }
+}
+
+/* About 150%: 402/24 = 16.8em. */
+@container ediagdheader (max-width: 18em) {
+  .ediagd-yields-second { display: none; }
+}

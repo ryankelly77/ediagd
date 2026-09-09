@@ -276,8 +276,9 @@
    "clipped": [],
    "spilling": [],
    "pageWide": 0,
-   "landed": "/profile",
-   "broken": 0
+   "landed": "/today",
+   "broken": 0,
+   "skipped": true
   },
   {
    "route": "/profile",

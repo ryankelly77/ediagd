@@ -80,6 +80,28 @@ export default async function MorePage() {
             hint="Spend your Sand Dollars on the gear"
           />
         </li>
+        {/*
+          THE HEADER'S SECOND HOME.
+          At larger text sizes the header sheds the avatar and then the alerts
+          bell — see .ediagd-yields-first / -second in styles/brand.css. These
+          rows are where they go, and they are listed unconditionally rather
+          than only when the header has dropped them: a menu whose contents
+          change with the font size is a menu nobody can learn.
+        */}
+        <li>
+          <LinkRow
+            href="/notifications"
+            label="Alerts"
+            hint="Wins, nudges and anything waiting for you"
+          />
+        </li>
+        <li>
+          <LinkRow
+            href="/profile"
+            label="Your account"
+            hint="Name, password, schedule and reminders"
+          />
+        </li>
       </ul>
 
       {/* THE MANAGER'S TOOLS. Above the admin block and behind a different
