@@ -436,12 +436,69 @@
   container-name: ediagdstats;
 }
 
+/* Stacked is the LAST resort, not the second one — see the bands below. */
 .ediagd-stat-grid {
   grid-template-columns: 1fr;
 }
 
-@container ediagdstats (min-width: 20em) {
+.ediagd-stat-value {
+  font-size: 1.25rem;
+}
+
+/*
+ * THREE ACROSS, COMPACT. Ryan at XXXL: "my sales numbers are all vertically
+ * stacked". Stacking removed the orphan and cost him the row, and the row is
+ * the thing — three numbers side by side is the comparison the card exists to
+ * make. XXXL is also the top of the STANDARD Text Size slider, so it is a
+ * setting a lot of people will actually be on, not an accessibility extreme.
+ *
+ * Three still fit there; they just cannot fit at full size. At 135% the columns
+ * are 96px and "$175.36" wants 98 at 1.25rem. So this band tightens the gap and
+ * steps the figures down to 1.05rem — which at that scale is still 22.7px,
+ * larger than the 20px they are at 100%. The numbers keep growing with the
+ * setting, just at a gentler rate than the copy around them, which is the trade
+ * that keeps them on one line.
+ *
+ * ---------------------------------------------------------------------------
+ * THE THRESHOLDS ARE CONTENT-BOX em, WHICH IS NOT WHAT THE CARD MEASURES
+ * ---------------------------------------------------------------------------
+ * A query container is sized by its CONTENT box. This card carries 1.25rem of
+ * padding a side, so the width these conditions see is about 2.5em less than
+ * the card's own width — measured, at five scales:
+ *
+ *     scale   card    padding   queried   card/fs   what the engine reports
+ *     100%    370px   2x20      330px     23.1em    20.6em
+ *     125%    362px   2x25      312px     18.1em    15.6em
+ *     135%    359px   2x27      305px     16.6em    14.1em
+ *     150%    354px   2x30      294px     14.8em    12.3em
+ *     200%    338px   2x40      258px     10.6em     8.1em
+ *
+ * The first pass of this used the card/fs column and picked 16em and 19em,
+ * which are both past the top of the queried range from 125% up — so the bands
+ * silently never fired and every larger size stacked. The numbers below come
+ * from the last column: 13em sits between 135% and 150%, 18em between 100% and
+ * 125%.
+ */
+@container ediagdstats (min-width: 13em) {
   .ediagd-stat-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.5rem;
+  }
+  .ediagd-stat-value {
+    font-size: 1.05rem;
+  }
+}
+
+/*
+ * THREE ACROSS, FULL SIZE. Wide enough that nothing has to give — 100% and
+ * anything else with room to spare. Comes after the compact band deliberately:
+ * both match here and equal specificity means the later one wins.
+ */
+@container ediagdstats (min-width: 18em) {
+  .ediagd-stat-grid {
+    column-gap: 1rem;
+  }
+  .ediagd-stat-value {
+    font-size: 1.25rem;
   }
 }

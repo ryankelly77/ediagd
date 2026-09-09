@@ -436,8 +436,14 @@ function SecondaryStat({ label, value }: { label: string; value: string }) {
         {label}
       </dt>
       {/* break-words so a long currency figure wraps inside its tile instead
-          of pushing the tile wider than the screen. */}
-      <dd className="ediagd-numeral mt-1 break-words text-xl font-extrabold text-navy">
+          of pushing the tile wider than the screen.
+
+          The size comes from .ediagd-stat-value rather than a text-xl utility:
+          it has to step down in the compact band so three figures still share a
+          row at XXXL, and a utility class and a container-query rule have the
+          same specificity — which one won would have come down to the order the
+          stylesheets happened to be concatenated in. */}
+      <dd className="ediagd-stat-value ediagd-numeral mt-1 break-words font-extrabold text-navy">
         {value}
       </dd>
     </div>
