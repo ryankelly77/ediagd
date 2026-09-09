@@ -192,13 +192,13 @@ export async function publishMany(ids: string[]): Promise<BulkPublishResult> {
 
   const { data, error: readError } = await ctx.supabase
     .from("content")
-    .select("id, title, type, status, service_family, mux_playback_id, video_url, duration_sec, vertical_status")
+    .select("id, title, type, status, service_family, retired_at, mux_playback_id, video_url, duration_sec, vertical_status")
     .in("id", wanted);
   if (readError) return { ok: false, published: 0, held: [], error: readError.message };
 
   const rows = (data ?? []) as {
     id: string; title: string; type: string; status: string;
-    service_family: string | null; mux_playback_id: string | null;
+    service_family: string | null; retired_at: string | null; mux_playback_id: string | null;
     video_url: string | null; duration_sec: number | null; vertical_status: string | null;
   }[];
 
@@ -208,6 +208,18 @@ export async function publishMany(ids: string[]): Promise<BulkPublishResult> {
 
   for (const row of rows) {
     if (row.status === "published") continue; // already there; not an error
+
+    /*
+     * NEVER REPUBLISH SOMETHING RETIRED. Retiring is this app's delete, and a
+     * retired row keeps status='draft' — so without this a bulk publish over a
+     * drafts list would quietly resurrect deleted content. The list no longer
+     * offers them, and this refuses them anyway: a Server Function is reachable
+     * by direct POST whether or not a checkbox rendered.
+     */
+    if (row.retired_at) {
+      held.push({ id: row.id, title: row.title, because: "retired — un-retire it first" });
+      continue;
+    }
     const isVideo = row.type.endsWith("_video") || row.type === "joe_the_pro";
 
     /*

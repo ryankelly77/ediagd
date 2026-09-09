@@ -65,6 +65,25 @@ export default async function ContentServicePage({
   if (tierFilter) query = query.eq("tier", tierFilter);
   if (statusFilter) query = query.eq("status", statusFilter);
 
+  /*
+   * ---- RETIRED IS NOT DRAFT, THOUGH IT WEARS THE SAME STATUS -------------
+   *
+   * Retiring is this app's replacement for delete: it sets retired_at AND
+   * unpublishes, so a retired row has status='draft'. Filtering on status
+   * alone therefore listed 129 retired items as things waiting to be
+   * published — and with bulk publish on that screen, one "Select all" would
+   * have resurrected every deleted item in the library.
+   *
+   * The detail screen has always shown these as Retired. The list never
+   * asked. Ryan found it on the first row: "it's labeled as retired but shows
+   * up when you have draft selected."
+   *
+   * Scoped to the DRAFT filter deliberately. Browsing everything should still
+   * show a retired row — it exists, and hiding it is how somebody concludes
+   * content vanished. It just is not a draft.
+   */
+  if (statusFilter === "draft") query = query.is("retired_at", null);
+
   const from = (page - 1) * PAGE_SIZE;
   const { data, count, error } = await query.range(from, from + PAGE_SIZE - 1);
 
