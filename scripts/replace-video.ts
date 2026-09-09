@@ -79,6 +79,22 @@ const dry = args.includes("--dry");
  * clip source, and the same swap and re-derive afterwards.
  */
 const trimOnly = args.includes("--trim-only");
+/**
+ * ---- THE SAME TAKE, RE-ENCODED, BECAUSE THE ASSET WAS WRONG ---------------
+ *
+ * Mux's clip produced six assets whose VIDEO is about two seconds shorter than
+ * their AUDIO — it cut the sound at the requested point and the picture
+ * somewhere else — so the two play from different points in the film. That is
+ * the desync Ryan heard on the daily loop, and Mux's own reported duration
+ * matched what was asked for, so nothing downstream noticed.
+ *
+ * The repair is a locally cut file: ffmpeg seeking accurately lands the two
+ * streams within a single frame of each other, measured. But it is NOT a new
+ * take and NOT a new version — the master on the shelf is unchanged and still
+ * the thing that was shot. So this uploads and swaps the asset, re-derives the
+ * vertical, and touches nothing in Drive and nothing about the version.
+ */
+const assetOnly = args.includes("--asset-only");
 
 if (!contentId || (!file && !trimOnly)) {
   console.error("  need --id=<content uuid> and --file=<path>");
@@ -409,8 +425,8 @@ async function main() {
    * written after fifty-four reshoots left their rows claiming v1 of a file
    * that had already been archived under another name.
    */
-  const newCanonical = trimOnly ? null : path.basename(file!);
-  const newVersion = trimOnly
+  const newCanonical = trimOnly || assetOnly ? null : path.basename(file!);
+  const newVersion = trimOnly || assetOnly
     ? null
     : Number(newCanonical!.match(/—\s*v(\d+)\.[a-z0-9]+$/i)?.[1] ?? row.version + 1);
 
@@ -451,10 +467,53 @@ async function main() {
    * a lie when the replacement IS that file — and it leaves the shelf without
    * the master it still needs.
    */
-  const fromTheShelf = !trimOnly && file!.includes(`${path.sep}02 - Published${path.sep}`);
-  if (!trimOnly && !fromTheShelf) {
+  const fromTheShelf = !trimOnly && !assetOnly && file!.includes(`${path.sep}02 - Published${path.sep}`);
+  if (!trimOnly && !assetOnly && !fromTheShelf) {
     await archiveOldMaster(row);
     await fileNewMaster(row, file!);
+  }
+
+  /*
+   * ---- DID THE TWO STREAMS SURVIVE? --------------------------------------
+   *
+   * The reason this exists: a Mux clip can return an asset whose duration is
+   * exactly what was asked for while its video and audio start from different
+   * points. Nothing in the API says so — only the file does. Six of ninety-one
+   * shipped that way and were found by a person watching one.
+   *
+   * Best effort and non-fatal: the swap has already happened and the row is
+   * already correct as far as anything else is concerned. This is here to make
+   * the failure LOUD rather than to prevent the write.
+   */
+  try {
+    /* Narrowed: newAssetId is nullable through the upload path and set by
+       here, and the Mux client takes a string. */
+    const finalAssetId = newAssetId as string;
+    await mux.video.assets.updateMasterAccess(finalAssetId, { master_access: "temporary" });
+    let ready: string | null = null;
+    for (let i = 0; i < 24; i++) {
+      const a = await mux.video.assets.retrieve(finalAssetId);
+      if (a.master?.status === "ready" && a.master.url) { ready = a.master.url; break; }
+      if (a.master?.status === "errored") break;
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+    if (ready) {
+      const { stdout: probe } = await run("ffprobe", [
+        "-v", "error", "-show_entries", "stream=codec_type,duration",
+        "-of", "default=noprint_wrappers=1:nokey=0", ready,
+      ]);
+      const v = Number(probe.match(/codec_type=video\nduration=([\d.]+)/)?.[1] ?? 0);
+      const a = Number(probe.match(/codec_type=audio\nduration=([\d.]+)/)?.[1] ?? 0);
+      const skew = Math.abs(v - a);
+      if (v && a && skew > 0.25) {
+        console.log(`\n  ⚠  A/V SKEW: video ${v.toFixed(2)}s vs audio ${a.toFixed(2)}s (${skew.toFixed(2)}s apart).`);
+        console.log(`     This asset will play out of sync. Re-cut it locally and use --asset-only.`);
+      } else if (v && a) {
+        console.log(`\n  streams aligned  video ${v.toFixed(2)}s / audio ${a.toFixed(2)}s`);
+      }
+    }
+  } catch {
+    /* Master access may be off account-wide; the swap still stands. */
   }
 
   const { data: after } = await sb
