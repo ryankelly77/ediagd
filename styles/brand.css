@@ -410,3 +410,38 @@
 @container ediagdheader (max-width: 18em) {
   .ediagd-yields-second { display: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   THE STAT ROW: THREE ACROSS, OR THREE DOWN — NEVER TWO AND AN ORPHAN
+   ---------------------------------------------------------------------------
+   ELR, Labor GP and ROs sat in an auto-fit grid, which reflows 3 -> 2 -> 1 as
+   the text grows. The 2 is the problem. Ryan, twice: at default size "ROs is
+   not a separate dangling line", and again at the top of the standard Text Size
+   range, "I am at full text size and RO is still wrapping."
+
+   He is right both times, and it is not really about ROs. Two full columns and
+   a third item alone underneath reads as a layout that ran out of room. The
+   same three numbers stacked one per row read as a deliberate list. So the row
+   has two states and no middle: all three side by side while they fit, and all
+   three stacked once they do not.
+
+   The threshold is in em inside a CONTAINER query, for the reason spelled out
+   above this block — em here resolves against the container's own scaled font
+   size, so "wide enough relative to the text printed on it" is a question this
+   can actually ask. A media query would be blind to the scale, which is the
+   bug that shipped the first time.
+   --------------------------------------------------------------------------- */
+.ediagd-stat-card {
+  container-type: inline-size;
+  container-name: ediagdstats;
+}
+
+.ediagd-stat-grid {
+  grid-template-columns: 1fr;
+}
+
+@container ediagdstats (min-width: 20em) {
+  .ediagd-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

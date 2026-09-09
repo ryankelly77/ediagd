@@ -292,7 +292,7 @@ export default async function AdvisorPage() {
       {/* ---- Daily stat: the screen's big number, warm not navy ---------- */}
       {/* Feature card rather than a second navy hero — DESIGN_LANGUAGE §5 says
           one hero per screen, and Eddie's Pick is the hero here. */}
-      <section className="ediagd-card-feature mt-6">
+      <section className="ediagd-card-feature ediagd-stat-card mt-6">
         <p className="ediagd-eyebrow">
           {periodLabel.period ? `Labor sales · ${periodLabel.period}` : "Labor sales this period"}
         </p>
@@ -307,21 +307,18 @@ export default async function AdvisorPage() {
           minimum lets the row become two columns, then one, as the text grows.
           The number is the point of the tile; the layout is what gives.
 
-          THE MINIMUM HAS TO FIT THREE AT 100%, WHICH 9rem DID NOT. 144px x 3
-          plus two 16px gaps is 464, and the card's interior is about 365 on a
-          430pt phone — so auto-fit dropped to two columns at DEFAULT text size
-          and left ROs alone on a second row looking like an afterthought.
-          5.5rem x 3 + gaps is 296, which fits three even on a 375pt SE, and the
-          1fr lets them spread to fill the row rather than sitting at 88px.
+          AND THE STEP IT REFLOWS TO MATTERS AS MUCH AS WHEN. auto-fit's middle
+          state is two columns with the third item alone underneath, and that is
+          the shape Ryan reported twice — at default size, and again at the top
+          of the standard Text Size range. Three stacked rows read as a list;
+          two and an orphan read as a bug.
 
-          It still gives way on schedule: the floor is in rem, so at 125% it is
-          110px and the SE goes to two columns, and by 150% every phone does.
-          That was the point of the original change and it is unchanged.
+          So the columns come from .ediagd-stat-grid in brand.css, which has
+          exactly two states — three across, or one per row — switched on a
+          container query against the card. The rule lives there rather than in
+          a style prop because a container query cannot be written inline.
         */}
-        <dl
-          className="mt-6 grid gap-4 border-t border-line pt-4"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(5.5rem, 100%), 1fr))" }}
-        >
+        <dl className="ediagd-stat-grid mt-6 grid gap-4 border-t border-line pt-4">
           <SecondaryStat
             label="ELR"
             value={
