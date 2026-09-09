@@ -24,8 +24,17 @@ export type PeriodInfo = {
 };
 
 export type PeriodLabel = {
-  /** "Doggett Chrysler Dodge Jeep Ram · July 2026" */
+  /**
+   * "Doggett Chrysler Dodge Jeep Ram · July 2026"
+   *
+   * The two facts joined, for a caller that has room for exactly one string.
+   * PeriodStamp no longer renders it: glued together they wrap as a single run
+   * of text, which is how "· July 2026" ended up alone on a second line with
+   * the date range stranded on a third. Prefer `rooftop` and `period`.
+   */
   headline: string;
+  /** "Doggett Chrysler Dodge Jeep Ram" on its own, so it can hold a line. */
+  rooftop: string;
   /** "July 2026" or "August 2026 (partial)" */
   period: string;
   /** "1–31 Jul 2026", or "1–10 Aug 2026" when partial. */
@@ -60,6 +69,7 @@ export function formatPeriod(
   if (!period) {
     return {
       headline: rooftopName ?? "",
+      rooftop: rooftopName ?? "",
       period: "",
       range: "",
       partialNote: null,
@@ -96,6 +106,7 @@ export function formatPeriod(
 
   return {
     headline: rooftopName ? `${rooftopName} · ${periodText}` : periodText,
+    rooftop: rooftopName ?? "",
     period: periodText,
     range,
     partialNote,
