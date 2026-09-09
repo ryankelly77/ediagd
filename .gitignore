@@ -161,3 +161,8 @@ exports/
 
 # tsc scratch output from npm run sync:mux-titles
 .tmp-smt/
+
+# Database dumps taken before destructive content writes. Large, and not ours to publish.
+backups/
+.tmp-sr/
+.tmp-rct/

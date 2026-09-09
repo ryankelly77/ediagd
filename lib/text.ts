@@ -92,3 +92,75 @@ export function looksTruncated(text: string): boolean {
 export function tidyTruncation(text: string): string {
   return (text ?? "").trimEnd().replace(/[\s]*[,\-–—/;:]+$/, "").trimEnd();
 }
+
+/**
+ * Drop markdown emphasis that has nowhere to render.
+ *
+ * Mitch writes his master in a sheet, and he bolds the opening phrase of a
+ * fact with **asterisks** the way anyone would. Nothing downstream of the
+ * import speaks markdown — Prose renders plain text — so those asterisks reach
+ * the advisor as literal punctuation: "**THE BOAT-LAUNCHING / WATER-EXPOSURE
+ * FACT**". 149 published cues do this today.
+ *
+ * Removing the markers loses the emphasis, which is a real loss. Showing them
+ * loses the reader, which is a bigger one, and the emphasis is usually on the
+ * opening phrase that splitCueHeading is about to promote to a heading anyway.
+ */
+export function stripEmphasis(text: string): string {
+  /* [\s\S] rather than the `s` flag: the build targets below es2018. */
+  return (text ?? "").replace(/\*\*([\s\S]+?)\*\*/g, "$1").replace(/\*\*/g, "");
+}
+
+export type CueHeading = {
+  /** The opening phrase, to set bold. Null when there isn't an honest one. */
+  heading: string | null;
+  /** Everything else, as paragraphs. */
+  rest: string;
+};
+
+/**
+ * Split a cue title into a heading and the teaching that follows it.
+ *
+ * WHY A TITLE NEEDS SPLITTING AT ALL. The knowledge import put Mitch's whole
+ * teaching paragraph into `title` and the short takeaway line into `body`. So
+ * `title` routinely runs 400–700 characters, and the daily loop set all of it
+ * in bold as though it were a heading — a wall of emphasised text with no
+ * entry point, which is what Ryan was looking at when he said he could not
+ * tell what was happening.
+ *
+ * The structure is already in the writing, twice over: the fact-style rows open
+ * with a bolded phrase ("**THE 8-FOOT / 13-FOOT STOPPING DISTANCE STAT**") and
+ * the strategy-style rows open with a short labelled sentence ("Strategy 2: The
+ * Boat-Launching / Water-Exposure Trigger."). Either is a heading. This finds
+ * whichever is there and leaves the rest as prose.
+ *
+ * WHEN IT FINDS NEITHER IT RETURNS NULL rather than cutting at a word count.
+ * A heading invented by truncation is exactly the thing being fixed here, and a
+ * paragraph with no heading reads fine — a paragraph with half a sentence in
+ * bold on top of it does not.
+ */
+export function splitCueHeading(title: string): CueHeading {
+  const t = (title ?? "").trim();
+  if (!t) return { heading: null, rest: "" };
+
+  /* A leading **bold span** is an explicit heading — take it as written. */
+  const bold = t.match(/^\*\*([\s\S]+?)\*\*\s*/);
+  if (bold) {
+    const heading = bold[1].trim().replace(/[.:;,\s]+$/, "");
+    return { heading, rest: stripEmphasis(t.slice(bold[0].length)).trim() };
+  }
+
+  /* Otherwise the first sentence, but only if it is short enough to BE a
+     heading. Past this it is just the first sentence of a paragraph, and
+     promoting it would put a random clause in bold. */
+  const HEADING_MAX = 90;
+  const end = t.search(/[.!?]["')\]]?(\s|$)/);
+  if (end > 0 && end < HEADING_MAX) {
+    const heading = t.slice(0, end).trim();
+    const rest = t.slice(end + 1).trim();
+    /* A heading with nothing under it is not a heading, it is the whole cue. */
+    if (rest) return { heading: stripEmphasis(heading), rest: stripEmphasis(rest) };
+  }
+
+  return { heading: null, rest: stripEmphasis(t) };
+}

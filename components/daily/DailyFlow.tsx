@@ -22,6 +22,7 @@ import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
 import { MIN_ROS_FOR_COACHING, formatPct } from "@/lib/advisor";
 import { citationFor } from "@/lib/content";
+import { splitCueHeading, stripEmphasis } from "@/lib/text";
 import type { CompleteDayResult } from "@/lib/gamification/completeDay";
 import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { PullQuote } from "@/components/brand/ScreenBlocks";
@@ -959,13 +960,28 @@ function FocusStep({
         <div className="rounded-card border border-line bg-surface-card p-5 shadow-card">
           {cue ? (
             <>
-              <p className="text-base font-extrabold text-navy">{cue.title}</p>
+              {/* The title is not a title for most of these rows — the import
+                  put the whole teaching paragraph in it. splitCueHeading takes
+                  the opening phrase Mitch already wrote as a heading and leaves
+                  the rest as readable prose, instead of setting 500 characters
+                  in bold. */}
+              {(() => {
+                const { heading, rest } = splitCueHeading(cue.title);
+                return (
+                  <>
+                    {heading && (
+                      <p className="text-base font-extrabold text-navy">{heading}</p>
+                    )}
+                    {rest && <Prose text={rest} className={heading ? "mt-3" : ""} />}
+                  </>
+                );
+              })()}
               {/* Also unclamped, and for the same reason as the nugget on step
                   1: one screen in a scroll region, not a row in a list. The 94
                   restored cues run to 1,200 characters now, which is exactly
                   the case where a "Read the rest" tap buys nothing — the words
                   were the point of restoring them. */}
-              {cue.body && <Prose text={cue.body} className="mt-3" />}
+              {cue.body && <Prose text={stripEmphasis(cue.body)} className="mt-3" />}
             </>
           ) : cueMatch === "none" && focus ? (
             /*
