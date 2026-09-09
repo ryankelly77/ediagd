@@ -112,6 +112,37 @@ export function stepToRange(
 export const WATCHED_PCT = 95;
 
 /**
+ * How close to the end the Continue gate opens, in seconds.
+ *
+ * The sign-off — "Mahalo" — lands a median 1.46s from the end across the whole
+ * library, measured word-level across 90 films. Two seconds is that moment.
+ */
+export const GATE_TAIL_SEC = 2;
+
+/**
+ * The bar for THIS video, which a flat percentage cannot express.
+ *
+ * 95% is a share, and a share of a long film is a lot of film: on a 130-second
+ * lesson it opens the button six and a half seconds early, while Mitch is still
+ * talking. On a 30-second one it is a second and a half. The same number,
+ * behaving completely differently, and worst on the longest pieces — which is
+ * exactly what Ryan kept seeing: "the gold button showed way before the end
+ * again."
+ *
+ * So the tail is expressed in SECONDS and converted to this video's own
+ * percentage. And it is the STRICTER of the two, never the looser: on a short
+ * clip two seconds would be 80% of it, which would open the gate earlier than
+ * today rather than later. 95 stays the floor.
+ */
+export function gateThreshold(durationSec: number | null | undefined): number {
+  if (!durationSec || !Number.isFinite(durationSec) || durationSec <= 0) {
+    return WATCHED_PCT;
+  }
+  const tailBased = ((durationSec - GATE_TAIL_SEC) / durationSec) * 100;
+  return Math.max(WATCHED_PCT, Math.min(99.5, tailBased));
+}
+
+/**
  * Has this been watched?
  *
  * Rounds to two decimals before comparing so a coverage of 94.999999 — which

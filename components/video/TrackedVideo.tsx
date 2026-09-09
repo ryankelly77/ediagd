@@ -34,7 +34,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MuxVideo, type MuxVideoProps } from "@/components/video/MuxVideo";
 import {
-  WATCHED_PCT,
+  gateThreshold,
   isWatched,
   newWatchSession,
   observeWatch,
@@ -65,7 +65,8 @@ const PLAYBACK_TIMEOUT_MS = 20_000;
 
 export function TrackedVideo({
   policy = "credit-only",
-  threshold = WATCHED_PCT,
+  /* Undefined means "decide per video" — see gateThreshold at the call site. */
+  threshold: thresholdGiven,
   onWatchChange,
   onFirstPlay,
   initialMet = null,
@@ -221,7 +222,19 @@ export function TrackedVideo({
       /* `met` lives only in a ref: this component renders nothing that depends
          on it — the gate and its line are the parent's — and a second copy in
          state would be a second source of truth for the same fact. */
-      if (!metRef.current && isWatched(next, threshold)) {
+      /*
+       * ---- THE BAR IS PER VIDEO, NOT A FLAT SHARE -------------------------
+       *
+       * A caller may still pass an explicit threshold and it wins. Left to
+       * itself, the gate now opens two seconds from the end of THIS video
+       * rather than at 95% of it — six and a half seconds early on a
+       * two-minute lesson, which is what kept putting the gold button on
+       * screen while Mitch was still speaking. gateThreshold never returns
+       * anything looser than 95, so no video opens sooner than it used to.
+       */
+      const bar = thresholdGiven ?? gateThreshold(el.duration);
+
+      if (!metRef.current && isWatched(next, bar)) {
         metRef.current = true;
         report({ pct: next, met: true });
         fileGate({ pct: next, met: true, error: false });
@@ -229,7 +242,7 @@ export function TrackedVideo({
       }
       report({ pct: next });
     },
-    [policy, threshold, pct, report, clearTimer, fileGate]
+    [policy, thresholdGiven, pct, report, clearTimer, fileGate]
   );
 
   /*
