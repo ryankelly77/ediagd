@@ -113,6 +113,12 @@
 
 /* Base application shell */
 .ediagd-app {
+  /* BODY IS 17, INCLUDING TEXT THAT NEVER ASKED FOR A SIZE. Anything without
+     a text-* class inherits the root, which is 16 and is the browser's number
+     rather than ours — that is how three primary buttons ended up a notch
+     under every other control on the same phone. In rem, so Dynamic Type
+     still moves it. See the scale note in app/globals.css. */
+  font-size: 1.0625rem;
   background: rgb(var(--surface));
   background-image: var(--ediagd-surface-gradient);
   background-repeat: no-repeat;
@@ -215,7 +221,9 @@
 /* Eyebrow: Montserrat-style tracked uppercase. Teal on light, gold on navy —
    both are "the label voice", the colour just follows the surface. */
 .ediagd-eyebrow {
-  font-size: 11px;
+  /* 13px, the floor — was 11. An eyebrow is small by role, not by size, and
+     the tracking and the colour already carry that role. */
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -419,10 +427,15 @@
  * container is sized by its content box, and this bar carries px-4 a side, so
  * the width these conditions see is 32px less than the header's. Getting that
  * wrong once already shipped a set of bands that silently never fired.
- * Measured on a 402pt viewport: 23.1em at 100%, 18.5 at 125%, 17.1 at 135%,
- * 15.4 at 150%, 11.6 at 200%.
+ * RE-MEASURED AFTER THE TYPE SCALE MOVED. Body went from 16px to 17, and the
+ * container's own font-size with it — so the same physical bar now measures
+ * FEWER em, and thresholds tuned against the old basis fire a step early. On
+ * a 402pt viewport: 21.8em at 100%, 17.0 at 125%, 15.6 at 135%, 13.9 at 150%,
+ * 9.9 at 200%. At the old 16em the tagline started vanishing at 135%, which is
+ * the top of the standard Text Size slider and a setting people actually sit
+ * on. 15em keeps it there and still drops it by 150%.
  */
-@container ediagdheader (max-width: 16em) {
+@container ediagdheader (max-width: 15em) {
   .ediagd-yields-first { display: none; }
 }
 

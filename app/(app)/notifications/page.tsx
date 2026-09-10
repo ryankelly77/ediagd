@@ -212,7 +212,7 @@ function NotificationCard({ notification }: { notification: Notification }) {
             </ul>
           )}
 
-          <p className="mt-2 text-[11px] font-bold uppercase tracking-wide" style={{ color: style.color }}>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wide" style={{ color: style.color }}>
             {style.label}
           </p>
         </div>

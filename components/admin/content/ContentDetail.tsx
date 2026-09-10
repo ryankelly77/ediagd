@@ -113,7 +113,7 @@ function Chip({ children, tone = "line" }: { children: React.ReactNode; tone?: "
     teal: "bg-teal-soft/40 text-navy border-teal/40",
   }[tone];
   return (
-    <span className={`inline-flex items-center rounded-pill border px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide ${bg}`}>
+    <span className={`inline-flex items-center rounded-pill border px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide ${bg}`}>
       {children}
     </span>
   );
@@ -125,14 +125,14 @@ function IdRow({ label, value, href }: { label: string; value: string | null; hr
   if (!value) {
     return (
       <div className="flex items-baseline justify-between gap-3 py-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">{label}</span>
+        <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">{label}</span>
         <span className="text-xs text-ink-soft">—</span>
       </div>
     );
   }
   return (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
-      <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ink-soft">{label}</span>
+      <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-ink-soft">{label}</span>
       <span className="flex min-w-0 items-baseline gap-2">
         {href ? (
           <a href={href} target="_blank" rel="noreferrer" className="truncate font-mono text-xs text-teal underline underline-offset-2">
@@ -144,7 +144,7 @@ function IdRow({ label, value, href }: { label: string; value: string | null; hr
         <button
           type="button"
           onClick={() => { navigator.clipboard?.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1200); }}
-          className="shrink-0 text-[11px] font-bold text-ocean"
+          className="shrink-0 text-xs font-bold text-ocean"
         >
           {copied ? "copied" : "copy"}
         </button>
@@ -156,7 +156,7 @@ function IdRow({ label, value, href }: { label: string; value: string | null; hr
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-ink-soft">{label}</span>
+      <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-ink-soft">{label}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-ink-soft">{hint}</span>}
     </label>
@@ -312,7 +312,7 @@ export function ContentDetail({
                 catch a video the app was serving as a phone crop to everyone.
               */}
               <div className="py-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                   Renditions
                 </span>
                 <p className="mt-0.5 text-xs leading-relaxed text-ink">
@@ -320,7 +320,7 @@ export function ContentDetail({
                 </p>
               </div>
               <div className="flex items-baseline justify-between gap-3 py-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">Format</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">Format</span>
                 <span className="text-xs text-ink">
                   {mux.width && mux.height ? `${mux.width}×${mux.height}` : "—"}
                   {mux.durationSec ? ` · ${Math.round(mux.durationSec)}s` : ""}
@@ -339,7 +339,7 @@ export function ContentDetail({
                 className="h-28 w-16 shrink-0 rounded-lg object-cover"
               />
             ) : (
-              <div className="flex h-28 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-line p-1 text-center text-[10px] leading-tight text-ink-soft">
+              <div className="flex h-28 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-line p-1 text-center text-xs leading-tight text-ink-soft">
                 vertical not derived yet
               </div>
             )}
@@ -394,7 +394,7 @@ export function ContentDetail({
                           <span className="font-bold text-navy">v{v.version}</span>
                           {v.version === (item.version as number) && <span className="ml-2 text-palm">live</span>}
                           <span className="ml-2 text-ink-soft">{new Date(v.created_at).toLocaleDateString()}</span>
-                          <span className="block truncate font-mono text-[11px] text-ink-soft">{v.source_filename ?? "—"}</span>
+                          <span className="block truncate font-mono text-xs text-ink-soft">{v.source_filename ?? "—"}</span>
                         </span>
                         {v.version !== (item.version as number) && (
                           <button
@@ -780,7 +780,7 @@ function LinkedFormats({ id, linked, onDone }: { id: string; linked: Linked[]; o
 
   return (
     <div className="rounded-xl border border-line p-3">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">Linked formats</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">Linked formats</p>
 
       {linked.length > 0 ? (
         <ul className="mt-2 space-y-1">

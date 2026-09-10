@@ -123,11 +123,19 @@ export function AppHeader({
             >
               {BRAND.name}
             </span>
-            {/* YIELDS FIRST. Already in px, so it never grew; it is allowed to
-                wrap, and past that it drops. It is the one thing up here that
-                is pure decoration — the words are on the login screen, the
-                marketing site and the mark itself, and nobody navigates by
-                them. Everything else in this bar is a number or a way out. */}
+            {/* YIELDS FIRST, and the ONE EXEMPTION TO THE 13px FLOOR.
+                
+                Everything else in the app was lifted to Apple's Footnote size;
+                this stayed at 8px because it is part of the mark, not reading
+                text — the same reason the wordmark beside it is capped and
+                never scales. Measured at 13px: the lockup gets wide enough
+                that the header wraps to two rows AT DEFAULT SIZE and grows
+                from 68px to 116. Nobody turned their text up to read a
+                tagline they have already seen on the login screen, and paying
+                48px of every screen for it is not a trade worth making.
+                
+                It is also the first thing to go, so at any size where reading
+                it would matter, it is not there. */}
             <span className="ediagd-yields-first mt-[3px] block text-[8px] font-semibold uppercase leading-tight tracking-[0.1em] text-teal">
               {BRAND.tagline}
             </span>

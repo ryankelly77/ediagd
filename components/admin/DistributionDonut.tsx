@@ -107,7 +107,7 @@ export function DistributionDonut({
             <span className="ediagd-numeral text-2xl font-extrabold text-navy">
               {total}
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-ink-soft">
+            <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
               {noun}
             </span>
           </span>

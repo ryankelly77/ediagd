@@ -109,7 +109,7 @@ function ServiceDetail({
           {/* The one place the dot pulses: a single service, in focus. */}
           <StatusDot status={family.status} size={14} pulse />
           <span
-            className="text-[11px] font-bold uppercase tracking-[0.2em]"
+            className="text-xs font-bold uppercase tracking-[0.2em]"
             style={{ color: `rgb(var(${STATUS_META[family.status].cssVar}))` }}
           >
             {STATUS_META[family.status].label}

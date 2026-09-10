@@ -421,7 +421,7 @@ function StyledSelect({
                    with its options under it, and the heading is not countable,
                    so "3 of 47" stays true. */
                 <li key={`g-${b}`} role="group" aria-label={bucket.group}>
-                  <p className="sticky top-0 z-10 bg-cream-card px-3 pb-1 pt-2 text-[11px] font-extrabold uppercase tracking-wide text-ink-soft">
+                  <p className="sticky top-0 z-10 bg-cream-card px-3 pb-1 pt-2 text-xs font-extrabold uppercase tracking-wide text-ink-soft">
                     {bucket.group}
                   </p>
                   {rows}

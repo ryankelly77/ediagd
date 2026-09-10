@@ -21,7 +21,7 @@ function Strength({ overlap }: { overlap: number }) {
   const partial = overlap >= 0.4;
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+      className={`rounded-full px-2 py-0.5 text-xs font-bold ${
         strong
           ? "bg-teal text-white"
           : partial
@@ -40,7 +40,7 @@ export function TwinProposalCard({ proposal }: { proposal: TwinProposal }) {
       <p className="text-base font-extrabold text-navy">{proposal.cue.title}</p>
 
       <div className="mt-3 rounded-xl border border-line bg-cream-card p-3">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+        <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
           The cue
         </p>
         <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">
@@ -58,7 +58,7 @@ export function TwinProposalCard({ proposal }: { proposal: TwinProposal }) {
         {proposal.candidates.map((c) => (
           <div key={c.contentId} className="rounded-xl border border-line p-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                 The quote
               </span>
               <Strength overlap={c.overlap} />
@@ -76,7 +76,7 @@ export function TwinProposalCard({ proposal }: { proposal: TwinProposal }) {
         ))}
       </div>
 
-      <p className="mt-3 border-t border-line pt-3 text-[11px] text-ink-soft">
+      <p className="mt-3 border-t border-line pt-3 text-xs text-ink-soft">
         Matched on {proposal.candidates[0].matchedOn}. Nothing is linked
         automatically — until one of these is linked as the other&apos;s
         artifact, the daily loop can serve both on the same day.

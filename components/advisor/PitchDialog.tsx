@@ -67,7 +67,7 @@ export function PitchDialog({
           onSelect={() => setTab("video")}
         >
           Video
-          <span className="ml-2 rounded-pill bg-gold-soft px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-navy">
+          <span className="ml-2 rounded-pill bg-gold-soft px-1.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy">
             Soon
           </span>
         </TabButton>

@@ -56,7 +56,7 @@ export function AdvisorDetail({
       <div className="mt-2.5 max-w-[18rem]">
         <div
           aria-hidden="true"
-          className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-ink-soft"
+          className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-ink-soft"
         >
           {WEEKDAY_INITIALS.map((d, i) => (
             <span key={i}>{d}</span>
@@ -220,7 +220,7 @@ export function AdvisorDetail({
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
-      <dt className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ink-soft sm:w-28">
+      <dt className="shrink-0 text-xs font-bold uppercase tracking-wide text-ink-soft sm:w-28">
         {label}
       </dt>
       <dd className="min-w-0 flex-1 text-sm leading-relaxed text-navy">

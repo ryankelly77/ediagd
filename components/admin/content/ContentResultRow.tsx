@@ -56,7 +56,7 @@ export function ContentResultRow({
 
 export function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-navy">
+    <span className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy">
       {children}
     </span>
   );
@@ -66,7 +66,7 @@ export function StatusBadge({ status }: { status: ContentStatus }) {
   const meta = STATUS_META[status];
   return (
     <span
-      className="rounded-pill px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
+      className="rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide"
       style={{
         color: `var(--color-${meta.color})`,
         backgroundColor: `color-mix(in srgb, var(--color-${meta.color}) 15%, transparent)`,

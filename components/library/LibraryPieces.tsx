@@ -144,7 +144,7 @@ export function ItemRow({
             {item.body}
           </span>
         )}
-        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-soft">
+        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
           {vehicle && <span className="ediagd-numeral">{vehicle}</span>}
           {item.tier && <span className="uppercase tracking-wide">{item.tier}</span>}
           {mins && <span className="ediagd-numeral">{mins}</span>}
@@ -161,7 +161,7 @@ export function ItemRow({
 
       {completed ? (
         <span
-          className="mt-1 shrink-0 rounded-pill px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide"
+          className="mt-1 shrink-0 rounded-pill px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide"
           style={{
             background: "color-mix(in srgb, rgb(var(--ediagd-palm)) 16%, transparent)",
             color: "rgb(var(--ediagd-palm))",

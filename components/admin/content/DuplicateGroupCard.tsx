@@ -74,17 +74,17 @@ export function DuplicateGroupCard({ group }: { group: DuplicateGroup }) {
                 <span className="text-xs font-bold text-ink-soft">{m.quoteKey ?? "—"}</span>
                 {m.voice && <span className="text-xs text-ink-soft">· {m.voice}</span>}
                 {m.proposed === "survive" && (
-                  <span className="rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-white">
+                  <span className="rounded-full bg-teal px-2 py-0.5 text-xs font-bold text-white">
                     Suggested
                   </span>
                 )}
                 {m.linkedVideo && (
-                  <span className="rounded-full border border-line px-2 py-0.5 text-[11px] font-bold text-ink-soft">
+                  <span className="rounded-full border border-line px-2 py-0.5 text-xs font-bold text-ink-soft">
                     Video: {m.linkedVideo.title}
                   </span>
                 )}
                 {m.saveCount > 0 && (
-                  <span className="text-[11px] font-bold text-ink-soft">
+                  <span className="text-xs font-bold text-ink-soft">
                     {m.saveCount} kept it
                   </span>
                 )}
@@ -162,7 +162,7 @@ export function DuplicateGroupCard({ group }: { group: DuplicateGroup }) {
       {/* ---- A line in the passage that has no row of its own -------------- */}
       {group.orphanLines.length > 0 && (
         <div className="mt-4 rounded-xl border border-line p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             In the long one, not saved anywhere else
           </p>
           <p className="mt-1 text-xs text-ink-soft">
@@ -206,7 +206,7 @@ export function DuplicateGroupCard({ group }: { group: DuplicateGroup }) {
         </button>
       </div>
 
-      <p className="mt-3 text-[11px] text-ink-soft">
+      <p className="mt-3 text-xs text-ink-soft">
         Matched because {group.relation ?? "they overlap"}
         {group.sourceGroup ? ` · group ${group.sourceGroup}` : ""}
       </p>

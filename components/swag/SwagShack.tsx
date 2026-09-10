@@ -178,7 +178,7 @@ function SwagTile({
           </span>
           {!affordable && (
             // Encouraging, never scolding.
-            <span className="mt-0.5 block text-[11px] font-bold text-clay">
+            <span className="mt-0.5 block text-xs font-bold text-clay">
               {shortfallLabel(item.price, balance)}
             </span>
           )}
@@ -282,7 +282,7 @@ function RedeemSheet({
             <>
               {options.length > 0 && (
                 <label className="mt-5 block">
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                  <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                     Choose one
                   </span>
                   <select
@@ -300,7 +300,7 @@ function RedeemSheet({
               )}
 
               <label className="mt-4 block">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                   Where should we send it?
                 </span>
                 <textarea
@@ -478,7 +478,7 @@ function StatusPill({ status }: { status: Redemption["status"] }) {
         : "bg-gold-soft text-navy";
   return (
     <span
-      className={`shrink-0 rounded-pill px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${tone}`}
+      className={`shrink-0 rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide ${tone}`}
     >
       {STATUS_LABEL[status]}
     </span>

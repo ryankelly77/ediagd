@@ -172,7 +172,7 @@ function Sparkline({ months }: { months: GroupMonth[] }) {
             key={m.startsOn}
             type="button"
             onClick={() => setPicked(m.startsOn)}
-            className="ediagd-numeral min-w-0 flex-1 truncate px-0.5 text-center text-[10px] text-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            className="ediagd-numeral min-w-0 flex-1 truncate px-0.5 text-center text-xs text-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
           >
             {m.label.replace(/\s*20\d\d$/, "").slice(0, 3)}
           </button>
@@ -182,7 +182,7 @@ function Sparkline({ months }: { months: GroupMonth[] }) {
       {/* A month the group did not yet have every store in is a step in the
           line that is not performance. Said, rather than drawn over. */}
       {new Set(months.map((m) => m.rooftops)).size > 1 && (
-        <p className="mt-2 text-[11px] leading-relaxed text-ink-soft">
+        <p className="mt-2 text-xs leading-relaxed text-ink-soft">
           {`Store count changes across this range (${Math.min(...months.map((m) => m.rooftops))}–${Math.max(...months.map((m) => m.rooftops))}), so part of any step is stores joining, not trading.`}
         </p>
       )}

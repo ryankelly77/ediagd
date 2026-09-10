@@ -148,14 +148,14 @@ export default async function ProfilePage() {
         {(roles.length > 0 || profile?.is_platform_owner) && (
           <p className="mt-4 flex flex-wrap gap-1.5">
             {profile?.is_platform_owner && (
-              <span className="rounded-pill bg-gold-soft px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-navy">
+              <span className="rounded-pill bg-gold-soft px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy">
                 Platform owner
               </span>
             )}
             {roles.map((role) => (
               <span
                 key={role}
-                className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-navy"
+                className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy"
               >
                 {role}
               </span>

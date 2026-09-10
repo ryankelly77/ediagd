@@ -83,7 +83,7 @@ export default async function DmsPage() {
             uploaded. Run <code>supabase db push</code> against this
             environment first.
           </p>
-          <p className="ediagd-numeral mt-2 text-[11px] text-ink-soft">
+          <p className="ediagd-numeral mt-2 text-xs text-ink-soft">
             {metricErr.message}
           </p>
         </Card>
@@ -134,7 +134,7 @@ export default async function DmsPage() {
                   </span>
                 </span>
                 <span
-                  className="shrink-0 rounded-pill px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
+                  className="shrink-0 rounded-pill px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide"
                   style={
                     i.status === "committed"
                       ? {
@@ -235,7 +235,7 @@ function RebuildStatus({ row }: { row: RebuildRow | null }) {
           `${row.periods_succeeded ?? 0} of ${row.periods_attempted ?? 0} periods rebuilt · ${stamp(row.finished_at)}`
         )}
       </p>
-      <p className="ediagd-numeral mt-0.5 text-[11px] text-ink-soft">
+      <p className="ediagd-numeral mt-0.5 text-xs text-ink-soft">
         {`scope ${row.scope ?? "—"} · started by ${row.initiated_by ?? "—"}`}
       </p>
 
@@ -247,7 +247,7 @@ function RebuildStatus({ row }: { row: RebuildRow | null }) {
           >
             {`${failedCount} period${failedCount === 1 ? "" : "s"} did not rebuild`}
           </p>
-          <ul className="ediagd-numeral mt-1 space-y-0.5 text-[11px] text-ink-soft">
+          <ul className="ediagd-numeral mt-1 space-y-0.5 text-xs text-ink-soft">
             {(row.failed ?? []).slice(0, 5).map((f, i) => (
               <li key={i}>
                 {`${f.month ?? "?"} · ${String(f.rooftop ?? "?").slice(0, 8)} — ${String(f.error ?? "").slice(0, 90)}`}

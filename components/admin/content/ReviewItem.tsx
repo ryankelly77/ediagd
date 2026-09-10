@@ -95,7 +95,7 @@ export function ReviewItem({ row }: { row: ReviewRow }) {
       {/* ---- What we currently have ------------------------------------- */}
       {row.reason !== "attribution" && (
         <div className="mt-3 rounded-xl bg-cream-card p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             {row.reason === "missing_nugget" ? "The quote" : "Where it stops"}
           </p>
           <p className="mt-1 whitespace-pre-wrap text-sm text-ink">
@@ -107,7 +107,7 @@ export function ReviewItem({ row }: { row: ReviewRow }) {
       {/* ---- The answer, shaped like the question ------------------------ */}
       {row.reason === "pick_ending" && row.options?.candidates ? (
         <div className="mt-3 space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             The two versions in your workbook
           </p>
           {row.options.candidates.map((c, i) => (

@@ -118,7 +118,7 @@ export function PushSelfTest() {
               refused every device" into a sentence somebody can act on, and
               it is the difference between a diagnostic and a shrug. */}
           {result.config && (
-            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all border-t border-navy/10 pt-2 text-[11px] leading-relaxed">
+            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all border-t border-navy/10 pt-2 text-xs leading-relaxed">
               {JSON.stringify(result.config, null, 1)}
             </pre>
           )}

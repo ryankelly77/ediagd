@@ -324,13 +324,13 @@ export function ServiceHistory({ points }: { points: ServicePoint[] }) {
         <table className="w-full min-w-[22rem] border-collapse text-left">
           <thead>
             <tr>
-              <th className="pb-2 pr-3 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              <th className="pb-2 pr-3 text-xs font-bold uppercase tracking-wide text-ink-soft">
                 Service
               </th>
               {months.map((m) => (
                 <th
                   key={m}
-                  className="pb-2 pl-2 text-right text-[11px] font-bold uppercase tracking-wide text-ink-soft"
+                  className="pb-2 pl-2 text-right text-xs font-bold uppercase tracking-wide text-ink-soft"
                 >
                   {monthLabel(points, m)}
                 </th>

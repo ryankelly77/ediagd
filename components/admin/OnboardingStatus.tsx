@@ -181,7 +181,7 @@ function Row({ row, showRooftop }: { row: OnboardingRow; showRooftop: boolean })
           <p className="text-xs text-ink-soft">{row.rooftopName}</p>
         )}
         <span
-          className={`ml-auto rounded-pill px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${
+          className={`ml-auto rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide ${
             row.ready
               ? "bg-teal-soft/50 text-navy"
               : "border border-clay text-clay"
@@ -252,7 +252,7 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+      <dt className="text-xs font-bold uppercase tracking-wide text-ink-soft">
         {label}
       </dt>
       <dd

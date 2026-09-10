@@ -506,19 +506,19 @@ function DeckCard({
         <div className="flex items-center gap-2">
           <span className="ediagd-eyebrow">{eyebrow}</span>
           {item.tier && (
-            <span className="text-[11px] uppercase tracking-wide text-ink-soft">
+            <span className="text-xs uppercase tracking-wide text-ink-soft">
               {item.tier}
             </span>
           )}
           {mins && (
-            <span className="ediagd-numeral text-[11px] text-ink-soft">
+            <span className="ediagd-numeral text-xs text-ink-soft">
               {mins}
             </span>
           )}
           {item.isSample && <SampleChip />}
           {isDone && (
             <span
-              className="ml-auto rounded-pill px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
+              className="ml-auto rounded-pill px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide"
               style={{
                 background:
                   "color-mix(in srgb, rgb(var(--ediagd-palm)) 16%, transparent)",
@@ -697,7 +697,7 @@ function VideoBody({
               <span className="ediagd-numeral text-xs font-extrabold text-navy">
                 Watched {watched}%
               </span>
-              <span className="ediagd-numeral text-[11px] text-ink-soft">
+              <span className="ediagd-numeral text-xs text-ink-soft">
                 counts at {threshold}%
               </span>
             </div>
@@ -769,7 +769,7 @@ function InactivePlayer() {
 function SampleChip() {
   return (
     <span
-      className="rounded-pill px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide"
+      className="rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide"
       style={{
         background: "color-mix(in srgb, rgb(var(--ediagd-clay)) 14%, transparent)",
         color: "rgb(var(--ediagd-clay))",

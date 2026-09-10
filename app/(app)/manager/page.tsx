@@ -253,7 +253,7 @@ export default async function ManagerPage() {
             className="mt-0.5"
           />
         </div>
-        <span className="rounded-pill bg-teal-soft px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-navy">
+        <span className="rounded-pill bg-teal-soft px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-navy">
           Manager
         </span>
       </header>

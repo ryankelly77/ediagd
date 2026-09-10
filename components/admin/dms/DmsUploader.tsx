@@ -378,7 +378,7 @@ function Line({
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-sm text-ink-soft">
         {label}
-        {hint && <span className="block text-[11px] leading-snug">{hint}</span>}
+        {hint && <span className="block text-xs leading-snug">{hint}</span>}
       </dt>
       <dd
         className={`ediagd-numeral shrink-0 ${strong ? "text-lg font-extrabold text-navy" : "text-sm font-bold text-navy"}`}
@@ -392,7 +392,7 @@ function Line({
 function Tag({ children, tone }: { children: React.ReactNode; tone: "calm" | "new" }) {
   return (
     <span
-      className="shrink-0 rounded-pill px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
+      className="shrink-0 rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide"
       style={
         tone === "calm"
           ? {

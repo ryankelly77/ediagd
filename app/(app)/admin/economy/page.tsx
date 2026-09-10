@@ -271,7 +271,7 @@ export default async function AdminEconomyPage() {
 function Figure({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-line bg-cream-card p-3">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+      <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
         {label}
       </p>
       <p className="mt-1 text-xl font-extrabold text-navy">{value}</p>
@@ -303,7 +303,7 @@ function Finding({
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-extrabold text-navy">{title}</p>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+          className={`rounded-full px-2 py-0.5 text-xs font-bold ${
             count > 0 ? "bg-clay text-white" : "border border-line text-ink-soft"
           }`}
         >

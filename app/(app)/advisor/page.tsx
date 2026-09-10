@@ -391,7 +391,7 @@ export default async function AdvisorPage() {
                   }}
                 />
               </div>
-              <div className="mt-2 flex justify-between text-[11px] font-bold uppercase tracking-wide text-ice-dim">
+              <div className="mt-2 flex justify-between text-xs font-bold uppercase tracking-wide text-ice-dim">
                 <span>You {formatPct(pick.rate)}</span>
                 <span>Store {formatPct(pick.storeAvg)}</span>
               </div>
@@ -432,7 +432,7 @@ export default async function AdvisorPage() {
 function SecondaryStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] font-bold uppercase leading-tight tracking-wide text-ink-soft">
+      <dt className="text-xs font-bold uppercase leading-tight tracking-wide text-ink-soft">
         {label}
       </dt>
       {/* break-words so a long currency figure wraps inside its tile instead

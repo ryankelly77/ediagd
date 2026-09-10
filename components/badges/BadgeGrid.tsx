@@ -144,7 +144,7 @@ function RewardLine({ reward, state }: { reward: number; state: TileState }) {
   const earned = state === "earned";
   return (
     <span
-      className={`mt-auto flex items-center gap-1 pt-1 text-[11px] font-extrabold ${
+      className={`mt-auto flex items-center gap-1 pt-1 text-xs font-extrabold ${
         earned ? "text-ink-soft" : "text-gold"
       }`}
     >
@@ -161,7 +161,7 @@ function RewardLine({ reward, state }: { reward: number; state: TileState }) {
 /** Reads as "unlocked" before anyone parses the date. */
 function EarnedTag() {
   return (
-    <span className="rounded-pill bg-palm-soft px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-palm">
+    <span className="rounded-pill bg-palm-soft px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-palm">
       Earned
     </span>
   );
@@ -170,7 +170,7 @@ function EarnedTag() {
 /** Visually distinct from a locked-but-earnable badge. */
 function SoonTag() {
   return (
-    <span className="rounded-pill border border-line bg-teal-soft/25 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-ocean">
+    <span className="rounded-pill border border-line bg-teal-soft/25 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-ocean">
       Coming soon
     </span>
   );

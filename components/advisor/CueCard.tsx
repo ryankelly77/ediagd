@@ -33,7 +33,7 @@ export function CueCard({ cue, badge }: { cue: ServiceCue; badge?: string }) {
   return (
     <div className="rounded-card border border-line bg-cream-card p-4">
       {badge && (
-        <span className="mb-2 inline-block rounded-pill bg-gold-soft px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-navy">
+        <span className="mb-2 inline-block rounded-pill bg-gold-soft px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy">
           {badge}
         </span>
       )}

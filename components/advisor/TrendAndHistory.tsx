@@ -93,7 +93,7 @@ export function TrendAndHistory({ trend }: { trend: AdvisorTrend }) {
         <div className="flex items-start gap-2">
           <span
             aria-hidden="true"
-            className="mt-0.5 shrink-0 rounded-pill px-2 py-0.5 text-[11px] font-extrabold"
+            className="mt-0.5 shrink-0 rounded-pill px-2 py-0.5 text-xs font-extrabold"
             style={{
               background: `color-mix(in srgb, ${tone.color} ${tone.tint}%, transparent)`,
               color: tone.color,
@@ -140,7 +140,7 @@ export function TrendAndHistory({ trend }: { trend: AdvisorTrend }) {
             {open
               ? "Hide history"
               : `History · ${points.length} ${points.length === 1 ? "month" : "months"}`}
-            <span aria-hidden="true" className="text-[10px]">
+            <span aria-hidden="true" className="text-xs">
               {open ? "▲" : "▼"}
             </span>
           </button>
@@ -262,7 +262,7 @@ function History({ points }: { points: MonthPoint[] }) {
                   }}
                 />
               </span>
-              <span className="ediagd-numeral block w-full truncate text-center text-[10px] text-ink-soft">
+              <span className="ediagd-numeral block w-full truncate text-center text-xs text-ink-soft">
                 {shortMonth(p.label, shown.length, spansYears)}
               </span>
             </button>
@@ -282,13 +282,13 @@ function History({ points }: { points: MonthPoint[] }) {
             : `Show more · ${points.length - DEFAULT_MONTHS} earlier ${
                 points.length - DEFAULT_MONTHS === 1 ? "month" : "months"
               }`}
-          <span aria-hidden="true" className="text-[10px]">
+          <span aria-hidden="true" className="text-xs">
             {showAll ? "▲" : "▼"}
           </span>
         </button>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-ink-soft">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
         <Key color="rgb(var(--ediagd-teal))" label="Labor sales" />
         <Key color="rgb(var(--ediagd-teal-soft))" label="ROs" />
         <span className="flex items-center gap-1.5">
@@ -305,7 +305,7 @@ function History({ points }: { points: MonthPoint[] }) {
       {/* The format boundary, said out loud rather than left as a mystery step
           in the bars. */}
       {new Set(shown.map((p) => (p.sourceKind === "dms_daily" ? "dynatron" : p.sourceKind))).size > 1 && (
-        <p className="mt-3 text-[11px] leading-relaxed text-ink-soft">
+        <p className="mt-3 text-xs leading-relaxed text-ink-soft">
           {`${shown.filter((p) => p.sourceKind !== "dynatron" && p.sourceKind !== "dms_daily").map((p) => p.label).join(", ")} came from a different report format than the months around it. A step at that point may be a change in what the report counts, not in what you did.`}
         </p>
       )}

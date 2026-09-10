@@ -163,7 +163,7 @@ export function IslandTimePanel({
         <div className="mt-3 rounded-card border border-line bg-cream-card p-4">
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                 First day
               </span>
               <input
@@ -175,7 +175,7 @@ export function IslandTimePanel({
               />
             </label>
             <label className="block">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                 Last day
               </span>
               <input
@@ -189,7 +189,7 @@ export function IslandTimePanel({
           </div>
 
           <label className="mt-3 block">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+            <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
               Note (optional)
             </span>
             <input

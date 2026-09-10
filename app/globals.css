@@ -37,6 +37,28 @@
   --color-tier-low: rgb(var(--tier-low));
   --color-tier-zero: rgb(var(--tier-zero));
 
+  /* ---- Type scale, calibrated to Apple's Dynamic Type table -------------
+   * Ryan: body 17px equivalent, secondary 15, floor 13.
+   *
+   * Those are Apple's Body, Subhead and Footnote at the default (Large)
+   * setting. Tailwind's own scale is a web scale — 16 / 14 / 12 — and the gap
+   * shows up as text that is one notch smaller than every native control
+   * beside it on the same phone. On a service drive, read at arm's length,
+   * one notch is not nothing.
+   *
+   * IN rem, NOT px, so Dynamic Type still moves them: the shell sets the root
+   * size from preferredContentSizeCategory and everything here follows. These
+   * are the values at 100%.
+   *
+   * 13 IS A FLOOR, NOT A STEP. Apple's own table goes below it — Caption 1 is
+   * 12 and Caption 2 is 11 — and this app does not, which is a deliberate
+   * departure for this audience. It is the same floor Ryan set for the tab
+   * bar labels, applied everywhere.
+   */
+  --text-xs: 0.8125rem;   /* 13px — Footnote. The floor. */
+  --text-sm: 0.9375rem;   /* 15px — Subhead. Secondary copy. */
+  --text-base: 1.0625rem; /* 17px — Body. */
+
   /* type + shape */
   --font-display: var(--font-display);
   --font-body: var(--font-body);

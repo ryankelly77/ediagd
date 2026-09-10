@@ -354,7 +354,7 @@ export function InterventionSplit({ rows }: { rows: InterventionRow[] }) {
                 </div>
                 {!real && r.n > 0 && (
                   <p
-                    className="mt-1.5 text-[11px] font-bold uppercase tracking-wide"
+                    className="mt-1.5 text-xs font-bold uppercase tracking-wide"
                     style={{ color: "rgb(var(--ediagd-gold))" }}
                   >
                     Illustrative — seeded data, not evidence

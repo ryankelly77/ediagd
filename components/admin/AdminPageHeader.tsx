@@ -52,7 +52,7 @@ export function AdminPageHeader({
         {crumbs.map((c, i) => (
           <span key={c.href} className="flex items-center gap-x-1.5">
             {i > 0 && (
-              <span aria-hidden="true" className="text-[11px] text-ink-soft">
+              <span aria-hidden="true" className="text-xs text-ink-soft">
                 ›
               </span>
             )}

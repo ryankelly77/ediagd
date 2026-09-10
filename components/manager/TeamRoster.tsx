@@ -28,7 +28,7 @@ function TrendChip({
 
   return (
     <span
-      className="ediagd-numeral inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-[11px] font-extrabold"
+      className="ediagd-numeral inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-xs font-extrabold"
       style={{
         background: `color-mix(in srgb, ${tone.c} ${tone.t}%, transparent)`,
         color: tone.c,

@@ -210,7 +210,7 @@ function Summary({
     <Card className="mt-4 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             {dealer.name} · {money(totalLabor)} of labor
           </p>
 
@@ -229,10 +229,10 @@ function Summary({
                   {st.pct}
                   <span className="text-base">%</span>
                 </div>
-                <div className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                <div className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                   {st.label}
                 </div>
-                <div className="mt-0.5 text-[11px] text-ink-soft">
+                <div className="mt-0.5 text-xs text-ink-soft">
                   {money(st.labor)} · {st.rows} {st.rows === 1 ? "row" : "rows"}
                 </div>
               </div>
@@ -333,7 +333,7 @@ function RowGroup({
       <Card className="mt-2 overflow-x-auto p-0">
         <table className="w-full min-w-[900px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-soft">
               <th className="p-3">Sub-category</th>
               <th className="p-3 text-right">Labor</th>
               <th className="p-3 text-right">ROs</th>
@@ -491,7 +491,7 @@ function SubCategoryRowView({
           <div>
             <div className="font-mono text-xs font-bold text-navy">{row.proposal.canonical}</div>
             {row.proposal.evidenceRos != null && (
-              <div className="mt-0.5 text-[11px] text-ink-soft">
+              <div className="mt-0.5 text-xs text-ink-soft">
                 {row.proposal.evidencePeriod ?? "evidence"}: {row.proposal.evidenceRos} ROs
                 {row.proposal.evidenceLabor != null && ` · ${money(Number(row.proposal.evidenceLabor))}`}
                 {row.proposal.evidenceStores != null && ` · ${row.proposal.evidenceStores} stores`}
@@ -550,21 +550,21 @@ function SubCategoryRowView({
 function FamilyState({ status, family }: { status: string; family: string | null }) {
   if (status === "not_coachable") {
     return (
-      <span className="inline-flex rounded-pill border border-line bg-cream-card px-2 py-0.5 text-[11px] font-bold text-ink-soft">
+      <span className="inline-flex rounded-pill border border-line bg-cream-card px-2 py-0.5 text-xs font-bold text-ink-soft">
         Not coachable
       </span>
     );
   }
   if (status === "mixed") {
     return (
-      <span className="inline-flex rounded-pill border border-gold/40 bg-gold/10 px-2 py-0.5 text-[11px] font-bold text-gold-deep">
+      <span className="inline-flex rounded-pill border border-gold/40 bg-gold/10 px-2 py-0.5 text-xs font-bold text-gold-deep">
         Differs by store
       </span>
     );
   }
   if (!family) {
     return (
-      <span className="inline-flex rounded-pill border border-clay/40 bg-clay/10 px-2 py-0.5 text-[11px] font-bold text-clay">
+      <span className="inline-flex rounded-pill border border-clay/40 bg-clay/10 px-2 py-0.5 text-xs font-bold text-clay">
         Not ruled
       </span>
     );
@@ -572,7 +572,7 @@ function FamilyState({ status, family }: { status: string; family: string | null
   const confirmed = status === "confirmed";
   return (
     <span
-      className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2 py-0.5 text-[11px] font-bold ${
+      className={`inline-flex items-baseline gap-1.5 rounded-pill border px-2 py-0.5 text-xs font-bold ${
         confirmed
           ? "border-palm/40 bg-palm-soft/40 text-navy"
           : "border-line bg-cream-card text-ink"
@@ -611,7 +611,7 @@ function RulingFootnote({ row }: { row: SubCategoryRow }) {
   const scope = appliesLabel(effectiveFrom) || null;
 
   return (
-    <p className="mt-1.5 text-[11px] text-ink-soft">
+    <p className="mt-1.5 text-xs text-ink-soft">
       {who}
       {when}
       {scope ? ` · ${scope}` : ""}
@@ -659,7 +659,7 @@ function OpCodeGroup({
       <Card className="mt-2 overflow-x-auto p-0">
         <table className="w-full min-w-[900px] text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-ink-soft">
+            <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-soft">
               {/* Explicit widths on the two flexible columns. Without them the
                   description takes whatever it wants and "Rule it…" wraps into
                   two lines inside its own pill. */}
@@ -763,7 +763,7 @@ function OpCodeRowView({
           )}
         </div>
 
-        <p className="mt-1 text-[11px] text-ink-soft">
+        <p className="mt-1 text-xs text-ink-soft">
           {r.status === "unruled" && r.suggestion
             ? `suggested · ${r.suggestion.name} · ${Math.round(r.suggestion.score * 100)}% match`
             : r.status === "unruled"

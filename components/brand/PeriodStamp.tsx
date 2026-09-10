@@ -51,7 +51,7 @@ export function PeriodStamp({
         )}
         {label.partialNote && (
           <span
-            className="rounded-pill px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
+            className="rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide"
             style={{
               background:
                 "color-mix(in srgb, rgb(var(--ediagd-clay)) 14%, transparent)",
@@ -71,7 +71,7 @@ export function PeriodChip({ label }: { label: PeriodLabel }) {
   if (!label.period) return null;
   return (
     <span
-      className="rounded-pill px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide"
+      className="rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide"
       style={
         label.isPartial
           ? {

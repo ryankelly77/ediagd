@@ -84,7 +84,7 @@ export default async function MorePage() {
             {[...roles].map((role) => (
               <span
                 key={role}
-                className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-navy"
+                className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy"
               >
                 {role}
               </span>
@@ -280,7 +280,7 @@ function SoonRow({ label, hint }: { label: string; hint: string }) {
         <span className="block text-base font-extrabold text-navy">{label}</span>
         <span className="mt-0.5 block text-xs text-ink-soft">{hint}</span>
       </span>
-      <span className="rounded-pill bg-line px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-ink-soft">
+      <span className="rounded-pill bg-line px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-ink-soft">
         Soon
       </span>
     </Card>

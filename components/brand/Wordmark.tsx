@@ -35,7 +35,7 @@ export function Wordmark({
         </div>
         {showTagline && (
           <div
-            className={`text-[11px] uppercase tracking-[0.28em] ${
+            className={`text-xs uppercase tracking-[0.28em] ${
               onDark ? "text-teal-soft" : "text-teal"
             }`}
           >

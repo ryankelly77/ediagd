@@ -128,7 +128,7 @@ function QueueCard({
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span
-          className={`rounded-pill px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${
+          className={`rounded-pill px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide ${
             row.status === "fulfilled"
               ? "bg-palm-soft text-palm"
               : row.status === "cancelled"
@@ -374,7 +374,7 @@ function ItemForm({
               placeholder immediately rather than after saving and switching to
               the advisor view. */}
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+            <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
               Preview
             </span>
             <div className="mt-1">
@@ -443,7 +443,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+      <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
         {label}
       </span>
       {children}

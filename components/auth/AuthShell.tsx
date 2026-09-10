@@ -82,7 +82,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             <span className="mt-3 font-display text-3xl tracking-[0.22em] text-navy">
               {BRAND.name}
             </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-navy/80">
+            <span className="text-xs font-semibold uppercase tracking-[0.28em] text-navy/80">
               {BRAND.tagline}
             </span>
           </div>
