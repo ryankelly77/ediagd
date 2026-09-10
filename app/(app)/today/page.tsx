@@ -142,7 +142,7 @@ export default async function TodayPage({
   /*
    * ---- THE STREAK SAVER LANDED -------------------------------------------
    *
-   * The push carries ?opened_via=streak_saver, which is the only thing that
+   * The push carries ?opened_via=..., which is the only thing that
    * separates "they opened the app at 7:04pm" from "they opened the app
    * because we asked them to". Stamped here rather than in a client effect so
    * it happens on the render the link caused, once, before anything can
@@ -151,8 +151,22 @@ export default async function TodayPage({
    * Idempotent in SQL and scoped to the caller's own row, so a refresh, a
    * double tap or a back-and-forward cannot inflate the number.
    */
-  if (params.opened_via === "streak_saver") {
-    await supabase.rpc("mark_push_opened", { _kind: "streak_keeper" });
+  /*
+   * TWO TAGS NOW, ONE PER KIND. The lunchtime nudge and the 16:50 last call
+   * are different messages sent at different moments, and the only reason to
+   * tag them separately is to find out which one actually moves people. If
+   * both stamped 'streak_keeper' the report could never tell them apart; if
+   * the last call stamped nothing — which is what it did until this line —
+   * it would read as a message nobody ever opens, which is the failure that
+   * looks like data.
+   */
+  const OPENED_VIA: Record<string, "streak_keeper" | "streak_last_call"> = {
+    streak_saver: "streak_keeper",
+    streak_last_call: "streak_last_call",
+  };
+  const openedKind = params.opened_via ? OPENED_VIA[params.opened_via] : undefined;
+  if (openedKind) {
+    await supabase.rpc("mark_push_opened", { _kind: openedKind });
   }
 
   /*

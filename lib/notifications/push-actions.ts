@@ -68,7 +68,11 @@ export async function setPushEnabled(enabled: boolean): Promise<void> {
  *
  * Idempotent in SQL: the first tap wins and a second does not move the time.
  */
-export async function stampStreakSaverOpened(): Promise<void> {
+export async function stampStreakSaverOpened(
+  /* Which of the two streak messages was tapped. Defaults to the lunchtime
+     one so existing callers keep their behaviour. */
+  kind: "streak_keeper" | "streak_last_call" = "streak_keeper"
+): Promise<void> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -81,5 +85,5 @@ export async function stampStreakSaverOpened(): Promise<void> {
    * not exist — a 7pm send in Honolulu is already tomorrow in UTC — and the
    * failure would be invisible, reading as "nobody opens these".
    */
-  await supabase.rpc("mark_push_opened", { _kind: "streak_keeper" });
+  await supabase.rpc("mark_push_opened", { _kind: kind });
 }
