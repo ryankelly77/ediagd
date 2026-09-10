@@ -112,9 +112,9 @@ async function main() {
 
   if (!fresh.length) {
     console.log(
-      `\n  Nothing is due at this moment. Each kind fires in a 30-minute window\n` +
-      `  at the rooftop's own clock — try AT=<iso> at 07:00, 09:30, 16:30 or\n` +
-      `  17:00 in a store's timezone.\n`
+      `\n  Nothing is due at this moment. Each kind fires in a 60-minute window\n` +
+      `  at the rooftop's own clock — try AT=<iso> at 07:00, 09:30, 12:00 or\n` +
+      `  16:50 in a store's timezone.\n`
     );
   }
 
@@ -141,13 +141,44 @@ async function main() {
   }
 
   /* ---- 5. Prove the hard rules held -------------------------------------- */
+  /*
+   * TWO EXEMPTIONS NOW, NOT ONE.
+   *
+   * personal_best may stack — a second best in a day is a better day. And as
+   * of 0112 the streak pair may both land: the noon nudge and the 16:50 last
+   * call are one allowance spent twice, for the advisor who has a live streak
+   * and still has not opened the app by the end of the drive.
+   *
+   * This check counted every non-personal_best row against a cap of one, so
+   * the first day both streak messages fired it would have printed
+   * "VIOLATED x1" for behaviour that was designed. A false alarm in the
+   * report that proves the rules is worse than no report: it teaches whoever
+   * reads it to ignore the line.
+   *
+   * What is still enforced, and what the database guarantees through the
+   * dedup index, is ONE OF EACH KIND per person per day. So the count is per
+   * kind, and the pair is allowed to be two rows.
+   */
+  const STACKABLE = new Set(["personal_best"]);
+  const STREAK_PAIR = new Set(["streak_keeper", "streak_last_call"]);
+
   const perPersonPerDay = new Map<string, number>();
+  const perPersonPerKind = new Map<string, number>();
   for (const r of fresh) {
-    if (r.kind === "personal_best") continue;
+    if (STACKABLE.has(r.kind)) continue;
+    perPersonPerKind.set(
+      `${r.recipient_id}|${r.local_date}|${r.kind}`,
+      (perPersonPerKind.get(`${r.recipient_id}|${r.local_date}|${r.kind}`) ?? 0) + 1
+    );
+    /* The streak pair share one allowance; everything else gets its own. */
+    if (STREAK_PAIR.has(r.kind)) continue;
     const k = `${r.recipient_id}|${r.local_date}`;
     perPersonPerDay.set(k, (perPersonPerDay.get(k) ?? 0) + 1);
   }
-  const overCap = [...perPersonPerDay.entries()].filter(([, n]) => n > 1);
+  const overCap = [
+    ...[...perPersonPerDay.entries()].filter(([, n]) => n > 1),
+    ...[...perPersonPerKind.entries()].filter(([, n]) => n > 1),
+  ];
   const outsideQuiet = fresh.filter((r) => r.local_time < "06:30" || r.local_time > "19:00");
   const toAdvisors = fresh.filter((r) => memberById.get(r.membership_id)?.role === "advisor");
   const digestToAdvisor = toAdvisors.filter((r) => r.kind === "manager_digest");
@@ -155,7 +186,7 @@ async function main() {
   console.log(`\n  ${"=".repeat(74)}`);
   console.log(`  HARD RULES`);
   console.log(`  ${"=".repeat(74)}`);
-  console.log(`   max 1 per person per day (personal_best exempt) : ${overCap.length ? `VIOLATED x${overCap.length}` : "held"}`);
+  console.log(`   max 1 per kind per day (best stacks, streak pairs) : ${overCap.length ? `VIOLATED x${overCap.length}` : "held"}`);
   console.log(`   quiet hours 06:30-19:00 rooftop-local           : ${outsideQuiet.length ? `VIOLATED x${outsideQuiet.length}` : "held"}`);
   console.log(`   no team summaries to advisors                   : ${digestToAdvisor.length ? `VIOLATED x${digestToAdvisor.length}` : "held"}`);
   console.log(`   advisors receive wins/invitations only          : enforced by trigger in 0056`);

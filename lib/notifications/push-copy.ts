@@ -42,6 +42,7 @@ export type PushKind =
   | "eddies_pick"
   | "personal_best"
   | "streak_keeper"
+  | "streak_last_call"
   | "manager_digest";
 
 export type PushCopy = {
@@ -95,29 +96,60 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
   streak_keeper: {
     kind: "streak_keeper",
     /*
-     * THE NUMBER DOES THE PERSUADING.
+     * THE LUNCHTIME NUDGE. Fires at noon store-local.
      *
-     * No emoji, no exclamation point, no "don't lose it". A person on day
-     * fourteen already knows what fourteen is worth, and telling them raises
-     * the temperature of a message that works better cold. "On the line" is
-     * the strongest phrasing allowed here: it names the stake without
-     * assigning blame for it, and the sentence after it is an open door
-     * rather than a countdown.
+     * This used to fire at 19:00 and read "Day {days} is on the line" — a
+     * phrasing chosen when the message was the last thing an advisor would
+     * see before the streak broke. Ryan moved it: "end of day right before
+     * signing off seems too late to me. If the advisor didn't have a chance
+     * in the morning, then we remind them at lunch." At 7pm the person has
+     * left; the message arrives after the last moment it could change
+     * anything.
      *
-     * "One rep" rather than "one session" because a rep is what a service
-     * advisor does all day — it is their word, and it makes three minutes
-     * sound like the small thing it is.
+     * At noon "on the line" would be false — the day is half over and there
+     * are hours of drive left — so the stake comes out of the copy entirely
+     * and what is left is an invitation. THE COPY IS RYAN'S, including the
+     * exclamation point, which the note below argues against. His call: this
+     * is a lunchtime nudge, not a warning, and the mark is doing warmth here
+     * rather than urgency.
      */
-    title: "Day {days} is on the line",
-    body: "One rep keeps the streak alive — today's is still open.",
-    /* Into today's block, not home, and carrying its own attribution so an
-       open can be told apart from somebody who opened the app anyway. */
+    title: "Keep your Swell going!",
+    body: "It's just 3 minutes. Now is a good moment.",
     deepLink: "/today?opened_via=streak_saver",
-    tokens: ["{days}"],
+    tokens: [],
     why:
       "Fires only while the Swell is ALIVE, on a day they were scheduled to " +
       "work, before they have completed it. Never fires to report a broken " +
       "streak — that is a notification whose only content is disappointment.",
+  },
+
+  streak_last_call: {
+    kind: "streak_last_call",
+    /*
+     * THE LAST CALL, at 16:50 store-local — in practice 17:00, because the
+     * cron runs hourly. See 0112.
+     *
+     * THIS IS THE SECOND MESSAGE IN A DAY, and 0056 wrote "one per advisor
+     * per day" into the schema as a hard rule with personal_best as the only
+     * exemption. This is the second exemption and it was made deliberately:
+     * the noon nudge catches people who can act at lunch, and this catches
+     * the ones who could not. Both still require a live streak genuinely at
+     * risk, so the only person who gets two is the one who has something real
+     * to lose and has not opened the app all day.
+     *
+     * IT NAMES THE NUMBER THEY GAIN, NOT THE ONE THEY LOSE. {days_next} is
+     * the streak AFTER today — "keep that Swell going to 8 days" rather than
+     * "day 7 is about to break". Same fact, and the only version of it that
+     * belongs in a product whose rule is celebrate up, never punish down.
+     */
+    title: "Don't forget your 3 minutes at EDIAGD!",
+    body: "Keep that Swell going to {days_next} days!",
+    deepLink: "/today?opened_via=streak_last_call",
+    tokens: ["{days_next}"],
+    why:
+      "The last moment a reminder can still change the outcome. Same five " +
+      "conditions as the noon nudge — an advisor who did their three minutes " +
+      "at lunch never sees this one.",
   },
 
   manager_digest: {

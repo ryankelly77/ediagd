@@ -1,0 +1,25 @@
+-- ============================================================================
+-- EDIAGD — 0111 A second streak message needs a second kind
+--
+-- ---------------------------------------------------------------------------
+-- WHY THIS IS A MIGRATION OF ITS OWN, CONTAINING ONE LINE
+-- ---------------------------------------------------------------------------
+-- Postgres will not let a new enum value be USED in the same transaction that
+-- adds it. 0112 inserts an outbox_policy row keyed on this value and writes a
+-- generator that references it, so the two cannot share a file: the second
+-- statement would fail with "unsafe use of new value of enum type".
+--
+-- Splitting it is the whole content of this migration.
+--
+-- ---------------------------------------------------------------------------
+-- AND WHY A NEW KIND RATHER THAN A SECOND streak_keeper
+-- ---------------------------------------------------------------------------
+-- Idempotency is a unique index on (recipient_id, dedup_key), and the streak
+-- saver's key is `streak_keeper:<membership>:<date>`. A second row for the
+-- same person on the same day is refused by construction — which is the point
+-- of it, and is why a second send cannot be arranged by moving a time or
+-- running the generator twice. It needs a different key, and the key is built
+-- from the kind.
+-- ============================================================================
+
+alter type outbox_kind add value if not exists 'streak_last_call';

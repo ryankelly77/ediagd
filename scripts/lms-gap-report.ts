@@ -414,7 +414,12 @@ async function main() {
   );
 
   const out = join(homedir(), "Downloads", "EDIAGD — LMS gaps.xlsx");
-  await wb.xlsx.writeFile(out);
+  /* Level 9. The workbook is uploaded to Drive as a base64 blob, and every
+     byte saved is a byte that has to survive being retyped into a tool call
+     without a typo. */
+  await wb.xlsx.writeFile(out, {
+    zip: { compression: "DEFLATE", compressionOptions: { level: 9 } },
+  } as Parameters<typeof wb.xlsx.writeFile>[1]);
 
   console.log(`\n  pitch films needed        ${needed.length}`);
   console.log(`  quiz questions unwired    ${orphanQuestions}`);
