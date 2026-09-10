@@ -1012,15 +1012,30 @@ function FocusStep({
           )}
         </div>
 
-        {/* Slot 2: a quote that carries the SELLING lesson, sitting with the
-            cue it reinforces rather than on a step of its own. The op-code cue
-            above is the technique; this is the line to remember it by.
+        {/*
+          Slot 2: a quote carrying a SELLING lesson.
 
-            Outside the card on purpose — one hero per screen, and the cue is
-            the hero. This reads as a margin note, which is what it is. */}
+          IT IS NOT ABOUT THE SERVICE ABOVE IT, AND IT NOW SAYS SO. This used to
+          claim it was "the line to remember the cue by" — but pickQuoteForSlot
+          draws slot 2 from the whole selling pool on a date rotation and never
+          looks at the focus family. It cannot: not one of the 280 slot-2
+          quotes carries a service_family or an op_code. So the pairing was a
+          coincidence dressed as a pairing, and Ryan read it exactly that way —
+          a Ryan Serhant line under "Today's focus: Differentials", "seems
+          misplaced".
+
+          The fix is a label, not a filter. These are general selling wisdom and
+          are good as that; what was wrong was the implied promise. With its own
+          eyebrow it reads as a second thing on the screen rather than a
+          conclusion drawn from the first.
+
+          Outside the card on purpose — one hero per screen, and the cue is the
+          hero. This reads as a margin note, which is what it is.
+        */}
         {salesQuote && (
           <div className="mt-5 border-l-2 border-teal pl-4">
-            <p className="text-[15px] italic leading-relaxed text-ink">
+            <p className="ediagd-eyebrow">A line to sell by</p>
+            <p className="mt-2 text-[15px] italic leading-relaxed text-ink">
               {salesQuote.body ?? salesQuote.title}
             </p>
             {citationFor(salesQuote.voice) && (

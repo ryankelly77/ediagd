@@ -300,21 +300,44 @@ function Screen3({ onNext }: { onNext: () => void }) {
         <div className="relative">
           <p className="ediagd-eyebrow">Every morning</p>
           <h2 className="mt-2 text-3xl font-extrabold leading-tight text-white">
-            Three steps, and you&apos;re out the door
+            A few minutes, and you&apos;re out the door
           </h2>
         </div>
       </section>
 
+      {/*
+        ---- THIS HAS TO BE THE LOOP THE ADVISOR ACTUALLY GETS -----------------
+
+        Onboarding ends by dropping straight into /today, so this list is a
+        promise the very next screen either keeps or breaks. It said "Three
+        steps" and named a quote, the Pick, and a cue as three separate
+        beats — but the Pick and its cue are ONE screen, and it never mentioned
+        the two videos that follow. An advisor was told three and handed five.
+
+        The order and the wording below track DailyFlow's steps directly, using
+        the same eyebrows those screens print ("Today's focus", "The pitch",
+        "Today's three minutes"), so the words are already familiar when they
+        arrive. What is earned at the end is deliberately left out — that is the
+        next screen's whole subject.
+
+        No count in the headline. The pitch step is skipped when nothing has been
+        filmed for that service yet, so "four" would be wrong on exactly the
+        days the library is thin.
+      */}
       <ol className="mt-6 space-y-3">
         <LoopStep n={1} title="A quote to start on">
           Something worth carrying out to the drive.
         </LoopStep>
-        <LoopStep n={2} title={`${BRAND.app}'s Pick`}>
+        <LoopStep n={2} title="Today's focus, and the words for it">
           The one service where you&apos;ve got the most room — measured against
-          your own store, not a national average.
+          your own store, not a national average — with the coaching cue for it
+          on the same screen.
         </LoopStep>
-        <LoopStep n={3} title="A coaching cue for exactly that">
-          The words to use today, on that service.
+        <LoopStep n={3} title="The pitch">
+          A short film on that service, when one has been shot for it.
+        </LoopStep>
+        <LoopStep n={4} title="Today's three minutes">
+          One more short film, on the part of the job that isn&apos;t the car.
         </LoopStep>
       </ol>
     </Narrative>

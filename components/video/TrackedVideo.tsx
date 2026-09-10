@@ -225,14 +225,27 @@ export function TrackedVideo({
       /*
        * ---- THE BAR IS PER VIDEO, NOT A FLAT SHARE -------------------------
        *
-       * A caller may still pass an explicit threshold and it wins. Left to
-       * itself, the gate now opens two seconds from the end of THIS video
-       * rather than at 95% of it — six and a half seconds early on a
-       * two-minute lesson, which is what kept putting the gold button on
-       * screen while Mitch was still speaking. gateThreshold never returns
-       * anything looser than 95, so no video opens sooner than it used to.
+       * The gate opens two seconds from the end of THIS video rather than at a
+       * flat share of it — 95% of a two-minute lesson is six and a half seconds
+       * early, which is what kept putting the gold button on screen while Mitch
+       * was still speaking.
+       *
+       * A PASSED THRESHOLD RAISES THE BAR, IT DOES NOT REPLACE IT, and that is
+       * a correction. This read `thresholdGiven ?? gateThreshold(...)`, so any
+       * caller supplying a number bypassed the per-video rule entirely — and
+       * the daily loop supplies one on both video steps, from
+       * game_settings.video_complete_pct, which defaults to 90. So the whole
+       * per-video gate was unreachable on the one screen it was written for,
+       * and the button kept going gold at 90% of the film: about eighteen
+       * seconds early on a three-minute piece. Ryan, after it shipped: "the
+       * video still has the gold button."
+       *
+       * Taking the larger of the two keeps the setting meaningful — an admin
+       * who wants 99% gets 99% — while making "not before the last two seconds"
+       * a floor no configuration can drop below. gateThreshold itself never
+       * returns anything looser than 95.
        */
-      const bar = thresholdGiven ?? gateThreshold(el.duration);
+      const bar = Math.max(thresholdGiven ?? 0, gateThreshold(el.duration));
 
       if (!metRef.current && isWatched(next, bar)) {
         metRef.current = true;
