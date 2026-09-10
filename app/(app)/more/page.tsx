@@ -30,6 +30,14 @@ export default async function MorePage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  /* The same count the More tab's dot is derived from, so the dot and the
+     number it resolves to can never disagree. RLS (0030) scopes it to this
+     user's own mail without a filter here. */
+  const { count: unreadCount } = await supabase
+    .from("notification")
+    .select("id", { count: "exact", head: true })
+    .is("read_at", null);
+
   const { data: memberships } = await supabase
     .from("membership")
     .select("role, app_user:user_id(full_name)")
@@ -105,17 +113,32 @@ export default async function MorePage() {
         </li>
         {/*
           THE HEADER'S SECOND HOME.
-          At larger text sizes the header sheds the avatar and then the alerts
-          bell — see .ediagd-yields-first / -second in styles/brand.css. These
-          rows are where they go, and they are listed unconditionally rather
-          than only when the header has dropped them: a menu whose contents
+          The bell and the avatar left the header entirely when the streak chip
+          took that slot; the Sand Dollars pill also folds up here at the
+          largest text sizes. These rows are listed unconditionally rather than
+          only when the header has dropped something: a menu whose contents
           change with the font size is a menu nobody can learn.
+
+          AND THIS IS WHERE THE DOT CASHES OUT. The More tab carries a dot when
+          something is unread, which says "there is something here" and then,
+          Ryan: "when you go there it doesn't indicate which menu you need to
+          click on." A dot that hands you a menu of nine rows and no direction
+          has only moved the question.
+
+          A COUNT IS ALLOWED HERE, and that is not a reversal of the no-badge
+          rule. The rule is against ambient guilt — a number in the chrome of
+          every screen, telling you how far behind you are whether you asked or
+          not. This is a screen somebody deliberately opened; by the time they
+          are reading it they have asked. The exact figure rather than a capped
+          "9+", too: in here there is room, and 14 tells you something about
+          your morning that "9+" does not.
         */}
         <li>
           <LinkRow
             href="/notifications"
             label="Alerts"
             hint="Wins, nudges and anything waiting for you"
+            count={Number(unreadCount ?? 0)}
           />
         </li>
         <li>
@@ -210,21 +233,38 @@ function LinkRow({
   href,
   label,
   hint,
+  count = 0,
 }: {
   href: string;
   label: string;
   hint: string;
+  /** Unread items behind this row. Rendered only when there are some. */
+  count?: number;
 }) {
   return (
     <Card>
       <Link
         href={href}
+        /* The count goes in the accessible name rather than being left to a
+           bubble a screen reader would read as a bare number after the hint. */
+        aria-label={count > 0 ? `${label} — ${count} unread` : undefined}
         className="flex items-center gap-3 p-4 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
       >
         <span className="min-w-0 flex-1">
           <span className="block text-base font-extrabold text-navy">{label}</span>
           <span className="mt-0.5 block text-xs text-ink-soft">{hint}</span>
         </span>
+        {count > 0 && (
+          /* Gold because the inbox is win-first — an unread notification here
+             is more often a badge earned than a problem, and the chrome should
+             not imply otherwise. Same colour as the dot it resolves. */
+          <span
+            aria-hidden="true"
+            className="ediagd-numeral flex min-h-6 min-w-6 shrink-0 items-center justify-center rounded-pill bg-gold px-2 text-xs font-extrabold tabular-nums text-navy"
+          >
+            {count}
+          </span>
+        )}
         <span aria-hidden="true" className="text-lg text-ink-soft">
           ›
         </span>

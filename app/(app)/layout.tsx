@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
 import { DayRollover } from "@/components/nav/DayRollover";
+import { SwipeNavigation } from "@/components/nav/SwipeNavigation";
 import type { IsoDate } from "@/lib/gamification/streak";
 import { loadScheduleContext, restDayFor, type RestDay } from "@/lib/work-schedule";
 
@@ -190,6 +191,9 @@ export default async function AppLayout({
       {renderedDate && rooftopTz && (
         <DayRollover serverDate={renderedDate} timezone={rooftopTz} />
       )}
+      {/* Renders nothing. Adds the full-screen swipe that the system's
+          edge-only gesture does not cover — see SwipeNavigation. */}
+      <SwipeNavigation />
       <AppHeader
         balance={balance}
         streak={streak}
