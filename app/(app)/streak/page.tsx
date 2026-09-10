@@ -78,8 +78,6 @@ export default async function StreakPage() {
         Your Swell
       </h1>
 
-      <IslandBalanceLine usage={islandBalance} className="mt-2" />
-
       {streak > 0 ? (
         <section className="mt-3 rounded-card bg-navy p-6 text-center shadow-card">
           <SwellSun size={92} className="mx-auto" />
@@ -216,6 +214,17 @@ export default async function StreakPage() {
           <span aria-hidden="true">⟶</span>
         </Link>
       </Card>
+
+      {/* UNDER PADDLE BACK OUT, NOT OVER THE SWELL. Ryan: "we don't need to
+          put the Island Time notice on the top of the Swell graphic."
+
+          He is right about the order. The hero is the streak, and a line
+          about days off sitting above it answered a question nobody had
+          arrived asking. Down here it sits with the other thing that
+          protects a Swell — Paddle Back Out covers the day you missed,
+          Island Time covers the days you booked — so the two ways your
+          streak survives an absence read as a pair. */}
+      <IslandBalanceLine usage={islandBalance} className="mt-3 px-1" />
 
       <p
         className="mt-8 text-center text-3xl text-teal"
