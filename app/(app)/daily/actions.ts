@@ -90,6 +90,23 @@ export async function completeDayAction(
       content
     );
     revalidatePath("/advisor");
+    /*
+     * ---- AND THE SHELL, BECAUSE THE STREAK NOW LIVES IN IT ----------------
+     *
+     * The header's streak chip is rendered by the (app) layout, not by any
+     * page, and revalidatePath("/advisor") only invalidates that one route's
+     * page segment. Completing the day is the single moment the number
+     * changes, and /today is immersive — the header is hidden while the loop
+     * runs — so the very first time an advisor sees the chip after finishing
+     * is the navigation OUT of the loop. Without this it would still read
+     * yesterday's number until something else forced a fresh render, which is
+     * the one moment the 0 -> 1 flip was supposed to be worth watching.
+     *
+     * "layout" from the root invalidates every nested route, which is heavier
+     * than a page revalidation and is the right weight for a value printed on
+     * every screen in the app. It fires once a day, per advisor.
+     */
+    revalidatePath("/", "layout");
     return { ok: true, result };
   } catch (error) {
     return { ok: false, error: (error as Error).message };

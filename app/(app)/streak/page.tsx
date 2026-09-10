@@ -7,6 +7,9 @@ import { MILESTONES } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
+import { IslandBalanceLine } from "@/components/schedule/IslandBalanceLine";
+import { loadIslandBalance } from "@/lib/work-schedule";
+import type { IsoDate } from "@/lib/gamification/streak";
 
 export default async function StreakPage() {
   const supabase = await createClient();
@@ -49,6 +52,23 @@ export default async function StreakPage() {
   const atCap = paddleOut >= paddleOutCap;
   const canAfford = balance >= paddleOutPrice;
 
+  /* The rooftop's today, because the allowance is counted per calendar year
+     and a trip over New Year splits across two. See loadIslandBalance. */
+  let today: IsoDate = new Date().toISOString().slice(0, 10);
+  const { data: membershipRows } = await supabase
+    .from("membership")
+    .select("rooftop_id")
+    .eq("user_id", user.id)
+    .eq("active", true);
+  const rooftopId = membershipRows?.[0]?.rooftop_id as string | undefined;
+  if (rooftopId) {
+    const { data: todayRaw } = await supabase.rpc("rooftop_today", {
+      _rooftop: rooftopId,
+    });
+    if (todayRaw) today = todayRaw as IsoDate;
+  }
+  const islandBalance = await loadIslandBalance(supabase, user.id, today);
+
   const nextMilestone = MILESTONES.find((m) => m > streak) ?? null;
   const toGo = nextMilestone ? nextMilestone - streak : 0;
 
@@ -57,6 +77,8 @@ export default async function StreakPage() {
       <h1 className="text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
         Your Swell
       </h1>
+
+      <IslandBalanceLine usage={islandBalance} className="mt-2" />
 
       {streak > 0 ? (
         <section className="mt-3 rounded-card bg-navy p-6 text-center shadow-card">

@@ -9,6 +9,8 @@ import {
   MEMBER_SECTIONS,
 } from "@/lib/navigation";
 import { BRAND } from "@/lib/brand";
+import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
+import { formatSandDollarsExact } from "@/lib/sand-dollars";
 import { signOutAction } from "./actions";
 
 export default async function MorePage() {
@@ -17,6 +19,16 @@ export default async function MorePage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  /* THE BALANCE HAS A HOME HERE NOW. The header pill folds at the largest
+     text sizes — the streak chip and the wordmark are the floor — so the
+     number has to be reachable without it. Exact, with separators: this is a
+     menu you arrive at on the way to spending something. */
+  const { data: balanceRow } = await supabase
+    .from("sand_dollar_balance")
+    .select("balance")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   const { data: memberships } = await supabase
     .from("membership")
@@ -48,6 +60,17 @@ export default async function MorePage() {
       <Card className="mt-3 p-5">
         <p className="text-lg font-extrabold text-navy">{displayName}</p>
         <p className="mt-0.5 text-sm text-ink-soft">{user.email}</p>
+        <Link
+          href="/sand-dollars"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-pill bg-gold-soft/60 px-3 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          <SandDollarIcon size={18} className="shrink-0" />
+          <span className="ediagd-numeral text-sm font-extrabold tabular-nums">
+            {formatSandDollarsExact(balanceRow?.balance == null ? 0 : Number(balanceRow.balance))}
+          </span>
+          <span className="text-sm font-bold text-ink-soft">Sand Dollars</span>
+        </Link>
+
         {roles.size > 0 && (
           <p className="mt-2 flex flex-wrap gap-1.5">
             {[...roles].map((role) => (

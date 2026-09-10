@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
+import { StreakChip } from "./StreakChip";
+import { formatSandDollarsCompact } from "@/lib/sand-dollars";
+import type { RestDay } from "@/lib/work-schedule";
 import { BRAND } from "@/lib/brand";
 import { isImmersive } from "./routes";
 
@@ -33,15 +36,19 @@ import { isImmersive } from "./routes";
  * line — see the layout note in the report.
  */
 export function AppHeader({
-  initials,
   balance,
-  unreadCount = 0,
+  streak,
+  rest,
+  completedToday,
 }: {
-  initials: string;
   /** Sand Dollars, or null when the user has no ledger yet. */
   balance: number | null;
-  /** Unread notifications. Resolved in the layout; the nav never queries. */
-  unreadCount?: number;
+  /** swell.current_len. The chip never recomputes it — see StreakChip. */
+  streak: number;
+  /** Today's rest reason, or null on a working day. */
+  rest: RestDay | null;
+  /** Whether today's block is already done. */
+  completedToday: boolean;
 }) {
   const pathname = usePathname() ?? "";
   if (isImmersive(pathname)) return null;
@@ -116,84 +123,60 @@ export function AppHeader({
             >
               {BRAND.name}
             </span>
-            {/* Already in px, so it never grew — and it still yields first if
-                anything ever has to: it is allowed to wrap rather than be cut. */}
-            <span className="mt-[3px] block text-[8px] font-semibold uppercase leading-tight tracking-[0.1em] text-teal">
+            {/* YIELDS FIRST. Already in px, so it never grew; it is allowed to
+                wrap, and past that it drops. It is the one thing up here that
+                is pure decoration — the words are on the login screen, the
+                marketing site and the mark itself, and nobody navigates by
+                them. Everything else in this bar is a number or a way out. */}
+            <span className="ediagd-yields-first mt-[3px] block text-[8px] font-semibold uppercase leading-tight tracking-[0.1em] text-teal">
               {BRAND.tagline}
             </span>
           </span>
         </Link>
 
-        {/* ---- Status + account ------------------------------------------ */}
+        {/* ---- Status: exactly two things, at every size ---------------- */}
+        {/*
+          THE BELL AND THE AVATAR ARE BOTH GONE, and that is the point of this
+          composition rather than a casualty of it.
+
+          The bell was ambient guilt: a permanent "9+" in the chrome, telling
+          you something was waiting every second of every day, whether or not
+          you had any intention of reading it. Its unread state is now a single
+          dot on the More tab — "there is something here when you want it" —
+          and counts and lists live inside the notifications screen, where
+          somebody has chosen to look at them. The avatar was a shortcut to a
+          screen More already offers, so it cost a tap and no capability.
+
+          What is left is the two numbers worth carrying everywhere: what you
+          have banked, and how many days you have strung together.
+        */}
         <Link
           href="/sand-dollars"
-          aria-label={`${balance ?? 0} Sand Dollars — view your ledger`}
-          className="flex shrink-0 items-center gap-1.5 rounded-pill bg-gold-soft/60 px-2.5 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          aria-label={`${(balance ?? 0).toLocaleString()} Sand Dollars — view your ledger`}
+          /*
+            YIELDS SECOND. Folds at the largest sizes, where its balance is
+            reprinted at the top of the More menu — so the number stays
+            reachable and only the tap depth changes.
+          */
+          className="ediagd-yields-second flex min-h-11 shrink-0 items-center gap-1.5 rounded-pill bg-gold-soft/60 px-2.5 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <SandDollarIcon size={18} className="shrink-0" />
-          <span className="ediagd-numeral text-sm font-extrabold">
-            {(balance ?? 0).toLocaleString()}
+          {/*
+            COMPACT HERE, EXACT EVERYWHERE ELSE. Three or four characters, so
+            the pill cannot be the reason the header wraps — and floored, so a
+            glance never overstates what is spendable. lib/sand-dollars.ts.
+          */}
+          <span className="ediagd-numeral text-sm font-extrabold tabular-nums">
+            {formatSandDollarsCompact(balance)}
           </span>
         </Link>
 
-        {/* The count is a WIN-FIRST inbox, so the badge is gold rather than a
-            warning colour — an unread notification is more often good news
-            than bad, and the header should not imply otherwise. */}
-        <Link
-          href="/notifications"
-          aria-label={
-            unreadCount > 0
-              ? `Notifications — ${unreadCount} unread`
-              : "Notifications"
-          }
-          /* Yields SECOND. An unread badge is the only thing up here that
-             tells somebody something happened without being asked; it survives
-             one step longer than the avatar. Duplicated on More. */
-          className="ediagd-yields-second relative flex h-9 w-9 shrink-0 items-center justify-center rounded-pill text-navy transition hover:bg-teal-soft/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          <BellIcon />
-          {unreadCount > 0 && (
-            <span
-              aria-hidden="true"
-              className="ediagd-numeral absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-pill bg-gold px-1 text-[10px] font-extrabold text-navy"
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </Link>
+        {/* The floor, alongside the wordmark. Nothing displaces the streak. */}
+        <StreakChip streak={streak} rest={rest} completedToday={completedToday} />
 
-        {/* Yields FIRST. This is a shortcut to a screen More already offers, so
-            losing it costs a tap rather than a capability — and it is the only
-            thing up here of which that is true. */}
-        <Link
-          href="/profile"
-          aria-label="Your account"
-          className="ediagd-yields-first flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-teal text-sm font-extrabold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          {initials}
-        </Link>
       </div>
     </header>
   );
 }
 
 export default AppHeader;
-
-/** A bell, drawn rather than imported — one shape, no icon dependency. */
-function BellIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7" />
-      <path d="M13.7 20a1.94 1.94 0 0 1-3.4 0" />
-    </svg>
-  );
-}

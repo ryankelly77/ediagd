@@ -163,3 +163,77 @@ export function paddleEntryDetail(entry: PaddleOutEntry): string | null {
   }
   return note;
 }
+
+/* ---------------------------------------------------------------------------
+   WRITING A BALANCE DOWN: TWO FORMS, AND WHICH ONE DEPENDS ON THE DECISION
+   ---------------------------------------------------------------------------
+   The header carries two things on its right now — the balance and the streak
+   — and has to hold both at every text size the app supports. The balance is
+   the only one that can grow without bound, so it is the one with a character
+   budget: three or four, whatever the number.
+
+   Everywhere somebody decides how to SPEND — the card below, the Swag Shack,
+   this ledger — keeps the exact figure with separators. "1.9K" is fine for a
+   glance in the chrome and useless when you are working out whether you can
+   afford a 2,000 hoodie.
+--------------------------------------------------------------------------- */
+
+/** Below this the number is short enough to print as it is. */
+const K = 1000;
+
+/**
+ * Past this the decimal stops earning its place: "101.4K" is five characters
+ * for a tenth of a percent, and the pill's whole job is to stay at four.
+ */
+const NO_DECIMAL_FROM = 100_000;
+
+/**
+ * The balance as the header pill shows it: at most four characters.
+ *
+ *     545     -> "545"      below a thousand, as written
+ *     1000    -> "1K"       a bare .0 is noise, so it goes
+ *     1300    -> "1.3K"
+ *     1999    -> "1.9K"     floored, never 2K
+ *     10100   -> "10.1K"
+ *     100000  -> "100K"     no decimal up here
+ *
+ * IT ROUNDS DOWN, ALWAYS. A readout that overstates what is spendable sets
+ * somebody up to be refused at the counter, and being told "you have 2K" by
+ * the app you are spending in is worse than being told 1.9. Flooring also
+ * makes the compact form safe to show beside a price: it can only understate.
+ *
+ * The arithmetic runs on the INTEGER, not on n/1000. Dividing first and
+ * scaling back up lands a hair under the right tenth for values like 2,900 —
+ * (2900/1000)*10 is 28.999999999999996, which floors to 28 and prints "2.8K".
+ * Math.floor(n / 100) never leaves the integers.
+ */
+export function formatSandDollarsCompact(balance: number | null | undefined): string {
+  const n = Number(balance ?? 0);
+  if (!Number.isFinite(n)) return "0";
+
+  /* Negative balances are not reachable through the ledger, but a minus sign
+     is a better answer than a wrong one if one ever is. The plain branch
+     handles them, which is also where everything below a thousand belongs. */
+  if (n < K) return String(Math.floor(n));
+
+  if (n >= NO_DECIMAL_FROM) return `${Math.floor(n / K)}K`;
+
+  const tenths = Math.floor(n / 100); // 1999 -> 19
+  const whole = Math.floor(tenths / 10);
+  const decimal = tenths % 10;
+  return decimal === 0 ? `${whole}K` : `${whole}.${decimal}K`;
+}
+
+/**
+ * The balance in full, with separators — for every screen where it is being
+ * spent, compared or reconciled.
+ *
+ * Named rather than a bare .toLocaleString() at each call site, so "the exact
+ * one" can be searched for, and so the two forms sit together in one file
+ * where the distinction between them is written down.
+ */
+export function formatSandDollarsExact(balance: number | null | undefined): string {
+  const n = Number(balance ?? 0);
+  if (!Number.isFinite(n)) return "0";
+  return n.toLocaleString();
+}

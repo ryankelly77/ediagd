@@ -1,0 +1,17 @@
+{
+  "//": "Standalone build for sand-dollar-format-scenarios.ts. Imports the REAL lib/sand-dollars.ts through the @/ alias — the same module the header pill renders with, because a paraphrase would prove nothing about the pill.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-sdf",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./sand-dollar-format-scenarios.ts", "../lib/sand-dollars.ts"]
+}

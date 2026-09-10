@@ -166,3 +166,5 @@ exports/
 backups/
 .tmp-sr/
 .tmp-rct/
+.tmp-sdf/
+.tmp-skc/

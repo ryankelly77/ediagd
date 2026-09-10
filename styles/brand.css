@@ -401,15 +401,35 @@
   container-name: ediagdheader;
 }
 
-/* About 125% on a 402px phone: 402/20 = 20.1em. */
-@container ediagdheader (max-width: 22em) {
+/*
+ * WHAT GIVES, AND IN WHICH ORDER.
+ *
+ * The right-hand side is now exactly two things — the Sand Dollars pill and
+ * the streak chip — and the chip is the floor: it and the wordmark are what
+ * survive at any size. So the order is tagline, then pill, then nothing.
+ *
+ * The tagline is pure decoration; the words are on the login screen, the site
+ * and the mark itself, and nobody navigates by them. The pill is a number with
+ * a second home — it reappears at the top of the More menu the moment it folds
+ * — so losing it costs a tap, not the fact. The chip has no second home by
+ * design: it is the ambient streak, and an ambient thing you have to go and
+ * find is not one.
+ *
+ * THRESHOLDS ARE CONTENT-BOX em AND WERE MEASURED, NOT REASONED. A query
+ * container is sized by its content box, and this bar carries px-4 a side, so
+ * the width these conditions see is 32px less than the header's. Getting that
+ * wrong once already shipped a set of bands that silently never fired.
+ * Measured on a 402pt viewport: 23.1em at 100%, 18.5 at 125%, 17.1 at 135%,
+ * 15.4 at 150%, 11.6 at 200%.
+ */
+@container ediagdheader (max-width: 16em) {
   .ediagd-yields-first { display: none; }
 }
 
-/* About 150%: 402/24 = 16.8em. */
-@container ediagdheader (max-width: 18em) {
+@container ediagdheader (max-width: 13em) {
   .ediagd-yields-second { display: none; }
 }
+
 
 /* ---------------------------------------------------------------------------
    THE STAT ROW: THREE ACROSS, OR THREE DOWN — NEVER TWO AND AN ORPHAN

@@ -5,6 +5,7 @@
    never learns what a database row looks like.
    ============================================================================ */
 
+import { usageForYear, yearOf, type YearUsage } from "@/lib/island-budget";
 import {
   addDays,
   daysBetween,
@@ -399,6 +400,36 @@ export async function loadIslandBudgetContext(
     ?.island_time_days_per_year;
 
   return { ...context, cap: raw == null ? 15 : Number(raw) };
+}
+
+/**
+ * How much Island Time is left this calendar year.
+ *
+ * ONE HELPER, because three screens now print this sentence — /island-time,
+ * /streak and /profile — and a balance that disagreed with itself between two
+ * of them would be worse than not showing it. The arithmetic is
+ * usageForYear's; this only assembles the context and picks the year.
+ *
+ * THE YEAR COMES FROM THE ROOFTOP'S TODAY, not the server's. A range is
+ * charged per calendar year and a trip over New Year splits across two, so on
+ * 31 December an advisor in Hawaii and a server in UTC disagree about which
+ * year's allowance they are looking at — for about five hours a year, on the
+ * screen that says how many days they have left.
+ */
+export async function loadIslandBalance(
+  client: Client,
+  userId: string,
+  today: IsoDate
+): Promise<YearUsage> {
+  const context = await loadIslandBudgetContext(client, userId);
+  /* islandTime is optional on ScheduleContext — an advisor with no bookings at
+     all. Empty means nothing spent, which is the correct reading. */
+  return usageForYear(
+    context.islandTime ?? [],
+    context.schedule ?? null,
+    yearOf(today),
+    context.cap
+  );
 }
 
 /** Has this person told us their schedule? Absence of a row is the signal. */

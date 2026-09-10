@@ -1,0 +1,23 @@
+{
+  "//": "Standalone build for streak-chip-scenarios.ts. Imports the REAL lib/streak-chip.ts and the REAL restDayFor through the @/ alias — the same pair the header renders from, so the rest days are derived here exactly as /today derives them.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-skc",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./streak-chip-scenarios.ts",
+    "../lib/streak-chip.ts",
+    "../lib/work-schedule.ts",
+    "../lib/island-budget.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

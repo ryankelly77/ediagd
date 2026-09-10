@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { isImmersive } from "./routes";
-
-export type TabIcon = "sun" | "wave" | "shell" | "team" | "swag" | "more";
+import { TabGlyph, type TabIcon } from "./TabGlyph";
 
 export type Tab = {
   href: string;
@@ -28,6 +27,18 @@ export type Tab = {
    * cannot go stale.
    */
   fallback?: boolean;
+  /**
+   * A quiet "there is something here" marker. Used only by More, for unread
+   * notifications, now that the bell has left the header.
+   *
+   * DELIBERATELY NOT A COUNT. A permanent "9+" in the chrome is ambient guilt:
+   * it tells you something is waiting every second of every day, whether or
+   * not you meant to think about it, and it is the thing this app's design
+   * exists to avoid. A dot says the same useful half — "when you want it,
+   * there is something" — and says nothing about how far behind you are. The
+   * number is on the notifications screen, where somebody chose to look.
+   */
+  dot?: boolean;
 };
 
 /**
@@ -114,9 +125,23 @@ export function TabBar({
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
+                  /* The dot is decorative; the fact it carries goes in the
+                     accessible name instead, where a screen reader can use it. */
+                  aria-label={tab.dot ? `${tab.label} — unread notifications` : undefined}
                   className="flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
                 >
-                  <TabGlyph icon={tab.icon} active={active} />
+                  {/* The dot rides the glyph, not the cell, so it sits on the
+                      icon at every text size rather than drifting as the label
+                      below it grows. */}
+                  <span className="relative flex items-center justify-center">
+                    <TabGlyph icon={tab.icon} color={active ? "var(--color-teal)" : "var(--color-ink-soft)"} />
+                    {tab.dot && (
+                      <span
+                        aria-hidden="true"
+                        className="ediagd-more-dot absolute -right-1 -top-0.5 h-2 w-2 rounded-pill bg-gold ring-2 ring-surface-card"
+                      />
+                    )}
+                  </span>
                   {/*
                     13px, and `ink` rather than `ink-soft` when inactive.
                     11px was below the floor Ryan set for this audience, and
@@ -148,78 +173,6 @@ export function TabBar({
       </nav>
     </>
   );
-}
-
-/**
- * Inline SVGs — no icon package, and they inherit brand colour. Shapes lean on
- * the brand's own vocabulary: sunrise, wave, shell.
- */
-function TabGlyph({ icon, active }: { icon: TabIcon; active: boolean }) {
-  const color = active ? "var(--color-teal)" : "var(--color-ink-soft)";
-  const common = {
-    /* Up from 22 with the label, so the glyph and its caption grow together
-       rather than the icon shrinking against bigger type. */
-    width: 24,
-    height: 24,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: color,
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    "aria-hidden": true,
-  };
-
-  switch (icon) {
-    case "sun":
-      return (
-        <svg {...common}>
-          <path d="M4 18h16" />
-          <path d="M7 18a5 5 0 0 1 10 0" />
-          <path d="M12 5v2M5.6 7.6l1.4 1.4M18.4 7.6 17 9" />
-        </svg>
-      );
-    case "wave":
-      return (
-        <svg {...common}>
-          <path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 5-3" />
-          <path d="M2 18c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 5-3" />
-        </svg>
-      );
-    case "shell":
-      return (
-        <svg {...common}>
-          <path d="M12 21a9 9 0 1 0-9-9c0 4 3 9 9 9Z" />
-          <path d="M12 21c-2-4-2-9 0-13M12 21c2-4 2-9 0-13" />
-        </svg>
-      );
-    case "team":
-      return (
-        <svg {...common}>
-          <circle cx="9" cy="8" r="3" />
-          <path d="M3 20a6 6 0 0 1 12 0" />
-          <path d="M16 6.5a3 3 0 0 1 0 5.8M17 20a6 6 0 0 0-2-4.4" />
-        </svg>
-      );
-    case "swag":
-      // The tote from /brand/icons/swag_shack.svg, inlined so it inherits the
-      // active/inactive colour like every other tab glyph.
-      return (
-        <svg {...common}>
-          <path d="M4.8 8h14.4l-1.1 11.1a1.6 1.6 0 0 1-1.6 1.4H7.5a1.6 1.6 0 0 1-1.6-1.4L4.8 8Z" />
-          <path d="M9 8.6V6.4a3 3 0 0 1 6 0v2.2" />
-          <path d="M8.9 14.6c1-1 2.1-1 3.1 0s2.1 1 3.1 0" strokeWidth={1.7} />
-        </svg>
-      );
-    case "more":
-      return (
-        <svg {...common}>
-          <circle cx="5" cy="12" r="1.4" />
-          <circle cx="12" cy="12" r="1.4" />
-          <circle cx="19" cy="12" r="1.4" />
-        </svg>
-      );
-  }
 }
 
 export default TabBar;

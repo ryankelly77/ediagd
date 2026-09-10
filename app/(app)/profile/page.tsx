@@ -5,6 +5,7 @@ import { hasLiveToken, loadPushPref } from "@/lib/notifications/push-prefs";
 import { PushSelfTest } from "@/components/notifications/PushSelfTest";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
+import { IslandBalanceLine } from "@/components/schedule/IslandBalanceLine";
 import { BRAND } from "@/lib/brand";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { AccountForms } from "@/components/profile/AccountForms";
@@ -15,6 +16,7 @@ import {
   describeSchedule,
   rowToSchedule,
   scheduleToDraft,
+  loadIslandBalance,
   type IslandTimeEntry,
   type ScheduleRow,
 } from "@/lib/work-schedule";
@@ -97,6 +99,10 @@ export default async function ProfilePage() {
     if (todayRaw) today = todayRaw as IsoDate;
   }
 
+  /* The year's allowance, printed where the schedule that governs it is
+     edited. Read-only — booking stays on /island-time. */
+  const islandBalance = await loadIslandBalance(supabase, user.id, today);
+
   let cursor: IsoDate = today;
   while (isoWeekday(cursor) !== 6) cursor = addDays(cursor, 1);
   const saturdays: IsoDate[] = [];
@@ -157,6 +163,8 @@ export default async function ProfilePage() {
           </p>
         )}
       </Card>
+
+      <IslandBalanceLine usage={islandBalance} className="mt-3 px-1" />
 
       <Card className="mt-3 p-5">
         <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
