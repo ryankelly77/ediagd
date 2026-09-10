@@ -65,32 +65,66 @@ export default async function MorePage() {
         More
       </h1>
 
-      <Card className="mt-3 p-5">
-        <p className="text-lg font-extrabold text-navy">{displayName}</p>
-        <p className="mt-0.5 text-sm text-ink-soft">{user.email}</p>
+      {/*
+        THE CARD THAT LOOKED LIKE A BUTTON AND WASN'T.
+
+        Ryan: "there is a big block at the top, which i thought would be the
+        clickable box to reach my profile settings — but it's not — i have to
+        scroll all the way down to the last box which says Your account."
+
+        A card carrying your name, your email and your roles is a profile
+        header in every app anybody has used. It was inert, and the row that
+        did the job sat eight rows below the fold. The affordance was already
+        being promised; it just wasn't being kept.
+
+        TWO TARGETS, NOT ONE, and that is forced rather than chosen: the Sand
+        Dollars pill is itself a link, and an anchor inside an anchor is
+        invalid HTML that browsers resolve by unnesting — which would have
+        made the balance a dead patch inside a bigger tap target. So the
+        identity block links to /profile and the pill stays its own sibling.
+        Both are inside the same card and read as one object.
+      */}
+      <Card className="mt-3">
         <Link
-          href="/sand-dollars"
-          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-pill bg-gold-soft/60 px-3 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          href="/profile"
+          className="flex items-center gap-3 rounded-t-card px-5 pt-5 pb-3 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
-          <SandDollarIcon size={18} className="shrink-0" />
-          <span className="ediagd-numeral text-sm font-extrabold tabular-nums">
-            {formatSandDollarsExact(balanceRow?.balance == null ? 0 : Number(balanceRow.balance))}
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-extrabold text-navy">{displayName}</span>
+            <span className="mt-0.5 block text-sm text-ink-soft">{user.email}</span>
           </span>
-          <span className="text-sm font-bold text-ink-soft">Sand Dollars</span>
+          {/* The same chevron every other row carries, so the card announces
+              itself as a way through rather than as a label. */}
+          <span aria-hidden="true" className="text-lg text-ink-soft">
+            ›
+          </span>
         </Link>
 
-        {roles.size > 0 && (
-          <p className="mt-2 flex flex-wrap gap-1.5">
-            {[...roles].map((role) => (
-              <span
-                key={role}
-                className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy"
-              >
-                {role}
-              </span>
-            ))}
-          </p>
-        )}
+        <div className="px-5 pb-5">
+          <Link
+            href="/sand-dollars"
+            className="inline-flex min-h-11 items-center gap-2 rounded-pill bg-gold-soft/60 px-3 py-1.5 text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            <SandDollarIcon size={18} className="shrink-0" />
+            <span className="ediagd-numeral text-sm font-extrabold tabular-nums">
+              {formatSandDollarsExact(balanceRow?.balance == null ? 0 : Number(balanceRow.balance))}
+            </span>
+            <span className="text-sm font-bold text-ink-soft">Sand Dollars</span>
+          </Link>
+
+          {roles.size > 0 && (
+            <p className="mt-2 flex flex-wrap gap-1.5">
+              {[...roles].map((role) => (
+                <span
+                  key={role}
+                  className="rounded-pill bg-teal-soft/50 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy"
+                >
+                  {role}
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
       </Card>
 
       {/* Libraries, from lib/navigation.ts. requiresRole decides whether the
