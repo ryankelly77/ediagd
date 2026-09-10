@@ -70,7 +70,7 @@
     "dedupe:quotes": "rm -rf .tmp-dq && tsc scripts/dedupe-quotes.ts --outDir .tmp-dq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-dq/dedupe-quotes.js",
     "brand:ink": "node scripts/gen-brand-ink-swift.mjs",
     "test:streak-saver": "rm -rf .tmp-ss && tsc -p scripts/tsconfig.streaksaver.json && mkdir -p .tmp-ss/node_modules && ln -sfn .. .tmp-ss/node_modules/@ && node .tmp-ss/scripts/streak-saver-scenarios.js",
-    "report:lms": "rm -rf .tmp-lms && tsc scripts/lms-gap-report.ts --outDir .tmp-lms --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-lms/lms-gap-report.js",
+    "report:lms": "rm -rf .tmp-lms && tsc -p scripts/tsconfig.lmsreport.json && mkdir -p .tmp-lms/node_modules/server-only && echo \"module.exports={};\" > .tmp-lms/node_modules/server-only/index.js && ln -sfn .. .tmp-lms/node_modules/@ && node .tmp-lms/scripts/lms-gap-report.js",
     "strip:nuggets": "rm -rf .tmp-scn && tsc scripts/strip-curatorial-nuggets.ts --outDir .tmp-scn --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-scn/strip-curatorial-nuggets.js",
     "strip:refs": "rm -rf .tmp-sr && tsc scripts/strip-internal-refs.ts --outDir .tmp-sr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-sr/strip-internal-refs.js",
     "restore:cue-titles": "rm -rf .tmp-rct && tsc scripts/restore-truncated-cues.ts --outDir .tmp-rct --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-rct/restore-truncated-cues.js",

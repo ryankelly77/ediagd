@@ -1,0 +1,17 @@
+{
+  "//": "Standalone build for lms-gap-report.ts. It imports the REAL lib/mapping/dealer-codes.ts through the @/ alias, because coverage is computed there with rules a report must not paraphrase — a no_match ruling does not count as covered, and getting that wrong quotes Mitch a percentage the admin screen disagrees with.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-lms",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./lms-gap-report.ts", "../lib/mapping/dealer-codes.ts"]
+}

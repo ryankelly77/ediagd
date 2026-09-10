@@ -16,6 +16,13 @@
    ============================================================================ */
 
 import ExcelJS from "exceljs";
+import { createClient } from "@supabase/supabase-js";
+import {
+  loadDealers,
+  loadOpCodes,
+  loadSubCategories,
+  laborCoverage,
+} from "@/lib/mapping/dealer-codes";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -303,6 +310,108 @@ async function main() {
       const c = courseById.get(m.course_id);
       ws6.addRow([c?.track ?? "—", c?.name ?? "—", m.name, contentByModule.get(m.id) ?? 0]);
     });
+
+  /* ---- 7. Mapping rulings waiting on Mitch --------------------------------
+   *
+   * THE NUMBERS COME FROM THE APP'S OWN FUNCTIONS, not from a query written
+   * here. Coverage in particular is subtle — a dealer code counts as covered
+   * when it has a ruling OR a proposal, and a `no_match` ruling deliberately
+   * does NOT count, because the dollars behind it are still bridged to
+   * nothing. Reimplementing that in a report is how a spreadsheet ends up
+   * quoting a percentage the admin screen disagrees with. My own first
+   * attempt at it produced 0%, and my second produced 1.1%; both were wrong
+   * for different reasons.
+   */
+  const service = createClient(url!, key!, { auth: { persistSession: false } });
+  const dealers = await loadDealers(service);
+
+  const ws7 = sheet(
+    "Mapping — for Mitch",
+    ["Task", "Where", "Open", "Detail"],
+    [40, 30, 10, 74]
+  );
+  const M = (task: string, where: string, open: number, detail: string) => {
+    const r = ws7.addRow([task, where, open, detail]);
+    r.alignment = { vertical: "top", wrapText: true };
+    if (open > 0) r.getCell(3).font = { bold: true, color: { argb: "FFB35309" } };
+  };
+
+  for (const d of dealers) {
+    const oc = await loadOpCodes(service, d, 5000);
+    const sc = await loadSubCategories(service, d);
+    const scCov = laborCoverage(sc);
+    /* NOTHING HERE HAS BEEN RULED YET — every row comes back 'unruled', so
+       the open count is the whole table. Worth stating plainly rather than
+       softening: the 29% coverage figure is machine proposals, not decisions.
+       (And loadOpCodes' `noMatch` is NOT "ruled no match" — it counts rows
+       the auto-matcher could not even guess at. Reading it as rulings is how
+       this first reported 1,260 items as already settled.) */
+    const unruled = oc.rows.filter((r) => r.status === "unruled").length;
+    const proposed = oc.rows.filter((r) => r.status === "proposed").length;
+
+    M(
+      `Dealer codes — ${d.name}`,
+      "/admin/mapping/dealer-codes",
+      unruled,
+      `${oc.total} codes in this dealer's DMS and NONE have been ruled — the whole table is open. ${oc.coveragePct}% of labor dollars are "covered", but that is entirely the auto-matcher's proposals, which nobody has agreed to. ${oc.total - oc.noMatch} have a proposal to accept or reject; the other ${oc.noMatch} the matcher cannot even guess at, and those include the catch-alls — 100, MISC, DIAG — which carry millions between them and fit no catalog code. Coverage has an honest ceiling well below 100%.`
+    );
+    M(
+      `Sub-categories — ${d.name}`,
+      "/admin/mapping/families",
+      sc.filter((r) => r.status === "unmapped").length,
+      `${sc.length} sub-categories. Of this dealer's labor dollars, ${scCov.ruledPct}% sit under a family a person RULED, ${scCov.autoPct}% under a machine guess nobody has confirmed, and ${scCov.openPct}% under nothing at all. The auto ones work today; they are just unagreed.`
+    );
+  }
+
+  const aliases = await pull<{ kind: string; alias: string; canonical: string; confirmed: boolean }>(
+    "mapping_alias?select=kind,alias,canonical,confirmed&order=kind"
+  );
+  const unconfirmed = aliases.filter((a) => !a.confirmed);
+  M(
+    "Aliases awaiting confirmation",
+    "/admin/mapping/aliases",
+    unconfirmed.length,
+    `Of ${aliases.length} aliases, ${unconfirmed.length} are unconfirmed — mostly op-code aliases like "Air Filter" -> EAF-001. They are already in use; confirming them is agreeing to what the system is doing.`
+  );
+
+  const catalog = await pull<{ code: string; category: string | null; piggyback_unresolved: boolean }>(
+    "op_code_catalog?select=code,category,piggyback_unresolved&order=code"
+  );
+  M(
+    "Piggyback partners unresolved",
+    "/admin/mapping/op-codes",
+    catalog.filter((c) => c.piggyback_unresolved).length,
+    "Op codes whose piggyback partner has not been settled — which service rides along with which."
+  );
+
+  const famRows = await pull<{ code: string; family: string | null; coachable: boolean; confidence: string }>(
+    "op_code_family_live?select=code,family,coachable,confidence&order=code"
+  );
+  M(
+    "Op codes on a medium-confidence family",
+    "/admin/mapping/op-codes",
+    famRows.filter((r) => r.confidence === "medium").length,
+    `All ${famRows.length} catalog codes have a family. ${famRows.filter((r) => r.confidence === "ruled").length} are ruled by a person, ${famRows.filter((r) => r.confidence === "high").length} high-confidence, and the medium ones are the guesses worth a look. ${famRows.filter((r) => !r.coachable).length} are marked not coachable.`
+  );
+
+  M(
+    "Possible duplicate quotes",
+    "/admin/content/review",
+    reviews.filter((r) => r.reason === "unlinked_twin" && r.status === "open").length,
+    "Two rows that may say the same thing. The daily loop can serve both on one day until one is retired or they are linked."
+  );
+  M(
+    "Cues with no op code",
+    "/admin/content/review",
+    reviews.filter((r) => r.reason === "needs_op_code" && r.status === "open").length,
+    "A cue with no op code cannot be served against a service. Written, unreachable."
+  );
+  M(
+    "Coaching nuggets carrying curator's notes",
+    "/admin/content/review",
+    26,
+    'Nuggets that reference other quotes, workbook tabs or R-numbers — "Pairs with Stay Good (Saban)". The pure index entries were stripped automatically; these 26 have the cross-reference welded into real coaching, so which half survives is an editorial call. Not yet filed: needs a new review reason.'
+  );
 
   const out = join(homedir(), "Downloads", "EDIAGD — LMS gaps.xlsx");
   await wb.xlsx.writeFile(out);
