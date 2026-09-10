@@ -6,6 +6,7 @@ import { PushSelfTest } from "@/components/notifications/PushSelfTest";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { IslandBalanceLine } from "@/components/schedule/IslandBalanceLine";
+import { TextScaleReadout } from "@/components/brand/TextScaleReadout";
 import { BRAND } from "@/lib/brand";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { AccountForms } from "@/components/profile/AccountForms";
@@ -165,6 +166,11 @@ export default async function ProfilePage() {
       </Card>
 
       <IslandBalanceLine usage={islandBalance} className="mt-3 px-1" />
+
+      {/* What the phone is actually asking for. See TextScaleReadout — the
+          shell forwards preferredContentSizeCategory into the web app, and
+          this is the far end of that bridge made visible. */}
+      <TextScaleReadout className="mt-2 px-1" />
 
       <Card className="mt-3 p-5">
         <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">

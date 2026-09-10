@@ -59,6 +59,29 @@
   --text-sm: 0.9375rem;   /* 15px — Subhead. Secondary copy. */
   --text-base: 1.0625rem; /* 17px — Body. */
 
+  /*
+   * The headings, on the same table. Tailwind's upper scale is 18 / 20 / 24 /
+   * 30, and only the 20 is a size Apple names — the rest sit in the gaps
+   * between Title 3, Title 2, Title 1 and Large Title.
+   *
+   * FIXING text-lg ALONE WAS NOT POSSIBLE: 18 has no Apple neighbour but 20,
+   * and 20 was already text-xl, so lifting lg would have put two tokens on
+   * the same number. Each one moves up a step instead, which keeps them
+   * distinct and lands the whole ladder on the table.
+   *
+   * The assignment follows what each is USED for, not just the nearest
+   * number: 2xl carries screen titles ("Aloha, Demo", "Lesson Library"), so
+   * it is Title 1; 3xl carries hero headlines ("HVAC"), so it is Large Title.
+   *
+   * 4xl and 5xl are left alone. Apple's table stops at 34 and those are
+   * display sizes — celebration numerals and the like — answering to
+   * composition rather than to a reading scale. So is .ediagd-figure at 46px.
+   */
+  --text-lg: 1.25rem;     /* 20px — Title 3 */
+  --text-xl: 1.375rem;    /* 22px — Title 2 */
+  --text-2xl: 1.75rem;    /* 28px — Title 1 */
+  --text-3xl: 2.125rem;   /* 34px — Large Title */
+
   /* type + shape */
   --font-display: var(--font-display);
   --font-body: var(--font-body);

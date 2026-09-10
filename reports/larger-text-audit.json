@@ -13,6 +13,36 @@
    "broken": 0
   },
   {
+   "route": "/today",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 0
+  },
+  {
+   "route": "/today",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 0
+  },
+  {
+   "route": "/today",
+   "scale": "200%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/today",
+   "broken": 0
+  },
+  {
    "route": "/advisor",
    "scale": "100%",
    "truncated": [],
@@ -23,8 +53,76 @@
    "broken": 0
   },
   {
+   "route": "/advisor",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/advisor",
+   "broken": 0
+  },
+  {
+   "route": "/advisor",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/advisor",
+   "broken": 0
+  },
+  {
+   "route": "/advisor",
+   "scale": "200%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [
+    "span.min-w-0.flex-1.break-words  \"Belts & Cooling\"  [0px box, 25px of content]",
+    "span.min-w-0.flex-1.break-words  \"Brake Service\"  [0px box, 24px of content]",
+    "span.min-w-0.flex-1.break-words  \"Fluids\"  [0px box, 21px of content]",
+    "span.min-w-0.flex-1.break-words  \"Fuel System\"  [0px box, 31px of content]",
+    "span.min-w-0.flex-1.break-words  \"Lighting\"  [0px box, 21px of content]",
+    "span.min-w-0.flex-1.break-words  \"Spark Plugs\"  [0px box, 23px of content]",
+    "span.min-w-0.flex-1.break-words  \"Wipers\"  [0px box, 32px of content]"
+   ],
+   "pageWide": 0,
+   "landed": "/advisor",
+   "broken": 7
+  },
+  {
    "route": "/streak",
    "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 0
+  },
+  {
+   "route": "/streak",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 0
+  },
+  {
+   "route": "/streak",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/streak",
+   "broken": 0
+  },
+  {
+   "route": "/streak",
+   "scale": "200%",
    "truncated": [],
    "clipped": [],
    "spilling": [],
@@ -43,8 +141,77 @@
    "broken": 0
   },
   {
+   "route": "/library",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 0
+  },
+  {
+   "route": "/library",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 0
+  },
+  {
+   "route": "/library",
+   "scale": "200%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [
+    "span.min-w-0.flex-1  \"The Multi-Point Inspection0 of 1 module\"  [134px box, 170px of content]",
+    "span.block.text-base.font-bold  \"The Multi-Point Inspection\"  [134px box, 170px of content]",
+    "span.min-w-0.flex-1  \"Objection Handling0 of 5 modules\"  [134px box, 157px of content]",
+    "span.block.text-base.font-bold  \"Objection Handling\"  [134px box, 157px of content]",
+    "span.min-w-0.flex-1  \"The MOC Warranty Program0 of 6 modules\"  [134px box, 146px of content]",
+    "span.block.text-base.font-bold  \"The MOC Warranty Program\"  [134px box, 146px of content]",
+    "span.min-w-0.flex-1  \"Six-Step Advanced Selling0 of 4 modules\"  [134px box, 161px of content]",
+    "span.block.text-base.font-bold  \"Six-Step Advanced Selling\"  [134px box, 161px of content]"
+   ],
+   "pageWide": 0,
+   "landed": "/library",
+   "broken": 8
+  },
+  {
    "route": "/sand-dollars",
    "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 0
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 0
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/sand-dollars",
+   "broken": 0
+  },
+  {
+   "route": "/sand-dollars",
+   "scale": "200%",
    "truncated": [],
    "clipped": [],
    "spilling": [],
@@ -63,8 +230,68 @@
    "broken": 0
   },
   {
+   "route": "/swag",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 0
+  },
+  {
+   "route": "/swag",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 0
+  },
+  {
+   "route": "/swag",
+   "scale": "200%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/swag",
+   "broken": 0
+  },
+  {
    "route": "/profile",
    "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 0
+  },
+  {
+   "route": "/profile",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 0
+  },
+  {
+   "route": "/profile",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/profile",
+   "broken": 0
+  },
+  {
+   "route": "/profile",
+   "scale": "200%",
    "truncated": [],
    "clipped": [],
    "spilling": [],
@@ -83,8 +310,68 @@
    "broken": 0
   },
   {
+   "route": "/notifications",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 0
+  },
+  {
+   "route": "/notifications",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 0
+  },
+  {
+   "route": "/notifications",
+   "scale": "200%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/notifications",
+   "broken": 0
+  },
+  {
    "route": "/island-time",
    "scale": "100%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 0
+  },
+  {
+   "route": "/island-time",
+   "scale": "125%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 0
+  },
+  {
+   "route": "/island-time",
+   "scale": "150%",
+   "truncated": [],
+   "clipped": [],
+   "spilling": [],
+   "pageWide": 0,
+   "landed": "/island-time",
+   "broken": 0
+  },
+  {
+   "route": "/island-time",
+   "scale": "200%",
    "truncated": [],
    "clipped": [],
    "spilling": [],
