@@ -925,18 +925,56 @@ export async function pickLifestyleVideo(
    * keeps it stateless, the same way every other pool in this file rotates, and
    * means two advisors at one store still see the same shelf on the same day.
    *
-   * The empty-shelf fallback is not defensive clutter: with Craft unpublished
-   * it is the branch that runs every other day, and without it half the year
-   * would render step 4 empty.
+   * ---------------------------------------------------------------------------
+   * ONLY SHELVES WITH STOCK GET A TURN, AND THE COUNTER COUNTS TURNS
+   * ---------------------------------------------------------------------------
+   * Both halves of that are bug fixes, and they are the same bug.
+   *
+   * This used to pick `LIFESTYLE_COLLECTIONS[epochDay % 2]`, fall back to the
+   * whole library when that shelf was empty, and then index with
+   * `rotationIndex(today, list.length, 3)` — the raw epoch day. The index was
+   * right when there was one shelf and wrong the moment the alternation went
+   * in, because a shelf only comes up every OTHER day: consecutive turns of the
+   * same shelf are two apart in the epoch day, so the index advanced in steps
+   * of two through an even-sized pool and never changed parity.
+   *
+   * Measured against the live library: 90 Mindset published, 45 reachable; 6
+   * Craft published, 3 reachable. FORTY-EIGHT FILMS that could not be served on
+   * any date, ever. And the half that did serve came round in half the time —
+   * the three reachable Craft videos returned every sixth day, which is the
+   * part an advisor actually notices.
+   *
+   * Exactly the dayOfYear bug fixed in rotationIndex above, wearing a new coat:
+   * an index whose stride does not walk its pool. Same lesson, too — the
+   * counter has to count the thing being drawn from, and what is drawn from
+   * here is the SHELF. One turn per serving, hence `cycles`.
+   *
+   * Dropping empty shelves instead of falling back is what makes that counter
+   * honest. A fallback shelf is not a turn of its own: with Craft unpublished
+   * both days resolved to the same pool, so "every other day" was a fiction and
+   * the pool was really being served daily. Filtering empties out first says
+   * that directly — one stocked shelf means `slot` is always 0 and `cycles` is
+   * the plain epoch day, which is the single-shelf behaviour this started with.
+   *
+   * The trailing `rest` shelf is the same invariant applied to rows tagged with
+   * neither collection. Today there are none. Under the old code they were
+   * reachable only on fallback days, which is to say: once Craft was published,
+   * silently never. Nothing published is allowed to be unreachable.
    */
-  const wanted = LIFESTYLE_COLLECTIONS[epochDay(today) % LIFESTYLE_COLLECTIONS.length];
-  const shelf = all.filter((r) => r.collection === wanted);
-  const list = shelf.length > 0 ? shelf : all;
+  const e = epochDay(today);
+  const named = LIFESTYLE_COLLECTIONS.map((c) => all.filter((r) => r.collection === c));
+  const rest = all.filter(
+    (r) => !LIFESTYLE_COLLECTIONS.includes(r.collection as (typeof LIFESTYLE_COLLECTIONS)[number])
+  );
+  const stocked = [...named, rest].filter((s) => s.length > 0);
+  // `all` is non-empty (checked above), so `stocked` cannot be — every row
+  // lands in a named shelf or in `rest`. The fallback is belt and braces.
+  const shelves = stocked.length > 0 ? stocked : [all];
 
-  /* Same deterministic day-rotation the quotes and cues use, so the loop feels
-     composed rather than shuffled, and two advisors at one store see the same
-     thing on the same day. */
-  const row = list[rotationIndex(today, list.length, 3)];
+  const list = shelves[e % shelves.length];
+  const cycles = Math.floor(e / shelves.length);
+
+  const row = list[(cycles + 3) % list.length];
   return shapeVideo(client, row, userId, today);
 }
 
