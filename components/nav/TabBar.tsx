@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 
 import { isImmersive } from "./routes";
@@ -157,13 +157,10 @@ export function TabBar({
                   >
                     {tab.label}
                   </span>
-                  {/* Active underline in gold — the brand's celebration colour. */}
-                  <span
-                    aria-hidden="true"
-                    className={`mt-0.5 h-0.5 w-6 rounded-pill ${
-                      active ? "bg-gold" : "bg-transparent"
-                    }`}
-                  />
+                  {/* Active underline in gold — the brand's celebration
+                      colour — and the same bar at half strength the moment
+                      the tab is pressed. See TabUnderline. */}
+                  <TabUnderline active={active} />
                 </Link>
               </li>
             );
@@ -176,3 +173,34 @@ export function TabBar({
 }
 
 export default TabBar;
+
+/**
+ * The underline, which now has three states rather than two.
+ *
+ * WHY THIS IS ITS OWN COMPONENT: useLinkStatus only reports the pending state
+ * of the Link it is rendered INSIDE. It cannot be read from the loop that
+ * builds the tabs, because at that point there is no Link in the tree above
+ * it yet.
+ *
+ * WHY IT EXISTS AT ALL. Next's own docs name this case — "the destination
+ * route is dynamic and doesn't include a loading.js file that would allow an
+ * instant navigation." Every route here is dynamic, and until this commit
+ * none of them had a loading boundary, so a tap did nothing visible for
+ * anywhere from 700ms to five seconds. The loading.tsx files are the real
+ * fix; this is the half-second before even those can paint, and it is the
+ * part that answers the thumb.
+ *
+ * Half-strength gold, deliberately: the solid bar means "you are here", and
+ * a second solid bar somewhere else would say you are in two places.
+ */
+function TabUnderline({ active }: { active: boolean }) {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden="true"
+      className={`mt-0.5 h-0.5 w-6 rounded-pill transition-colors ${
+        active ? "bg-gold" : pending ? "ediagd-tab-pending" : "bg-transparent"
+      }`}
+    />
+  );
+}

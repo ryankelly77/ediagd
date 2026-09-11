@@ -535,3 +535,55 @@
     font-size: 1.25rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   SKELETONS — the shape of the screen, while the screen is on its way
+   ---------------------------------------------------------------------------
+   Every route in this app is dynamic, because every one of them reads an auth
+   cookie. Next does not prefetch a dynamic route unless it has a loading
+   boundary, and — the part that was actually being felt — it does not NAVIGATE
+   until the server has finished rendering. Ryan: "tapping the footer menu has
+   slow response times." Measured at 700ms to 5.2s with nothing moving on
+   screen at all: not the page, not the URL, not the tab.
+
+   A loading.tsx per tab fixes both halves. These are the blocks it draws.
+
+   THE PULSE IS SLOW ON PURPOSE. A fast shimmer reads as an alarm; this is
+   meant to say "coming" and then get out of the way. It is also the first
+   thing the eye lands on after a tap, so it should not be the loudest thing
+   on the screen — 8% over the card colour is enough to register as motion
+   without competing with the content that replaces it.
+--------------------------------------------------------------------------- */
+.ediagd-skeleton {
+  background: rgb(var(--ediagd-ink) / 0.08);
+  border-radius: 8px;
+  animation: ediagd-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ediagd-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+/* The shell-wide rule already covers anything inside .ediagd-app; this one
+   makes it true for a loading boundary that renders before the shell class
+   is on the tree. A still block is a perfectly good skeleton. */
+@media (prefers-reduced-motion: reduce) {
+  .ediagd-skeleton { animation: none !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   THE TAB THAT KNOWS IT WAS PRESSED
+   ---------------------------------------------------------------------------
+   useLinkStatus gives a Link its pending state. Next's own docs name this
+   exact case: "the destination route is dynamic and doesn't include a
+   loading.js file that would allow an instant navigation."
+
+   With loading.tsx in place the page now responds immediately, so this is the
+   belt to that braces — the tab itself lights the moment the thumb lifts,
+   rather than when the route commits. Gold at half strength: the full gold
+   underline means "you are here", and this means "you are going there".
+--------------------------------------------------------------------------- */
+.ediagd-tab-pending {
+  background: rgb(var(--ediagd-gold) / 0.5);
+}
