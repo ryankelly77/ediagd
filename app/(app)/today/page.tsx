@@ -115,6 +115,56 @@ export default async function TodayPage({
     );
   }
 
+  /*
+   * ==========================================================================
+   * THREE WAVES, NOT THIRTEEN
+   * ==========================================================================
+   * This is the slowest screen in the app, and it used to reach its content
+   * through thirteen steps taken one after another, each waiting on the one
+   * before it for no reason but the order the lines were written in. Only
+   * three of those dependencies are real. This restructures it around the
+   * three that are.
+   *
+   * ---------------------------------------------------------------------------
+   * READ THIS BEFORE CLAIMING IT MADE THE SCREEN FASTER — IT DIDN'T, YET
+   * ---------------------------------------------------------------------------
+   * Measured server-side, post-prefix, against the live database:
+   *
+   *     thirteen serial steps   1753 / 1784 / 1786 / 1911 / 1913 / 2090 ms
+   *     three waves             1833 / 1980 ms
+   *
+   * The same. The await ordering was never what cost the time. Timing wave A's
+   * members individually says why: eleven of the twelve land in 13-312ms and
+   * are effectively free, and the wave costs exactly what its slowest member
+   * costs — `loadAdvisorDay` at 849-1052ms. Behind it, `pickQuotesForDay` is
+   * ~600ms and the cue and pitch film ~350ms. Three slow operations, not one
+   * badly ordered list, and parallelising cheap queries around a slow one
+   * cannot beat the slow one.
+   *
+   * It is kept because it is the honest shape of the dependencies and does no
+   * harm — but the next person looking for time on this screen should go
+   * straight at Eddie's Pick, the quote draw, and the Mux signing, and should
+   * not expect anything from moving these awaits around again.
+   *
+   * WAVE A is everything that needs nothing but `user`, `today` and
+   * `rooftopId`, which by this point are all in hand. Twelve calls that used
+   * to be a dozen waits.
+   *
+   * WAVE B is the two things that needed wave A: the block (which needs the
+   * pick, the block length and whether today is a rest day) and the quotes
+   * (which need the lifestyle film's artifact, so the same idea is not served
+   * twice in one loop — see below).
+   *
+   * WAVE C is what needs the block: the cue and the pitch film for its stage,
+   * plus which of the day's quotes are already kept.
+   *
+   * WHAT IS *NOT* PARALLELISED, and must not be: the technician return above
+   * still happens first, because everything down here is advisor apparatus
+   * and ensureBlockForToday WRITES. And the ordering inside each wave is
+   * still the ordering the data demands — the waves only remove the waits
+   * that were never required.
+   */
+
   // ---- Already done today? The ritual can't be re-run or re-earned. -------
   // NOT a server redirect: completeDayAction writes Supabase session cookies,
   // and Next re-renders the current page on the server when a Server Action
@@ -122,66 +172,45 @@ export default async function TodayPage({
   // so redirecting here would fire mid-celebration and yank the payoff off the
   // screen. The client redirects instead, and only when it didn't just do the
   // ritual itself.
-  const { data: existing } = await supabase
-    .from("daily_completion")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("completion_date", today)
-    .maybeSingle();
-
-  const alreadyCompleteOnLoad = Boolean(existing);
-
-  // Their Swell, so the "done for today" screen can show something real.
-  const { data: swellRow } = await supabase
-    .from("swell")
-    .select("current_len")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  const currentStreak = Number(swellRow?.current_len ?? 0);
+  const opCodeId = (membership.op_code_id as string | null) ?? null;
 
   /*
-   * ---- THE STREAK SAVER LANDED -------------------------------------------
+   * THE LIFESTYLE FILM MOVES INTO WAVE A. It used to be drawn alongside the
+   * cue and the pitch, AFTER the block, purely because they shared a
+   * Promise.all. It depends on none of them — only on the date and the viewer
+   * — and the quotes depend on IT, so pulling it forward is what lets the
+   * quotes start a wave earlier. In practice it finishes at ~760ms and wave A
+   * ends at ~900, so this buys nearer 140ms than a whole wave; see the note
+   * above about where the time actually is.
    *
-   * The push carries ?opened_via=..., which is the only thing that
-   * separates "they opened the app at 7:04pm" from "they opened the app
-   * because we asked them to". Stamped here rather than in a client effect so
-   * it happens on the render the link caused, once, before anything can
-   * navigate away.
-   *
-   * Idempotent in SQL and scoped to the caller's own row, so a refresh, a
-   * double tap or a back-and-forward cannot inflate the number.
+   * The rule it exists to serve is unchanged and still enforced by ordering:
+   * the day's quotes have to know which artifact the film belongs to, so the
+   * same idea is not served twice in one loop — Mitch saying "never lose
+   * money" on step 4 and the words "never lose money" on step 1.
    */
-  /*
-   * TWO TAGS NOW, ONE PER KIND. The lunchtime nudge and the 16:50 last call
-   * are different messages sent at different moments, and the only reason to
-   * tag them separately is to find out which one actually moves people. If
-   * both stamped 'streak_keeper' the report could never tell them apart; if
-   * the last call stamped nothing — which is what it did until this line —
-   * it would read as a message nobody ever opens, which is the failure that
-   * looks like data.
-   */
-  const OPENED_VIA: Record<string, "streak_keeper" | "streak_last_call"> = {
-    streak_saver: "streak_keeper",
-    streak_last_call: "streak_last_call",
-  };
-  const openedKind = params.opened_via ? OPENED_VIA[params.opened_via] : undefined;
-  if (openedKind) {
-    await supabase.rpc("mark_push_opened", { _kind: openedKind });
-  }
-
-  /*
-   * ---- SHOULD WE ASK ABOUT NOTIFICATIONS? --------------------------------
-   *
-   * Decided on the server because the two-ask budget belongs to the person,
-   * not the handset — see lib/notifications/push-prefs.ts. The card itself
-   * adds the last condition, which only the client can answer: is this the
-   * native shell.
-   *
-   * Skipped entirely for anybody who already has a live device on file. They
-   * have been through the dialog; asking again would be asking a question we
-   * already have the answer to.
-   */
-  const [pushPref, alreadyRegistered, completionCount] = await Promise.all([
+  const [
+    { data: existing },
+    { data: swellRow },
+    pushPref,
+    alreadyRegistered,
+    completionCount,
+    scheduleContext,
+    advisorDay,
+    blockDays,
+    { data: badgeRows },
+    badgeRewards,
+    { data: gameSettings },
+    lifestyle,
+    openStamp,
+  ] = await Promise.all([
+    supabase
+      .from("daily_completion")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("completion_date", today)
+      .maybeSingle(),
+    // Their Swell, so the "done for today" screen can show something real.
+    supabase.from("swell").select("current_len").eq("user_id", user.id).maybeSingle(),
     loadPushPref(supabase, user.id),
     hasLiveToken(supabase, user.id),
     supabase
@@ -189,8 +218,75 @@ export default async function TodayPage({
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .then((r: { count: number | null }) => r.count ?? 0),
-  ]);
+    /* The same context the streak engine reads, through the same loader, so
+       the screen and the maths can never disagree about whether today
+       counted. The rooftop is what decides whether the STORE is shut — the
+       closure calendar is per rooftop, and this is the same id rooftop_today()
+       resolved the date from, so the card and the dates agree.
 
+       NO SCHEDULE ON FILE MEANS SCHEDULED. countMissedWorkDays treats every
+       day as a work day when there is no row, so this has to as well — a rest
+       card shown to somebody whose absence the engine WILL count would be the
+       app telling them their streak is safe and then breaking it. See
+       restDayFor. */
+    loadScheduleContext(supabase, user.id, rooftopId),
+    opCodeId ? loadAdvisorDay(supabase, opCodeId, rooftopId) : Promise.resolve(null),
+    loadBlockDays(supabase),
+    // Badge display names, so the celebration can say "First Light earned!"
+    // rather than "first_light". The catalog is public reference data.
+    supabase.from("badge").select("key, name"),
+    // What each badge pays — read from game_settings/the catalog, so the
+    // celebration can never quote an amount the engine didn't grant.
+    loadBadgeRewards(supabase),
+    supabase
+      .from("game_settings")
+      .select("sand_daily_loop, video_complete_pct")
+      .limit(1)
+      .maybeSingle(),
+    // Signed playback is minted per view — never cached across users, because
+    // the token IS the authorisation.
+    pickLifestyleVideo(supabase, today, user.id),
+    /*
+     * ---- THE STREAK SAVER LANDED -----------------------------------------
+     *
+     * The push carries ?opened_via=..., which is the only thing that
+     * separates "they opened the app at 7:04pm" from "they opened the app
+     * because we asked them to". Stamped on the render the link caused, once,
+     * before anything can navigate away. Idempotent in SQL and scoped to the
+     * caller's own row, so a refresh or a double tap cannot inflate it.
+     *
+     * TWO TAGS, ONE PER KIND: the lunchtime nudge and the 16:50 last call are
+     * different messages at different moments, and telling them apart is the
+     * only way to learn which one actually moves people.
+     *
+     * In the wave because it gates nothing — it is a write nobody reads on
+     * this render, and making the screen wait for it bought nothing.
+     */
+    (() => {
+      const OPENED_VIA: Record<string, "streak_keeper" | "streak_last_call"> = {
+        streak_saver: "streak_keeper",
+        streak_last_call: "streak_last_call",
+      };
+      const kind = params.opened_via ? OPENED_VIA[params.opened_via] : undefined;
+      return kind
+        ? supabase.rpc("mark_push_opened", { _kind: kind })
+        : Promise.resolve(null);
+    })(),
+  ]);
+  void openStamp;
+
+  const alreadyCompleteOnLoad = Boolean(existing);
+  const currentStreak = Number(swellRow?.current_len ?? 0);
+  const restDay = restDayFor(today, scheduleContext);
+
+  /*
+   * ---- SHOULD WE ASK ABOUT NOTIFICATIONS? --------------------------------
+   *
+   * Decided on the server because the two-ask budget belongs to the person,
+   * not the handset — see lib/notifications/push-prefs.ts. The card itself
+   * adds the last condition, which only the client can answer: is this the
+   * native shell. Skipped entirely for anybody who already has a live device.
+   */
   const offerSoftAsk =
     !alreadyRegistered &&
     shouldOfferSoftAsk({
@@ -200,76 +296,55 @@ export default async function TodayPage({
     });
 
   /*
-   * ---- IS TODAY A DAY THEY WERE ASKED TO WORK? ---------------------------
-   *
-   * The same context the streak engine reads, through the same loader, so the
-   * screen and the maths can never disagree about whether today counted.
-   *
-   * NO SCHEDULE ON FILE MEANS SCHEDULED. countMissedWorkDays treats every day as
-   * a work day when there is no row, so this has to as well — a rest card shown
-   * to somebody whose absence the engine WILL count would be the app telling
-   * them their streak is safe and then breaking it. In practice the layout
-   * redirects to /onboarding before a signed-in screen renders without one.
-   *
-   * The derivation itself lives in lib/work-schedule.ts beside the loader, so
-   * the screen and countMissedWorkDays cannot drift apart about which days
-   * count. See restDayFor.
+   * WHICH DAY THEIR SWELL PICKS UP ON, computed rather than assumed. The card
+   * used to say "on Monday" to everybody — right for a Mon-Fri advisor
+   * resting on a Saturday, wrong for a Tue-Sat advisor resting on Monday, who
+   * would be told their Swell resumes on the day they are standing in.
    */
-  /* The rooftop is what decides whether the STORE is shut today — the closure
-     calendar is per rooftop, and this is the same id rooftop_today() resolved
-     the date from, so the card and the dates agree. */
-  const scheduleContext = await loadScheduleContext(supabase, user.id, rooftopId);
-  const restDay = restDayFor(today, scheduleContext);
+  const nextWorkDayLabel = restDay ? nextScheduledDayLabel(today, scheduleContext) : "";
 
-  /*
-   * WHICH DAY THEIR SWELL PICKS UP ON, computed rather than assumed.
-   *
-   * The card used to say "on Monday" to everybody. Right for a Mon-Fri advisor
-   * resting on a Saturday — every advisor in the system today, and none of them
-   * once sixty more onboard — and wrong for a Tue-Sat advisor resting on
-   * Monday, who would be told their Swell resumes on the day they are standing
-   * in. Same context the streak engine reads, so Island Time is skipped too.
-   */
-  const nextWorkDayLabel = restDay
-    ? nextScheduledDayLabel(today, scheduleContext)
-    : "";
-
-  // ---- The day's focus ----------------------------------------------------
-  const opCodeId = (membership.op_code_id as string | null) ?? null;
-  const advisorDay = opCodeId
-    ? await loadAdvisorDay(supabase, opCodeId, rooftopId)
-    : null;
+  const badgeNames = Object.fromEntries(
+    (badgeRows ?? []).map((b) => [b.key as string, b.name as string])
+  );
+  const dailyLoopSand = Number(gameSettings?.sand_daily_loop ?? 0);
+  // The bar a watch has to clear. Same setting the library re-checks
+  // server-side in completeLibraryItem, so the two surfaces cannot disagree.
+  const videoThreshold = Number(gameSettings?.video_complete_pct ?? 90);
 
   const pick = advisorDay?.hasVolume ? advisorDay.pick : null;
 
   /*
-   * ---- The block: one family, one op code, six stages ---------------------
+   * ---- WAVE B: the block, and the quotes ---------------------------------
    *
-   * Eddie's Pick chooses the FAMILY and the block locks it, so the six stages
-   * of a pitch are six days of the same conversation rather than six unrelated
-   * mornings. A pick that changes mid-block does not steal the block — that is
-   * what locking means, and it is why the picker asks the block what today's
-   * focus is rather than asking the pick directly.
+   * The block: Eddie's Pick chooses the FAMILY and the block locks it, so the
+   * six stages of a pitch are six days of the same conversation rather than
+   * six unrelated mornings. The service client is required — 0067 gives
+   * coaching_block no user-facing insert policy on purpose, because an
+   * advisor who could open their own block could choose their own easiest
+   * family.
    *
-   * The service client is required: 0067 gives coaching_block no user-facing
-   * insert policy on purpose, because an advisor who could open their own block
-   * could choose their own easiest family. See ensureBlockForToday.
+   * The quotes: both together, because 253 of the 484 are eligible for either
+   * slot and drawing them independently would eventually hand the same quote
+   * to both on one day. pickQuotesForDay makes slot 2 yield to slot 3.
    */
   const service = createServiceClient();
-  const blockDays = await loadBlockDays(supabase);
-  const block = await ensureBlockForToday(
-    service,
-    user.id,
-    rooftopId,
-    today,
-    pick ? { family: pick.family, tier: cueTierForRate(pick.rate) } : null,
-    blockDays,
-    // No block is opened from a part-month. An open one keeps running.
-    advisorDay?.fromPartialPeriod ?? false,
-    // Nor from a day off. Opening the app on a Saturday must not start six days
-    // of coaching — an open block still serves if they take the voluntary rep.
-    restDay === null
-  );
+  const [block, quotes] = await Promise.all([
+    ensureBlockForToday(
+      service,
+      user.id,
+      rooftopId,
+      today,
+      pick ? { family: pick.family, tier: cueTierForRate(pick.rate) } : null,
+      blockDays,
+      // No block is opened from a part-month. An open one keeps running.
+      advisorDay?.fromPartialPeriod ?? false,
+      // Nor from a day off. Opening the app on a Saturday must not start six
+      // days of coaching — an open block still serves if they take the
+      // voluntary rep.
+      restDay === null
+    ),
+    pickQuotesForDay(supabase, today, lifestyle?.artifactId ?? null),
+  ]);
 
   const focus = block
     ? {
@@ -280,29 +355,31 @@ export default async function TodayPage({
       }
     : null;
 
-  // Both quotes together: 253 of the 484 are eligible for either slot, so
-  // drawing them independently would eventually hand the same quote to both on
-  // the same day. pickQuotesForDay makes slot 2 yield to slot 3 on a collision.
   /*
-   * THE VIDEO IS PICKED FIRST, ON PURPOSE.
-   *
-   * These used to run together, and they cannot any more: the day's quotes have
-   * to know which artifact the video belongs to so the same idea is not served
-   * twice in one loop — Mitch saying "never lose money" on step 4 and the words
-   * "never lose money" on step 1. The cue still runs in parallel; it has no such
-   * relationship.
+   * ---- WAVE C: what needed the block, and what needed the quotes ---------
    */
-  const [lifestyle, coaching, pitchVideo] = await Promise.all([
-    // Signed playback is minted per view — never cached across users, because
-    // the token IS the authorisation.
-    pickLifestyleVideo(supabase, today, user.id),
+  const [coaching, pitchVideo, { data: savedRows }] = await Promise.all([
     pickCoachingCueForBlock(supabase, today, focus),
     /*
      * Step 3. Null means the stage has not been filmed, and the step is left
-     * OUT of the day rather than rendered as an empty player — see pickPitchVideo.
-     * Returns null for everyone today: nothing is in 'Pitches by Op Code' yet.
+     * OUT of the day rather than rendered as an empty player — see
+     * pickPitchVideo.
      */
     pickPitchVideo(supabase, today, user.id, focus),
+    /* Which of the day's quotes this advisor has already kept. ONE query for
+       both, and it reads through the user's client so the policy in 0059 is
+       what decides — a save is private and the service role would step
+       straight over that. */
+    (() => {
+      const ids = [quotes.slot3?.id, quotes.slot2?.id].filter(Boolean) as string[];
+      return ids.length
+        ? supabase
+            .from("saved_content")
+            .select("content_id")
+            .eq("user_id", user.id)
+            .in("content_id", ids)
+        : Promise.resolve({ data: [] as { content_id: string }[] });
+    })(),
   ]);
 
   /*
@@ -312,20 +389,6 @@ export default async function TodayPage({
    * is what measures the unfilmed library.
    */
   const pitchVideoSkipped = focus?.opCode && focus.stage ? pitchVideo === null : null;
-  const quotes = await pickQuotesForDay(supabase, today, lifestyle?.artifactId ?? null);
-
-  // Which of the day's quotes this advisor has already kept. ONE query for
-  // both, and it reads through the user's client so the policy in 0059 is what
-  // decides — a save is private and the service role would step straight over
-  // that.
-  const quoteIds = [quotes.slot3?.id, quotes.slot2?.id].filter(Boolean) as string[];
-  const { data: savedRows } = quoteIds.length
-    ? await supabase
-        .from("saved_content")
-        .select("content_id")
-        .eq("user_id", user.id)
-        .in("content_id", quoteIds)
-    : { data: [] };
   const savedIds = new Set((savedRows ?? []).map((r) => r.content_id as string));
 
   const shapeQuote = (q: typeof quotes.slot3) =>
@@ -340,28 +403,8 @@ export default async function TodayPage({
         }
       : null;
 
-  // Badge display names, so the celebration can say "First Light earned!"
-  // rather than "first_light". The catalog is public reference data.
-  const { data: badgeRows } = await supabase.from("badge").select("key, name");
-  const badgeNames = Object.fromEntries(
-    (badgeRows ?? []).map((b) => [b.key as string, b.name as string])
-  );
-
-  // What each badge pays — read from game_settings/the catalog, so the
-  // celebration can never quote an amount the engine didn't grant.
-  const badgeRewards = await loadBadgeRewards(supabase);
-
-  // The daily-loop amount, itemised in the celebration so the total visibly
-  // sums its parts. Read from settings — never hardcoded.
-  const { data: gameSettings } = await supabase
-    .from("game_settings")
-    .select("sand_daily_loop, video_complete_pct")
-    .limit(1)
-    .maybeSingle();
-  const dailyLoopSand = Number(gameSettings?.sand_daily_loop ?? 0);
-  // The bar a watch has to clear. Same setting the library re-checks
-  // server-side in completeLibraryItem, so the two surfaces cannot disagree.
-  const videoThreshold = Number(gameSettings?.video_complete_pct ?? 90);
+  // (badgeNames, badgeRewards, dailyLoopSand and videoThreshold are drawn in
+  // wave A above — none of them depended on anything down here.)
 
   // ---- Admin demo -------------------------------------------------------
   // ?preview=1 walks the real daily loop with a canned outcome: nothing is
