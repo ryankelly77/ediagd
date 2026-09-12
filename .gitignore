@@ -170,3 +170,7 @@ backups/
 .tmp-skc/
 .tmp-scn/
 .tmp-lms/
+
+# Local Python env for the Drop Zone transcription (faster-whisper).
+# Not a dependency of the app; see scripts/transcribe-dropzone.py.
+.venv-whisper/

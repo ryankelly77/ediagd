@@ -356,6 +356,52 @@ function titleCase(s: string): string {
  * film, and scoping the read is cheaper than teaching the scorer to ignore
  * fifty-eight files it should never see.
  */
+/**
+ * Do the slate and the shelf disagree about WHO SAID IT?
+ *
+ * ---------------------------------------------------------------------------
+ * A GATE, NOT A SIGNAL — AND THIS BATCH IS WHY
+ * ---------------------------------------------------------------------------
+ * lib/video/quote-match.ts has had this rule from the start, in the same words:
+ * "A Buffett video cannot be a Kobe quote no matter how the words score." This
+ * matcher parsed the author out of every slate and then never looked at it, and
+ * the cost showed up the moment a batch of Buffett reshoots met a shelf film
+ * called "One Focus".
+ *
+ * FOUR DIFFERENT FILMS CLAIMED "One Focus (Mitch Hardt)" AT 0.79. "One" and
+ * "focus" are both low-information words, so the containment test lit up for
+ * anything whose opening said "focus" — "More life" ("focus on your presence"),
+ * "The four F's" ("focus on your present"), "Avoiding Problems", and one more
+ * behind them. It is precisely the failure this file already documents for "Be
+ * Better Than That" and "Day One or One Day", and the IDF weighting that fixed
+ * those does not save a title whose every word is common.
+ *
+ * Ruling each one out by hand made it worse, not better. Assignment is greedy
+ * over a shared pool, so freeing the row just let the next claimant take it —
+ * three rulings deep, "Avoiding Problems" had been dragged off its own correct
+ * match ("Solving Difficult Problems", 0.63) and onto One Focus, leaving the
+ * right row unclaimed. Whack-a-mole that damages the board.
+ *
+ * The voice gate refuses all four at once and touches no threshold. Every one
+ * of them disagreed on the author, which is the one thing a spoken slate states
+ * outright and cannot be inferred wrong from a common word.
+ *
+ * ONLY WHEN BOTH SIDES KNOW. A shelf file with no parenthetical has no opinion,
+ * and "author unknown" on both sides is agreement, not a conflict. Surnames are
+ * what match: the slate says "Warren Buffett" and the shelf says "(Buffett)".
+ */
+function voiceConflict(slateVoice: string | null, rowVoice: string | null): boolean {
+  const a = tokens(slateVoice ?? "");
+  const b = tokens(rowVoice ?? "");
+  if (a.length === 0 || b.length === 0) return false;
+  /* "Author unknown" is a label, not a person. Two films that both decline to
+     name an author are not thereby the same author, but they are not in
+     conflict either — the title has to decide, as it did before this gate. */
+  const anon = (t: string[]) => t.includes("unknown") || t.includes("anonymou");
+  if (anon(a) || anon(b)) return false;
+  return !a.some((w) => b.includes(w));
+}
+
 function library(mastersDir: string, collection: string): Row[] {
   const dir = join(mastersDir, PUBLISHED, collection);
   if (!existsSync(dir)) {
@@ -393,10 +439,46 @@ function library(mastersDir: string, collection: string): Row[] {
  *
  * So it is recorded as what it is — a person knowing something the transcript
  * does not say — keyed by file, and applied before the scoring runs.
+ *
+ * Every entry here binds a file to a canonical filename ALREADY ON THE SHELF —
+ * it is how you say "this film is that film". It cannot say "this film is new",
+ * because a ruling whose canonical name matches no row is skipped silently. For
+ * that, see NOT_A_RESHOOT below.
  */
 const RULINGS: Record<string, string> = {
   "IMG_2414.MOV": "MINDSET — Choices — v1.mov",
 };
+
+/**
+ * Ruled NEW: films the matcher claimed were reshoots and are not.
+ *
+ * ONE ENTRY, DOWN FROM FOUR, AND THE DIFFERENCE IS THE POINT. IMG_2491,
+ * IMG_2492 and IMG_2504 all wrongly claimed "One Focus (Mitch Hardt)" and all
+ * three are now refused by voiceConflict() on the evidence — Cole Campbell is
+ * not Mitch Hardt, Warren Buffett is not Mitch Hardt. A ruling a rule can make
+ * for itself is not a ruling; it is a workaround waiting to be forgotten.
+ *
+ * What is left is the case this mechanism is actually for. IMG_2489 says "More
+ * life, AUTHOR UNKNOWN", and an unknown author cannot contradict anybody — the
+ * gate correctly declines to decide, and the containment score still reaches
+ * 0.79 because the film says "focus on your presence" in its opening. No
+ * evidence separates them. A person knows "More life" is not "One Focus".
+ *
+ * That is the honest shape of it: the rule handles what the rule can see, and
+ * this holds the one thing it cannot.
+ */
+const NOT_A_RESHOOT = new Set<string>([
+  /* "More life" — says "focus on your presence" in its opening. */
+  "IMG_2489.MOV",
+  /*
+   * "The four F's" — "focus on your present", one of the four F's. Ruling out
+   * the first one surfaced this one, because assignment is greedy over a shared
+   * pool and they are the only two films here whose author is unknown. Both had
+   * to be named; neither could be refused on evidence. That is the residue the
+   * gate cannot reach, and it is two files rather than four.
+   */
+  "IMG_2491.MOV",
+]);
 
 type Plan = {
   file: string;
@@ -503,17 +585,24 @@ async function main() {
     const voice = fixNames(p0.voice);
     parsed.set(t.file, { title, voice });
     if (t.error || !title || duplicated.has(t.file) || driveCopies.has(t.file)) continue;
+    /* Ruled new: never offered to the shelf at all, so it cannot be outbid
+       into becoming a reshoot. See NOT_A_RESHOOT. */
+    if (NOT_A_RESHOOT.has(t.file)) continue;
 
     const opening = openings.get(t.file) ?? "";
     const ranked = rows
       .map((r) => ({
         r,
-        s: Math.max(
-          score(title, r.title),
-          score(title, r.canonical_filename),
-          0.95 * contains(r.title, opening, idf)
-        ),
+        /* A voice disagreement removes the pair entirely — see voiceConflict. */
+        s: voiceConflict(voice, r.voice)
+          ? 0
+          : Math.max(
+              score(title, r.title),
+              score(title, r.canonical_filename),
+              0.95 * contains(r.title, opening, idf)
+            ),
       }))
+      .filter((c) => c.s > 0)
       .sort((a, b) => b.s - a.s);
 
     for (const c of ranked.slice(0, 5)) {
