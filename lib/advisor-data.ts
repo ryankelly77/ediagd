@@ -21,7 +21,7 @@ import {
 } from "@/lib/advisor";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
-import { loadMeasurementPeriod } from "@/lib/perf-period";
+import { loadAdvisorPeriodWithTotals } from "@/lib/perf-period";
 
 type Client = {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -65,22 +65,23 @@ export async function loadAdvisorDay(
    */
   if (!rooftopId) return null;
 
-  /* Advisor-grained: their own latest complete period, else their own latest
-     partial. See lib/perf-period.ts. */
-  const period = await loadMeasurementPeriod(client, rooftopId, undefined, opCodeId);
-  if (!period) return null;
+  /*
+   * Advisor-grained: their own latest complete period, else their own latest
+   * partial — and their totals in it, from the same row and the same trip. See
+   * lib/perf-period.ts for why this used to be three queries and why it is one.
+   *
+   * Null here means the advisor has no rows in any live period at this rooftop.
+   * The two old failure points — no period, and a period with no totals row —
+   * cannot be told apart any more because they cannot happen apart: the totals
+   * ARE the row the period was chosen from.
+   */
+  const measured = await loadAdvisorPeriodWithTotals(client, rooftopId, opCodeId);
+  if (!measured) return null;
 
-  const { data: totals } = await client
-    .from("advisor_period_totals")
-    .select("period_id, rooftop_id, total_ros, total_labor_sales")
-    .eq("advisor_op_id", opCodeId)
-    .eq("period_id", period.id)
-    .maybeSingle();
-  if (!totals) return null;
-
-  const resolvedPeriodId = totals.period_id as string;
-  const resolvedRooftopId = totals.rooftop_id as string;
-  const totalRos = Number(totals.total_ros ?? 0);
+  const { period, totals } = measured;
+  const resolvedPeriodId = totals.periodId;
+  const resolvedRooftopId = totals.rooftopId;
+  const totalRos = totals.totalRos;
 
   const [
     { data: attachRows },
@@ -131,7 +132,7 @@ export async function loadAdvisorDay(
     periodId: resolvedPeriodId,
     rooftopId: resolvedRooftopId,
     totalRos,
-    totalLaborSales: Number(totals.total_labor_sales ?? 0),
+    totalLaborSales: totals.totalLaborSales,
     families,
     pick: eddiesPick(families, totalRos),
     hasVolume: hasCoachingVolume(totalRos),
