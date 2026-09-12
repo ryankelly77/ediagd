@@ -36,6 +36,10 @@ import { streakChipForm } from "@/lib/streak-chip";
    deliberately — one glance answers "am I resting today?" and there is no
    second thing to keep in sync with it.
 
+   The pill itself does not change colour between the two states; only what is
+   in it does. See the note at the resting branch for why the light pill was
+   withdrawn.
+
    ---------------------------------------------------------------------------
    IT HAS NO OPINION OF ITS OWN
    ---------------------------------------------------------------------------
@@ -74,17 +78,37 @@ export function StreakChip({
         is explicit that touch targets are the one thing that SHOULD grow with
         the text, so this is a floor rather than a fixed height.
       */
-      className={`ediagd-streak-chip flex min-h-11 shrink-0 items-center gap-1.5 rounded-pill px-2.5 py-1.5 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
-        form.kind === "resting"
-          ? "bg-teal-soft/60 text-navy"
-          : "bg-navy text-cream"
-      }`}
+      className="ediagd-streak-chip flex min-h-11 shrink-0 items-center gap-1.5 rounded-pill bg-navy px-2.5 py-1.5 text-cream transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
       {form.kind === "resting" ? (
-        /* A LIGHT PILL, DELIBERATELY. The counting form is navy; this one is
-           not, so "am I resting today?" is answered by the colour from across
-           the drive, before the shape resolves. RestingMark is inked in navy
-           and teal and would disappear on the dark fill anyway. */
+        /*
+          ---------------------------------------------------------------------
+          ONE PILL, NAVY, IN BOTH STATES — AND THE LIGHT ONE WAS A MISTAKE
+          ---------------------------------------------------------------------
+          The resting form used to be a pale `bg-teal-soft/60` pill, on the
+          stated grounds that "RestingMark is inked in navy and teal and would
+          disappear on the dark fill anyway". That sentence is simply wrong
+          about the artwork. Every ink in the mark is a LIGHT ink — the wave and
+          swell lines are MARK_WAVE #6fbcc6, the palm and hammock MARK_CREAM
+          #f2efe8, the low sun MARK_SUN #e3b15c — so it was drawn for a dark
+          fill and was being painted onto a light one.
+
+          Measured against the pill it actually sat on:
+
+              palm / hammock   1.14:1      on navy  15.01:1
+              wave / swell     1.66:1      on navy   7.95:1
+              low sun          1.50:1      on navy   8.79:1
+
+          1.14:1 is not low contrast, it is not drawn. Ryan reported it from his
+          phone as "the light logo on top of the light blue background".
+
+          So the pill is navy in both states and the mark is used the way it was
+          inked — which is also how the rest card uses it, on bg-navy. The
+          two states are still told apart at a glance, by the thing that
+          actually differs: a resting mark, or gold waves and a number. Colour
+          was never carrying that distinction, because one of the two colours
+          was invisible.
+        */
         <RestingMark variant={form.mark} size={30} className="shrink-0" />
       ) : (
         <>
