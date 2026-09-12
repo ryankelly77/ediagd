@@ -135,6 +135,124 @@ export const MILESTONE_BADGE: Record<Milestone, string> = {
   365: "swell_365",
 };
 
+/* ============================================================================
+   THE MILESTONE LINE
+   ============================================================================
+   ---------------------------------------------------------------------------
+   IT HAS TO KNOW WHAT THE ADVISOR ALREADY HOLDS
+   ---------------------------------------------------------------------------
+   The Swell card used to compute this inline as `MILESTONES.find(m => m > streak)`
+   — the next milestone above the current number, and nothing else. Ryan, on
+   day 5 with a 9-day personal best and swell_7 already in his ledger, was told
+   "2 days to your 7-Day Swell": a countdown to a badge sitting on his own badge
+   wall, dated 10 August.
+
+   That is worse than a cosmetic slip. The one thing this line is for is telling
+   somebody what is still ahead of them, and offering back a thing they already
+   won says nobody is keeping count.
+
+   So the ledger is an input. An earned milestone is never offered again.
+
+   ---------------------------------------------------------------------------
+   THE ORDER OF THESE THREE IS THE WHOLE DESIGN
+   ---------------------------------------------------------------------------
+     1. the next UNEARNED milestone above the current streak
+     2. nothing left to earn, and still short of the personal best
+     3. at or above the personal best
+
+   Milestone first, and that is a real decision rather than an obvious one. The
+   alternative — lead with "your longest Swell yet" whenever the current run
+   ties the record — reads well for one day and then never shows a goal again,
+   because every day after a record is also a record. Somebody who beats their
+   best at 10 would see no target between there and 30. The badge is the thing
+   with a number on it, so the badge goes first.
+
+   The cost of that choice: at streak 9 with a 9-day best and 30 still unearned,
+   this says "21 days to your 30-Day Swell" rather than "your longest Swell
+   yet". Case 3 is reachable only once every milestone is held. That is the
+   honest reading of "never render a countdown to something already held" —
+   there IS something ahead, so it is named.
+
+   ---------------------------------------------------------------------------
+   ONE SELECTOR, BECAUSE TWO WOULD DRIFT
+   ---------------------------------------------------------------------------
+   The Swell card and the rest-day card both say this, and a rest day is exactly
+   when somebody checks whether their streak is still worth something. Two
+   copies of this arithmetic is two chances to reintroduce the bug above, on the
+   surface nobody re-reads. The rest card keeps its own framing — nothing is
+   owed today — and takes the sentence from here.
+============================================================================ */
+
+/** What the milestone line should say, or that it should say nothing. */
+export type MilestoneLine =
+  | { kind: "milestone"; milestone: number; daysToGo: number; text: string }
+  | { kind: "beat-best"; best: number; daysToGo: number; text: string }
+  | { kind: "longest-yet"; streak: number; text: string }
+  | { kind: "none"; text: null };
+
+/**
+ * The milestone sentence for an advisor, given everything it must respect.
+ *
+ * @param streak       swell.current_len — never recomputed here.
+ * @param earnedKeys   the badge keys this advisor holds (user_badge.badge_key).
+ * @param longest      swell.longest_len, their personal best.
+ */
+export function milestoneLine({
+  streak,
+  earnedKeys,
+  longest,
+}: {
+  streak: number;
+  earnedKeys: Iterable<string>;
+  longest: number;
+}): MilestoneLine {
+  /* A streak of zero has its own card — "Start your Swell today" — and a
+     countdown under it would be answering a question nobody asked yet. Negative
+     and non-finite are the shapes a bad read produces; none of them may become
+     a countdown. */
+  const n = Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0;
+  if (n <= 0) return { kind: "none", text: null };
+
+  const best = Number.isFinite(longest) && longest > 0 ? Math.floor(longest) : 0;
+  const held = new Set(earnedKeys);
+
+  /* 1. The next milestone that is BOTH ahead of them and not already theirs.
+        `m > n` is what keeps the countdown positive: a milestone equal to the
+        current streak is today, not a target. */
+  const next = MILESTONES.find(
+    (m) => m > n && !held.has(MILESTONE_BADGE[m])
+  );
+  if (next !== undefined) {
+    const daysToGo = next - n;
+    return {
+      kind: "milestone",
+      milestone: next,
+      daysToGo,
+      text: `${daysToGo} ${daysToGo === 1 ? "day" : "days"} to your ${next}-Day Swell`,
+    };
+  }
+
+  /* 2. Every badge held, but their own record still stands. The record becomes
+        the target, because it is the only number left that means anything. */
+  if (n < best) {
+    const daysToGo = best - n;
+    return {
+      kind: "beat-best",
+      best,
+      daysToGo,
+      text: `${daysToGo} ${daysToGo === 1 ? "day" : "days"} to beat your longest Swell (${best} days)`,
+    };
+  }
+
+  /* 3. Nothing ahead and nothing to beat. State the fact rather than inventing
+        a target — an em dash, not a countdown. */
+  return {
+    kind: "longest-yet",
+    streak: n,
+    text: `Day ${n} — your longest Swell yet.`,
+  };
+}
+
 /** The sand_reason enum value that matches each milestone. */
 export const MILESTONE_REASON: Record<Milestone, string> = {
   7: "swell_7",

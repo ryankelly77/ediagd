@@ -28,6 +28,7 @@ import {
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
 import { TechnicianDay } from "@/components/daily/TechnicianDay";
+import { milestoneLine } from "@/lib/gamification/streak";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 export default async function TodayPage({
@@ -198,6 +199,7 @@ export default async function TodayPage({
     advisorDay,
     blockDays,
     { data: badgeRows },
+    { data: earnedBadges },
     badgeRewards,
     { data: gameSettings },
     lifestyle,
@@ -209,8 +211,14 @@ export default async function TodayPage({
       .eq("user_id", user.id)
       .eq("completion_date", today)
       .maybeSingle(),
-    // Their Swell, so the "done for today" screen can show something real.
-    supabase.from("swell").select("current_len").eq("user_id", user.id).maybeSingle(),
+    /* Their Swell, so the "done for today" screen can show something real —
+       and longest_len, which the milestone line needs to know when the only
+       target left is their own record. */
+    supabase
+      .from("swell")
+      .select("current_len, longest_len")
+      .eq("user_id", user.id)
+      .maybeSingle(),
     loadPushPref(supabase, user.id),
     hasLiveToken(supabase, user.id),
     supabase
@@ -235,6 +243,10 @@ export default async function TodayPage({
     // Badge display names, so the celebration can say "First Light earned!"
     // rather than "first_light". The catalog is public reference data.
     supabase.from("badge").select("key, name"),
+    /* WHAT THEY ALREADY HOLD. The rest card's milestone sentence must not offer
+       back a badge they won in August — see milestoneLine. The user's own
+       client, so 0012's owner-readable policy decides. */
+    supabase.from("user_badge").select("badge_key").eq("user_id", user.id),
     // What each badge pays — read from game_settings/the catalog, so the
     // celebration can never quote an amount the engine didn't grant.
     loadBadgeRewards(supabase),
@@ -278,6 +290,16 @@ export default async function TodayPage({
   const alreadyCompleteOnLoad = Boolean(existing);
   const currentStreak = Number(swellRow?.current_len ?? 0);
   const restDay = restDayFor(today, scheduleContext);
+
+  /* THE SAME SENTENCE THE SWELL CARD SHOWS, from the same selector — the rest
+     card must not tell somebody they are two days from a badge they already
+     hold, which is the bug this closes. Decided on the server; the client
+     receives finished copy and never the ledger. */
+  const milestone = milestoneLine({
+    streak: currentStreak,
+    earnedKeys: (earnedBadges ?? []).map((b) => b.badge_key as string),
+    longest: Number(swellRow?.longest_len ?? 0),
+  });
 
   /*
    * ---- SHOULD WE ASK ABOUT NOTIFICATIONS? --------------------------------
@@ -462,6 +484,7 @@ export default async function TodayPage({
       restDay={isPreview ? null : restDay}
       nextWorkDayLabel={nextWorkDayLabel}
       currentStreak={currentStreak}
+      milestoneText={milestone.text}
       today={today}
       greetingName={firstName(appUser?.full_name ?? user.email ?? "there")}
       ackLabel={ackLabel(today)}

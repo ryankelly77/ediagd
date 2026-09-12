@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
-import { MILESTONES } from "@/lib/gamification/streak";
+import { milestoneLine } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
@@ -20,8 +20,13 @@ export default async function StreakPage() {
 
   // Both are RLS-readable by the owner (0012). Nothing is recomputed here —
   // the engine owns these numbers.
-  const [{ data: swell }, { data: balanceRow }, { data: earnedRow }, { data: settings }] =
-    await Promise.all([
+  const [
+    { data: swell },
+    { data: balanceRow },
+    { data: earnedRow },
+    { data: settings },
+    { data: earnedBadges },
+  ] = await Promise.all([
       supabase.from("swell").select("*").eq("user_id", user.id).maybeSingle(),
       // Balance = every ledger row (spending pulls it down).
       supabase
@@ -40,6 +45,10 @@ export default async function StreakPage() {
         .select("paddle_out_cap, sand_paddle_out_price")
         .limit(1)
         .maybeSingle(),
+      /* WHAT THEY ALREADY HOLD, because the milestone line is not allowed to
+         offer it back — see milestoneLine. Read through the user's own client,
+         so 0012's owner-readable policy is what decides. */
+      supabase.from("user_badge").select("badge_key").eq("user_id", user.id),
     ]);
 
   const streak = Number(swell?.current_len ?? 0);
@@ -69,8 +78,14 @@ export default async function StreakPage() {
   }
   const islandBalance = await loadIslandBalance(supabase, user.id, today);
 
-  const nextMilestone = MILESTONES.find((m) => m > streak) ?? null;
-  const toGo = nextMilestone ? nextMilestone - streak : 0;
+  /* One selector, shared with the rest-day card. The arithmetic that used to
+     live here is what told Ryan he was two days from a badge he had held since
+     August — see milestoneLine. */
+  const milestone = milestoneLine({
+    streak,
+    earnedKeys: (earnedBadges ?? []).map((b) => b.badge_key as string),
+    longest,
+  });
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
@@ -88,9 +103,9 @@ export default async function StreakPage() {
             {streak === 1 ? "The Swell begins" : "and still rolling"}
           </p>
 
-          {nextMilestone && (
+          {milestone.text && (
             <p className="mt-5 rounded-card bg-white/10 px-4 py-3 text-sm font-bold text-gold">
-              {toGo} {toGo === 1 ? "day" : "days"} to your {nextMilestone}-Day Swell
+              {milestone.text}
             </p>
           )}
         </section>

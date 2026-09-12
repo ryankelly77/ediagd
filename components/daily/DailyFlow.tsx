@@ -87,6 +87,7 @@ export function DailyFlow({
   videoThreshold,
   restDay = null,
   nextWorkDayLabel = "",
+  milestoneText = null,
   offerSoftAsk = false,
 }: {
   alreadyCompleteOnLoad: boolean;
@@ -158,6 +159,14 @@ export function DailyFlow({
    * work day, where the rest card never renders.
    */
   nextWorkDayLabel?: string;
+  /**
+   * The milestone sentence, already decided by lib/gamification/streak's
+   * milestoneLine on the server. Passed as finished copy rather than as the
+   * badge rows it was computed from: the client has no business knowing the
+   * ledger, and a second caller of the selector is a second chance to drift
+   * from the Swell card. Null when there is nothing to say.
+   */
+  milestoneText?: string | null;
 }) {
   const preview = Boolean(previewResult);
   // The close button in the rail needs it; the nested steps have their own.
@@ -351,6 +360,7 @@ export function DailyFlow({
         greetingName={greetingName}
         streak={currentStreak}
         nextWorkDayLabel={nextWorkDayLabel}
+        milestoneText={milestoneText}
         onTakeTheRep={() => setRevealed(true)}
       />
     );
@@ -536,6 +546,7 @@ function RestDayCard({
   greetingName,
   streak,
   nextWorkDayLabel,
+  milestoneText,
   onTakeTheRep,
 }: {
   kind: "day_off" | "island_time" | "store_closed";
@@ -545,6 +556,8 @@ function RestDayCard({
   streak: number;
   /** Their next scheduled day, in words. Never "Monday" by assumption. */
   nextWorkDayLabel: string;
+  /** The same sentence the Swell card shows — see milestoneLine. */
+  milestoneText: string | null;
   onTakeTheRep: () => void;
 }) {
   const island = kind === "island_time";
@@ -639,6 +652,22 @@ function RestDayCard({
               Day {streak} is still Day {streak}{" "}
               {island ? "when you're back" : `on ${nextWorkDayLabel}`}.
             </p>
+          )}
+
+          {/*
+            AND WHAT IS STILL AHEAD — the same sentence the Swell card shows, from
+            the same selector, so the two screens cannot disagree about what an
+            advisor has left to earn.
+
+            UNDER the closer, not instead of it. The closer answers the question a
+            rest day actually raises — does this cost me my streak — and that
+            stays the last word in the dark panel. This sits below it, quieter, as
+            information rather than a demand: a rest day is the one screen that is
+            asking for nothing, and a gold countdown in the middle of it would be
+            asking.
+          */}
+          {streak > 0 && milestoneText && (
+            <p className="mt-3 text-sm font-bold text-ice-dim">{milestoneText}</p>
           )}
         </section>
       </div>

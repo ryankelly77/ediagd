@@ -7,6 +7,8 @@
 
 import {
   MILESTONES,
+  MILESTONE_BADGE,
+  milestoneLine,
   addDays,
   applyDailyCompletion,
   countMissedWorkDays,
@@ -382,6 +384,64 @@ section("11. countMissedWorkDays");
   check("a full month away, Mon–Fri", countMissedWorkDays("2026-08-07", "2026-09-07", { schedule: MON_FRI }), 20);
   check("…all of it Island Time", countMissedWorkDays("2026-08-07", "2026-09-07", { schedule: MON_FRI, islandTime: [{ start: "2026-08-08", end: "2026-09-06" }] }), 0);
   check("a decade-old completion doesn't hang", countMissedWorkDays("2016-08-07", "2026-08-07", { schedule: MON_FRI }) > 2000, true);
+}
+
+/* ---- 12. The milestone line ----------------------------------------------
+   The bug: at Day 5 with a 9-day personal best and swell_7 already earned on
+   10 August, the Swell card read "2 days to your 7-Day Swell" — a countdown to
+   a badge on his own badge wall. The line was computed from the streak alone.
+--------------------------------------------------------------------------- */
+
+section("12. milestoneLine");
+{
+  const ALL = MILESTONES.map((m) => MILESTONE_BADGE[m]);
+  const line = (streak: number, earnedKeys: string[], longest: number) =>
+    milestoneLine({ streak, earnedKeys, longest }).text;
+
+  /* THE REPORTED BUG, as a fixture. */
+  check(
+    "day 5, swell_7 held, best 9 -> never offers the 7-Day back",
+    line(5, ["swell_7"], 9),
+    "25 days to your 30-Day Swell"
+  );
+  check(
+    "…and the old arithmetic is what it must not do",
+    MILESTONES.find((m) => m > 5),
+    7
+  );
+
+  /* Unchanged where it was already right. */
+  check("day 5, nothing earned -> the 7-Day is genuinely next", line(5, [], 5), "2 days to your 7-Day Swell");
+  check("day 6 -> singular day", line(6, [], 6), "1 day to your 7-Day Swell");
+
+  /* Every badge held: the record becomes the target. */
+  check("all held, day 5, best 9 -> beat your own best", line(5, ALL, 9), "4 days to beat your longest Swell (9 days)");
+  check("all held, day 8, best 9 -> singular", line(8, ALL, 9), "1 day to beat your longest Swell (9 days)");
+
+  /* Nothing ahead and nothing to beat. */
+  check("all held, day 9, best 9 -> longest yet, no countdown", line(9, ALL, 9), "Day 9 — your longest Swell yet.");
+  check("all held, day 20, best 9 -> still longest yet", line(20, ALL, 9), "Day 20 — your longest Swell yet.");
+
+  /* A milestone equal to today is today, not a target — the countdown may
+     never be zero. */
+  check("day 7, nothing earned -> 30 is next, not 7", line(7, [], 7), "23 days to your 30-Day Swell");
+  check("day 30, swell_7+30 held -> 90 is next", line(30, ["swell_7", "swell_30"], 30), "60 days to your 90-Day Swell");
+
+  /* No streak has its own card; a countdown under it answers nothing. */
+  check("day 0 -> says nothing", line(0, [], 0), null);
+  check("negative streak -> says nothing", line(-3, [], 0), null);
+  check("NaN streak -> says nothing", line(Number.NaN, [], 0), null);
+
+  /* A milestone held but NOT yet reached (a back-award, or a paddle-out that
+     dropped the streak) must still not be offered back. */
+  check("day 3, swell_7 held -> skips to 30", line(3, ["swell_7"], 9), "27 days to your 30-Day Swell");
+
+  /* Ryan's live row, as it stands today. */
+  check(
+    "Ryan: day 5, best 9, holds swell_7",
+    line(5, ["first_light", "ten_sunrises", "swell_7", "free_surf"], 9),
+    "25 days to your 30-Day Swell"
+  );
 }
 
 /* ---- Summary ------------------------------------------------------------- */
