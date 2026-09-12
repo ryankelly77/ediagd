@@ -646,11 +646,37 @@ function RestDayCard({
             next-milestone line: set into the panel rather than floating under
             it, because it is the sentence that answers "so what happens to my
             streak" and it should land last.
+
+            ---------------------------------------------------------------
+            IT SAYS BOTH HALVES NOW, AND THE SECOND HALF IS THE POINT
+            ---------------------------------------------------------------
+            This read "Day 5 is still Day 5 on Monday." Ryan, on a Saturday:
+            "why does it say that — should it not be Day 6?"
+
+            The sentence was TRUE. currentLen only moves when a rep is
+            completed, so a rest day touches nothing and Monday morning really
+            does start at Day 5. But it named MONDAY — the day he acts — while
+            quoting the number from before he acts, so it read as though Monday
+            were a dead end rather than the day the number moves.
+
+            Preservation was only ever half the answer. The half an advisor
+            actually wants on a day off is what happens when they come back, so
+            the line now says both: it holds, and the next rep advances it.
+
+            THE NEXT NUMBER IS streak + 1, which is the same arithmetic 0112's
+            push copy does with {days_next} — "Keep that Swell going to
+            {days_next} days!". Two surfaces promising a different next number
+            would be worse than either wording alone.
+
+            "Three minutes ON {label}" rather than "{label}'s three minutes",
+            because nextWorkDayLabel is sometimes "your next work day" rather
+            than a weekday, and the possessive form of that is unreadable.
           */}
           {streak > 0 && (
             <p className="mt-6 rounded-card bg-white/10 px-4 py-3 text-sm font-bold text-white">
-              Day {streak} is still Day {streak}{" "}
-              {island ? "when you're back" : `on ${nextWorkDayLabel}`}.
+              Day {streak} holds today. Three minutes{" "}
+              {island ? "when you're back" : `on ${nextWorkDayLabel}`} makes it Day{" "}
+              {streak + 1}.
             </p>
           )}
 
