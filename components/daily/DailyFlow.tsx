@@ -608,7 +608,18 @@ function RestDayCard({
         <section className="rounded-card bg-navy p-7 text-center shadow-card">
           <RestingMark variant={island ? "palm" : "sun"} size={96} className="mx-auto" />
 
-          <h1 className="mt-4 text-3xl font-extrabold leading-tight text-white">
+          {/*
+            hyphens AND break-words, because at the top Dynamic Type sizes a
+            SINGLE WORD here is wider than the card. "Scheduled" at 200% is
+            ~340px of extrabold in a 226px box, so there is no space to wrap at
+            and the word simply runs out of the panel — found by the larger-text
+            audit the first Saturday it ever rendered this screen.
+
+            hyphens-auto breaks it properly (Sched-uled) wherever the language
+            allows; break-words is the floor under that, for the closure label,
+            which is a manager's free text and can be any word at all.
+          */}
+          <h1 className="mt-4 hyphens-auto break-words text-3xl font-extrabold leading-tight text-white">
             {heading}
           </h1>
           <p className="mt-2 text-base font-bold text-gold">Your streak is safe</p>
