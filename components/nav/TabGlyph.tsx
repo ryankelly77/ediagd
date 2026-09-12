@@ -25,7 +25,21 @@
    size vocabulary and the header is a small size.
    ============================================================================ */
 
-export type TabIcon = "sun" | "wave" | "shell" | "team" | "swag" | "more";
+/*
+ * `calm` is not a tab. It lives here because the header's streak chip swaps
+ * its glyph between working and resting days and both faces have to be drawn
+ * in the same hand — same 24px box, same 2px stroke, same single colour. A rest
+ * glyph drawn anywhere else would be the copied-SVG problem in the note above,
+ * one drawer further along.
+ */
+export type TabIcon =
+  | "sun"
+  | "wave"
+  | "shell"
+  | "team"
+  | "swag"
+  | "more"
+  | "calm";
 
 export function TabGlyph({
   icon,
@@ -67,6 +81,43 @@ export function TabGlyph({
         <svg {...common}>
           <path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 5-3" />
           <path d="M2 18c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 5-3" />
+        </svg>
+      );
+    case "calm":
+      /*
+       * A DAY OFF, SAID AS FLAT WATER — the direct answer to `wave`.
+       *
+       * The chip's working face is two curling waves; this is the same two
+       * lines of water with the curl taken out, under a low sun. Read together
+       * across days that is the whole message: the water is up, or the water is
+       * flat. Nothing is greyed out and nothing is missing, which is the rule
+       * for rest days everywhere in this app — a day off is a different day,
+       * not a lesser one.
+       *
+       * The sun is a plain circle with no rays, which is what separates it at a
+       * glance from the `sun` tab glyph above: that one is a half-sun RISING
+       * over the horizon with rays thrown out, and it means "today". This one
+       * is already up and sitting quietly over still water.
+       *
+       * ONE REST GLYPH, FOR ALL THREE REASONS. Island Time briefly had its own
+       * — a hammock, then a palm — and Ryan's call was to drop it and use this
+       * for everything. The chip answers "is anything being asked of me today",
+       * which has two answers, not four; the WHY is in the aria-label, which
+       * still names Island Time and still names the closure.
+       *
+       * The hammock is worth recording as a dead end, because it looked
+       * obviously right: RestingMark uses one at 96px on the rest card. Three
+       * versions were drawn — short posts, tall posts, and posts with the end
+       * lashings that RestingMark's own note says are what stop the curve being
+       * a smile — and every one reads as a cup at 20px, the lashings becoming
+       * two pin-heads. A drawing that needs a detail to be legible cannot be
+       * shrunk past that detail.
+       */
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="8" r="3" />
+          <path d="M3 15h18" />
+          <path d="M6 19h12" />
         </svg>
       );
     case "shell":

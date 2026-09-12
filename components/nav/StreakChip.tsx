@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { RestingMark } from "@/components/brand/badges/RestingMark";
 import { TabGlyph } from "./TabGlyph";
 import type { RestDay } from "@/lib/work-schedule";
 import { streakChipForm } from "@/lib/streak-chip";
@@ -29,16 +28,26 @@ import { streakChipForm } from "@/lib/streak-chip";
    ---------------------------------------------------------------------------
    ON A REST DAY IT STOPS COUNTING AT YOU
    ---------------------------------------------------------------------------
-   A day off, a booked Island Time day, a store closure — the chip drops the
-   number entirely and shows the resting mark. Nothing is greyed out and
-   nothing says "0 today": the streak has not broken, it is simply not being
-   asked about. This is also the ONLY ambient Island Time indicator in the app,
-   deliberately — one glance answers "am I resting today?" and there is no
-   second thing to keep in sync with it.
+   A day off, a booked Island Time day, a store closure — the chip KEEPS the
+   number and changes the glyph: waves on a working day, flat water on any
+   kind of rest day. Nothing is greyed out and nothing says "0
+   today": the streak has not broken, it is simply not being asked about.
 
-   The pill itself does not change colour between the two states; only what is
-   in it does. See the note at the resting branch for why the light pill was
-   withdrawn.
+   One glance answers "am I resting today?", which is the question the chip is
+   for. It does not distinguish the three REASONS — a day off, a closure and
+   Island Time all draw flat water — because that is a second question, and its
+   answer is in the aria-label and on the rest card /today already renders.
+
+   TWO EARLIER VERSIONS OF THIS WERE WRONG, both found on Ryan's phone rather
+   than in review, which is worth remembering about a 50px object:
+
+     1. A pale teal pill carrying RestingMark. Every ink in that mark is a
+        light ink — MARK_WAVE #6fbcc6, MARK_CREAM #f2efe8, MARK_SUN #e3b15c —
+        so the hammock sat at 1.14:1 against its own background. Not low
+        contrast; not drawn. The pill is navy in both states now.
+     2. Dropping the number on rest days. A rest day is precisely when somebody
+        most wants to be told the Swell is INTACT, and a mark with no figure
+        beside it makes them go and look. The number never leaves.
 
    ---------------------------------------------------------------------------
    IT HAS NO OPINION OF ITS OWN
@@ -80,59 +89,27 @@ export function StreakChip({
       */
       className="ediagd-streak-chip flex min-h-11 shrink-0 items-center gap-1.5 rounded-pill bg-navy px-2.5 py-1.5 text-cream transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      {form.kind === "resting" ? (
-        /*
-          ---------------------------------------------------------------------
-          ONE PILL, NAVY, IN BOTH STATES — AND THE LIGHT ONE WAS A MISTAKE
-          ---------------------------------------------------------------------
-          The resting form used to be a pale `bg-teal-soft/60` pill, on the
-          stated grounds that "RestingMark is inked in navy and teal and would
-          disappear on the dark fill anyway". That sentence is simply wrong
-          about the artwork. Every ink in the mark is a LIGHT ink — the wave and
-          swell lines are MARK_WAVE #6fbcc6, the palm and hammock MARK_CREAM
-          #f2efe8, the low sun MARK_SUN #e3b15c — so it was drawn for a dark
-          fill and was being painted onto a light one.
+      {/*
+        ONE SHAPE, EVERY DAY. Glyph then number, on a navy pill, whether the
+        Swell is being counted at or resting — see the note above. The only
+        thing that moves between states is which glyph.
 
-          Measured against the pill it actually sat on:
+        THE STREAK TAB'S OWN WAVE on a working day, imported rather than
+        redrawn — see TabGlyph. The chip is a shortcut to that tab, so it wears
+        that tab's mark; the brand's SwellSun was both inconsistent with the
+        footer and unreadable at this size. Flat water is drawn in the same
+        hand, in the same file, for the same reason.
 
-              palm / hammock   1.14:1      on navy  15.01:1
-              wave / swell     1.66:1      on navy   7.95:1
-              low sun          1.50:1      on navy   8.79:1
-
-          1.14:1 is not low contrast, it is not drawn. Ryan reported it from his
-          phone as "the light logo on top of the light blue background".
-
-          So the pill is navy in both states and the mark is used the way it was
-          inked — which is also how the rest card uses it, on bg-navy. The
-          two states are still told apart at a glance, by the thing that
-          actually differs: a resting mark, or gold waves and a number. Colour
-          was never carrying that distinction, because one of the two colours
-          was invisible.
-        */
-        <RestingMark variant={form.mark} size={30} className="shrink-0" />
-      ) : (
-        <>
-          {/*
-            THE STREAK TAB'S OWN WAVE, imported rather than redrawn — see
-            TabGlyph. The chip is a shortcut to that tab, so it wears that
-            tab's mark; the brand's SwellSun was both inconsistent with the
-            footer and unreadable at this size.
-
-            currentColor, so it takes the white from the pill.
-          */}
-          {/*
-            TWO VOICES, AND THAT IS THE WHOLE STRUCTURE. Gold waves, cream
-            number — Ryan's ruling: the chip must never collapse into a solid
-            gold object. The gold is the Swell (DESIGN_LANGUAGE names the Swell
-            as one of gold's sanctioned uses); the number is just the count,
-            and it reads as a count because it is not competing.
-          */}
-          <TabGlyph icon="wave" size={20} color="rgb(var(--ediagd-gold))" />
-          <span className="ediagd-numeral text-sm font-extrabold tabular-nums text-cream">
-            {form.streak}
-          </span>
-        </>
-      )}
+        TWO VOICES, AND THAT IS THE WHOLE STRUCTURE. Gold glyph, cream number —
+        Ryan's ruling: the chip must never collapse into a solid gold object.
+        The gold is the Swell (DESIGN_LANGUAGE names the Swell as one of gold's
+        sanctioned uses); the number is just the count, and it reads as a count
+        because it is not competing.
+      */}
+      <TabGlyph icon={form.icon} size={20} color="rgb(var(--ediagd-gold))" />
+      <span className="ediagd-numeral text-sm font-extrabold tabular-nums text-cream">
+        {form.streak}
+      </span>
     </Link>
   );
 }

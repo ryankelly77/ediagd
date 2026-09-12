@@ -97,21 +97,21 @@ check(
 console.log("\n  REST DAYS — all three reasons, derived by restDayFor\n");
 
 check(
-  "scheduled day off (Saturday, Mon-Fri advisor) -> resting, low sun",
+  "scheduled day off (Saturday, Mon-Fri advisor) -> flat water, streak still shown",
   streakChipForm({ streak: 12, rest: restDayFor(SATURDAY, bare), completedToday: false }),
-  { kind: "resting", mark: "sun" }
+  { kind: "resting", icon: "calm", streak: 12 }
 );
 
 check(
-  "inside a booked Island Time range -> resting, hammock",
+  "inside a booked Island Time range -> flat water too, streak still shown",
   streakChipForm({ streak: 12, rest: restDayFor(WEDNESDAY, onIsland), completedToday: false }),
-  { kind: "resting", mark: "palm" }
+  { kind: "resting", icon: "calm", streak: 12 }
 );
 
 check(
-  "confirmed store closure -> resting, low sun, closure named",
+  "confirmed store closure -> flat water, closure named, streak still shown",
   streakChipForm({ streak: 12, rest: restDayFor(WEDNESDAY, storeShut), completedToday: false }),
-  { kind: "resting", mark: "sun" }
+  { kind: "resting", icon: "calm", streak: 12 }
 );
 
 /* Rest outranks a completed block: doing the loop on your day off does not
@@ -119,8 +119,47 @@ check(
 check(
   "rest day where the block was completed anyway -> still resting",
   streakChipForm({ streak: 12, rest: restDayFor(SATURDAY, bare), completedToday: true }),
-  { kind: "resting", mark: "sun" }
+  { kind: "resting", icon: "calm", streak: 12 }
 );
+
+/* ---------------------------------------------------------------------------
+   THE NUMBER SURVIVES THE REST DAY
+   ---------------------------------------------------------------------------
+   Ryan's ruling, after seeing the first version on his phone: keep the pill
+   with the streak number in it on rest days and change the ICON to indicate
+   the rest. An earlier build dropped the count and showed a mark alone, which
+   is exactly backwards — a rest day is when somebody most wants to be told the
+   Swell is intact.
+
+   Pinned here rather than trusted to the type, because "resting" carrying a
+   streak is the whole point and a refactor that quietly drops it again would
+   still compile. */
+console.log("\n  REST DAYS STILL CARRY THE NUMBER\n");
+
+for (const [label, ctx, day] of [
+  ["a day off", bare, SATURDAY],
+  ["Island Time", onIsland, WEDNESDAY],
+  ["a store closure", storeShut, WEDNESDAY],
+] as const) {
+  const form = streakChipForm({ streak: 12, rest: restDayFor(day, ctx), completedToday: false });
+  const ok = form.kind === "resting" && form.streak === 12;
+  console.log(`  ${ok ? "ok  " : "FAIL"} ${label} -> streak ${form.kind === "resting" ? form.streak : "(counting)"}`);
+  if (!ok) failed++;
+
+  /* And it is spoken before the reason, so a screen reader answers "what is my
+     Swell" first. */
+  const spoken = form.label.startsWith("12-day Swell");
+  console.log(`  ${spoken ? "ok  " : "FAIL"} ${label} -> label leads with the number`);
+  if (!spoken) failed++;
+}
+
+/* Zero rests too. The pre-dawn rule does not get suspended on a Saturday. */
+{
+  const form = streakChipForm({ streak: 0, rest: restDayFor(SATURDAY, bare), completedToday: false });
+  const ok = form.kind === "resting" && form.streak === 0;
+  console.log(`  ${ok ? "ok  " : "FAIL"} a day off at zero -> shows 0, not nothing`);
+  if (!ok) failed++;
+}
 
 console.log("\n  THE CHIP NEVER INVENTS A NUMBER\n");
 
