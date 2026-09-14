@@ -381,7 +381,14 @@ insert into advisor_op_metric (period_id, rooftop_id, advisor_op_id, op_code, ro
   ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','400030','QL20D',1.0,60.0,0.3,0.3,18.0,18.0,0.525,0.324453),
   ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','400030','QL19D',2.0,28.453846,1.3,0.65,36.99,18.495,-0.001622,0.199502),
   ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','400030','100',2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.087363)
-on conflict (period_id, advisor_op_id, op_code) do nothing;
+-- Matches advisor_op_metric_grain_idx as 0054_mitch_triage.sql widened it. This
+-- seed was written against the narrower 0039 shape (period_id, advisor_op_id,
+-- op_code) and had silently broken `supabase db reset` ever since: the index no
+-- longer matched, so the whole seed aborted here and every table below this
+-- line stayed empty. The coalesce() expressions must be spelled exactly as the
+-- index spells them for Postgres to infer it.
+on conflict (period_id, advisor_op_id, op_code,
+             coalesce(sub_category, ''), coalesce(resolved_family, '')) do nothing;
 
 -- NOTE: advisor_op_id values ('35122','400025','400049','400030') match
 -- membership.op_code_id. Create advisor logins later and set their op_code_id
@@ -1146,7 +1153,9 @@ cross join lateral (
   )) as attach
 ) a
 where demo.rnd('has:' || t.user_id::text || fc.fam) < 0.55   -- not every advisor sells every family
-on conflict (period_id, advisor_op_id, op_code) do nothing;
+-- Same 0054 grain widening as the literal insert above; see the note there.
+on conflict (period_id, advisor_op_id, op_code,
+             coalesce(sub_category, ''), coalesce(resolved_family, '')) do nothing;
 
 
 -- ---- 6.5 The coaching history that has to match ---------------------------

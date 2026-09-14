@@ -21,6 +21,7 @@ export type GameSettingsValues = {
   sand_lesson: number;
   video_complete_pct: number;
   island_time_days_per_year: number;
+  certification_min_items: number;
 };
 
 export type GameSettingKey = keyof GameSettingsValues;
@@ -154,6 +155,29 @@ export const GAME_SETTING_FIELDS: GameSettingField[] = [
     group: "rewards",
     min: 0,
     max: 100_000,
+  },
+  {
+    /*
+     * MITCH'S DIAL, AND THE ONE NUMBER HERE THAT CHANGES WHAT EXISTS RATHER
+     * THAN WHAT IT PAYS. Editing it re-derives which certification tracks are
+     * offered at all — a track below the bar stops being earnable until more
+     * content lands. It never takes a certification off anybody who already
+     * earned it.
+     *
+     * Five is a starting position, not a finding. At five, four of the eight
+     * core tracks are below the bar and EDIAGD Certified cannot be earned by
+     * anyone; that is the content punch list made visible rather than a
+     * setting to tune around.
+     *
+     * NOTE: the app re-derives on recompute_certification_content(), not on
+     * save — see 0116. Changing this number takes effect when that runs.
+     */
+    key: "certification_min_items",
+    label: "Minimum items for a certification track",
+    hint: "A track with fewer published items than this is not offered. 0 turns the bar off. Nobody loses a certification they already hold.",
+    group: "rewards",
+    min: 0,
+    max: 1000,
   },
 ];
 

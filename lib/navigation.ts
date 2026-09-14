@@ -209,6 +209,17 @@ export const MEMBER_SECTIONS: readonly MemberSection[] = [
     requiresRole: null,
   },
   {
+    /*
+     * Above the libraries, beside Saved and Island Time, because it is the
+     * third thing on this list that is THEIRS — what they have earned, not
+     * what somebody else filled.
+     */
+    href: "/certifications",
+    label: "Certifications",
+    hint: "The tracks you've earned, and how far from EDIAGD Certified.",
+    requiresRole: null,
+  },
+  {
     href: "/library",
     label: "Lesson Library",
     hint: "Coaching cues and pitch videos, by service.",

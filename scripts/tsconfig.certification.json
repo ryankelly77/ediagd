@@ -1,0 +1,21 @@
+{
+  "//": "Standalone build for certification-scenarios.ts. Imports the REAL lib/certification.ts through the @/ alias, so the rules asserted here are the ones the screens will call.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-cert",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": [
+    "./certification-scenarios.ts",
+    "../lib/certification.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

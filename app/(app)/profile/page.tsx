@@ -10,6 +10,8 @@ import { TextScaleReadout } from "@/components/brand/TextScaleReadout";
 import { BRAND } from "@/lib/brand";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { AccountForms } from "@/components/profile/AccountForms";
+import { SealMedallion } from "@/components/brand/badges/SealMedallion";
+import { loadCredentialCard } from "@/lib/certifications";
 import { ScheduleForm } from "@/components/schedule/ScheduleForm";
 import { addDays, isoWeekday, type IsoDate } from "@/lib/gamification/streak";
 import {
@@ -104,6 +106,11 @@ export default async function ProfilePage() {
      edited. Read-only — booking stays on /island-time. */
   const islandBalance = await loadIslandBalance(supabase, user.id, today);
 
+  /* Read with the advisor's own client: advisor_credential's RLS lets them see
+     their own row, so this needs no service role and no user_id filter beyond
+     the one that makes the query specific. */
+  const credential = await loadCredentialCard(supabase, user.id, today);
+
   let cursor: IsoDate = today;
   while (isoWeekday(cursor) !== 6) cursor = addDays(cursor, 1);
   const saturdays: IsoDate[] = [];
@@ -164,6 +171,33 @@ export default async function ProfilePage() {
           </p>
         )}
       </Card>
+
+      {/* THE CREDENTIAL, OR NOTHING AT ALL. Not an empty slot reading "none" —
+          nobody can hold one until Mitch's core content lands, and a profile
+          that scored the advisor against an unreachable bar would be blaming
+          them for a writing queue. */}
+      {credential && (
+        <Card className="mt-3 flex items-center gap-4 p-5">
+          <SealMedallion
+            glyphKey={`credential_${credential.level}`}
+            name={credential.level === "master" ? "EDIAGD Master" : "EDIAGD Certified"}
+            state="earned"
+            size={88}
+          />
+          <div className="min-w-0">
+            <p className="break-words text-lg font-extrabold text-navy">
+              {credential.level === "master" ? "EDIAGD Master" : "EDIAGD Certified"}
+            </p>
+            <p className="ediagd-numeral break-all text-xs text-ink-soft">
+              {credential.certificateId}
+            </p>
+            <p className="mt-1 text-sm text-ink-soft">
+              Current through {credential.currentThrough}
+            </p>
+            <p className="text-sm text-ink-soft">{credential.rungLine}</p>
+          </div>
+        </Card>
+      )}
 
       <IslandBalanceLine usage={islandBalance} className="mt-3 px-1" />
 

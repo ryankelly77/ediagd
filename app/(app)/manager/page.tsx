@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRoByAdvisor } from "@/lib/family-labor";
+import { loadCredentialPills } from "@/lib/certifications";
 import { Card } from "@/components/brand/Card";
 import Link from "next/link";
 import { TeamRoster } from "@/components/manager/TeamRoster";
@@ -132,7 +133,10 @@ export default async function ManagerPage() {
       .eq("rooftop_id", rooftopId),
     supabase
       .from("membership")
-      .select("op_code_id, app_user:user_id(full_name)")
+      /* user_id joins the roster to advisor_credential. It is selected rather
+         than derived because the roster is keyed by op code and a credential is
+         held by a person — the two only meet on the membership row. */
+      .select("op_code_id, user_id, app_user:user_id(full_name)")
       .eq("rooftop_id", rooftopId)
       .eq("role", "advisor")
       .eq("active", true),
@@ -162,6 +166,24 @@ export default async function ManagerPage() {
       | undefined;
     nameByOpCode.set(row.op_code_id as string, named?.full_name ?? null);
   }
+
+  /*
+   * WHO HOLDS A CREDENTIAL. Read with the manager's own client, so
+   * advisor_credential's RLS policy is what decides which rows come back — a
+   * manager sees their rooftop's and nothing else, and this code adds no filter
+   * that could accidentally be more generous than the policy.
+   *
+   * READ-ONLY, EVERYWHERE. There is no granting or editing path from the
+   * manager side; these tables have no write policy for any session role.
+   */
+  const userIdByOpCode = new Map<string, string>();
+  for (const row of advisorMemberships ?? []) {
+    if (!row.op_code_id || !row.user_id) continue;
+    userIdByOpCode.set(row.op_code_id as string, row.user_id as string);
+  }
+  const credentialByUser = await loadCredentialPills(supabase, [
+    ...new Set(userIdByOpCode.values()),
+  ]);
 
   const rosterByOpCode = new Map<string, string | null>();
   for (const r of (dmsRoster ?? []) as Record<string, unknown>[]) {
@@ -196,6 +218,7 @@ export default async function ManagerPage() {
       benchmarks,
       familiesWithCues,
       laborPerRoByFamily: laborByAdvisor.get(opId),
+      credential: credentialByUser.get(userIdByOpCode.get(opId) ?? "") ?? null,
     });
   });
 

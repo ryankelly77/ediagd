@@ -61,8 +61,21 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
               className="flex w-full items-center gap-3 px-1.5 py-3 text-left transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             >
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-base font-bold text-navy">
-                  {advisor.name}
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate text-base font-bold text-navy">
+                    {advisor.name}
+                  </span>
+                  {/* A TEXT PILL, AND ONLY WHEN HELD. Not a seal — this is a
+                      roster row, and thirty seals down a list would turn a
+                      working screen into a trophy cabinet. Advisors without a
+                      credential carry no marker at all: an "uncertified" chip
+                      would mark the whole team as failing a bar nobody can
+                      currently clear. */}
+                  {advisor.credential && (
+                    <span className="shrink-0 rounded-pill bg-gold-soft px-2 py-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-navy">
+                      {advisor.credential}
+                    </span>
+                  )}
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
                   <span>
