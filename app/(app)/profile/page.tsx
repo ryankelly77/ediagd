@@ -195,6 +195,16 @@ export default async function ProfilePage() {
               Current through {credential.currentThrough}
             </p>
             <p className="text-sm text-ink-soft">{credential.rungLine}</p>
+            {/* THE BUTTON EXISTS ONLY WHEN THERE IS SOMETHING TO PRINT. It sits
+                inside the credential block, so "no credential, no button" is
+                structural rather than a condition somebody has to remember —
+                there is no disabled state to explain away. */}
+            <Link
+              href="/certificate"
+              className="mt-2 inline-block rounded-pill bg-gold px-4 py-1.5 text-sm font-extrabold text-navy"
+            >
+              View certificate
+            </Link>
           </div>
         </Card>
       )}

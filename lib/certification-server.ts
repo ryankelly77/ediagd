@@ -361,18 +361,80 @@ async function grantCertification(
   certificationId: string,
   today: IsoDate
 ): Promise<boolean> {
-  const { error } = await service.from("advisor_certification").insert({
-    user_id: userId,
-    certification_id: certificationId,
-    earned_at: new Date().toISOString(),
-    current_through: currentThrough(today),
-    source: "accrued",
-  });
+  const { data, error } = await service
+    .from("advisor_certification")
+    .insert({
+      user_id: userId,
+      certification_id: certificationId,
+      earned_at: new Date().toISOString(),
+      current_through: currentThrough(today),
+      source: "accrued",
+    })
+    .select("id")
+    .maybeSingle();
 
-  if (!error) return true;
-  if (error.code === "23505") return false; // already held; nothing changed
-  assertServiceRole(error, "advisor_certification");
-  return false;
+  if (error) {
+    if (error.code === "23505") return false; // already held; nothing changed
+    assertServiceRole(error, "advisor_certification");
+    return false;
+  }
+
+  /* The row that was just created IS the evidence the money points at. */
+  if (data?.id) await payForCertification(service, userId, data.id as string);
+  return true;
+}
+
+/**
+ * game_settings.sand_certification, paid once per certification, ever.
+ *
+ * ---------------------------------------------------------------------------
+ * THE AMOUNT IS READ, NEVER PASSED
+ * ---------------------------------------------------------------------------
+ * Same discipline as completeLibraryItem: no caller names a figure, because a
+ * caller that could name one could mint currency that buys real swag. It comes
+ * from the row the admin screen edits, so the number on the screen and the
+ * number paid cannot disagree.
+ *
+ * ---------------------------------------------------------------------------
+ * IDEMPOTENT BY INDEX, NOT BY CARE
+ * ---------------------------------------------------------------------------
+ * A credential is derived state and recomputes on every accrual, so a payment
+ * on this path is a double-pay waiting for the second run. Two things stop it,
+ * and only the second one is load-bearing:
+ *
+ *   the caller   this runs only when the advisor_certification INSERT actually
+ *                inserted, so a re-run reaches a 23505 and returns before here
+ *   0121         a partial unique index on (ref_id) where reason='certification'
+ *
+ * The first depends on every future caller reproducing the reasoning. The
+ * second is the database refusing, which is why a 23505 here is swallowed as
+ * "already paid" rather than treated as a failure.
+ *
+ * A FAILED PAYMENT DOES NOT UNDO THE CERTIFICATION. The advisor earned it; the
+ * money is bookkeeping that can be repaired, and revoking something earned
+ * because a ledger write failed would be the worse of the two outcomes.
+ */
+async function payForCertification(
+  service: Client,
+  userId: string,
+  advisorCertificationId: string
+): Promise<void> {
+  const { data: settings } = await service
+    .from("game_settings")
+    .select("sand_certification")
+    .limit(1)
+    .maybeSingle();
+
+  const amount = Number(settings?.sand_certification ?? 0);
+  if (amount <= 0) return;
+
+  await service.from("sand_dollar_entry").insert({
+    user_id: userId,
+    amount,
+    reason: "certification",
+    ref_id: advisorCertificationId,
+    note: "Certification earned",
+  });
 }
 
 /**

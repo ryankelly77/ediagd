@@ -16,6 +16,7 @@
   "include": [
     "./certification-scenarios.ts",
     "../lib/certification.ts",
+    "../lib/certificate.ts",
     "../lib/gamification/streak.ts"
   ]
 }
