@@ -189,6 +189,29 @@ export function coreProgressLine(
   return `${have} of ${total} core — ${left} from EDIAGD Certified`;
 }
 
+/**
+ * "4 of the 8 are still being built."
+ *
+ * WHY THE HEADLINE NEEDS A SECOND SENTENCE. coreProgressLine counts the whole
+ * core — eight — because the credential requires all eight and a denominator
+ * that shrank as content was withdrawn would make the credential easier exactly
+ * as the library got thinner. The Craft section, meanwhile, only lists the
+ * tracks an advisor can actually start.
+ *
+ * So the screen said "0 of 8 core" above "0 of 4", and read as though it were
+ * arguing with itself. Both numbers are right; what was missing was the reason
+ * they differ. This is that reason, and it disappears on its own the moment
+ * Mitch's content lands — there is no state to clean up.
+ *
+ * Returns null when nothing is unbuilt, because a line saying "0 are still
+ * being built" is worse than no line.
+ */
+export function coreBuildLine(coreCount: number, unbuilt: number): string | null {
+  if (coreCount <= 0 || unbuilt <= 0) return null;
+  if (unbuilt >= coreCount) return `All ${coreCount} are still being built.`;
+  return `${unbuilt} of the ${coreCount} are still being built.`;
+}
+
 /* ---------------------------------------------------------------------------
    EARNING A CERTIFICATION
 --------------------------------------------------------------------------- */

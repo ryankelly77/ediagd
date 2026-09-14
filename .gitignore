@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -40,22 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# offline engine scenarios
-.tmp-test
-
-# Build artefact from npm run check:nav
-.tmp-nav/
-
-# tsc scratch output from the script runners in package.json
-.tmp-dms/
-
-# tsc scratch output from the one-off script runners
-.tmp-cm/
-.tmp-remap/
-
 # generated decision sheets — data, not code
 exports/
-.tmp-exp/
 
 # ---- Capacitor native projects -------------------------------------------
 # ANDROID is still generated on demand: scaffolded from a template, re-created
@@ -75,108 +61,24 @@ exports/
 # capacitor.config.ts (App/App/capacitor.config.json and App/App/public). After
 # a fresh clone, run `npx cap sync ios` before archiving.
 /android/
-.tmp-push/
-.tmp-cat/
-.tmp-dv/
-.tmp-rv/
-# import-quotes build output
-.tmp-iq/
-.tmp-po/
-.tmp-iv/
-.tmp-oc/
-.tmp-bf/
-.tmp-mq/
-.tmp-la/
-.tmp-fd/
-.tmp-dq/
-.tmp-kt/
-.tmp-of/
-.tmp-rc/
-.tmp-cq/
-.tmp-br/
-.tmp-ik/
-.tmp-pk/
-.tmp-dp/
-.tmp-w/
-.tmp-sn/
 .metric-snapshots/
-.tmp-rp/
-.tmp-ep/
-.tmp-dt/
 
 # Pre-migration pg_dumps. Production data — never commit these.
 .backups/
 
-.tmp-ig/
-
-.tmp-dtk/
-
-# tsc scratch output from npm run test:rendition
-.tmp-rn/
-
-# tsc scratch output from npm run import:quiz
-.tmp-iqz/
-
-# tsc scratch output from npm run import:deck-map
-.tmp-idm/
-
-# tsc scratch output from npm run test:names
-.tmp-nm/
-
-# tsc scratch output from npm run ruling:op-codes
-.tmp-rul/
-
-# tsc scratch output from npm run test:dealer-rows
-.tmp-dr/
-
-# tsc scratch output from npm run propose:twins
-.tmp-pt/
-
-# tsc scratch output from npm run test:rest-day
-.tmp-rd/
-
-# tsc scratch output from npm run test:island-budget
-.tmp-ib/
-
-# tsc scratch output from npm run test:schedule-flags
-.tmp-sf/
-
-# tsc scratch output from npm run build:deck-vocab
-.tmp-dv2/
-
-# tsc scratch output from npm run test:transcript-match
-.tmp-tm/
-
-# tsc scratch output from npm run identify:videos
-.tmp-idv/
-
-# tsc scratch output from npm run test:ingest-routing
-.tmp-ir/
-
-# tsc scratch output from npm run test:quote-match
-.tmp-qm/
-
-# tsc scratch output from npm run reconcile:uploads
-.tmp-ru/
-
-# tsc scratch output from npm run sync:mux-titles
-.tmp-smt/
-
 # Database dumps taken before destructive content writes. Large, and not ours to publish.
 backups/
-.tmp-sr/
-.tmp-rct/
-.tmp-sdf/
-.tmp-skc/
-.tmp-scn/
-.tmp-lms/
 
 # Local Python env for the Drop Zone transcription (faster-whisper).
 # Not a dependency of the app; see scripts/transcribe-dropzone.py.
 .venv-whisper/
 
-# Standalone test builds (see the test:* scripts).
-.tmp-cert/
-.tmp-si/
-.tmp-acc/
-.tmp-cpl/
+# ---- tsc scratch output from the script runners ---------------------------
+# ONE GLOB, NOT A LINE PER SUITE. This was 61 individually-listed directories,
+# and eight still slipped through and got committed — .tmp-cl, .tmp-ss and six
+# more — because a new `npm run test:*` mints a new .tmp-<x>/ and the ignore
+# list only learns about it if somebody remembers. The list was the bug.
+#
+# These are build output: `rm -rf` at the top of every script that makes one.
+.tmp-*/
+.tmp-test

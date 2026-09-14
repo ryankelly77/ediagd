@@ -67,11 +67,20 @@ export function SealMedallion({
   const earned = state === "earned";
 
   if (!earned) {
-    /* ---- Not earned: the badge wall's own cream disc ---------------------
-       Identical to BadgeMedallion's locked state on purpose. The subject glyph
-       is NOT shown: a cream disc with a brake rotor on it looks like a brake
-       certification rendered badly, where an empty disc reads as the
-       placeholder it is. The name underneath is what says which one. */
+    /* ---- Not earned: the seal's OWN art, muted --------------------------
+       Identical treatment to BadgeMedallion's locked state — cream disc,
+       inset hairline, and the real artwork at grayscale(1) / opacity 0.45.
+
+       AN EARLIER VERSION DREW A GENERIC RING HERE, on the reasoning that a
+       muted brake rotor would read as a brake certification rendered badly.
+       That was wrong, and the Coming Soon grid proved it: fourteen tracks
+       rendered as fourteen indistinguishable circles. Thirty-four distinct
+       glyphs were drawn precisely so a wall of certifications is not a wall of
+       identical rings, and hiding the glyph until it is earned throws that away
+       at exactly the moment it does the most work — when somebody is deciding
+       which track to start.
+
+       A locked badge still shows its motif. A locked seal shows its glyph. */
     return (
       <span
         className={`relative inline-flex shrink-0 items-center justify-center rounded-pill ${className ?? ""}`}
@@ -84,20 +93,28 @@ export function SealMedallion({
         role="img"
         aria-label={`${name} — ${state === "soon" ? "coming soon" : "not yet earned"}`}
       >
-        {/* The scalloped silhouette, flat and quiet, so the shape still says
-            "seal" rather than "badge" before it is earned. */}
-        <svg
-          viewBox="0 0 24 24"
-          width={Math.round(size * 0.52)}
-          height={Math.round(size * 0.52)}
-          fill="none"
-          stroke="rgb(var(--ediagd-ink-soft) / 0.35)"
-          strokeWidth="1.4"
+        {/* Full size, not inset: on a seal the scalloped rim IS the edge, so
+            shrinking the art would float a small seal inside a plain circle and
+            lose the silhouette that distinguishes a seal from a badge.
+            alt="" and aria-hidden because the span above already carries the
+            accessible name — announcing it twice is noise. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={sealHref(glyphKey)}
+          alt=""
           aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="8.5" strokeDasharray="1.6 1.4" />
-          <circle cx="12" cy="12" r="5.5" />
-        </svg>
+          width={size}
+          height={size}
+          className="inline-block shrink-0"
+          style={{
+            width: size,
+            height: size,
+            filter: "grayscale(1)",
+            opacity: 0.45,
+          }}
+          loading="lazy"
+          decoding="async"
+        />
       </span>
     );
   }

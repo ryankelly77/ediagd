@@ -57,6 +57,11 @@ export default async function CertificationsPage() {
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
       <h1 className="ediagd-eyebrow">Your certifications</h1>
       <p className="mt-1 text-2xl font-extrabold text-navy">{view.rungLine}</p>
+      {/* Why the headline's 8 and the Craft section's 4 differ. Both numbers
+          are right; without this the screen reads as contradicting itself. */}
+      {view.buildLine && (
+        <p className="mt-1 text-sm text-ink-soft">{view.buildLine}</p>
+      )}
 
       {view.credential ? (
         <Card className="mt-4 flex items-center gap-4">

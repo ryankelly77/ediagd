@@ -146,6 +146,27 @@ export default async function MorePage() {
           />
         </li>
         {/*
+          BADGES, FOR THE PEOPLE WHOSE BAR NO LONGER CARRIES IT.
+          The fourth tab is Team for anyone who coaches and Badges for everyone
+          else, so this row exists exactly when that swap took Badges away.
+
+          The condition is `isManager || isAdmin` — the SAME expression the
+          layout uses to decide the tab — rather than a requiresRole entry in
+          MEMBER_SECTIONS. That list is filtered on roles.has(...), which is a
+          single role, so an admin who is not also a manager would have lost the
+          tab to Team and never been offered the row: the one path by which this
+          swap could make a screen unreachable.
+        */}
+        {(isManager || isAdmin) && (
+          <li>
+            <LinkRow
+              href="/badges"
+              label="Badges"
+              hint="What you've earned on your own streak."
+            />
+          </li>
+        )}
+        {/*
           THE HEADER'S SECOND HOME.
           The bell and the avatar left the header entirely when the streak chip
           took that slot; the Sand Dollars pill also folds up here at the

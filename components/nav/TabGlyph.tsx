@@ -36,6 +36,7 @@ export type TabIcon =
   | "sun"
   | "wave"
   | "shell"
+  | "seal"
   | "team"
   | "swag"
   | "more"
@@ -125,6 +126,41 @@ export function TabGlyph({
         <svg {...common}>
           <path d="M12 21a9 9 0 1 0-9-9c0 4 3 9 9 9Z" />
           <path d="M12 21c-2-4-2-9 0-13M12 21c2-4 2-9 0-13" />
+        </svg>
+      );
+    case "seal":
+      /*
+       * THE SCALLOPED RIM, WHICH IS THE WHOLE POINT.
+       *
+       * It sits beside `shell` in the same bar, so the two have to separate at
+       * a glance and not merely differ: spec §10's rule is "circles are badges,
+       * seals are certifications — badges keep the smooth disc, seals take the
+       * scalloped rim". That contrast is load-bearing here. `shell` is a smooth
+       * closed curve with two ribs; this is a toothed edge around an open
+       * centre, and the eye catches the broken silhouette before it reads
+       * either shape.
+       *
+       * TEN SCALLOPS, NOT TWELVE OR SIXTEEN. The rim on the real seal art
+       * carries far more, and every one of them disappears here — at a 24px box
+       * ten teeth already means a 6.0px pitch, and a 2px stroke with round
+       * joins eats most of that. Twelve drops the pitch to 5.0px and the edge
+       * starts reading as a soft blur rather than as teeth, which would leave a
+       * fuzzy circle sitting next to the shell's crisp one. The rim is stylised
+       * down to the point where it still says "seal", the same way `wave` is
+       * two strokes rather than a seascape.
+       *
+       * The path is generated rather than hand-tuned: alternating radii 9.6 and
+       * 7.8 about (12,12), which is why the numbers look arbitrary.
+       */
+      return (
+        <svg {...common}>
+          <path
+            d="M12.00 2.40 L14.41 4.58 L17.64 4.23 L18.31 7.42 L21.13 9.03 L19.80 12.00 L21.13 14.97 L18.31 16.58 L17.64 19.77 L14.41 19.42 L12.00 21.60 L9.59 19.42 L6.36 19.77 L5.69 16.58 L2.87 14.97 L4.20 12.00 L2.87 9.03 L5.69 7.42 L6.36 4.23 L9.59 4.58 Z"
+            strokeWidth={1.7}
+          />
+          {/* The inner ring the real seals all carry. Kept well clear of the
+              rim so the two rings never touch and smear at small sizes. */}
+          <circle cx="12" cy="12" r="4.1" />
         </svg>
       );
     case "team":

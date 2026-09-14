@@ -17,6 +17,7 @@ import {
   certificationProgress,
   certificationState,
   computeCredential,
+  coreBuildLine,
   coreProgressLine,
   currencyLine,
   currentThrough,
@@ -165,6 +166,29 @@ check(
   "7 of 8 core — 1 from EDIAGD Certified"
 );
 check("nothing published yet", coreProgressLine([], TODAY, 0), "The core eight are not published yet");
+
+section("6. the headline says why 8 and 4 differ");
+/* The screen read "0 of 8 core" above a Craft section listing 4, and looked
+   like it was arguing with itself. Both numbers are right — these assert the
+   sentence that explains the gap, and that it vanishes once content lands. */
+check(
+  "today's real shape — four core tracks unbuilt",
+  coreBuildLine(8, 4),
+  "4 of the 8 are still being built."
+);
+check("one short", coreBuildLine(8, 1), "1 of the 8 are still being built.");
+check(
+  "every core track unbuilt reads as all, not as 8 of the 8",
+  coreBuildLine(8, 8),
+  "All 8 are still being built."
+);
+check("nothing unbuilt says nothing at all", coreBuildLine(8, 0), null);
+check("an empty catalogue says nothing either", coreBuildLine(0, 0), null);
+check(
+  "more unbuilt than the core can hold still reads as all",
+  coreBuildLine(8, 9),
+  "All 8 are still being built."
+);
 
 /* ---- Summary ------------------------------------------------------------- */
 
