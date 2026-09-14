@@ -367,6 +367,9 @@ async function grantCertification(
       user_id: userId,
       certification_id: certificationId,
       earned_at: new Date().toISOString(),
+      /* INERT. The column is NOT NULL so it still gets a value, and nothing
+         reads it: a track no longer expires. Kept rather than dropped —
+         retire, never delete — and commented in 0122. */
       current_through: currentThrough(today),
       source: "accrued",
     })
@@ -486,13 +489,16 @@ export async function recomputeCredential(
 
   const { data: held } = await service
     .from("advisor_certification")
-    .select("certification_id, current_through")
+    .select("certification_id, earned_at")
     .eq("user_id", userId);
 
+  /* earned_at, NOT current_through. A track is held permanently; the column
+     that used to say when it stopped counting no longer governs anything —
+     see 0122 and the note on CertificationHolding. */
   const heldBy = new Map(
-    ((held ?? []) as { certification_id: string; current_through: string }[]).map((h) => [
+    ((held ?? []) as { certification_id: string; earned_at: string }[]).map((h) => [
       h.certification_id,
-      h.current_through,
+      h.earned_at.slice(0, 10),
     ])
   );
 
@@ -503,7 +509,7 @@ export async function recomputeCredential(
   const holdings: CertificationHolding[] = coreRows.map((c) => ({
     slug: c.slug,
     isCore: true,
-    currentThrough: (heldBy.get(c.id) as IsoDate | undefined) ?? null,
+    earnedOn: (heldBy.get(c.id) as IsoDate | undefined) ?? null,
   }));
 
   const computed = computeCredential(holdings, today, coreCount);
