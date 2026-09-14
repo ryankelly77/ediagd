@@ -7,6 +7,7 @@ import { DayRollover } from "@/components/nav/DayRollover";
 import { SwipeNavigation } from "@/components/nav/SwipeNavigation";
 import type { IsoDate } from "@/lib/gamification/streak";
 import { loadScheduleContext, restDayFor, type RestDay } from "@/lib/work-schedule";
+import { TAB_ROUTES } from "@/lib/navigation";
 
 /** First letter of the name (or email) for the avatar. */
 function initialsFor(name: string): string {
@@ -157,23 +158,40 @@ export default async function AppLayout({
   // Max 5 tabs. Admin lives inside More rather than taking a slot, so a
   // manager-admin doesn't overflow the bar.
   //
-  // The fifth slot is role-dependent: someone who coaches a team gets Team;
-  // a plain advisor has no use for it, so they get the Swag Shack instead.
-  // Swag stays in More for BOTH, so managers keep a path to it.
+  // ---- THE FOURTH SLOT IS THE ROLE-DEPENDENT ONE --------------------------
+  //
+  // Certs is permanent for everybody: what an advisor has earned is theirs, and
+  // it belongs beside the streak rather than three taps down a drawer.
+  //
+  // What it displaced differs by role, because the two roles were not using the
+  // same tab for the same kind of thing:
+  //
+  //   advisor  Today · Streak · Certs · Badges · More
+  //            Swag leaves the bar. It is a shop — visited when there is
+  //            something to spend on, not daily — and it keeps its row in More.
+  //
+  //   manager  Today · Streak · Certs · Team · More
+  //            BADGES leaves the bar, not Team. A manager checks their roster
+  //            constantly and it must not be buried, whereas badges are a
+  //            surface people are notified INTO rather than one they navigate
+  //            to. Badges keeps a row in More for managers, so nothing the bar
+  //            drops becomes unreachable — see MANAGER_EXTRA_SECTIONS.
   const leadsTeam = isManager || isAdmin;
   const tabs: Tab[] = [
-    { href: todayHref, label: "Today", icon: "sun", match: ["/today", "/advisor"] },
+    { href: todayHref, label: "Today", icon: "sun", match: [TAB_ROUTES.today, TAB_ROUTES.advisor] },
     // Sand Dollars hangs off the Swell, so the Streak tab stays lit there.
-    { href: "/streak", label: "Streak", icon: "wave", match: ["/streak", "/sand-dollars"] },
-    { href: "/badges", label: "Badges", icon: "shell", match: ["/badges"] },
+    { href: TAB_ROUTES.streak, label: "Streak", icon: "wave", match: [TAB_ROUTES.streak, "/sand-dollars"] },
+    /* "Certs", not "Certifications" — the bar has five labels to fit and the
+       longest one sets the floor at the largest text sizes. */
+    { href: TAB_ROUTES.certifications, label: "Certs", icon: "seal", match: [TAB_ROUTES.certifications] },
     leadsTeam
-      ? { href: "/manager", label: "Team", icon: "team" as const, match: ["/manager"] }
-      : { href: "/swag", label: "Swag", icon: "swag" as const, match: ["/swag"] },
+      ? { href: TAB_ROUTES.manager, label: "Team", icon: "team" as const, match: [TAB_ROUTES.manager] }
+      : { href: TAB_ROUTES.badges, label: "Badges", icon: "shell" as const, match: [TAB_ROUTES.badges] },
     // fallback: More is a drawer. Everything reached through it — Saved, the
     // libraries, Your Group, profile, notifications — keeps it lit, without
     // each new page behind it having to be remembered here. See TabBar.
     {
-      href: "/more",
+      href: TAB_ROUTES.more,
       label: "More",
       icon: "more",
       match: ["/more", "/admin"],

@@ -209,17 +209,6 @@ export const MEMBER_SECTIONS: readonly MemberSection[] = [
     requiresRole: null,
   },
   {
-    /*
-     * Above the libraries, beside Saved and Island Time, because it is the
-     * third thing on this list that is THEIRS — what they have earned, not
-     * what somebody else filled.
-     */
-    href: "/certifications",
-    label: "Certifications",
-    hint: "The tracks you've earned, and how far from EDIAGD Certified.",
-    requiresRole: null,
-  },
-  {
     href: "/library",
     label: "Lesson Library",
     hint: "Coaching cues and pitch videos, by service.",
@@ -247,6 +236,35 @@ export const MEMBER_SECTIONS: readonly MemberSection[] = [
     requiresRole: "manager",
   },
 ] as const;
+
+/**
+ * The routes the tab bar can put in front of somebody.
+ *
+ * A THIRD KIND OF REGISTRATION, because there are three ways a screen gets
+ * linked and check:nav only knew about two. ADMIN_TOOLS and MEMBER_SECTIONS
+ * describe rows in a menu; this describes the bar at the bottom, which is how
+ * the most-used screens are reached and therefore the last place an orphan
+ * would ever be noticed.
+ *
+ * It exists because /certifications moved OUT of MEMBER_SECTIONS and into the
+ * bar, which made it registered nowhere — the check would have called it an
+ * orphan, and the honest answer is that the checker had a blind spot rather
+ * than that the route was unreachable.
+ *
+ * app/(app)/layout.tsx builds its tabs from these values, so renaming a route
+ * here is a type error there rather than a silently dead tab.
+ */
+export const TAB_ROUTES = {
+  today: "/today",
+  /** Today swaps to the recap once the day is done; both light the Today tab. */
+  advisor: "/advisor",
+  streak: "/streak",
+  certifications: "/certifications",
+  badges: "/badges",
+  manager: "/manager",
+  swag: "/swag",
+  more: "/more",
+} as const;
 
 export const NAV_EXEMPT: Readonly<Record<string, string>> = {
   "/admin": "The hub itself — it renders this registry, and More links to it.",

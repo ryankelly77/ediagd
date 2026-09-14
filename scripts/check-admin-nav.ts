@@ -20,7 +20,13 @@
 
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import { ADMIN_TOOLS, MANAGER_TOOLS, MEMBER_SECTIONS, NAV_EXEMPT } from "../lib/navigation";
+import {
+  ADMIN_TOOLS,
+  MANAGER_TOOLS,
+  MEMBER_SECTIONS,
+  NAV_EXEMPT,
+  TAB_ROUTES,
+} from "../lib/navigation";
 
 const APP_DIR = join(process.cwd(), "app", "(app)");
 
@@ -30,7 +36,18 @@ const APP_DIR = join(process.cwd(), "app", "(app)");
  * missing link would look like "not entitled" rather than "not linked", which
  * is the hardest kind of orphan to notice.
  */
-const WATCHED = ["admin", "library", "joe-the-pro", "meetings", "island-time"];
+const WATCHED = [
+  "admin",
+  "library",
+  "joe-the-pro",
+  "meetings",
+  "island-time",
+  /* Added when the certifications wall shipped. It was outside the watched set
+     at first, which meant the suite reported "every watched route is
+     reachable" while saying nothing whatsoever about it — a pass that reads
+     green and checks nothing is worse than no check at all. */
+  "certifications",
+];
 
 /** Every route under app/(app)/admin that has a page. */
 function routesUnder(dir: string, prefix: string): string[] {
@@ -56,6 +73,11 @@ function main(): void {
        to, not one the platform owner's hub happens not to list. */
     ...MANAGER_TOOLS.map((t) => t.href),
     ...MEMBER_SECTIONS.map((s) => s.href),
+    /* The tab bar is the third way a screen gets linked, and the one this
+       check used to be blind to. /certifications is reached ONLY from the bar
+       — it left MEMBER_SECTIONS when it was promoted — so without this it
+       would read as an orphan. */
+    ...Object.values(TAB_ROUTES),
   ]);
 
   const routes = WATCHED.flatMap((name) =>

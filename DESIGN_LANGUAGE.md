@@ -106,6 +106,27 @@ Per brand book: **a circle, a dotted inner ring, one motif from the brand's worl
 - **Touch targets are the exception that SHOULD grow.** The bell and the avatar
   get bigger with the text, and that is right; if the header has to become two
   rows to allow it, it becomes two rows.
+- **The tab bar is a STATED EXCEPTION: its labels do not scale.** They are
+  pinned at 13px, and the bar's height is a px constant, so pushing the root
+  font size to the largest accessibility setting leaves the bar byte-identical.
+  This contradicts the rule above and is deliberate.
+
+  The bar carries five tabs across the full width of the narrowest phone we
+  support. At a 320px viewport that is 64px per cell, less padding, against a
+  widest label ("Badges") measuring 48.9px — about 7px of headroom. There is no
+  room to grow into and nowhere to reflow to: a tab bar cannot wrap, and it
+  cannot become two rows the way the header can, because it is anchored to the
+  bottom of every screen.
+
+  What makes it defensible is that 13px is already the legibility floor set for
+  this audience — it was raised from 11px for exactly that reason, and the
+  inactive label was darkened from `ink-soft` to `ink` at the same time — and
+  that the glyph above each label carries the meaning independently. Somebody
+  who cannot read "Certs" can still recognise the seal.
+
+  **Do not "fix" this.** Making the labels scale breaks the bar at the sizes it
+  was meant to help, which is the opposite of the intent. If the bar ever needs
+  to hold more than five tabs, the thing to revisit is the tab count.
 - `npm run test:larger-text` enforces all of this. It drives headless Chrome at
   an iPhone viewport through every advisor route at four sizes and fails on
   measured truncation, clipping or overflow. A screen that breaks at 125% fails

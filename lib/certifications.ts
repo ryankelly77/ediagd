@@ -10,6 +10,7 @@
 
 import {
   certificationState,
+  coreBuildLine,
   coreProgressLine,
   currencyLine,
   type CertificationHolding,
@@ -52,6 +53,8 @@ export type CertificationsView = {
   tiles: CertificationTile[];
   /** "5 of 8 core — 3 from EDIAGD Certified." */
   rungLine: string;
+  /** "4 of the 8 are still being built." Null when every core track is live. */
+  buildLine: string | null;
   coreCount: number;
   coreHeld: number;
   credential: {
@@ -153,9 +156,16 @@ export async function loadCertifications(
     currentThrough: t.currentThrough,
   }));
 
+  /* "Still being built" means exactly what the Coming Soon grid holds: not
+     earnable, and not already held. A core track somebody earned before the bar
+     moved is not something Mitch still has to write, and counting it here would
+     tell that advisor a track they hold is unfinished. */
+  const unbuiltCore = coreTiles.filter((t) => !t.active && t.state === "unearned").length;
+
   return {
     tiles,
     rungLine: coreProgressLine(holdings, today, coreTiles.length),
+    buildLine: coreBuildLine(coreTiles.length, unbuiltCore),
     coreCount: coreTiles.length,
     coreHeld: coreTiles.filter((t) => t.state === "current").length,
     credential: cred
