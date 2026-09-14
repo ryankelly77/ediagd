@@ -776,6 +776,254 @@ async function main() {
     String(badgeRows));
 
   /* ---------------------------------------------------------------------- */
+  section("10. earning a certification pays, exactly once");
+
+  const { data: gsPay } = await sb
+    .from("game_settings")
+    .select("sand_certification")
+    .single();
+  const payAmount = Number(need(gsPay, "game_settings").sand_certification);
+  ok("sand_certification is configured", payAmount > 0, String(payAmount));
+
+  const { data: heldRows } = await sb
+    .from("advisor_certification")
+    .select("id")
+    .eq("user_id", advisor);
+  const heldIds = ((heldRows ?? []) as { id: string }[]).map((r) => r.id);
+
+  const { data: payments } = await sb
+    .from("sand_dollar_entry")
+    .select("id, amount, reason, ref_id")
+    .eq("user_id", advisor)
+    .eq("reason", "certification");
+  const paid = (payments ?? []) as { amount: number; ref_id: string }[];
+
+  ok("one payment per certification earned", paid.length === heldIds.length,
+    `${paid.length} payments for ${heldIds.length} certifications`);
+  ok("each payment is the configured amount",
+    paid.every((p) => Number(p.amount) === payAmount), JSON.stringify(paid.map((p) => p.amount)));
+  ok("each points at the advisor_certification that earned it",
+    paid.every((p) => heldIds.includes(p.ref_id)));
+
+  /* THE IDEMPOTENCY THAT MATTERS. The credential is derived state and
+     recomputes on every accrual — so re-running the whole derivation must not
+     mint a second payment. */
+  for (const c of core) {
+    await accrueFromModule(sb as never, advisor, rooftopId, moduleOf.get(c.id)!);
+  }
+  await recomputeCredential(sb as never, advisor, today);
+
+  const { count: afterRerun } = await sb
+    .from("sand_dollar_entry")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", advisor)
+    .eq("reason", "certification");
+  ok("re-running the derivation pays nothing more", (afterRerun ?? 0) === paid.length,
+    `${paid.length} -> ${afterRerun}`);
+
+  /* And the index refuses directly, not merely the caller's logic. */
+  const { error: doublePay } = await sb.from("sand_dollar_entry").insert({
+    user_id: advisor,
+    amount: payAmount,
+    reason: "certification",
+    ref_id: heldIds[0],
+    note: "duplicate attempt",
+  });
+  ok("the ledger index itself refuses a second payment", doublePay?.code === "23505",
+    doublePay?.code ?? "accepted!");
+
+  /* ---------------------------------------------------------------------- */
+  section("11. Founding Class is derived, in both directions");
+
+  const { data: credForFc } = await sb
+    .from("advisor_credential")
+    .select("id, earned_at")
+    .eq("user_id", advisor)
+    .maybeSingle();
+  const fcCred = need(credForFc, "the advisor credential");
+  const earnedDay = String(fcCred.earned_at).slice(0, 10);
+
+  async function setFounding(through: string | null) {
+    await sb.from("game_settings").update({ founding_class_through: through }).eq("id", true);
+    const { error } = await sb.rpc("recompute_founding_class");
+    if (error) throw new Error(`recompute_founding_class: ${error.message}`);
+    const { data } = await sb
+      .from("advisor_credential")
+      .select("founding_class")
+      .eq("id", fcCred.id)
+      .single();
+    return Boolean(need(data, "credential").founding_class);
+  }
+
+  ok("a null cutoff marks nobody", (await setFounding(null)) === false);
+
+  const dayAfter = new Date(`${earnedDay}T00:00:00Z`);
+  dayAfter.setUTCDate(dayAfter.getUTCDate() + 1);
+  const dayBefore = new Date(`${earnedDay}T00:00:00Z`);
+  dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
+
+  ok("a cutoff after the earn date marks them",
+    (await setFounding(dayAfter.toISOString().slice(0, 10))) === true);
+  /* ON or before — somebody who certified at 9pm on the cutoff is in, which is
+     what a human reading "on or before the 31st" expects. */
+  ok("the cutoff is inclusive of the day itself", (await setFounding(earnedDay)) === true);
+  ok("moving it earlier un-marks them",
+    (await setFounding(dayBefore.toISOString().slice(0, 10))) === false);
+  ok("clearing it un-marks them again", (await setFounding(null)) === false);
+
+  /* ---------------------------------------------------------------------- */
+  section("12. the public verify endpoint");
+
+  await setFounding(earnedDay); // so the founding field is exercised as true
+  const { data: credId } = await sb
+    .from("advisor_credential")
+    .select("certificate_id, current_through")
+    .eq("id", fcCred.id)
+    .single();
+  const cert = need(credId, "certificate id");
+
+  const { data: okLookup } = await sb.rpc("verify_certificate", {
+    _certificate_id: cert.certificate_id,
+    _ip: "203.0.113.10",
+  });
+  const v = okLookup as Record<string, unknown>;
+  ok("a real certificate verifies", v.status === "ok", JSON.stringify(v.status));
+  ok("it names the holder", typeof v.name === "string" && (v.name as string).length > 0);
+  ok("it states the level", v.level === "certified", String(v.level));
+  ok("it reports currency", v.is_current === true, String(v.is_current));
+  ok("it carries the founding mark", v.founding_class === true, String(v.founding_class));
+
+  /*
+   * THE PRIVACY CONTRACT, ASSERTED AS AN ALLOW-LIST.
+   *
+   * Not "does it contain an email" — that only catches the field somebody
+   * thought of. This fails on ANY key that is not one of the six agreed, so a
+   * well-meaning addition to the function breaks the test rather than the
+   * promise. This is the surface where a convenience does real harm.
+   */
+  const ALLOWED = ["status", "name", "level", "earned_on", "current_through",
+    "founding_class", "is_current"];
+  const unexpectedKeys = Object.keys(v).filter((k) => !ALLOWED.includes(k));
+  ok("it returns NOTHING beyond the agreed fields", unexpectedKeys.length === 0,
+    unexpectedKeys.join(","));
+
+  const blob = JSON.stringify(v).toLowerCase();
+  ok("no email anywhere in the payload", !blob.includes("@"), blob.slice(0, 80));
+  ok("no rooftop id", !blob.includes("rooftop"));
+  ok("no user id", !blob.includes("user_id"));
+
+  const { data: rooftopName } = await sb
+    .from("rooftop")
+    .select("name")
+    .eq("id", rooftopId)
+    .single();
+  ok("no employer name",
+    !blob.includes(String(need(rooftopName, "rooftop").name).toLowerCase()));
+
+  /* Lapsed still verifies — it is stated, not hidden. */
+  await sb.from("advisor_credential").update({ current_through: "2020-01-01" }).eq("id", fcCred.id);
+  const { data: lapsedLookup } = await sb.rpc("verify_certificate", {
+    _certificate_id: cert.certificate_id,
+    _ip: "203.0.113.11",
+  });
+  const lv = lapsedLookup as Record<string, unknown>;
+  ok("a lapsed certificate still verifies as genuine", lv.status === "ok");
+  ok("...and is reported as not current", lv.is_current === false);
+  await sb
+    .from("advisor_credential")
+    .update({ current_through: cert.current_through })
+    .eq("id", fcCred.id);
+
+  /* Unknown id: one answer, no oracle. */
+  const { data: missLookup } = await sb.rpc("verify_certificate", {
+    _certificate_id: "EDG-C-2026-99999",
+    _ip: "203.0.113.12",
+  });
+  ok("an unknown id is not found", (missLookup as Record<string, unknown>).status === "not_found");
+  const { data: junkLookup } = await sb.rpc("verify_certificate", {
+    _certificate_id: "not-even-close",
+    _ip: "203.0.113.12",
+  });
+  ok("a malformed id gets the SAME answer, not a format hint",
+    (junkLookup as Record<string, unknown>).status ===
+      (missLookup as Record<string, unknown>).status);
+
+  /* ---- the throttle, demonstrated ------------------------------------- */
+  const BURST_IP = "203.0.113.99";
+  let limitedAt = 0;
+  for (let i = 1; i <= 40; i++) {
+    const { data: r } = await sb.rpc("verify_certificate", {
+      _certificate_id: cert.certificate_id,
+      _ip: BURST_IP,
+    });
+    if ((r as Record<string, unknown>).status === "rate_limited") { limitedAt = i; break; }
+  }
+  ok("the endpoint throttles a burst from one address", limitedAt > 0,
+    limitedAt ? `limited at request ${limitedAt}` : "never limited in 40 requests");
+  ok("...at the documented threshold of 30/minute", limitedAt === 31,
+    `limited at ${limitedAt}`);
+
+  /* A different address is unaffected — the limit is per-caller, not global. */
+  const { data: other } = await sb.rpc("verify_certificate", {
+    _certificate_id: cert.certificate_id,
+    _ip: "198.51.100.7",
+  });
+  ok("another address is not caught by it",
+    (other as Record<string, unknown>).status === "ok");
+
+  await sb.from("verify_attempt").delete().in("ip", [BURST_IP, "203.0.113.10",
+    "203.0.113.11", "203.0.113.12", "198.51.100.7"]);
+  await setFounding(null);
+
+  /* ---------------------------------------------------------------------- */
+  /*
+   * THE PAGE ITSELF, when a dev server is pointed at this database.
+   *
+   * The RPC allow-list above is the ENFORCING boundary — the page cannot render
+   * what it is never handed — but the brief asks for an assertion against the
+   * page, and a future change could always add a second query beside the RPC.
+   * Opt-in via VERIFY_PAGE_URL so the suite still runs with no server up.
+   */
+  if (process.env.VERIFY_PAGE_URL) {
+    section("13. the served page leaks nothing");
+    const base = process.env.VERIFY_PAGE_URL.replace(/\/+$/, "");
+    const html = await fetch(`${base}/verify/${cert.certificate_id}`).then((r) => r.text());
+    const lower = html.toLowerCase();
+
+    ok("the page renders the holder's name", lower.includes(String(v.name).toLowerCase()));
+    /* Email-SHAPED, not the bare @: '@media' and Next's RSC framing both
+       contain one, and a test that fails on those gets muted. */
+    const emails = html.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) ?? [];
+    ok("no email address anywhere in the served HTML", emails.length === 0, emails.join(","));
+    ok("no user id", !lower.includes(advisor.toLowerCase()));
+    ok("no rooftop id", !lower.includes(rooftopId.toLowerCase()));
+    ok("the word rooftop never appears", !lower.includes("rooftop"));
+    ok("nor employer", !lower.includes("employer"));
+
+    const { data: rt } = await sb.from("rooftop").select("name").eq("id", rooftopId).single();
+    const rtName = String(need(rt, "rooftop").name).toLowerCase();
+    ok("the employer's NAME never appears", !lower.includes(rtName), rtName);
+
+    const missHtml = await fetch(`${base}/verify/EDG-C-2026-99999`).then((r) => r.text());
+    ok("an unknown id renders the plain miss", missHtml.includes("No certificate found"));
+
+    /* VISIBLE TEXT, not the raw bundle. The first version of this assertion
+       failed on `URLSearchParams` inside a framework script — the same mistake
+       as matching a bare '@' and calling it an email. What is being asserted is
+       what the PAGE says, so strip the scripts and the tags and read that. */
+    const visible = missHtml
+      .replace(/<script[\s\S]*?<\/script>/g, " ")
+      .replace(/<style[\s\S]*?<\/style>/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+    ok("...and says nothing else at all",
+      !visible.includes("did you mean") && !visible.includes("search") &&
+      !visible.includes("format") && !visible.includes("try"),
+      visible.slice(0, 120));
+  }
+
+  /* ---------------------------------------------------------------------- */
   console.log(`\n${"=".repeat(64)}`);
   console.log(`  ${passed} passed, ${failed} failed`);
   console.log("=".repeat(64));

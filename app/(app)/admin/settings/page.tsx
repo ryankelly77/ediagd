@@ -5,6 +5,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminsOnly } from "@/components/admin/content/AdminsOnly";
 import { GameSettingsForm } from "@/components/admin/settings/GameSettingsForm";
 import { GAME_SETTING_FIELDS, type GameSettingsValues } from "@/lib/game-settings";
+import { FoundingClassForm } from "@/components/admin/settings/FoundingClassForm";
 
 export default async function GameSettingsPage() {
   const { supabase, userId, hasAdminAccess } = await getAdminContext();
@@ -34,6 +35,13 @@ export default async function GameSettingsPage() {
   }
 
   const row = data as Record<string, unknown>;
+
+  /* How many credentials carry the mark today, so the screen states the current
+     state rather than only offering to change it. */
+  const { count: markedNow } = await supabase
+    .from("advisor_credential")
+    .select("id", { count: "exact", head: true })
+    .eq("founding_class", true);
   const initial = Object.fromEntries(
     GAME_SETTING_FIELDS.map((f) => [f.key, Number(row[f.key] ?? 0)])
   ) as GameSettingsValues;
@@ -47,6 +55,13 @@ export default async function GameSettingsPage() {
       />
 
       <GameSettingsForm initial={initial} />
+
+      {/* Beside the content bar, because the two of them decide what the
+          certification programme IS rather than what it pays. */}
+      <FoundingClassForm
+        initial={(row.founding_class_through as string | null) ?? null}
+        markedNow={Number(markedNow ?? 0)}
+      />
     </main>
   );
 }

@@ -1,0 +1,24 @@
+{
+  "//": "Server-renders the real <Certificate> outside Next, so the document's fields can be asserted without a browser. jsx: react-jsx because there is no Next compiler here.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "outDir": "../.tmp-cr",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "react"]
+  },
+  "include": [
+    "./certificate-render-scenarios.ts",
+    "../components/certificate/Certificate.tsx",
+    "../components/brand/Logo.tsx",
+    "../lib/certificate.ts",
+    "../lib/gamification/streak.ts"
+  ]
+}

@@ -26,6 +26,13 @@ import {
   type CertificationHolding,
   type ModuleProgress,
 } from "../lib/certification";
+import {
+  certificateCopy,
+  currencyStatement,
+  formatCertificateDate,
+  foundingClassMark,
+  verifyUrl,
+} from "../lib/certificate";
 import type { IsoDate } from "../lib/gamification/streak";
 
 let passed = 0;
@@ -189,6 +196,56 @@ check(
   coreBuildLine(8, 9),
   "All 8 are still being built."
 );
+
+section("7. what the certificate says");
+
+/* The paper is the artefact that leaves the building, so every string on it is
+   asserted here rather than trusted to a component. */
+check("a date reads the way a person says it", formatCertificateDate("2027-03-14" as IsoDate), "14 March 2027");
+check("single digits are not zero-padded", formatCertificateDate("2028-01-02" as IsoDate), "2 January 2028");
+check("December is not off by one", formatCertificateDate("2026-12-31" as IsoDate), "31 December 2026");
+check("a malformed date returns itself rather than Invalid Date",
+  formatCertificateDate("not-a-date" as IsoDate), "not-a-date");
+
+check("the founding mark carries the year earned",
+  foundingClassMark("2026-11-02" as IsoDate), "FOUNDING CLASS \u00b7 2026");
+
+check("certified title", certificateCopy("certified").title, "EDIAGD Certified Service Advisor");
+check("master title", certificateCopy("master").title, "EDIAGD Master Service Advisor");
+/* Master is not a louder Certified — the citation has to say the contribution,
+   or the two read as tiers of the same accumulation. */
+check("master's citation is about giving the craft back, not about volume",
+  certificateCopy("master").body[1], "and has given that craft back to the advisors alongside them");
+
+/* NO SURF VOCABULARY ON THE PAPER. A hiring manager does not know what a Swell
+   is, and a certificate needing the product's private language proves nothing
+   to anybody outside it. */
+const paperWords = [
+  ...certificateCopy("certified").body, certificateCopy("certified").title,
+  ...certificateCopy("master").body, certificateCopy("master").title,
+].join(" ").toLowerCase();
+check("no Swell on the paper", paperWords.includes("swell"), false);
+check("no Sand Dollars on the paper", paperWords.includes("sand dollar"), false);
+check("no Paddle Out on the paper", paperWords.includes("paddle"), false);
+check("no Island Time on the paper", paperWords.includes("island"), false);
+
+const v = verifyUrl("EDG-C-2026-04817", "https://app.ediagd.ai");
+check("the printed URL drops the scheme", v.display, "app.ediagd.ai/verify/EDG-C-2026-04817");
+check("the link keeps it", v.href, "https://app.ediagd.ai/verify/EDG-C-2026-04817");
+check("a trailing slash on the base does not double up",
+  verifyUrl("EDG-C-2026-04817", "https://app.ediagd.ai/").href,
+  "https://app.ediagd.ai/verify/EDG-C-2026-04817");
+
+/* Lapsed is stated, never shamed — design law 3 on the one surface a stranger
+   sees. "Expired" and "no longer valid" both describe a withdrawal that did not
+   happen. */
+check("current reads plainly", currencyStatement("2028-03-14" as IsoDate, true), "Current through 14 March 2028");
+check("lapsed says was, not expired",
+  currencyStatement("2027-03-14" as IsoDate, false), "Lapsed \u2014 was current through 14 March 2027");
+check("the word expired never appears",
+  currencyStatement("2027-03-14" as IsoDate, false).toLowerCase().includes("expired"), false);
+check("nor invalid",
+  currencyStatement("2027-03-14" as IsoDate, false).toLowerCase().includes("invalid"), false);
 
 /* ---- Summary ------------------------------------------------------------- */
 

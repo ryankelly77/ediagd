@@ -34,19 +34,27 @@ export const REF_TARGET: Record<string, string> = {
      correct. A check that cries wolf on a legitimate purchase gets switched
      off, which costs more than the check was ever worth. */
   swag_purchase: "swag_redemption",
+  /*
+   * Mapped on the day the path was written, exactly as the note below said it
+   * should be. Earning a certification pays game_settings.sand_certification,
+   * and the entry points at the advisor_certification row that is the evidence
+   * it was earned. 0121 makes that pointer unique, so the derivation can run as
+   * often as it likes and the money is minted once.
+   */
+  certification: "advisor_certification",
 };
 
 /** Reasons with no event behind them, where a null ref is the correct state. */
 export const NO_REF_EXPECTED = new Set(["paddle_out_purchase", "adjustment"]);
 
 /*
- * DELIBERATELY UNMAPPED: 'certification'.
+ * 'certification' WAS DELIBERATELY UNMAPPED until phase 2.
  *
- * The value has been in the sand_reason enum since 0011 and nothing in the app
- * has ever written it. Leaving it out of both sets is the ruling, not an
- * oversight: if one ever appears, somebody added a mint path without saying
- * where its evidence lives, and the check should stop rather than wave it
- * through. Map it here on the day that path is written.
+ * The value sat in the sand_reason enum from 0011 with nothing writing it, and
+ * the rule here was: leave it out of both sets, so that if an entry ever
+ * appeared the check would STOP rather than wave through a mint path that never
+ * said where its evidence lived. That is what happened — the path was written,
+ * and mapping it above was part of writing it rather than a fix afterwards.
  */
 
 export type LedgerEntry = {
