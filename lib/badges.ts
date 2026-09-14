@@ -20,7 +20,16 @@ export type BadgeFamily =
   | "team"
   | "mastery";
 
-export type BadgeStatus = "now" | "future";
+/**
+ * `retired` is the third state, and it is not `future` reversed.
+ *
+ * RETIRE NEVER DELETES. A retired badge stops being AWARDED and stops counting
+ * toward the wall's denominator, but the row stays in this catalogue and any
+ * user_badge already granted stays granted and still renders earned. Somebody
+ * who earned Full Horizon in August did earn it; withdrawing it later because
+ * the programme moved on would be the app telling them it miscounted.
+ */
+export type BadgeStatus = "now" | "future" | "retired";
 
 export type BadgeSpec = {
   key: string;
@@ -34,6 +43,8 @@ export type BadgeSpec = {
   detail: string;
   /** Why it isn't earnable yet — shown only on "future" badges. */
   waitingOn?: string;
+  /** Why it stopped being awarded — shown only on "retired" badges. */
+  retiredBecause?: string;
 };
 
 export const BADGE_FAMILIES: {
@@ -135,9 +146,15 @@ export const BADGES: BadgeSpec[] = [
     name: "Full Horizon",
     family: "learning",
     ring: "gold",
-    status: "now",
+    status: "retired",
     howToEarn: "Finish everything published in one service",
     detail: "Every published cue and video in one service, finished.",
+    /* Spec §11, ruled 13 September. "Finish everything published in one
+       service" is now the literal definition of a Service Certification, and
+       paying twice for one act is a bug rather than generosity. The seal is the
+       reward; this badge was the placeholder standing in for it. */
+    retiredBecause:
+      "This is now a Service Certification — the seal replaced it.",
   },
 
   // ---- Performance — needs a second period of data ------------------------
@@ -220,10 +237,13 @@ export const BADGES: BadgeSpec[] = [
     name: "Big Wave",
     family: "mastery",
     ring: "gold",
-    status: "future",
-    howToEarn: "Earn a certification",
-    detail: "The master mark. The biggest single reward in the app.",
-    waitingOn: "Arrives with certifications.",
+    status: "now",
+    howToEarn: "Earn your first certification",
+    /* Spec §11. It read "Earn a certification", which with thirty-two tracks
+       would have fired thirty-two times while claiming to be "the biggest
+       single reward in the app". A thing that happens monthly is not the
+       biggest anything. Re-pointed to the FIRST one, which happens once. */
+    detail: "Your first certification. It only happens once.",
   },
   {
     key: "coach",
@@ -240,16 +260,31 @@ export const BADGES: BadgeSpec[] = [
     name: "Waterman",
     family: "mastery",
     ring: "gold",
-    status: "future",
-    howToEarn: "Get certified in every track",
-    detail: "A full quiver — certified across the board.",
-    waitingOn: "Arrives with certifications.",
+    status: "now",
+    howToEarn: "Hold all twelve craft certifications",
+    /* Spec §11. This was the old definition of Master, written before the
+       credential existed. Master is now a credential with a contribution
+       programme behind it, so Waterman keeps the achievement — every craft
+       track held — without pretending to be the credential. */
+    detail: "All twelve craft tracks held. A full quiver.",
   },
 ];
 
 export const BADGES_BY_KEY = new Map(BADGES.map((b) => [b.key, b]));
 
-/** The five wired to the streak engine today. */
+/**
+ * The earnable set — what the wall's "N of M" counts against.
+ *
+ * RETIRED BADGES ARE NOT IN HERE, and that is the whole point of the status:
+ * Full Horizon can still be held and still renders earned for whoever holds
+ * it, but nobody can newly earn it, so counting it in the denominator would
+ * describe a goal that cannot be reached.
+ */
 export const NOW_BADGE_KEYS = BADGES.filter((b) => b.status === "now").map(
   (b) => b.key
 );
+
+/** Retired: never awarded again, never withdrawn from anyone who holds one. */
+export const RETIRED_BADGE_KEYS = BADGES.filter(
+  (b) => b.status === "retired"
+).map((b) => b.key);

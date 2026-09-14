@@ -174,3 +174,9 @@ backups/
 # Local Python env for the Drop Zone transcription (faster-whisper).
 # Not a dependency of the app; see scripts/transcribe-dropzone.py.
 .venv-whisper/
+
+# Standalone test builds (see the test:* scripts).
+.tmp-cert/
+.tmp-si/
+.tmp-acc/
+.tmp-cpl/

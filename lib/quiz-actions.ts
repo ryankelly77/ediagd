@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { gradeAttempt } from "@/lib/quiz";
 import { moduleRequirementsMet } from "@/lib/lms";
+import { accrueFromModule } from "@/lib/certification-server";
 
 /**
  * Grade an attempt, then complete the module if that was the last requirement.
@@ -79,6 +80,16 @@ export async function submitQuiz(formData: FormData): Promise<void> {
             ref_id: moduleId,
             note: "Module completed",
           });
+        }
+
+        /*
+         * Passing the quiz can be the act that finishes the last module of a
+         * craft certification. Without this the library path would certify and
+         * the quiz path would not, and a course whose final requirement is its
+         * quiz would never certify anybody at all.
+         */
+        if (membership?.rooftop_id) {
+          await accrueFromModule(service, user.id, membership.rooftop_id, moduleId);
         }
       }
     }

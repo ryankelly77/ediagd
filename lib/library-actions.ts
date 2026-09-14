@@ -30,6 +30,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { moduleForItem, moduleRequirementsMet } from "@/lib/lms";
+import { accrueFromCompletion } from "@/lib/certification-server";
 
 export type CompleteResult =
   | {
@@ -41,6 +42,10 @@ export type CompleteResult =
       capped: boolean;
       /** The module this finished, if it finished one. Drives the celebration. */
       moduleCompleted: { moduleId: string; bonus: number } | null;
+      /** Certification slugs this completion earned. Usually empty. */
+      certifications: string[];
+      /** Set only on the completion that produced the credential itself. */
+      credential: { level: "certified" | "master"; certificateId: string } | null;
     }
   | { ok: false; error: string };
 
@@ -134,6 +139,8 @@ export async function completeLibraryItem(
         badges: [],
         capped: false,
         moduleCompleted: null,
+        certifications: [],
+        credential: null,
       };
     }
     return { ok: false, error: progressError.message };
@@ -179,7 +186,7 @@ export async function completeLibraryItem(
     }
   }
 
-  const badges = await awardLearningBadges(service, user.id, item.service_family);
+  const badges = await awardLearningBadges(service, user.id);
 
   // ---- 6. Did that finish a module? --------------------------------------
   const moduleCompleted = await maybeCompleteModule(
@@ -190,8 +197,23 @@ export async function completeLibraryItem(
     moduleBonus
   );
 
+  /*
+   * ---- 7. Did that finish a certification? --------------------------------
+   *
+   * AFTER the module completion, never before: a craft certification is earned
+   * when every module of its courses is complete, and the module that just
+   * finished is one of them. Running this first would miss the earn and only
+   * notice it on the NEXT completion — which, for the last item in a course,
+   * never comes.
+   *
+   * The service client is passed deliberately. These tables have no write
+   * policy for any session role; see lib/certification-server.ts.
+   */
+  const accrual = await accrueFromCompletion(service, user.id, rooftopId, contentId);
+
   revalidatePath("/library");
   revalidatePath("/badges");
+  if (accrual.earned.length > 0) revalidatePath("/certifications");
   return {
     ok: true,
     alreadyDone: false,
@@ -199,6 +221,8 @@ export async function completeLibraryItem(
     badges,
     capped,
     moduleCompleted,
+    certifications: accrual.earned,
+    credential: accrual.credential,
   };
 }
 
@@ -265,8 +289,7 @@ async function maybeCompleteModule(
 async function awardLearningBadges(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   service: any,
-  userId: string,
-  serviceFamily: string | null
+  userId: string
 ): Promise<string[]> {
   const { count } = await service
     .from("content_progress")
@@ -280,29 +303,18 @@ async function awardLearningBadges(
   if (done >= TEN) earned.push("ten_sunrises");
   if (done >= FIFTY) earned.push("fifty_sunrises");
 
-  // Full Horizon: every PUBLISHED item in this service family, finished.
-  if (serviceFamily) {
-    const [{ count: published }, { count: mine }] = await Promise.all([
-      service
-        .from("content")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "published")
-        .eq("service_family", serviceFamily),
-      service
-        .from("content_progress")
-        .select("id, content!inner(service_family, status)", {
-          count: "exact",
-          head: true,
-        })
-        .eq("user_id", userId)
-        .not("completed_at", "is", null)
-        .eq("content.service_family", serviceFamily)
-        .eq("content.status", "published"),
-    ]);
-
-    const total = Number(published ?? 0);
-    if (total > 0 && Number(mine ?? 0) >= total) earned.push("full_horizon");
-  }
+  /*
+   * ---- FULL HORIZON IS RETIRED, AND ITS QUERY IS GONE WITH IT --------------
+   *
+   * Spec §11, ruled 13 September: "finish everything published in one service"
+   * became the literal definition of a Service Certification, and two rewards
+   * for one act is a bug. The badge keeps its row in lib/badges.ts and anybody
+   * holding one keeps it — retire never deletes — but nothing grants it from
+   * here on, so the serviceFamily argument is gone from the signature too.
+   *
+   * Deleted rather than flagged off: it was two COUNT(*) round trips on every
+   * single content completion, for a badge that can no longer be earned.
+   */
 
   if (earned.length === 0) return [];
 

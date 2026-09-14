@@ -30,6 +30,14 @@ export type AdvisorSummary = {
   /** Families in 'pursue'; 0 under min volume. */
   pursueCount: number;
   families: ServiceFamily[];
+  /**
+   * "Certified" / "Master Certified", or null.
+   *
+   * NULL IS RENDERED AS NOTHING AT ALL, never as "Not certified". A manager
+   * roster marks who holds a credential; it does not score the rest of the team
+   * against one that no advisor in the company can currently earn.
+   */
+  credential?: "Certified" | "Master Certified" | null;
 };
 
 export type AdvisorTrend = {
@@ -111,6 +119,8 @@ export function summarizeAdvisor(input: {
    * set out to remove.
    */
   laborPerRoByFamily?: Record<string, number>;
+  /** Read-only, and absent for most advisors. See AdvisorSummary.credential. */
+  credential?: "Certified" | "Master Certified" | null;
 }): AdvisorSummary {
   const families = buildServiceFamilies(
     input.attach,
@@ -131,6 +141,7 @@ export function summarizeAdvisor(input: {
       ? families.filter((f) => f.status === "pursue").length
       : 0,
     families,
+    credential: input.credential ?? null,
   };
 }
 
