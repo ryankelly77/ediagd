@@ -32,6 +32,37 @@
    INK never has to be. One import, and the drift cannot regrow.
    ============================================================================ */
 
+/* ---------------------------------------------------------------------------
+   THE MASTER FILES THEMSELVES
+--------------------------------------------------------------------------- */
+
+/**
+ * The mark as the designer drew it, for every surface that can simply show it.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THESE ARE HERE AND NOT TYPED AT EACH CALL SITE
+ * ---------------------------------------------------------------------------
+ * The header, the auth shell and the certificate all render the same mark. Two
+ * of them had the path typed out inline, and the third — the certificate — used
+ * the hand-drawn <Logo> component instead and therefore printed the pre-palm
+ * mark on a document meant to be framed. That is the FOURTH instance of the
+ * drift this file's header describes, and it happened because "which file is
+ * the mark" was never written down anywhere a call site could import.
+ *
+ * The rule from the header applies exactly: geometry sometimes has to be
+ * hand-drawn — a layer that animates, or one the icon compiler needs as a
+ * separate file. A print document is not one of those. It shows the master.
+ *
+ * Enforced by test:brand-mark, which fails if any component references a mark
+ * file by a literal path rather than through these constants.
+ */
+export const MARK_SRC_LIGHT = "/brand/svg/ediagd-mark-primary-light.svg";
+
+/** The reverse, for navy grounds — the Master certificate and the app header's
+    dark surfaces. A separate FILE, not a CSS filter over the light one: the
+    reverse is drawn, with its own ring and cream fills. */
+export const MARK_SRC_DARK = "/brand/svg/ediagd-mark-primary-dark.svg";
+
 /** Ring and palm on a light ground. Master: ediagd-mark-primary-light.svg */
 export const MARK_NAVY = "#132a40";
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { usePathname } from "next/navigation";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { StreakChip } from "./StreakChip";
@@ -97,11 +98,10 @@ export function AppHeader({
             at its designed size once the text passes 100% — the words scale for
             legibility, the artwork does not need to.
           */}
-          <img
-            src="/brand/svg/ediagd-mark-primary-light.svg"
-            alt=""
+          <BrandMark
+            size="auto"
             className="w-auto shrink-0"
-            style={{ height: "min(3.5rem, 56px)" }}
+            style={{ height: "min(3.5rem, 56px)", width: "auto" }}
           />
 
           <span className="min-w-0">

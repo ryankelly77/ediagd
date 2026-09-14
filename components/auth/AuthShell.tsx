@@ -14,6 +14,7 @@
    words, one action per screen, and targets big enough to hit without looking.
    ============================================================================ */
 
+import { BrandMark } from "@/components/brand/BrandMark";
 import { useEffect, useRef } from "react";
 import { BRAND } from "@/lib/brand";
 
@@ -73,12 +74,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             }}
           />
           <div className="relative flex flex-col items-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/svg/ediagd-mark-primary-light.svg"
-              alt="EDIAGD"
-              className="h-20 w-auto"
-            />
+            <BrandMark alt="EDIAGD" size="auto" className="h-20 w-auto" style={{ height: undefined, width: "auto" }} />
             <span className="mt-3 font-display text-3xl tracking-[0.22em] text-navy">
               {BRAND.name}
             </span>

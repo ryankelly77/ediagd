@@ -26,7 +26,7 @@
    It is built to the mockup and tested against a fixture.
 ============================================================================ */
 
-import { Logo } from "@/components/brand/Logo";
+import { BrandMark } from "@/components/brand/BrandMark";
 import {
   certificateCopy,
   formatCertificateDate,
@@ -104,33 +104,46 @@ export function Certificate({
         }}
       />
 
-      {/* ---- Contents ---------------------------------------------------- */}
+      {/* ---- Contents ------------------------------------------------------
+          ABSOLUTELY POSITIONED AGAINST THE SHEET, not height:100% inside a
+          padded parent. The first version did the latter without box-sizing on
+          this element, so its own 1.05in of padding was ADDED to a height that
+          already filled the page: the column ran ~1in taller than the paper,
+          `margin-top:auto` pushed the footer to the bottom of the COLUMN rather
+          than the sheet, and the signature, the founder line, the verify URL
+          and the current-through date all printed past the page edge — while
+          an inch and a half of slack sat above them.
+
+          Every render assertion still passed, because every field was in the
+          markup. Being in the markup and being on the paper are different
+          claims, and only one of them is what a certificate is for.
+
+          Insets are absolute, so this box is the page box no matter what the
+          surrounding stylesheet does about box-sizing. */}
       <div
         style={{
-          position: "relative",
-          height: "100%",
+          position: "absolute",
+          top: "0.95in",
+          right: "1.25in",
+          bottom: "0.72in",
+          left: "1.25in",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: "0.55in 0.9in 0.5in",
+          /* SPACE-BETWEEN, so slack is shared between the three blocks instead
+             of accumulating in one gap above the footer. */
+          justifyContent: "space-between",
           textAlign: "center",
         }}
       >
-        {/* The mark. On Master the ring goes white and the disc goes navy by
-            overriding the two tokens Logo draws from — rather than forking the
-            SVG, which would be a second copy of the geometry to drift. */}
-        <div
-          style={
-            master
-              ? ({
-                  ["--ediagd-navy" as string]: "255 255 255",
-                  ["--ediagd-cream" as string]: "12 39 57",
-                } as React.CSSProperties)
-              : undefined
-          }
-        >
-          <Logo size={96} />
-        </div>
+        {/* ---- Head: mark, wordmark, ornament --------------------------- */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* THE MASTER FILE, not the hand-drawn <Logo>.
+            <Logo> is the pre-palm geometry; this document is framed on a wall,
+            and it was carrying a mark the rest of the product had stopped
+            using. Master takes the reverse file — drawn, not a filter over the
+            light one. Source of truth: lib/brand-ink.ts. */}
+        <BrandMark size={92} onDark={master} />
 
         <div
           style={{
@@ -180,10 +193,12 @@ export function Certificate({
             <span style={{ display: "block", width: "0.6in", height: "1.2pt", background: gold }} />
           )}
         </div>
+        </div>
 
+        {/* ---- Body: the citation ---------------------------------------- */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <div
           style={{
-            marginTop: "0.42in",
             fontSize: "9pt",
             letterSpacing: "0.26em",
             fontWeight: 700,
@@ -254,10 +269,15 @@ export function Certificate({
           </div>
         )}
 
-        {/* ---- Footer: id · signature · dates --------------------------- */}
+        </div>
+
+        {/* ---- Footer: id · signature · dates ----------------------------
+            No margin-top:auto. The column is space-between across three
+            groups, so the footer sits at the bottom of the PAGE BOX rather
+            than being pushed to the bottom of a column that might be taller
+            than the page. That distinction is the whole of defect 1. */}
         <div
           style={{
-            marginTop: "auto",
             width: "100%",
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr",
@@ -278,9 +298,19 @@ export function Certificate({
             {/* The URL is on the FACE, not only in the app. A certificate whose
                 verification lives somewhere you have to be told about is a
                 certificate nobody checks. */}
+            {/* ONE LINE, ALWAYS. At 8.5pt this wrapped after "EDG-C-2026-"
+                and dropped the last five digits onto a second line hard against
+                the inner frame — a certificate number split across a line break
+                is a number somebody mistypes. nowrap plus 7.5pt keeps the
+                longest id we can mint inside the column. */}
             <div
               data-testid="certificate-verify"
-              style={{ fontSize: "8.5pt", marginTop: "0.06in", color: inkSoft }}
+              style={{
+                fontSize: "7.5pt",
+                marginTop: "0.06in",
+                color: inkSoft,
+                whiteSpace: "nowrap",
+              }}
             >
               Verify at {verify.display}
             </div>

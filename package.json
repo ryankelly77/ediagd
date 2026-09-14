@@ -81,6 +81,8 @@
     "test:seal-ink": "rm -rf .tmp-si && tsc scripts/seal-ink-scenarios.ts --outDir .tmp-si --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-si/scripts/seal-ink-scenarios.js",
     "test:certification": "rm -rf .tmp-cert && tsc -p scripts/tsconfig.certification.json && mkdir -p .tmp-cert/node_modules && ln -sfn .. .tmp-cert/node_modules/@ && node .tmp-cert/scripts/certification-scenarios.js",
     "test:certificate": "rm -rf .tmp-cr && tsc -p scripts/tsconfig.certrender.json && mkdir -p .tmp-cr/node_modules && ln -sfn .. .tmp-cr/node_modules/@ && node .tmp-cr/scripts/certificate-render-scenarios.js",
+    "test:brand-mark": "rm -rf .tmp-bm && tsc scripts/brand-mark-scenarios.ts lib/brand-ink.ts --outDir .tmp-bm --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-bm/scripts/brand-mark-scenarios.js",
+    "test:certificate-print": "rm -rf .tmp-cr && tsc -p scripts/tsconfig.certrender.json && mkdir -p .tmp-cr/node_modules && ln -sfn .. .tmp-cr/node_modules/@ && node .tmp-cr/scripts/certificate-print-check.js",
     "accept:certification": "rm -rf .tmp-acc && tsc -p scripts/tsconfig.acceptance.json && mkdir -p .tmp-acc/node_modules && ln -sfn .. .tmp-acc/node_modules/@ && node .tmp-acc/scripts/certification-acceptance.js",
     "report:certifications": "rm -rf .tmp-cpl && tsc scripts/certification-punch-list.ts --outDir .tmp-cpl --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-cpl/certification-punch-list.js"
   },

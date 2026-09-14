@@ -16,8 +16,10 @@
   },
   "include": [
     "./certificate-render-scenarios.ts",
+    "./certificate-print-check.ts",
     "../components/certificate/Certificate.tsx",
-    "../components/brand/Logo.tsx",
+    "../components/brand/BrandMark.tsx",
+    "../lib/brand-ink.ts",
     "../lib/certificate.ts",
     "../lib/gamification/streak.ts"
   ]
