@@ -30,7 +30,13 @@ import {
   accrueFromModule,
   recomputeCredential,
 } from "@/lib/certification-server";
-import { computeCredential, currentThrough } from "@/lib/certification";
+import { loadCertifications, loadCredentialCard } from "@/lib/certifications";
+import {
+  computeCredential,
+  credentialCurrencyLine,
+  credentialState,
+  currentThrough,
+} from "@/lib/certification";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 const URL = process.env.SB_URL!;
@@ -314,9 +320,13 @@ async function main() {
     .eq("user_id", advisor)
     .maybeSingle();
   const first1 = need(firstRow, "the first advisor_certification");
-  ok("current_through is one year from the rooftop's earning day",
-    first1.current_through === currentThrough(today),
-    `${today} -> ${first1.current_through} (earned_at ${first1.earned_at.slice(0, 10)} UTC)`);
+  ok("earned_at records the day the work was finished",
+    first1.earned_at.slice(0, 10).length === 10, first1.earned_at);
+  /* current_through is still written because the column is NOT NULL, and is
+     inert — 0122. Asserted so that its continued presence is deliberate rather
+     than something a future reader mistakes for a live rule. */
+  ok("current_through is still populated but governs nothing",
+    first1.current_through === currentThrough(today), first1.current_through);
   ok("source records how it was earned", first1.source === "accrued", first1.source);
 
   /* Re-running must not double-earn. */
@@ -365,7 +375,7 @@ async function main() {
   const holdings = core.map((c) => ({
     slug: c.slug,
     isCore: true,
-    currentThrough: "2099-01-01" as IsoDate,
+    earnedOn: "2020-01-01" as IsoDate,   // ancient on purpose: age is irrelevant
   }));
   ok("the completeness guard REFUSES a filtered input (7 of 8)",
     computeCredential(holdings.slice(0, 7), today, core.length) === null);
@@ -375,45 +385,100 @@ async function main() {
     computeCredential(holdings, today, 0) === null);
 
   /* ---------------------------------------------------------------------- */
-  section("4. lapse never revokes");
+  section("4. a track is held permanently — the credential carries the year");
 
-  const lapsed = core[0];
+  /*
+   * THE SCENARIO THAT FAILED BEFORE THIS RULE, and the reason for the whole
+   * change. Age the first track past a year and re-derive: under annual track
+   * currency the credential refused, because the first constituent had lapsed
+   * while the advisor was still climbing. It must now compute.
+   */
+  const aged = core[0];
   await sb
     .from("advisor_certification")
-    .update({ current_through: "2020-01-01" })
+    .update({ earned_at: "2024-01-15T09:00:00Z", current_through: "2025-01-15" })
     .eq("user_id", advisor)
-    .eq("certification_id", lapsed.id);
+    .eq("certification_id", aged.id);
 
-  const afterLapse = await recomputeCredential(sb as never, advisor, today);
-  ok("with one constituent lapsed the credential does not recompute",
-    afterLapse === null || afterLapse.certificateId === cred1.certificate_id);
+  const afterAging = await recomputeCredential(sb as never, advisor, today);
+  ok("a core track earned years ago still counts — the credential holds",
+    afterAging?.level === "certified", JSON.stringify(afterAging));
+  ok("...and it is the SAME certificate id, not a re-issue",
+    afterAging?.certificateId === cred1.certificate_id,
+    `${afterAging?.certificateId} vs ${cred1.certificate_id}`);
 
   const { data: stillHeld } = await sb
     .from("advisor_certification")
-    .select("certification_id")
+    .select("certification_id, current_through")
     .eq("user_id", advisor)
-    .eq("certification_id", lapsed.id)
+    .eq("certification_id", aged.id)
     .maybeSingle();
-  ok("the lapsed certification is STILL HELD — nothing stripped", stillHeld != null);
+  ok("nothing retracted the track", stillHeld != null);
+  ok("its current_through is in the past and nothing cares",
+    String(need(stillHeld, "aged track").current_through) < today,
+    String(stillHeld?.current_through));
 
-  const { count: credStill } = await sb
-    .from("advisor_credential")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", advisor);
-  ok("the credential row is not deleted either", credStill === 1);
+  /* THE HARDER VERSION: a fresh advisor who earns everything across a span
+     longer than a year. Nothing is being patched after the fact here — the
+     credential is computed for the first time from constituents of mixed age. */
+  {
+    const slow = await makeUser("advisor");
+    for (const c of core) {
+      await completeModule(slow, moduleOf.get(c.id)!);
+      await accrueFromModule(sb as never, slow, rooftopId, moduleOf.get(c.id)!);
+    }
+    /* Push the earliest four back beyond the old one-year window. */
+    const { data: slowHeld } = await sb
+      .from("advisor_certification")
+      .select("id")
+      .eq("user_id", slow)
+      .limit(4);
+    for (const row of (slowHeld ?? []) as { id: string }[]) {
+      await sb
+        .from("advisor_certification")
+        .update({ earned_at: "2024-02-01T09:00:00Z", current_through: "2025-02-01" })
+        .eq("id", row.id);
+    }
+    await sb.from("advisor_credential").delete().eq("user_id", slow);
+    const fresh = await recomputeCredential(sb as never, slow, today);
+    ok("an eight-track climb spanning more than a year certifies",
+      fresh?.level === "certified", JSON.stringify(fresh));
+    ok("...and the credential's year starts TODAY, not at the oldest track",
+      fresh ? true : false);
 
-  /* Renew it. */
+    const { data: freshRow } = await sb
+      .from("advisor_credential")
+      .select("current_through")
+      .eq("user_id", slow)
+      .maybeSingle();
+    ok("the credential is current for a year from now",
+      need(freshRow, "fresh credential").current_through === currentThrough(today),
+      `${freshRow?.current_through} vs ${currentThrough(today)}`);
+  }
+
+  /* ---- the credential is the thing that can lapse --------------------- */
   await sb
-    .from("advisor_certification")
-    .update({ current_through: currentThrough(today), renewed_at: new Date().toISOString() })
-    .eq("user_id", advisor)
-    .eq("certification_id", lapsed.id);
+    .from("advisor_credential")
+    .update({ current_through: "2020-01-01" })
+    .eq("user_id", advisor);
 
-  const restored = await recomputeCredential(sb as never, advisor, today);
-  ok("renewing restores the credential", restored?.level === "certified");
-  ok("...and it is the SAME certificate id, not a new one",
-    restored?.certificateId === cred1.certificate_id,
-    `${restored?.certificateId} vs ${cred1.certificate_id}`);
+  const { data: lapsedCred } = await sb
+    .from("advisor_credential")
+    .select("certificate_id, current_through")
+    .eq("user_id", advisor)
+    .maybeSingle();
+  ok("a lapsed credential is not deleted", lapsedCred != null);
+  ok("...and reads lapsed",
+    credentialState(String(need(lapsedCred, "credential").current_through) as IsoDate, today) === "lapsed");
+  ok("...in clay, never red, never stripped",
+    credentialCurrencyLine(String(lapsedCred?.current_through) as IsoDate, today) ===
+      "Renew to stay current");
+
+  /* Restore it for the sections that follow. */
+  await sb
+    .from("advisor_credential")
+    .update({ current_through: cred1.current_through })
+    .eq("user_id", advisor);
 
   /* ---------------------------------------------------------------------- */
   section("5. a re-shoot un-completes nobody");
@@ -1021,6 +1086,47 @@ async function main() {
       !visible.includes("did you mean") && !visible.includes("search") &&
       !visible.includes("format") && !visible.includes("try"),
       visible.slice(0, 120));
+  }
+
+  /* ---------------------------------------------------------------------- */
+  section("14. no track renders a currency date");
+
+  /*
+   * THE COPY, NOT THE LOGIC. Every other assertion here checks the field the
+   * code now reads — so a hardcoded "Current through" left in a screen would
+   * pass all of them and still tell an advisor their track expires. This asks
+   * the real loader for the strings it will put on the page.
+   */
+  {
+    const view = await loadCertifications(sb as never, advisor, today);
+    const held = view.tiles.filter((t) => t.state === "held");
+    ok("the fixture advisor holds tracks to inspect", held.length > 0, `${held.length}`);
+
+    const lines = held.map((t) => t.currency ?? "");
+    ok("every held track says 'Earned …'",
+      lines.every((l) => l.startsWith("Earned ")), JSON.stringify(lines.slice(0, 3)));
+    ok("no track line says 'Current through'",
+      !lines.some((l) => l.includes("Current through")), JSON.stringify(lines.filter((l) => l.includes("Current through"))));
+    ok("no track line says 'Renew'",
+      !lines.some((l) => l.includes("Renew")));
+    ok("no track line says 'lapsed' or 'expire'",
+      !lines.some((l) => /laps|expir/i.test(l)));
+
+    /* The aged track from section 4 — the one whose current_through is years in
+       the past — must read exactly like any other held track. */
+    const agedTile = view.tiles.find((t) => t.id === aged.id);
+    ok("the track earned in 2024 reads as plainly earned",
+      (agedTile?.currency ?? "").startsWith("Earned 2024-"), agedTile?.currency ?? "(none)");
+
+    /* And the credential is where the currency DOES appear. */
+    ok("the credential card carries the currency instead",
+      /Current through|Renew to stay current/.test(view.credential?.currency ?? ""),
+      view.credential?.currency ?? "(no credential)");
+
+    const card = await loadCredentialCard(sb as never, advisor, today);
+    ok("the profile card says the same thing",
+      /Current through|Renew to stay current/.test(card?.currency ?? ""),
+      card?.currency ?? "(none)");
   }
 
   /* ---------------------------------------------------------------------- */

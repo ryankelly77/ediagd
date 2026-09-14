@@ -52,37 +52,95 @@ export function isCurrent(through: IsoDate | null, today: IsoDate): boolean {
    A SINGLE CERTIFICATION
 --------------------------------------------------------------------------- */
 
+/**
+ * ---------------------------------------------------------------------------
+ * A TRACK, ONCE EARNED, IS HELD PERMANENTLY
+ * ---------------------------------------------------------------------------
+ * It does not expire, and there is no date on which it stops counting. What it
+ * carries is the day it was earned.
+ *
+ * THIS REPLACES ANNUAL CURRENCY ON TRACKS, AND THE REASON MATTERS BECAUSE THE
+ * OLD RULE LOOKED CORRECT. Each track used to be current for a year from the
+ * day it was earned, and EDIAGD Certified required all eight current at once.
+ * That silently assumed the eight could be collected inside twelve months.
+ *
+ * They cannot. The four finished core courses run 29–56 items; at 300–400 items
+ * for the full eight, the first track is earned around day 61 and the eighth
+ * somewhere past day 440 — so the first has lapsed about two weeks before the
+ * last is earned, and the credential can never compute. The advisor does every
+ * piece of the work and is refused, correctly, by a rule that assumed a
+ * renewal path which did not exist.
+ *
+ * It matches ASE, too: their window is long relative to how fast the specialty
+ * certifications can be stacked. Ours was shorter than the climb, which is the
+ * actual defect.
+ *
+ * THE CURRENCY MOVED TO THE CREDENTIAL, which is where it does retention work
+ * anyway — on somebody who has something to maintain rather than somebody still
+ * earning one — and it collapses renewal from eight refreshers a year to one.
+ * Ten minutes for the advisor instead of eighty, and one refresher for Mitch to
+ * write instead of thirty.
+ *
+ * The accepted cost, stated plainly: a Certified advisor may hold a track they
+ * last touched years ago. The credential is the public claim and the credential
+ * is what must be renewed, so the honesty lives where anybody can check it.
+ */
 export type CertificationHolding = {
   slug: string;
   isCore: boolean;
-  /** Null when never earned. */
-  currentThrough: IsoDate | null;
+  /** The day it was earned. Null when never earned. */
+  earnedOn: IsoDate | null;
 };
 
-export type CertificationState = "current" | "lapsed" | "unearned";
+/** A track is held or it is not. There is no third state and no clock. */
+export type CertificationState = "held" | "unearned";
 
-/**
- * NOTE THERE IS NO "revoked". A lapsed certification is one an advisor holds
- * and needs to renew; the seal still renders earned and the badge is never
- * stripped. The only thing that changes is a line of copy.
- */
 export function certificationState(
-  holding: Pick<CertificationHolding, "currentThrough">,
-  today: IsoDate
+  holding: Pick<CertificationHolding, "earnedOn">
 ): CertificationState {
-  if (!holding.currentThrough) return "unearned";
-  return isCurrent(holding.currentThrough, today) ? "current" : "lapsed";
+  return holding.earnedOn ? "held" : "unearned";
 }
 
-/** "renew to stay current" — clay at most, never red. Design law 3. */
-export function currencyLine(
-  holding: Pick<CertificationHolding, "currentThrough">,
-  today: IsoDate
+/**
+ * "Earned 14 March 2027", or nothing at all.
+ *
+ * NOT "Current through". A track that cannot lapse must not display a currency
+ * date — that would be the screen asserting something the engine no longer
+ * believes, and the first person to notice would be an advisor wondering what
+ * happens when the date passes. Nothing happens. So the date shown is the one
+ * that means something: when they did the work.
+ */
+export function earnedLine(
+  holding: Pick<CertificationHolding, "earnedOn">
 ): string | null {
-  const state = certificationState(holding, today);
-  if (state === "unearned") return null;
-  if (state === "current") return `Current through ${holding.currentThrough}`;
-  return "Renew to stay current";
+  return holding.earnedOn ? `Earned ${holding.earnedOn}` : null;
+}
+
+/* ---------------------------------------------------------------------------
+   THE CREDENTIAL'S OWN CURRENCY — the only clock left
+--------------------------------------------------------------------------- */
+
+export type CredentialCurrency = "current" | "lapsed";
+
+export function credentialState(
+  currentThrough: IsoDate,
+  today: IsoDate
+): CredentialCurrency {
+  return isCurrent(currentThrough, today) ? "current" : "lapsed";
+}
+
+/**
+ * "renew to stay current" — clay at most, never red. Design law 3, which did
+ * not change: it simply applies to the credential now, which is the thing that
+ * can actually go out of date.
+ */
+export function credentialCurrencyLine(
+  currentThrough: IsoDate,
+  today: IsoDate
+): string {
+  return credentialState(currentThrough, today) === "current"
+    ? `Current through ${currentThrough}`
+    : "Renew to stay current";
 }
 
 /* ---------------------------------------------------------------------------
@@ -93,27 +151,39 @@ export type CredentialLevel = "certified" | "master";
 
 export type ComputedCredential = {
   level: CredentialLevel;
-  /** The earliest current_through among the constituents. */
+  /**
+   * One year from the day the CREDENTIAL was earned.
+   *
+   * Not the earliest constituent any more. The constituents no longer carry
+   * dates that expire, so there is no "weakest part" to be only as current as —
+   * the credential's clock starts when the credential does.
+   */
   currentThrough: IsoDate;
   /** Which certifications it was computed from — the audit trail. */
   from: string[];
 };
 
 /**
- * EDIAGD Certified: all eight core craft certifications, HELD AND CURRENT.
+ * EDIAGD Certified: all eight core craft certifications HELD.
  *
  * ---------------------------------------------------------------------------
- * WHY "held and current" IS ONE TEST AND NOT TWO
+ * HELD, NOT HELD-AND-CURRENT — AND THE OLD COMMENT ARGUED THE OPPOSITE
  * ---------------------------------------------------------------------------
- * A credential composed of eight things is only as true as its weakest part,
- * so the credential's own current_through is the EARLIEST among them. That
- * single rule does all the work: let one constituent lapse and the credential's
- * date falls into the past on its own, with nothing to revoke and no second
- * "is it still valid" flag that could disagree with the dates it was computed
- * from.
+ * What used to be here was a defence of the rule this replaces: that a
+ * credential is only as true as its weakest part, so its date should be the
+ * earliest among its constituents. It reads well. It was also the bug, and a
+ * confident comment defending a wrong rule is how a fix gets reverted in six
+ * months by somebody who trusts the prose — so it is gone rather than softened.
  *
- * Renew the lapsed one and the earliest date moves forward again — the
- * credential restores itself, because it was never withdrawn.
+ * The rule assumed the eight tracks could be collected inside the year each one
+ * stayed current. They cannot: see the note on CertificationHolding above. The
+ * first track lapsed before the eighth was earned, so the credential could
+ * never compute for anybody who actually did the work.
+ *
+ * A track is now held permanently and the CREDENTIAL carries the year. There is
+ * no weakest part to be only as current as, and nothing here consults a clock
+ * to decide whether a constituent still counts — `today` is used only to date
+ * the credential being granted.
  *
  * MASTER IS DEFINED AND UNREACHABLE. The level exists in the type and in the
  * database check constraint; nothing computes it. Its shape is the contribution
@@ -151,17 +221,22 @@ export function computeCredential(
   /* The caller was handed a partial list. Refuse rather than conclude. */
   if (core.length !== coreCount) return null;
 
-  const currentCore = core.filter((h) => certificationState(h, today) === "current");
-  if (currentCore.length !== core.length) return null;
-
-  const earliest = currentCore
-    .map((h) => h.currentThrough as IsoDate)
-    .sort()[0];
+  /*
+   * HELD, NOT HELD-AND-CURRENT. This one word is the whole fix.
+   *
+   * The old line filtered to constituents that were still current, and that is
+   * what made the credential unreachable: by the time the eighth track is
+   * earned the first has aged past a year, so the filter dropped it and the
+   * count never matched. Nothing was broken — the rule was wrong.
+   */
+  const heldCore = core.filter((h) => certificationState(h) === "held");
+  if (heldCore.length !== core.length) return null;
 
   return {
     level: "certified",
-    currentThrough: earliest,
-    from: currentCore.map((h) => h.slug).sort(),
+    /* The credential's year starts NOW, on the day the eighth track lands. */
+    currentThrough: currentThrough(today),
+    from: heldCore.map((h) => h.slug).sort(),
   };
 }
 
@@ -181,7 +256,7 @@ export function coreProgressLine(
   coreCount: number
 ): string {
   const core = holdings.filter((h) => h.isCore);
-  const have = core.filter((h) => certificationState(h, today) === "current").length;
+  const have = core.filter((h) => certificationState(h) === "held").length;
   const total = coreCount;
   if (total === 0) return "The core eight are not published yet";
   const left = total - have;

@@ -191,9 +191,10 @@ export default async function ProfilePage() {
             <p className="ediagd-numeral break-all text-xs text-ink-soft">
               {credential.certificateId}
             </p>
-            <p className="mt-1 text-sm text-ink-soft">
-              Current through {credential.currentThrough}
-            </p>
+            {/* THE CREDENTIAL IS WHAT LAPSES NOW. Clay at most, never red,
+                never stripped — design law 3, applied to the thing that can
+                actually go out of date. */}
+            <p className="mt-1 text-sm text-ink-soft">{credential.currency}</p>
             <p className="text-sm text-ink-soft">{credential.rungLine}</p>
             {/* THE BUTTON EXISTS ONLY WHEN THERE IS SOMETHING TO PRINT. It sits
                 inside the credential block, so "no credential, no button" is

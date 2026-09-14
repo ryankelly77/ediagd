@@ -19,8 +19,10 @@ import {
   computeCredential,
   coreBuildLine,
   coreProgressLine,
-  currencyLine,
+  credentialCurrencyLine,
+  credentialState,
   currentThrough,
+  earnedLine,
   isCurrent,
   moduleComplete,
   type CertificationHolding,
@@ -65,13 +67,32 @@ check("never earned is not current", isCurrent(null, TODAY), false);
 
 /* ---- 2. A single certification ------------------------------------------- */
 
-section("2. lapsed is never revoked");
-check("unearned", certificationState({ currentThrough: null }, TODAY), "unearned");
-check("current", certificationState({ currentThrough: d("2027-01-01") }, TODAY), "current");
-check("lapsed — still a state you HOLD", certificationState({ currentThrough: d("2026-01-01") }, TODAY), "lapsed");
-check("copy is never red", currencyLine({ currentThrough: d("2026-01-01") }, TODAY), "Renew to stay current");
-check("current says the date", currencyLine({ currentThrough: d("2027-01-01") }, TODAY), "Current through 2027-01-01");
-check("unearned says nothing", currencyLine({ currentThrough: null }, TODAY), null);
+section("2. a track, once earned, is held permanently");
+check("unearned", certificationState({ earnedOn: null }), "unearned");
+check("earned", certificationState({ earnedOn: d("2027-01-01") }), "held");
+/* THE POINT: age is irrelevant. A track earned years ago is held exactly as
+   much as one earned this morning — there is no third state to fall into. */
+check("earned years ago is still just held",
+  certificationState({ earnedOn: d("2019-01-01") }), "held");
+check("the line names the day the work was done",
+  earnedLine({ earnedOn: d("2027-01-01") }), "Earned 2027-01-01");
+check("an ancient one says the same thing",
+  earnedLine({ earnedOn: d("2019-01-01") }), "Earned 2019-01-01");
+check("unearned says nothing", earnedLine({ earnedOn: null }), null);
+/* A track must never display a currency date — that is the screen asserting
+   something the engine no longer believes. */
+check("no track line ever says 'Current through'",
+  earnedLine({ earnedOn: d("2019-01-01") })!.includes("Current through"), false);
+check("nor 'Renew'",
+  earnedLine({ earnedOn: d("2019-01-01") })!.includes("Renew"), false);
+
+section("   the credential is the only thing that can lapse");
+check("current", credentialState(d("2027-01-01"), TODAY), "current");
+check("lapsed", credentialState(d("2026-01-01"), TODAY), "lapsed");
+check("current says the date",
+  credentialCurrencyLine(d("2027-01-01"), TODAY), "Current through 2027-01-01");
+check("copy is never red",
+  credentialCurrencyLine(d("2026-01-01"), TODAY), "Renew to stay current");
 
 /* ---- 3. Earning --------------------------------------------------------- */
 
@@ -96,20 +117,20 @@ check("progress halfway", certificationProgress([mod(true, null), mod(false, nul
 /* ---- 4. The credential --------------------------------------------------- */
 
 section("4. EDIAGD Certified computes, never granted");
-const core = (n: number, through: IsoDate | null): CertificationHolding[] =>
+const core = (n: number, earned: IsoDate | null): CertificationHolding[] =>
   Array.from({ length: n }, (_, i) => ({
     slug: `craft-core-${i + 1}`,
     isCore: true,
-    currentThrough: through,
+    earnedOn: earned,
   }));
 
-check("eight current core -> certified", computeCredential(core(8, d("2027-06-01")), TODAY, 8)?.level, "certified");
+check("eight core held -> certified", computeCredential(core(8, d("2027-06-01")), TODAY, 8)?.level, "certified");
 check("seven of eight -> nothing", computeCredential([...core(7, d("2027-06-01")), ...core(1, null)], TODAY, 8), null);
 check("empty catalogue is NOT everyone certified", computeCredential([], TODAY, 8), null);
 check(
   "non-core holdings do not count toward it",
   computeCredential(
-    [...core(7, d("2027-06-01")), { slug: "service-brakes", isCore: false, currentThrough: d("2027-06-01") }],
+    [...core(7, d("2027-06-01")), { slug: "service-brakes", isCore: false, earnedOn: d("2027-06-01") }],
     TODAY,
     8
   ),
@@ -125,30 +146,39 @@ check(
 );
 check("a core count of zero is never a credential", computeCredential(core(8, d("2027-06-01")), TODAY, 0), null);
 
-section("   the credential is only as current as its weakest part");
+section("   THE COLLISION THIS RULE EXISTS TO FIX");
 {
-  const mixed: CertificationHolding[] = [
-    ...core(7, d("2027-06-01")),
-    { slug: "craft-core-8", isCore: true, currentThrough: d("2026-11-02") },
+  /*
+   * The scenario that failed before: an advisor earns the first track, spends
+   * more than a year working through the rest, and finishes the eighth. Under
+   * annual track currency the first had lapsed and the credential refused —
+   * for somebody who had done every single item.
+   */
+  const longClimb: CertificationHolding[] = [
+    { slug: "craft-core-1", isCore: true, earnedOn: d("2025-01-15") }, // over 18 months ago
+    ...core(7, d("2026-08-01")).map((h, i) => ({ ...h, slug: `craft-core-${i + 2}` })),
   ];
-  check("current_through is the EARLIEST constituent", computeCredential(mixed, TODAY, 8)?.currentThrough, "2026-11-02");
+  check("a track earned eighteen months ago still counts",
+    computeCredential(longClimb, TODAY, 8)?.level, "certified");
+  check("...and the oldest one is in the audit trail",
+    computeCredential(longClimb, TODAY, 8)?.from.includes("craft-core-1"), true);
 }
 
-section("   lapse one, the credential stops computing — and nothing is revoked");
+section("   the credential's year starts when the credential does");
 {
-  const lapsed: CertificationHolding[] = [
-    ...core(7, d("2027-06-01")),
-    { slug: "craft-core-8", isCore: true, currentThrough: d("2026-01-01") },
-  ];
-  check("credential does not compute", computeCredential(lapsed, TODAY, 8), null);
-  check("but the lapsed one is still HELD", certificationState(lapsed[7], TODAY), "lapsed");
+  const held = core(8, d("2020-01-01")); // all ancient
+  check("not the earliest constituent",
+    computeCredential(held, TODAY, 8)?.currentThrough, currentThrough(TODAY));
+  check("a year from today", computeCredential(held, TODAY, 8)?.currentThrough, "2027-09-13");
+}
 
-  /* Renewal restores it, because nothing was taken away. */
-  const renewed = lapsed.map((h) =>
-    h.slug === "craft-core-8" ? { ...h, currentThrough: currentThrough(TODAY) } : h
-  );
-  check("renew -> credential returns", computeCredential(renewed, TODAY, 8)?.level, "certified");
-  check("…dated by the new weakest part", computeCredential(renewed, TODAY, 8)?.currentThrough, "2027-06-01");
+section("   an unearned core track still refuses");
+{
+  const missing: CertificationHolding[] = [...core(7, d("2027-06-01")), ...core(1, null)];
+  check("seven held and one never earned -> nothing",
+    computeCredential(missing, TODAY, 8), null);
+  check("and the unearned one reads unearned, not lapsed",
+    certificationState(missing[7]), "unearned");
 }
 
 section("   Master is defined and unreachable");
@@ -167,9 +197,18 @@ check(
   "5 of 8 core — 3 from EDIAGD Certified"
 );
 check("all eight", coreProgressLine(core(8, d("2027-06-01")), TODAY, 8), "8 of 8 core — EDIAGD Certified");
+/* THE OLD ASSERTION SAID THE OPPOSITE — that a lapsed core track dropped out of
+   the rung count. That was the annual-track-currency rule, and it is the reason
+   the rung could go backwards while somebody was still climbing. A held track
+   counts, however old. */
 check(
-  "a lapsed core does not count toward the rung",
-  coreProgressLine([...core(7, d("2027-06-01")), ...core(1, d("2026-01-01"))], TODAY, 8),
+  "an ancient core track still counts toward the rung",
+  coreProgressLine([...core(7, d("2027-06-01")), ...core(1, d("2019-01-01"))], TODAY, 8),
+  "8 of 8 core — EDIAGD Certified"
+);
+check(
+  "only an UNEARNED one is missing from it",
+  coreProgressLine([...core(7, d("2027-06-01")), ...core(1, null)], TODAY, 8),
   "7 of 8 core — 1 from EDIAGD Certified"
 );
 check("nothing published yet", coreProgressLine([], TODAY, 0), "The core eight are not published yet");

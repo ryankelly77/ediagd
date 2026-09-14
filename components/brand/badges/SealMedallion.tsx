@@ -36,12 +36,18 @@
    dynamic.
 
    ---------------------------------------------------------------------------
-   LAPSED IS NOT A THIRD PICTURE
+   THERE IS NO LAPSED SEAL, BECAUSE A TRACK CANNOT LAPSE
    ---------------------------------------------------------------------------
-   Design law 3: lapsed is never revoked, "clay at most, never red, and the
-   badge is never stripped". A lapsed certification therefore renders EARNED —
-   the seal it earned — and the currency is said in words beside it. Nothing
-   here dims, greys or crosses out a thing somebody genuinely holds.
+   A track certification, once earned, is held permanently — the annual currency
+   moved to the credential, which is the thing that can go out of date. So a
+   seal has two states and not three: earned, and not yet.
+
+   This was already how it rendered. The previous note defended the same two
+   pictures on different grounds (design law 3 — a lapsed certification still
+   renders earned, with the currency said in words beside it), and that
+   reasoning is now simply unreachable for tracks. Nothing here dims, greys or
+   crosses out a thing somebody holds; there is no longer even a state in which
+   it could.
 ============================================================================ */
 
 import { sealHref } from "@/lib/brand-seal-ink";

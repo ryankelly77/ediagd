@@ -77,7 +77,7 @@ export default async function CertificationsPage() {
               {view.credential.certificateId}
             </p>
             <p className="mt-0.5 text-xs text-ink-soft">
-              Current through {view.credential.currentThrough}
+              {view.credential.currency}
             </p>
           </div>
         </Card>
@@ -169,8 +169,11 @@ function Tile({ tile }: { tile: CertificationTile }) {
  * itself.
  */
 function statusLine(t: CertificationTile): string {
-  if (t.state === "current") return t.currency ?? "Earned";
-  if (t.state === "lapsed") return "Renew to stay current";
+  /* HELD IS THE END STATE. A track does not lapse, so there is no "renew"
+     branch here any more — the date shown is the day it was earned. The
+     credential is the thing that can go out of date, and it says so on its own
+     card above. */
+  if (t.state === "held") return t.currency ?? "Earned";
   if (!t.active) return "Coming soon";
 
   if (t.itemCount > 0 && t.doneItems >= t.itemCount) {

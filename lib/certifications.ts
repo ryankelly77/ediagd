@@ -12,7 +12,8 @@ import {
   certificationState,
   coreBuildLine,
   coreProgressLine,
-  currencyLine,
+  credentialCurrencyLine,
+  earnedLine,
   type CertificationHolding,
   type CertificationState,
 } from "@/lib/certification";
@@ -43,9 +44,17 @@ export type CertificationTile = {
   doneModules: number;
 
   earnedAt: string | null;
-  currentThrough: IsoDate | null;
+  /*
+   * There is deliberately no `currentThrough` here.
+   *
+   * The DB column survives because it is NOT NULL and because we retire rather
+   * than delete — but carrying it onto the tile would put a live-looking,
+   * unread date in front of every screen, which is how a retired rule gets
+   * wired back up by someone who assumes a field exists to be used. What the
+   * screens need is earnedAt. See 0122.
+   */
   state: CertificationState;
-  /** "Current through 2027-03-01" / "Renew to stay current" / null. */
+  /** "Earned 2027-03-14", or null when never earned. */
   currency: string | null;
 };
 
@@ -62,6 +71,8 @@ export type CertificationsView = {
     certificateId: string;
     currentThrough: IsoDate;
     earnedAt: string;
+    /** "Current through …" / "Renew to stay current" — the only clock left. */
+    currency: string;
   } | null;
 };
 
@@ -90,7 +101,7 @@ export async function loadCertifications(
         .order("sort"),
       client
         .from("advisor_certification")
-        .select("certification_id, earned_at, current_through")
+        .select("certification_id, earned_at")
         .eq("user_id", userId),
       client.rpc("my_certification_progress"),
       client
@@ -105,7 +116,6 @@ export async function loadCertifications(
     ((held ?? []) as {
       certification_id: string;
       earned_at: string;
-      current_through: string;
     }[]).map((h) => [h.certification_id, h])
   );
 
@@ -122,7 +132,10 @@ export async function loadCertifications(
   const tiles: CertificationTile[] = ((catalogue ?? []) as any[]).map((c) => {
     const mine = heldBy.get(c.id);
     const p = progressBy.get(c.id);
-    const currentThrough = (mine?.current_through as IsoDate | undefined) ?? null;
+    /* The day it was earned is the only date a track has that means anything. */
+    const earnedOn = ((mine?.earned_at as string | undefined)?.slice(0, 10) ?? null) as
+      | IsoDate
+      | null;
 
     return {
       id: c.id,
@@ -139,9 +152,8 @@ export async function loadCertifications(
       totalModules: Number(p?.total_modules ?? 0),
       doneModules: Number(p?.done_modules ?? 0),
       earnedAt: (mine?.earned_at as string | undefined) ?? null,
-      currentThrough,
-      state: certificationState({ currentThrough }, today),
-      currency: currencyLine({ currentThrough }, today),
+      state: certificationState({ earnedOn }),
+      currency: earnedLine({ earnedOn }),
     };
   });
 
@@ -153,7 +165,7 @@ export async function loadCertifications(
   const holdings: CertificationHolding[] = coreTiles.map((t) => ({
     slug: t.slug,
     isCore: true,
-    currentThrough: t.currentThrough,
+    earnedOn: (t.earnedAt?.slice(0, 10) as IsoDate | undefined) ?? null,
   }));
 
   /* "Still being built" means exactly what the Coming Soon grid holds: not
@@ -167,13 +179,14 @@ export async function loadCertifications(
     rungLine: coreProgressLine(holdings, today, coreTiles.length),
     buildLine: coreBuildLine(coreTiles.length, unbuiltCore),
     coreCount: coreTiles.length,
-    coreHeld: coreTiles.filter((t) => t.state === "current").length,
+    coreHeld: coreTiles.filter((t) => t.state === "held").length,
     credential: cred
       ? {
           level: cred.level,
           certificateId: cred.certificate_id,
           currentThrough: cred.current_through,
           earnedAt: cred.earned_at,
+          currency: credentialCurrencyLine(cred.current_through as IsoDate, today),
         }
       : null,
   };
@@ -183,6 +196,8 @@ export type CredentialCard = {
   level: "certified" | "master";
   certificateId: string;
   currentThrough: IsoDate;
+  /** "Current through …" / "Renew to stay current". */
+  currency: string;
   /** "8 of 8 core — EDIAGD Certified" */
   rungLine: string;
   /** How many certifications they hold in total, current or lapsed. */
@@ -219,27 +234,30 @@ export async function loadCredentialCard(
     client.from("certification").select("id, slug").eq("is_core", true),
     client
       .from("advisor_certification")
-      .select("certification_id, current_through")
+      .select("certification_id, earned_at")
       .eq("user_id", userId),
   ]);
 
   const coreRows = (core ?? []) as { id: string; slug: string }[];
   const heldRows = (held ?? []) as {
     certification_id: string;
-    current_through: string;
+    earned_at: string;
   }[];
-  const heldBy = new Map(heldRows.map((h) => [h.certification_id, h.current_through]));
+  const heldBy = new Map(
+    heldRows.map((h) => [h.certification_id, h.earned_at.slice(0, 10)])
+  );
 
   const holdings: CertificationHolding[] = coreRows.map((c) => ({
     slug: c.slug,
     isCore: true,
-    currentThrough: (heldBy.get(c.id) as IsoDate | undefined) ?? null,
+    earnedOn: (heldBy.get(c.id) as IsoDate | undefined) ?? null,
   }));
 
   return {
     level: cred.level,
     certificateId: cred.certificate_id,
     currentThrough: cred.current_through,
+    currency: credentialCurrencyLine(cred.current_through as IsoDate, today),
     rungLine: coreProgressLine(holdings, today, coreRows.length),
     held: heldRows.length,
   };
