@@ -26,6 +26,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import {
+  accrueFromCompletion,
   accrueFromModule,
   recomputeCredential,
 } from "@/lib/certification-server";
@@ -60,20 +61,6 @@ function section(title: string) {
 }
 
 /**
- * A thing that is true, that should not be, and that is not this task's to fix.
- *
- * Not counted as a failure, because a permanently-red suite gets ignored and
- * then stops being read at all. Printed on every run and summarised at the
- * bottom, so it cannot quietly become the accepted shape of the system.
- */
-const gaps: string[] = [];
-function gap(label: string, detail: string) {
-  gaps.push(`${label} — ${detail}`);
-  console.log(`  ⚠ KNOWN GAP: ${label}`);
-  console.log(`      ${detail}`);
-}
-
-/**
  * A fixture row that came back null is a broken harness, not a failed
  * assertion — the difference matters, because reporting "✗ credential minted"
  * when the SELECT itself returned nothing sends the reader hunting through the
@@ -90,6 +77,7 @@ const madeCourses: string[] = [];
 const madeContent: string[] = [];
 const madeUsers: string[] = [];
 let rooftopId = "";
+let grantedProduct = false;
 
 async function makeTrackContent(certId: string, items: number): Promise<string> {
   const { data: course, error: cErr } = await sb
@@ -209,6 +197,13 @@ async function cleanup() {
     await sb.from("certification_course").delete().eq("course_id", c);
     await sb.from("module").delete().eq("course_id", c);
     await sb.from("course").delete().eq("id", c);
+  }
+  if (grantedProduct) {
+    await sb
+      .from("rooftop_product")
+      .delete()
+      .eq("rooftop_id", rooftopId)
+      .eq("product", "manager_meetings");
   }
   /* Put the catalogue back the way it was found. */
   await recompute();
@@ -506,8 +501,23 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   section("7. entitlement gates accrual");
 
-  /* manager_video maps to the manager_meetings product AND the manager role,
-     so an advisor is doubly excluded — by role and by entitlement. */
+  /*
+   * TWO DIMENSIONS, TESTED SEPARATELY.
+   *
+   * The fixture rooftop ships with advisor_base only, so a manager_video is
+   * refused for BOTH reasons at once — wrong role and unbought product — and a
+   * test that cannot tell which rule fired is a test that still passes when one
+   * of them breaks. So the rooftop is granted manager_meetings for the duration:
+   *
+   *   manager_video  role excludes the advisor, product is present  -> ROLE
+   *   joe_the_pro    role allows the advisor, product is absent     -> PRODUCT
+   */
+  await sb.from("rooftop_product").insert({
+    rooftop_id: rooftopId,
+    product: "manager_meetings",
+    status: "active",
+  });
+  grantedProduct = true;
   const { data: mm } = await sb
     .from("content")
     .insert({
@@ -525,43 +535,249 @@ async function main() {
     .select("id")
     .eq("id", mmRow.id)
     .maybeSingle();
-  ok("a base-tier advisor cannot even READ Manager Meetings content", visible == null);
+  ok("an advisor cannot READ Manager Meetings content — wrong ROLE, product present", visible == null);
 
-  const { error: progressErr } = await asAdvisor.from("content_progress").insert({
+  /*
+   * ---- THE FORGERY, REFUSED BY THE DATABASE ------------------------------
+   *
+   * Not by the application. completeLibraryItem's entitlement re-check is a
+   * good belt, but PostgREST is reachable with this advisor's JWT and does not
+   * run it — so the assertion that matters is this one, made with a raw session
+   * client against the table directly. 0118 is what makes it pass.
+   */
+  const { error: forgedInsert } = await asAdvisor.from("content_progress").insert({
     user_id: advisor,
     rooftop_id: rooftopId,
     content_id: mmRow.id,
     completed_at: new Date().toISOString(),
   });
+  ok("...and the DATABASE refuses progress against it", forgedInsert != null, forgedInsert?.code);
 
-  if (progressErr) {
-    ok("...so they cannot record progress against it", true);
-  } else {
-    /* Clean up the row we just proved we should not have been able to write. */
-    await sb
-      .from("content_progress")
-      .delete()
-      .eq("user_id", advisor)
-      .eq("content_id", mmRow.id);
+  /* The RPC the video player actually calls. It is INSERT ... ON CONFLICT DO
+     UPDATE and runs security INVOKER, so it is governed by the same policies —
+     and it is the path a forgery would reach for once the plain insert fails. */
+  const { error: forgedRpc } = await asAdvisor.rpc("record_watch_progress", {
+    _content_id: mmRow.id,
+    _pct: 100,
+    _position: 0,
+  });
+  ok("record_watch_progress refuses it too", forgedRpc != null, forgedRpc?.code);
 
-    gap(
-      "content_progress accepts progress against unreadable content",
-      "content_progress_self_insert checks only that the row is yours and the rooftop is yours — " +
-        "it never checks the content is readable. completeLibraryItem re-checks entitlement, so " +
-        "the app path is safe, but PostgREST is directly reachable with an advisor's JWT. This " +
-        "predates certification; what is new is the consequence, because service certifications " +
-        "now accrue by counting content_progress rows, so forged rows could mint a certification. " +
-        "Fix is a WITH CHECK clause requiring the content row to be visible to the caller."
-    );
+  /* Joe the Pro: a DIFFERENT product on the same advisor, to prove the check
+     follows content's own rules rather than a hardcoded manager_video case. */
+  const { data: jtp } = await sb
+    .from("content")
+    .insert({ type: "joe_the_pro", title: `${TAG} joe`, status: "published" })
+    .select("id")
+    .single();
+  const jtpRow = need(jtp, "joe the pro content");
+  madeContent.push(jtpRow.id);
+
+  const { error: forgedJtp } = await asAdvisor.from("content_progress").insert({
+    user_id: advisor,
+    rooftop_id: rooftopId,
+    content_id: jtpRow.id,
+    completed_at: new Date().toISOString(),
+  });
+  ok("an unbought Joe the Pro item is refused too — right role, no PRODUCT", forgedJtp != null, forgedJtp?.code);
+
+  /* ---------------------------------------------------------------------- */
+  section("8. what must NOT have broken");
+
+  /* An entitled advisor, through the real player path. The fixture content is
+     type 'cue' — advisor_base, which every rooftop has — so this is the honest
+     everyday write and it must be completely unaffected. */
+  /* A FRESH cue, deliberately not one of the module items the fixture advisor
+     already completed at 100%: record_watch_progress clamps monotonically, so
+     writing 88 over an existing 100 correctly changes nothing and would make
+     the "it advanced" assertion a lie either way. */
+  const { data: freshItem } = await sb
+    .from("content")
+    .insert({ type: "cue", title: `${TAG} fresh cue`, status: "published" })
+    .select("id")
+    .single();
+  const entitledItem = need(freshItem, "fresh entitled cue").id;
+  madeContent.push(entitledItem);
+  const { data: readable } = await asAdvisor
+    .from("content")
+    .select("id")
+    .eq("id", entitledItem)
+    .maybeSingle();
+  ok("an entitled advisor can still READ their own library content", readable != null);
+
+  const { error: honestRpc } = await asAdvisor.rpc("record_watch_progress", {
+    _content_id: entitledItem,
+    _pct: 42,
+    _position: 7,
+  });
+  ok("record_watch_progress still works for entitled content", honestRpc == null, honestRpc?.message);
+
+  /* And again, to exercise the ON CONFLICT DO UPDATE branch specifically —
+     the update policy, not the insert one. */
+  const { error: honestRpcAgain } = await asAdvisor.rpc("record_watch_progress", {
+    _content_id: entitledItem,
+    _pct: 88,
+    _position: 19,
+  });
+  ok("...including the ON CONFLICT update branch", honestRpcAgain == null, honestRpcAgain?.message);
+
+  const { data: bumped } = await sb
+    .from("content_progress")
+    .select("watched_pct")
+    .eq("user_id", advisor)
+    .eq("content_id", entitledItem)
+    .maybeSingle();
+  ok("...and the progress actually advanced", Number(need(bumped, "progress row").watched_pct) === 88,
+    String(bumped?.watched_pct));
+
+  /* The service role is the daily loop, the library completion and the
+     certification accrual. RLS does not apply to it and must not start to. */
+  const { error: serviceWrite } = await sb.from("content_progress").insert({
+    user_id: advisor,
+    rooftop_id: rooftopId,
+    content_id: mmRow.id,
+    completed_at: new Date().toISOString(),
+  });
+  ok("the SERVICE role is unaffected — the daily loop still writes", serviceWrite == null,
+    serviceWrite?.message);
+  await sb.from("content_progress").delete().eq("user_id", advisor).eq("content_id", mmRow.id);
+
+  /*
+   * A manager keeps everything they had — on the content they were ever
+   * entitled to. NOT on a cue: roles_for_content_type('cue') is {advisor}, so a
+   * manager could never READ one, before or after this change. Asserting they
+   * can record progress on a cue would be asserting the hole is still open.
+   */
+  const { data: mgrCanRead } = await asManager
+    .from("content")
+    .select("id")
+    .eq("id", mmRow.id)
+    .maybeSingle();
+  ok("a manager can read Manager Meetings content", mgrCanRead != null);
+
+  const { error: mgrRpc } = await asManager.rpc("record_watch_progress", {
+    _content_id: mmRow.id,
+    _pct: 30,
+    _position: 3,
+  });
+  ok("...and can still record progress against it", mgrRpc == null, mgrRpc?.message);
+  await sb.from("content_progress").delete().eq("user_id", manager).eq("content_id", mmRow.id);
+
+  /* The platform owner reads content through content_platform_all, not through
+     content_entitled_read — the case a copied predicate would have broken. */
+  await sb.from("app_user").update({ is_platform_owner: true }).eq("id", manager);
+  const asOwner = await signedInAs(manager);
+  const { error: ownerRpc } = await asOwner.rpc("record_watch_progress", {
+    _content_id: mmRow.id,
+    _pct: 50,
+    _position: 5,
+  });
+  ok("the PLATFORM OWNER can record progress on anything", ownerRpc == null, ownerRpc?.message);
+  await sb.from("content_progress").delete().eq("user_id", manager).eq("content_id", mmRow.id);
+  await sb.from("app_user").update({ is_platform_owner: false }).eq("id", manager);
+
+  /* ---------------------------------------------------------------------- */
+  section("9. the consequence — forgery cannot mint anything");
+
+  /*
+   * A SERVICE CERTIFICATION THE ADVISOR CANNOT REACH, BUILT ON PURPOSE.
+   *
+   * Service certifications accrue by counting content_progress rows against a
+   * family's published items — that is the machinery the forgery was aiming at,
+   * so the test has to actually stand one up rather than skip when the local
+   * catalogue happens to have none active.
+   *
+   * The items are type joe_the_pro, which this rooftop has not bought, so they
+   * count toward the family's item_count (0116 counts published content by
+   * family, regardless of type) while remaining unreadable to the advisor. That
+   * is precisely the shape of the hole: a track whose content you cannot see,
+   * which you could previously certify in by POSTing rows.
+   */
+  const { data: targetCert } = await sb
+    .from("certification")
+    .select("id, slug, service_family")
+    .eq("kind", "service")
+    .order("sort")
+    .limit(1)
+    .maybeSingle();
+  const target = need(targetCert, "a service certification");
+
+  const unreachable = Array.from({ length: 5 }, (_, i) => ({
+    type: "joe_the_pro",
+    title: `${TAG} unreachable ${i}`,
+    status: "published",
+    service_family: target.service_family,
+  }));
+  const { data: madeUnreachable, error: unreachErr } = await sb
+    .from("content")
+    .insert(unreachable)
+    .select("id");
+  if (unreachErr) throw new Error(`unreachable content: ${unreachErr.message}`);
+  const unreachableIds = need(madeUnreachable, "unreachable content").map(
+    (r: { id: string }) => r.id
+  );
+  madeContent.push(...unreachableIds);
+
+  await recompute();
+  const { data: nowActive } = await sb
+    .from("certification")
+    .select("active, item_count")
+    .eq("id", target.id)
+    .single();
+  const activeRow = need(nowActive, "target certification");
+  ok(`the ${target.service_family} track is now earnable on paper`,
+    activeRow.active === true && activeRow.item_count >= 5,
+    `active=${activeRow.active} items=${activeRow.item_count}`);
+
+  /* The advisor cannot read any of it. */
+  const { data: seen } = await asAdvisor.from("content").select("id").in("id", unreachableIds);
+  ok("...but the advisor cannot read a single one of its items", (seen ?? []).length === 0,
+    `${(seen ?? []).length} visible`);
+
+  /* The forgery: claim every item in the family. */
+  let refusedCount = 0;
+  for (const id of unreachableIds) {
+    const { error } = await asAdvisor.from("content_progress").insert({
+      user_id: advisor,
+      rooftop_id: rooftopId,
+      content_id: id,
+      completed_at: new Date().toISOString(),
+    });
+    if (error) refusedCount++;
   }
+  ok("every forged progress row is refused", refusedCount === unreachableIds.length,
+    `${refusedCount}/${unreachableIds.length}`);
+
+  /* And the accrual, run explicitly, finds nothing to grant. */
+  const forgedAccrual = await accrueFromCompletion(
+    sb as never,
+    advisor,
+    rooftopId,
+    unreachableIds[0]
+  );
+  ok("accrual grants no certification from forged progress",
+    forgedAccrual.earned.length === 0, JSON.stringify(forgedAccrual.earned));
+
+  const { count: heldTarget } = await sb
+    .from("advisor_certification")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", advisor)
+    .eq("certification_id", target.id);
+  ok("...and the advisor does not hold the service certification", (heldTarget ?? 0) === 0,
+    String(heldTarget));
+
+  /* Badge counts read the same rows. */
+  const { count: badgeRows } = await sb
+    .from("content_progress")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", advisor)
+    .eq("content_id", mmRow.id);
+  ok("no unentitled row survives to inflate a badge count", (badgeRows ?? 0) === 0,
+    String(badgeRows));
 
   /* ---------------------------------------------------------------------- */
   console.log(`\n${"=".repeat(64)}`);
-  console.log(`  ${passed} passed, ${failed} failed, ${gaps.length} known gap(s)`);
-  if (gaps.length) {
-    console.log("");
-    for (const g of gaps) console.log(`  ⚠ ${g.split(" — ")[0]}`);
-  }
+  console.log(`  ${passed} passed, ${failed} failed`);
   console.log("=".repeat(64));
 }
 
