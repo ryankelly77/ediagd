@@ -8,6 +8,7 @@ import {
   type ContentRow,
   type ContentStatus,
 } from "@/lib/content";
+import { libraryLabel } from "@/lib/library";
 
 /**
  * One content row — title, body snippet, type/tier/status badges.
@@ -29,7 +30,17 @@ export function ContentResultRow({
       >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-navy">{item.title}</p>
+            {/* COMPOSED, NOT REWRITTEN. Thirteen films are titled "On the
+                Drive" and three more stage names repeat a dozen times each —
+                the op code is what tells them apart, and it lives in its own
+                column rather than in the title. See libraryLabel in lib/library. */}
+            <p className="text-base font-bold text-navy">
+              {libraryLabel({
+                title: item.title,
+                opCode: item.op_code,
+                resolvedServiceFamily: item.resolved_service_family ?? item.service_family,
+              })}
+            </p>
             {item.body && (
               <p className="mt-1 text-sm leading-relaxed text-ink-soft">
                 {snippet(item.body, 120)}
@@ -44,7 +55,9 @@ export function ContentResultRow({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Badge>{TYPE_META[item.type].short}</Badge>
           {item.tier && <Badge>{TIER_LABEL[item.tier]}</Badge>}
-          {showService && item.service_family && (
+          {/* The family badge is dropped when the label already names it —
+              otherwise a search result says "Belts & Cooling" twice. */}
+          {showService && item.service_family && !item.op_code && (
             <Badge>{item.service_family}</Badge>
           )}
           <StatusBadge status={item.status} />

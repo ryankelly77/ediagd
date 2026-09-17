@@ -57,14 +57,14 @@ export default async function ContentSearchPage({
     // explicitly, then fill the remaining slots from the full match set. The
     // exact count still comes from the full set, so the header stays honest.
     let titleRequest = supabase
-      .from("content")
+      .from("content_service")
       .select("*")
       .ilike("title", `%${query}%`)
       .order("title", { ascending: true })
       .limit(RESULT_CAP);
 
     let allRequest = supabase
-      .from("content")
+      .from("content_service")
       .select("*", { count: "exact" })
       .or(`title.ilike."%${safe}%",body.ilike."%${safe}%"`)
       .order("updated_at", { ascending: false })

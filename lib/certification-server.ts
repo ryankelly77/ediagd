@@ -293,36 +293,23 @@ async function accrueService(
     .maybeSingle();
   if (!cert) return null;
 
-  /* Every published item that counts for the family — the same two-way
-     resolution the catalogue uses. Ids only; this is a set-difference, not a
-     content read. */
-  const { data: direct } = await service
-    .from("content")
+  /*
+   * Every published item that counts for the family — ONE query against the one
+   * derivation (0123), not the three-query hand-rolled join this used to be.
+   *
+   * It fetched the family's direct matches, then op_code_family's codes, then
+   * the content carrying them, and unioned the ids. That was correct, and it
+   * was also a fourth private copy of a rule the library had already lost —
+   * which is how the library and this function came to disagree about which
+   * films belong to a service. There is one answer now and everything asks it.
+   */
+  const { data: needed_ } = await service
+    .from("content_service")
     .select("id")
     .eq("status", "published")
-    .eq("service_family", family);
+    .eq("resolved_service_family", family);
 
-  const { data: codes } = await service
-    .from("op_code_family")
-    .select("code")
-    .is("retired_at", null)
-    .eq("family", family);
-
-  const opCodes = ((codes ?? []) as { code: string }[]).map((c) => c.code);
-  let viaOp: { id: string }[] = [];
-  if (opCodes.length > 0) {
-    const { data } = await service
-      .from("content")
-      .select("id")
-      .eq("status", "published")
-      .in("op_code", opCodes);
-    viaOp = (data ?? []) as { id: string }[];
-  }
-
-  const needed = new Set<string>([
-    ...((direct ?? []) as { id: string }[]).map((r) => r.id),
-    ...viaOp.map((r) => r.id),
-  ]);
+  const needed = new Set<string>(((needed_ ?? []) as { id: string }[]).map((r) => r.id));
   /* An empty family is never a certification. Same law as the empty module list:
      every() over nothing is true, and that would certify an advisor for a track
      with no content at all. */

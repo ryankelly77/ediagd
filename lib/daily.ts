@@ -449,6 +449,21 @@ async function pickFamilyRung(
   block: BlockFocus,
   base: Filters
 ): Promise<{ cue: ContentRow | null; matched: CueMatch | null }> {
+  /*
+   * READS content.service_family DIRECTLY, AND THAT IS A STATED EXCEPTION.
+   *
+   * 0123 makes content_service.resolved_service_family the one answer to "which
+   * service is this about", and everything that LISTS or COUNTS content now
+   * reads it. This does neither — it draws one cue — and the difference is
+   * currently nil: no published cue resolves by op code (0 of 432 that carry no
+   * family), so the view would return exactly these rows.
+   *
+   * Left alone deliberately. pickByRotation hits the table twice per pick on the
+   * daily path, and swapping in a joined view for zero behavioural change, a
+   * fortnight before a rooftop goes live, is risk without benefit. Revisit the
+   * day a cue is filed by op code — at which point this is wrong and the view is
+   * the fix, not another join here.
+   */
   if (block.tier) {
     const hit = await pickByRotation(
       client,

@@ -20,15 +20,17 @@ export async function listServiceNames(
 
   for (let page = 0; ; page++) {
     const { data, error } = await supabase
-      .from("content")
-      .select("service_family")
-      .not("service_family", "is", null)
-      .order("service_family", { ascending: true })
+      /* The resolved derivation (0123): a service whose only content is
+         op-code films would otherwise be missing from this list entirely. */
+      .from("content_service")
+      .select("resolved_service_family")
+      .not("resolved_service_family", "is", null)
+      .order("resolved_service_family", { ascending: true })
       .range(page * pageSize, page * pageSize + pageSize - 1);
 
     if (error || !data || data.length === 0) break;
     for (const row of data) {
-      const value = (row.service_family as string | null)?.trim();
+      const value = (row.resolved_service_family as string | null)?.trim();
       if (value) names.add(value);
     }
     if (data.length < pageSize) break;

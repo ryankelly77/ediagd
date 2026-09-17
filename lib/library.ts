@@ -27,7 +27,12 @@ export type LibraryItem = {
   type: ContentType;
   title: string;
   body: string | null;
+  /** As stored. NULL on every video — see resolvedServiceFamily. */
   serviceFamily: string | null;
+  /** service_family, or the op code resolved through op_code_family. 0123. */
+  resolvedServiceFamily: string | null;
+  /** The op code a pitch film was shot for. Null on cues. */
+  opCode: string | null;
   tier: string | null;
   make: string | null;
   model: string | null;
@@ -38,8 +43,19 @@ export type LibraryItem = {
   isVideo: boolean;
 };
 
+/*
+ * op_code and resolved_service_family are here for the SAME reason.
+ *
+ * Thirteen films are titled "On the Drive" and thirty-eight more share three
+ * other stage names — the stage went into `title` and the op code into its own
+ * column, so a list rendering only the title shows the same words over and
+ * over. The label is composed at display from these two (see libraryLabel), and
+ * the titles are deliberately NOT rewritten: a title carrying data that lives
+ * in a column is two things that can disagree.
+ */
 const COLUMNS =
-  "id, type, title, body, service_family, tier, make, model, year_range, duration_sec, video_url";
+  "id, type, title, body, service_family, resolved_service_family, op_code, " +
+  "tier, make, model, year_range, duration_sec, video_url";
 
 function toItem(r: Record<string, unknown>): LibraryItem {
   const type = r.type as ContentType;
@@ -49,6 +65,8 @@ function toItem(r: Record<string, unknown>): LibraryItem {
     title: (r.title as string) ?? "Untitled",
     body: (r.body as string | null) ?? null,
     serviceFamily: (r.service_family as string | null) ?? null,
+    resolvedServiceFamily: (r.resolved_service_family as string | null) ?? null,
+    opCode: (r.op_code as string | null) ?? null,
     tier: (r.tier as string | null) ?? null,
     make: (r.make as string | null) ?? null,
     model: (r.model as string | null) ?? null,
@@ -57,6 +75,35 @@ function toItem(r: Record<string, unknown>): LibraryItem {
     videoUrl: (r.video_url as string | null) ?? null,
     isVideo: isVideoType(type),
   };
+}
+
+/**
+ * "On the Drive · SRP-038 · Belts & Cooling"
+ *
+ * ---------------------------------------------------------------------------
+ * COMPOSED AT DISPLAY, NEVER WRITTEN INTO `title`
+ * ---------------------------------------------------------------------------
+ * The Mux naming convention survived the import intact — `source_filename` still
+ * reads "SRP-038 — On the Drive — v1.MOV". Nothing was lost; it was SPLIT, the
+ * stage into `title` and the code into `op_code`, and the screen rendered one of
+ * them. Thirteen films then appear as thirteen lines saying "On the Drive".
+ *
+ * The fix is not an UPDATE that stuffs the code back into the title. The moment
+ * a title contains data that also lives in a column, the two can disagree — and
+ * that is precisely the bug this whole change exists to remove. So the title
+ * stays the stage, and the label is assembled where it is shown.
+ *
+ * Parts are dropped when absent, so a cue with a family and no op code reads
+ * "Brake pads · Brake Service", and a Mindset film with neither is just itself.
+ */
+export function libraryLabel(item: {
+  title: string;
+  opCode?: string | null;
+  resolvedServiceFamily?: string | null;
+}): string {
+  return [item.title, item.opCode, item.resolvedServiceFamily]
+    .filter((p): p is string => Boolean(p && String(p).trim()))
+    .join(" · ");
 }
 
 export function resolveLibraryLimit(raw: string | undefined): number {
@@ -87,15 +134,17 @@ export async function listServiceBuckets(client: Client): Promise<ServiceBucket[
   // per grouping — is not worth a migration for a list this small.
   for (let page = 0; ; page++) {
     const { data, error } = await client
-      .from("content")
-      .select("type, service_family")
+      /* content_service, not content: videos carry no service_family and would
+         all land in the "" bucket and be dropped. See 0123. */
+      .from("content_service")
+      .select("type, resolved_service_family")
       .eq("status", "published")
       .in("type", ["cue", "advisor_video"])
       .range(page * 1000, page * 1000 + 999);
 
     if (error || !data || data.length === 0) break;
     for (const row of data as Record<string, unknown>[]) {
-      const service = ((row.service_family as string | null) ?? "").trim();
+      const service = ((row.resolved_service_family as string | null) ?? "").trim();
       if (!service) continue;
       const b = buckets.get(service) ?? { service, cues: 0, videos: 0 };
       if (row.type === "advisor_video") b.videos += 1;
@@ -116,19 +165,24 @@ export async function loadServiceContent(
 ): Promise<{ cues: LibraryItem[]; videos: LibraryItem[]; cueTotal: number }> {
   const [videosRes, cuesRes] = await Promise.all([
     client
-      .from("content")
+      /* THE FIX. This filtered `service_family`, which is NULL on all 154
+         published advisor videos — so every service page showed zero films
+         while the certification derivation counted them toward progress. */
+      .from("content_service")
       .select(COLUMNS)
       .eq("status", "published")
       .eq("type", "advisor_video")
-      .eq("service_family", service)
+      .eq("resolved_service_family", service)
       .order("title", { ascending: true })
       .range(0, LIBRARY_MAX - 1),
     client
-      .from("content")
+      /* Cues carry service_family directly, so this is unchanged in effect —
+         but it reads the same derivation, so there is one answer and not two. */
+      .from("content_service")
       .select(COLUMNS, { count: "exact" })
       .eq("status", "published")
       .eq("type", "cue")
-      .eq("service_family", service)
+      .eq("resolved_service_family", service)
       .order("title", { ascending: true })
       .range(0, limit - 1),
   ]);
@@ -187,13 +241,13 @@ export async function loadMakeVideos(
   service?: string | null
 ): Promise<{ items: LibraryItem[]; total: number; services: string[] }> {
   let query = client
-    .from("content")
+    .from("content_service")
     .select(COLUMNS, { count: "exact" })
     .eq("status", "published")
     .eq("type", "joe_the_pro")
     .eq("make", make);
 
-  if (service) query = query.eq("service_family", service);
+  if (service) query = query.eq("resolved_service_family", service);
 
   const { data, count } = await query
     .order("model", { ascending: true })
@@ -205,18 +259,18 @@ export async function loadMakeVideos(
   // The service filter's options come from this make's own videos, so the
   // control never offers a filter that would return nothing.
   const { data: all } = await client
-    .from("content")
-    .select("service_family")
+    .from("content_service")
+    .select("resolved_service_family")
     .eq("status", "published")
     .eq("type", "joe_the_pro")
     .eq("make", make)
-    .not("service_family", "is", null)
+    .not("resolved_service_family", "is", null)
     .range(0, LIBRARY_MAX - 1);
 
   const services = [
     ...new Set(
       ((all ?? []) as Record<string, unknown>[])
-        .map((r) => ((r.service_family as string | null) ?? "").trim())
+        .map((r) => ((r.resolved_service_family as string | null) ?? "").trim())
         .filter(Boolean)
     ),
   ].sort();
@@ -241,15 +295,15 @@ export async function listManagerTopics(client: Client): Promise<TopicBucket[]> 
 
   for (let page = 0; ; page++) {
     const { data, error } = await client
-      .from("content")
-      .select("service_family")
+      .from("content_service")
+      .select("resolved_service_family")
       .eq("status", "published")
       .eq("type", "manager_video")
       .range(page * 1000, page * 1000 + 999);
 
     if (error || !data || data.length === 0) break;
     for (const row of data as Record<string, unknown>[]) {
-      const service = ((row.service_family as string | null) ?? "").trim();
+      const service = ((row.resolved_service_family as string | null) ?? "").trim();
       const topic = service || MANAGER_GENERAL_TOPIC;
       const b = topics.get(topic) ?? {
         topic,
@@ -276,13 +330,13 @@ export async function loadManagerVideos(
   limit: number
 ): Promise<{ items: LibraryItem[]; total: number }> {
   let query = client
-    .from("content")
+    .from("content_service")
     .select(COLUMNS, { count: "exact" })
     .eq("status", "published")
     .eq("type", "manager_video");
 
-  if (topic === MANAGER_GENERAL_TOPIC) query = query.is("service_family", null);
-  else if (topic) query = query.eq("service_family", topic);
+  if (topic === MANAGER_GENERAL_TOPIC) query = query.is("resolved_service_family", null);
+  else if (topic) query = query.eq("resolved_service_family", topic);
 
   const { data, count } = await query
     .order("title", { ascending: true })
@@ -331,11 +385,11 @@ export async function loadJoeForService(
   service: string
 ): Promise<LibraryItem[]> {
   const { data } = await client
-    .from("content")
+    .from("content_service")
     .select(COLUMNS)
     .eq("status", "published")
     .eq("type", "joe_the_pro")
-    .eq("service_family", service)
+    .eq("resolved_service_family", service)
     .order("make", { ascending: true })
     .range(0, 9);
 

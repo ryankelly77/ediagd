@@ -107,6 +107,12 @@ export type ContentRow = {
   best_used_for: string | null;
   needs_translation: boolean | null;
   op_code: string | null;
+  /**
+   * From content_service, not the table — service_family when set, otherwise the
+   * op code resolved through op_code_family. Optional because rows read
+   * straight from `content` do not carry it. See 0123.
+   */
+  resolved_service_family?: string | null;
   quote_key: string | null;
 };
 

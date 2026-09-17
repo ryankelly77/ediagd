@@ -55,13 +55,15 @@ export default async function ContentServicePage({
      rest. Kept out of ContentStatus so nothing else has to pretend it is one. */
   const statusFilter = (filters.status ?? "") as ContentStatus | "retired" | "";
 
+  /* content_service so a film filed by op code lands under its service here
+     too — the admin was hunting the same thirteen identical titles. 0123. */
   let query = supabase
-    .from("content")
+    .from("content_service")
     .select("*", { count: "exact" })
     .order("updated_at", { ascending: false });
 
-  if (isNoService) query = query.is("service_family", null);
-  else if (!isAllServices) query = query.eq("service_family", service);
+  if (isNoService) query = query.is("resolved_service_family", null);
+  else if (!isAllServices) query = query.eq("resolved_service_family", service);
 
   if (typeFilter) query = query.eq("type", typeFilter);
   if (tierFilter) query = query.eq("tier", tierFilter);
