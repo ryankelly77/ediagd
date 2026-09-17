@@ -90,3 +90,4 @@ backups/
 # are the only recovery source for an import truncation, and they carry no
 # customer or payroll data.
 data/Doggett_Key_Maintenance_Sales_*.xlsx
+data/KeyMaintenanceSales_*.xlsx
