@@ -103,6 +103,25 @@ section("3. THE AUGUST 2026 FILE — dealer and sub-category swapped");
     msg.includes("not in the order this file's header claims"), true);
 }
 
+section("3b. the columns the vendor renamed between exports");
+{
+  /* Dynatron renamed "% Of Total (1)" to "Sales %" somewhere between the May
+     2025 and September 2026 exports. Same column, same position, same values.
+     Nothing refused and nothing lost — but it reached us as an UNMAPPED
+     warning first, which is the only reason anybody noticed. A column that
+     imports as null reads downstream as a store that sold nothing. */
+  const headers = ["Dealer", "Advisor", "Sub Category", "Op Code Code", "Op Code Description",
+    "CP ROs", "Sales %", "FRHs", "FRHs/RO", "Labor Sales", "Lbr $/RO", "Lbr GP%",
+    "Tot $/RO", "ELR", "Num of ROs", "Lbr GP", "Pts GP", "GP", "GP%"];
+  const sample = headers.map((_, i) =>
+    i === 0 ? GOOD_SAMPLE[0] : i === 1 ? GOOD_SAMPLE[1] : i === 2 ? GOOD_SAMPLE[2]
+    : i === 3 ? GOOD_SAMPLE[3] : ["1", "2", "3", "4", "5", "6"]);
+  const d = detectColumns(headers, sample, HINTS);
+  check("the renamed column is found", d.map.pctOfTotal, 6);
+  check("and nothing else went unmapped in its place", d.unmapped.includes("pctOfTotal"), false);
+  check("not refused", d.refused, false);
+}
+
 section("4. a header nobody has seen before still resolves");
 {
   /* The vendor renames the columns. The data is still recognisable, so the

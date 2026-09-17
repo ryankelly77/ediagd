@@ -56,7 +56,10 @@ export const FIELDS = {
   dept: { required: false, aliases: ["dept", "department"] },
   opDescription: { required: false, aliases: ["opdescription", "description", "opdesc", "operation"] },
   cpRos: { required: false, aliases: ["cpros", "cpro", "customerpayros"] },
-  pctOfTotal: { required: false, aliases: ["oftotal", "pctoftotal", "percentoftotal"] },
+  /* "Sales %" is what "% Of Total (1)" was renamed to somewhere between the
+     May 2025 and September 2026 exports. Same column, same position, same
+     values — a rename the unmapped warning caught before it imported as null. */
+  pctOfTotal: { required: false, aliases: ["oftotal", "pctoftotal", "percentoftotal", "salespct"] },
   frhs: { required: false, aliases: ["frhs", "flagratehours", "frh"] },
   frhsPerRo: { required: false, aliases: ["frhsro", "frhsperro"] },
   laborSales: { required: false, aliases: ["laborsales", "laboursales"] },
