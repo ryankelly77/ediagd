@@ -82,3 +82,11 @@ backups/
 # These are build output: `rm -rf` at the top of every script that makes one.
 .tmp-*/
 .tmp-test
+
+# DMS exports from the dealer group. Real operational data — advisor names,
+# labour sales, gross profit by rooftop — and 1-3MB apiece. Kept locally to
+# test the parser against formats the vendor changes without telling us, but
+# never pushed. The master workbooks in data/ ARE tracked, deliberately: they
+# are the only recovery source for an import truncation, and they carry no
+# customer or payroll data.
+data/Doggett_Key_Maintenance_Sales_*.xlsx
