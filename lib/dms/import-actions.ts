@@ -37,6 +37,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { parseWorkbook } from "./parse";
+import { guardWorkbook } from "./parse-guards";
 import { autoMatch } from "./mapping";
 import { projectMapping } from "./preview-mapping";
 
@@ -129,7 +130,22 @@ export async function previewImport(formData: FormData): Promise<ImportPreview> 
 
   const buffer = await file.arrayBuffer();
   const hash = await sha256(buffer);
-  const parsed = await parseWorkbook(buffer);
+
+  /*
+   * The parser is given what we already know, so it can recognise a column by
+   * its CONTENT and not only its header. This is what lets a renamed export
+   * still import, and what lets a re-ordered one be refused rather than
+   * silently mis-read. See lib/dms/columns.ts.
+   */
+  const hintClient = createServiceClient();
+  const [{ data: rooftopHints }, { data: opCodeHints }] = await Promise.all([
+    hintClient.from("rooftop").select("name"),
+    hintClient.from("op_code_catalog").select("code"),
+  ]);
+  const parsed = await parseWorkbook(buffer, {
+    rooftops: ((rooftopHints ?? []) as { name: string }[]).map((r) => r.name),
+    opCodes: ((opCodeHints ?? []) as { code: string }[]).map((r) => r.code),
+  });
 
   if (parsed.detail.length === 0) {
     throw new Error(
@@ -138,6 +154,35 @@ export async function previewImport(formData: FormData): Promise<ImportPreview> 
   }
 
   const service = createServiceClient();
+
+  /*
+   * ---- REFUSE BEFORE STAGING ---------------------------------------------
+   *
+   * The August 2026 file staged 18,764 rows, rendered a confident summary, and
+   * only failed when Commit hit dms_daily_metric's primary key — as a masked
+   * "an error occurred in the Server Components render". Every one of those
+   * rows was already provably uncommittable at parse time.
+   *
+   * These checks cost one pass over the rows and turn that into a sentence an
+   * admin can act on, before anything is written.
+   */
+  const { data: knownRooftops } = await service.from("rooftop").select("name");
+  const guard = guardWorkbook(
+    parsed.detail.map((r) => ({
+      reportDate: r.reportDate,
+      dealerName: r.dealerName,
+      advisorOpId: r.advisorOpId,
+      subCategory: r.subCategory,
+      opCode: r.opCode,
+    })),
+    ((knownRooftops ?? []) as { name: string }[]).map((r) => r.name)
+  );
+  if (guard.refused) {
+    throw new Error(
+      guard.findings.filter((f) => f.severity === "refuse").map((f) => f.message).join(" ")
+    );
+  }
+  for (const f of guard.findings) parsed.warnings.push(f.message);
 
   // Has this exact file already gone in? Not a blocker — a re-run is a no-op by
   // design — but the admin should be told rather than left wondering.
@@ -397,7 +442,31 @@ export async function commitImport(importId: string): Promise<CommitResult> {
   const { data, error } = await service.rpc("commit_dms_import", {
     _import_id: importId,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    /*
+     * 23505 — a duplicate key on dms_daily_metric.
+     *
+     * The commit is one transaction, so this is always a total rollback and
+     * never a partial import. It means two rows in the file share a key, which
+     * in practice means two columns are not the ones we read them as.
+     *
+     * This is the exact error the August file produced, and what reached the
+     * admin was "An error occurred in the Server Components render. The
+     * specific message is omitted in production builds" — for a constraint
+     * violation containing nothing sensitive whatsoever. Nobody can act on
+     * that. Preview refuses this case now; this stays as the second line of
+     * defence, saying what happened in words.
+     */
+    if (error.code === "23505") {
+      throw new Error(
+        "This file has two rows that land on the same record, so nothing was imported " +
+          "and nothing was changed. That almost always means the columns are not in the " +
+          "order we expect — check dealer and sub-category against the last file that " +
+          `imported cleanly. (${error.details ?? error.message})`
+      );
+    }
+    throw new Error(error.message);
+  }
 
   const r = (data ?? {}) as Record<string, number>;
 

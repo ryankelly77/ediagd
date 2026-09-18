@@ -32,16 +32,58 @@
 // loudly at build time anyway.
 import ExcelJS from "exceljs";
 import { autoMatch } from "./mapping";
+import { detectColumns, mergeHeaderRows, type ColumnMap, type ContentHints } from "./columns";
 
-const SKIP_SHEETS = new Set(["Index", "Op Code Frequency", "Advisor Summary"]);
+/*
+ * Summary sheets, deliberately ignored. Every figure on them is a re-cut of the
+ * per-day tabs, so reading them would double-count; we derive the same totals
+ * from the detail and can check ourselves against these rather than trust them.
+ *
+ * "Daily ROs by Advisor" and "Daily Gross by Advisor" arrived with the
+ * September 2026 re-pull, one row per advisor and one column per day. They are
+ * listed here because the alternative is a warning that each "has no readable
+ * date — skipped entirely", which reads like data loss to the admin doing the
+ * upload. It is not: nothing on them is missing from the day tabs. The RO
+ * counts were cross-checked against the per-advisor subtotals over 1,638
+ * advisor-days in August and September and agreed on every one.
+ */
+const SKIP_SHEETS = new Set([
+  "Index",
+  "Op Code Frequency",
+  "Advisor Summary",
+  "Daily ROs by Advisor",
+  "Daily Gross by Advisor",
+]);
 const ROLLUP_MARKERS = new Set([
   "all advisors",
   "all sub categories",
   "all op codes",
   "all dealers",
+  /*
+   * DEPT — a FIFTH dimension, and it arrived without warning.
+   *
+   * The export that starts on 12 August 2026 adds a "Dept" column, so every
+   * line appears twice: once as Service and once as "All Departments". Both
+   * look like detail by the other four markers, so both imported — and because
+   * Dept is not part of dms_daily_metric's primary key, the pair collides with
+   * itself. That is the duplicate key the August commit died on, and it would
+   * have DOUBLED every figure in the file had the key not existed.
+   */
+  "all departments",
 ]);
 
-/** Column positions on a daily tab, 1-based, from the row-1 header. */
+/**
+ * THE LAYOUT EVERY KNOWN FILE HAS USED — a fallback, not the contract.
+ *
+ * Verified against data/Doggett_*_2025_05_May.xlsx and _12_December.xlsx: 53
+ * daily tabs, every one of them this exact order. It is used only when a sheet
+ * carries no readable header, because a file whose header row went missing is
+ * still probably this shape.
+ *
+ * It is NOT consulted when a header exists. Trusting it unconditionally is what
+ * filed 11,058 August rows under service categories: the parser read position 1
+ * as the dealer while the file said otherwise, and nothing checked.
+ */
 const COL = {
   dealer: 1,
   advisor: 2,
@@ -119,6 +161,22 @@ export type ParseResult = {
   /** Anything that would silently lose data if ignored. */
   warnings: string[];
 };
+
+/**
+ * Detection is 0-based (array indices); ExcelJS cells are 1-based. Converting
+ * in one place rather than at nineteen call sites is the difference between a
+ * column being off by one and every column being off by one.
+ *
+ * Anything undetected falls back to its legacy position, so a report missing an
+ * optional column still reads the ones it has.
+ */
+function mapToPositions(map: ColumnMap): Record<string, number> {
+  const out: Record<string, number> = { ...COL };
+  for (const [field, idx] of Object.entries(map)) {
+    if (typeof idx === "number") out[field] = idx + 1;
+  }
+  return out;
+}
 
 function text(v: ExcelJS.CellValue): string {
   if (v == null) return "";
@@ -227,7 +285,15 @@ function isoDate(
   return null;
 }
 
-export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
+export async function parseWorkbook(
+  buffer: ArrayBuffer,
+  /**
+   * What the database already knows, used to recognise a column by its
+   * CONTENT as well as its header. Optional so the parser stays testable
+   * without a database — with no hints it falls back to headers alone.
+   */
+  hints: ContentHints = { rooftops: [], opCodes: [] }
+): Promise<ParseResult> {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buffer);
 
@@ -295,23 +361,85 @@ export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
     sheetsRead++;
     dates.add(reportDate);
 
+    /*
+     * ---- WHICH COLUMN IS WHICH, ON THIS SHEET ---------------------------
+     *
+     * Per sheet, not per workbook: a hand-assembled file can carry one tab
+     * from a different export, and a mapping decided once for the whole book
+     * would read that tab wrong in exactly the silent way this exists to stop.
+     */
+    const width = 24;
+    const h1: string[] = [];
+    const h2: string[] = [];
+    for (let c = 1; c <= width; c++) {
+      h1.push(text(ws.getRow(1).getCell(c).value));
+      h2.push(text(ws.getRow(2).getCell(c).value));
+    }
+    const headers = mergeHeaderRows(h1, h2);
+
+    const sample: string[][] = [];
+    for (let c = 1; c <= width; c++) {
+      const vals: string[] = [];
+      for (let r = 3; r < 3 + 25 && r <= ws.rowCount; r++) {
+        vals.push(text(ws.getRow(r).getCell(c).value));
+      }
+      sample.push(vals);
+    }
+
+    const hasHeader = headers.some((h) => h.trim().length > 0);
+    let col: Record<string, number>;
+    if (hasHeader) {
+      const detected = detectColumns(headers, sample, hints);
+      if (detected.refused) {
+        /* Refusing the whole workbook, not skipping the tab: a file whose
+           columns we cannot identify must not import the tabs we happened to
+           understand and silently drop the rest. */
+        throw new Error(
+          `Tab "${ws.name}": ${detected.problems.join(" ")} ` +
+            `Nothing has been imported. Compare this file's columns with the last one that ` +
+            `imported cleanly before re-sending it.`
+        );
+      }
+      for (const f of detected.unmapped) {
+        warnings.push(
+          `Tab "${ws.name}": no column matched "${f}", so it imports empty. ` +
+            `Check the report still includes it.`
+        );
+      }
+      col = mapToPositions(detected.map);
+    } else {
+      warnings.push(`Tab "${ws.name}" has no header row — assuming the standard column order.`);
+      col = { ...COL };
+    }
+
     ws.eachRow((row, rowNumber) => {
       if (rowNumber < 3) return; // two header rows
-      const dealer = text(row.getCell(COL.dealer).value);
+      const dealer = text(row.getCell(col.dealer).value);
       if (!dealer) return;
 
-      const advisorRaw = text(row.getCell(COL.advisor).value);
-      const subCategory = text(row.getCell(COL.subCategory).value);
-      const opCode = text(row.getCell(COL.opCode).value);
+      const advisorRaw = text(row.getCell(col.advisor).value);
+      const subCategory = text(row.getCell(col.subCategory).value);
+      const opCode = text(row.getCell(col.opCode).value);
       totalRows++;
+
+      /* Absent from the pre-August export, so `col.dept` is usually undefined
+         and this reads as empty — which is not a rollup, which is correct. */
+      const dept = col.dept ? text(row.getCell(col.dept).value) : "";
+      const deptRollup = isRollup(dept);
 
       const dealerRollup = isRollup(dealer);
       const advisorRollup = isRollup(advisorRaw);
       const subRollup = isRollup(subCategory);
       const opRollup = isRollup(opCode);
 
-      // ---- the one rollup worth keeping ---------------------------------
-      if (!dealerRollup && !advisorRollup && subRollup && opRollup) {
+      /* ---- the one rollup worth keeping ---------------------------------
+         When the file carries a Dept column, the advisor's day appears once per
+         department AND once for "All Departments". Only the latter is the
+         advisor's actual day; taking the per-department copies would count the
+         same repair orders once per department. With no Dept column the
+         condition is vacuously true, which is the old behaviour exactly. */
+      const deptTotalOk = !col.dept || deptRollup;
+      if (!dealerRollup && !advisorRollup && subRollup && opRollup && deptTotalOk) {
         rollupRows++;
         const opId = advisorOpId(advisorRaw);
         if (!opId) return;
@@ -320,18 +448,20 @@ export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
           dealerName: dealer,
           advisorRaw,
           advisorOpId: opId,
-          uniqueRos: num(row.getCell(COL.cpRos).value),
-          frhs: num(row.getCell(COL.frhs).value),
-          laborSales: num(row.getCell(COL.laborSales).value),
-          laborPerRo: num(row.getCell(COL.laborPerRo).value),
-          elr: num(row.getCell(COL.elr).value),
-          gp: num(row.getCell(COL.gp).value),
-          gpPct: num(row.getCell(COL.gpPct).value),
+          uniqueRos: num(row.getCell(col.cpRos).value),
+          frhs: num(row.getCell(col.frhs).value),
+          laborSales: num(row.getCell(col.laborSales).value),
+          laborPerRo: num(row.getCell(col.laborPerRo).value),
+          elr: num(row.getCell(col.elr).value),
+          gp: num(row.getCell(col.gp).value),
+          gpPct: num(row.getCell(col.gpPct).value),
         });
         return;
       }
 
-      if (dealerRollup || advisorRollup || subRollup || opRollup) {
+      /* Any rollup on any dimension, INCLUDING the new Dept. Dropping the
+         "All Departments" copy is what stops every line importing twice. */
+      if (dealerRollup || advisorRollup || subRollup || opRollup || deptRollup) {
         rollupRows++;
         return;
       }
@@ -356,21 +486,21 @@ export async function parseWorkbook(buffer: ArrayBuffer): Promise<ParseResult> {
         advisorOpId: opId,
         subCategory,
         opCode,
-        opDescription: text(row.getCell(COL.opDescription).value) || null,
-        cpRos: num(row.getCell(COL.cpRos).value),
-        pctOfTotal: num(row.getCell(COL.pctOfTotal).value),
-        frhs: num(row.getCell(COL.frhs).value),
-        frhsPerRo: num(row.getCell(COL.frhsPerRo).value),
-        laborSales: num(row.getCell(COL.laborSales).value),
-        laborPerRo: num(row.getCell(COL.laborPerRo).value),
-        laborGpPct: num(row.getCell(COL.laborGpPct).value),
-        totPerRo: num(row.getCell(COL.totPerRo).value),
-        elr: num(row.getCell(COL.elr).value),
-        numRos: num(row.getCell(COL.numRos).value),
-        laborGp: num(row.getCell(COL.laborGp).value),
-        partsGp: num(row.getCell(COL.partsGp).value),
-        gp: num(row.getCell(COL.gp).value),
-        gpPct: num(row.getCell(COL.gpPct).value),
+        opDescription: text(row.getCell(col.opDescription).value) || null,
+        cpRos: num(row.getCell(col.cpRos).value),
+        pctOfTotal: num(row.getCell(col.pctOfTotal).value),
+        frhs: num(row.getCell(col.frhs).value),
+        frhsPerRo: num(row.getCell(col.frhsPerRo).value),
+        laborSales: num(row.getCell(col.laborSales).value),
+        laborPerRo: num(row.getCell(col.laborPerRo).value),
+        laborGpPct: num(row.getCell(col.laborGpPct).value),
+        totPerRo: num(row.getCell(col.totPerRo).value),
+        elr: num(row.getCell(col.elr).value),
+        numRos: num(row.getCell(col.numRos).value),
+        laborGp: num(row.getCell(col.laborGp).value),
+        partsGp: num(row.getCell(col.partsGp).value),
+        gp: num(row.getCell(col.gp).value),
+        gpPct: num(row.getCell(col.gpPct).value),
       });
     });
   }
