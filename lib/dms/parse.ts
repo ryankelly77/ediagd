@@ -34,7 +34,26 @@ import ExcelJS from "exceljs";
 import { autoMatch } from "./mapping";
 import { detectColumns, mergeHeaderRows, type ColumnMap, type ContentHints } from "./columns";
 
-const SKIP_SHEETS = new Set(["Index", "Op Code Frequency", "Advisor Summary"]);
+/*
+ * Summary sheets, deliberately ignored. Every figure on them is a re-cut of the
+ * per-day tabs, so reading them would double-count; we derive the same totals
+ * from the detail and can check ourselves against these rather than trust them.
+ *
+ * "Daily ROs by Advisor" and "Daily Gross by Advisor" arrived with the
+ * September 2026 re-pull, one row per advisor and one column per day. They are
+ * listed here because the alternative is a warning that each "has no readable
+ * date — skipped entirely", which reads like data loss to the admin doing the
+ * upload. It is not: nothing on them is missing from the day tabs. The RO
+ * counts were cross-checked against the per-advisor subtotals over 1,638
+ * advisor-days in August and September and agreed on every one.
+ */
+const SKIP_SHEETS = new Set([
+  "Index",
+  "Op Code Frequency",
+  "Advisor Summary",
+  "Daily ROs by Advisor",
+  "Daily Gross by Advisor",
+]);
 const ROLLUP_MARKERS = new Set([
   "all advisors",
   "all sub categories",

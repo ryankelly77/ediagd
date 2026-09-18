@@ -53,7 +53,15 @@ export const FIELDS = {
   advisor: { required: true, aliases: ["advisor", "serviceadvisor", "writer", "servicewriter", "advisorname"] },
   subCategory: { required: true, aliases: ["subcategory", "subcat", "category", "servicecategory"] },
   opCode: { required: true, aliases: ["opcode", "code", "operationcode", "op"] },
-  dept: { required: false, aliases: ["dept", "department"] },
+  /*
+   * A DIMENSION, NOT A VALUE. Nothing from this column is stored — it is read
+   * only to recognise the "All Departments" rollup, which the August 2026
+   * export introduced and which duplicated every line. So its ABSENCE loses
+   * nothing, and warning that it "imports empty" is a false alarm: it fired on
+   * every monthly workbook we have ever imported successfully, May 2025
+   * included, because that report has never had the column.
+   */
+  dept: { required: false, stored: false, aliases: ["dept", "department"] },
   opDescription: { required: false, aliases: ["opdescription", "description", "opdesc", "operation"] },
   cpRos: { required: false, aliases: ["cpros", "cpro", "customerpayros"] },
   /* "Sales %" is what "% Of Total (1)" was renamed to somewhere between the
@@ -267,8 +275,12 @@ export function detectColumns(
        * file exists to stop: Labor GP quietly absent reads downstream as a
        * store that made none. It does not refuse — a report genuinely without
        * the column must still import — but it is never passed over in silence.
+       *
+       * Unless nothing is stored from it. A warning that cannot indicate data
+       * loss is noise, and noise is what stops anyone reading the warnings that
+       * can.
        */
-      unmapped.push(field);
+      if ((FIELDS[field] as { stored?: boolean }).stored !== false) unmapped.push(field);
     }
   }
 

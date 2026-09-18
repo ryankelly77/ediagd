@@ -122,6 +122,22 @@ section("3b. the columns the vendor renamed between exports");
   check("not refused", d.refused, false);
 }
 
+section("3c. a column nothing is stored from does not warn");
+{
+  /* "Dept" exists to spot the "All Departments" rollup and is never persisted,
+     so its absence cannot lose data. It warned on every monthly workbook we
+     have ever imported — May 2025 included — which is the shape of a warning
+     nobody ends up reading. */
+  const d = detectColumns(GOOD_HEADERS, GOOD_SAMPLE, HINTS);
+  check("no Dept column in this file", d.map.dept, undefined);
+  check("and no warning about it", d.unmapped.includes("dept"), false);
+  /* The rule is narrow: a column we DO store still warns. */
+  const thin = detectColumns(
+    ["Dealer", "Advisor", "Sub Category", "Op Code"],
+    GOOD_SAMPLE.slice(0, 4), HINTS);
+  check("a stored column still warns when missing", thin.unmapped.includes("laborGp"), true);
+}
+
 section("4. a header nobody has seen before still resolves");
 {
   /* The vendor renames the columns. The data is still recognisable, so the
