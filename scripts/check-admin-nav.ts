@@ -47,6 +47,13 @@ const WATCHED = [
      reachable" while saying nothing whatsoever about it — a pass that reads
      green and checks nothing is worse than no check at all. */
   "certifications",
+  /* Added with the family shelf in 3c, and for the same reason as
+     certifications above: a route outside this list is one the suite reports
+     "every watched route is reachable" about while saying nothing whatsoever
+     about it. /service/[family] is reached from the focus-family card and the
+     pitch dialog, never from a menu, which is exactly the shape that goes
+     unnoticed. */
+  "service",
 ];
 
 /** Every route under app/(app)/admin that has a page. */

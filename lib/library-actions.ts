@@ -29,7 +29,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { moduleForItem, moduleRequirementsMet } from "@/lib/lms";
+import { completeModuleIfReady } from "@/lib/lms";
 import { accrueFromCompletion } from "@/lib/certification-server";
 
 export type CompleteResult =
@@ -189,7 +189,7 @@ export async function completeLibraryItem(
   const badges = await awardLearningBadges(service, user.id);
 
   // ---- 6. Did that finish a module? --------------------------------------
-  const moduleCompleted = await maybeCompleteModule(
+  const moduleCompleted = await completeModuleIfReady(
     service,
     user.id,
     contentId,
@@ -224,56 +224,6 @@ export async function completeLibraryItem(
     certifications: accrual.earned,
     credential: accrual.credential,
   };
-}
-
-/**
- * Finish the module this item belongs to, if its requirements are now met.
- *
- * The module bonus is NOT subject to the daily lesson cap. The cap exists to
- * stop grinding through a 1,257-item library; finishing a module is the event
- * the cap is trying to protect, and capping it would punish the behaviour we
- * want.
- *
- * module_completion's primary key is (user_id, service_family, module_key), so
- * the insert is the pay-once guard — same discipline as everywhere else.
- */
-async function maybeCompleteModule(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  service: any,
-  userId: string,
-  contentId: string,
-  rooftopId: string,
-  bonus: number
-): Promise<{ moduleId: string; bonus: number } | null> {
-  const moduleId = await moduleForItem(service, contentId);
-  if (!moduleId) return null;
-
-  const req = await moduleRequirementsMet(service, userId, moduleId);
-  // Not met is the NORMAL case — cues left, or a quiz still to pass. The quiz
-  // path calls this same function after grading, so whichever finishes last
-  // triggers the completion.
-  if (!req.met) return null;
-
-  const { error } = await service.from("module_completion").insert({
-    user_id: userId,
-    module_id: moduleId,
-    rooftop_id: rooftopId,
-  });
-
-  // Already celebrated. The primary key decided; nothing to pay, nothing to show.
-  if (error) return null;
-
-  if (bonus > 0) {
-    await service.from("sand_dollar_entry").insert({
-      user_id: userId,
-      amount: bonus,
-      reason: "module_complete",
-      ref_id: moduleId,
-      note: "Module completed",
-    });
-  }
-
-  return { moduleId, bonus };
 }
 
 /**

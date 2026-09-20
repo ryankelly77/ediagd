@@ -2,17 +2,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminViewer } from "@/lib/access";
 import { loadAdvisorDay } from "@/lib/advisor-data";
-import {
-  ackLabel,
-  cueTierForRate,
-  pickCoachingCueForBlock,
-  pickLifestyleVideo,
-  pickPitchVideo,
-  pickTechnicianVideo,
-  pickQuotesForDay,
-} from "@/lib/daily";
+import { ackLabel, pickQuotesForDay, pickTechnicianVideo } from "@/lib/daily";
+import { assembleMorning } from "@/lib/loop";
+import { previewKindFrom, previewMorning } from "@/lib/loop-preview";
+import { rooftopIsProvisioned } from "@/lib/entitlement";
+import { RooftopNotReady } from "@/components/daily/RooftopNotReady";
 import { createServiceClient } from "@/lib/supabase/service";
-import { ensureBlockForToday, loadBlockDays } from "@/lib/coaching-block";
 import {
   loadScheduleContext,
   nextScheduledDayLabel,
@@ -79,6 +74,44 @@ export default async function TodayPage({
    */
   const roles = new Set((memberships ?? []).map((m) => m.role as string));
   const technicianOnly = roles.has("technician") && !roles.has("advisor");
+
+  /*
+   * ---- IS THE ROOFTOP SWITCHED ON? ----------------------------------------
+   *
+   * BEFORE ANYTHING ELSE, because everything else is pointless without it. A
+   * rooftop with no `advisor_base` row can read no published content at all —
+   * content_entitled_read gates on it — so every slot comes back empty, the
+   * gate fails closed, and the advisor works through a ritual that can never
+   * complete and is told nothing.
+   *
+   * Ten of eleven Doggett rooftops are in that state today, and one of the four
+   * advisor accounts is at one of them.
+   *
+   * THIS IS NOT THE SAME QUESTION AS "IS THE LIBRARY EMPTY". A provisioned
+   * rooftop with nothing published is a content gap, and the loop's own empty
+   * states already say so honestly. This is the account not being finished, and
+   * it needs a different sentence and a different person to tell.
+   */
+  const entitlementClient = createServiceClient();
+  const provisioned = await rooftopIsProvisioned(entitlementClient, rooftopId);
+  if (!provisioned) {
+    const { data: roof } = await supabase
+      .from("rooftop")
+      .select("name")
+      .eq("id", rooftopId)
+      .maybeSingle();
+    const { data: me } = await supabase
+      .from("app_user")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    return (
+      <RooftopNotReady
+        greetingName={firstName(me?.full_name ?? user.email ?? "there")}
+        rooftopName={(roof?.name as string | null) ?? null}
+      />
+    );
+  }
 
   const { data: todayRaw } = await supabase.rpc("rooftop_today", {
     _rooftop: rooftopId,
@@ -176,18 +209,14 @@ export default async function TodayPage({
   const opCodeId = (membership.op_code_id as string | null) ?? null;
 
   /*
-   * THE LIFESTYLE FILM MOVES INTO WAVE A. It used to be drawn alongside the
-   * cue and the pitch, AFTER the block, purely because they shared a
-   * Promise.all. It depends on none of them — only on the date and the viewer
-   * — and the quotes depend on IT, so pulling it forward is what lets the
-   * quotes start a wave earlier. In practice it finishes at ~760ms and wave A
-   * ends at ~900, so this buys nearer 140ms than a whole wave; see the note
-   * above about where the time actually is.
+   * THE FILM PICKS ALL MOVED INTO assembleMorning (wave B).
    *
-   * The rule it exists to serve is unchanged and still enforced by ordering:
-   * the day's quotes have to know which artifact the film belongs to, so the
-   * same idea is not served twice in one loop — Mitch saying "never lose
-   * money" on step 4 and the words "never lose money" on step 1.
+   * Wave A used to draw the lifestyle film so the quote draw could exclude its
+   * twin — one idea must not be served twice in one morning. That exclusion is
+   * gone along with the reason for it: there is ONE quote now and it is on the
+   * completion screen (ruling 6), and the mindset film and the quote are drawn
+   * from two different pools with two independent cursors. They cannot collide
+   * the way slot 2 and slot 3 could.
    */
   const [
     { data: existing },
@@ -197,12 +226,10 @@ export default async function TodayPage({
     completionCount,
     scheduleContext,
     advisorDay,
-    blockDays,
     { data: badgeRows },
     { data: earnedBadges },
     badgeRewards,
     { data: gameSettings },
-    lifestyle,
     openStamp,
   ] = await Promise.all([
     supabase
@@ -239,7 +266,6 @@ export default async function TodayPage({
        restDayFor. */
     loadScheduleContext(supabase, user.id, rooftopId),
     opCodeId ? loadAdvisorDay(supabase, opCodeId, rooftopId) : Promise.resolve(null),
-    loadBlockDays(supabase),
     // Badge display names, so the celebration can say "First Light earned!"
     // rather than "first_light". The catalog is public reference data.
     supabase.from("badge").select("key, name"),
@@ -255,9 +281,6 @@ export default async function TodayPage({
       .select("sand_daily_loop, video_complete_pct")
       .limit(1)
       .maybeSingle(),
-    // Signed playback is minted per view — never cached across users, because
-    // the token IS the authorisation.
-    pickLifestyleVideo(supabase, today, user.id),
     /*
      * ---- THE STREAK SAVER LANDED -----------------------------------------
      *
@@ -336,106 +359,86 @@ export default async function TodayPage({
   const pick = advisorDay?.hasVolume ? advisorDay.pick : null;
 
   /*
-   * ---- WAVE B: the block, and the quotes ---------------------------------
+   * ---- WAVE B: the morning ------------------------------------------------
    *
-   * The block: Eddie's Pick chooses the FAMILY and the block locks it, so the
-   * six stages of a pitch are six days of the same conversation rather than
-   * six unrelated mornings. The service client is required — 0067 gives
-   * coaching_block no user-facing insert policy on purpose, because an
-   * advisor who could open their own block could choose their own easiest
-   * family.
+   * ONE CALL, BECAUSE THE THREE SLOTS ARE ONE DECISION. Which morning this is
+   * — normal, two-slot, or track entry — is not knowable until the pitch shelf
+   * and the track cursor have both been read, and every branch that used to
+   * decide it separately is a branch that could disagree. assembleMorning runs
+   * the three picks concurrently and returns the shape.
    *
-   * The quotes: both together, because 253 of the 484 are eligible for either
-   * slot and drawing them independently would eventually hand the same quote
-   * to both on one day. pickQuotesForDay makes slot 2 yield to slot 3.
+   * BOTH CLIENTS, AND THE SPLIT IS THE SECURITY STORY. Content pools are read
+   * through `supabase` — the advisor's own session — so 0010's entitlement RLS
+   * decides what may be served. The assignment row, the pool cursors and the
+   * track-entry record are read and written through the service client, because
+   * an advisor who could choose those could choose their own easiest family and
+   * skip the film that gates a track.
    */
   const service = createServiceClient();
-  const [block, quotes] = await Promise.all([
-    ensureBlockForToday(
-      service,
-      user.id,
-      rooftopId,
-      today,
-      pick ? { family: pick.family, tier: cueTierForRate(pick.rate) } : null,
-      blockDays,
-      // No block is opened from a part-month. An open one keeps running.
-      advisorDay?.fromPartialPeriod ?? false,
-      // Nor from a day off. Opening the app on a Saturday must not start six
-      // days of coaching — an open block still serves if they take the
-      // voluntary rep.
-      restDay === null
-    ),
-    pickQuotesForDay(supabase, today, lifestyle?.artifactId ?? null),
-  ]);
-
-  const focus = block
-    ? {
-        family: block.family,
-        opCode: block.opCode,
-        stage: block.stage,
-        tier: block.tier,
-      }
-    : null;
 
   /*
-   * ---- WAVE C: what needed the block, and what needed the quotes ---------
+   * ---- THE ADMIN WALKTHROUGH ---------------------------------------------
+   *
+   * Decided HERE, before the morning is assembled, because the preview changes
+   * what gets assembled rather than only what gets shown. `?preview=` is
+   * checked against isAdminViewer, so the flag is inert for everyone else and
+   * can never be used to reach a morning somebody's own data did not produce.
+   *
+   * WHY THE PREVIEW NEEDED ITS OWN ASSEMBLER: the pitch slot derives from
+   * `membership.op_code_id`, and an admin account has none — so the old
+   * walkthrough served a two-slot morning every time and the one screen 3b
+   * exists to show was unreachable. See lib/loop-preview.ts.
    */
-  const [coaching, pitchVideo, { data: savedRows }] = await Promise.all([
-    pickCoachingCueForBlock(supabase, today, focus),
-    /*
-     * Step 3. Null means the stage has not been filmed, and the step is left
-     * OUT of the day rather than rendered as an empty player — see
-     * pickPitchVideo.
-     */
-    pickPitchVideo(supabase, today, user.id, focus),
-    /* Which of the day's quotes this advisor has already kept. ONE query for
-       both, and it reads through the user's client so the policy in 0059 is
-       what decides — a save is private and the service role would step
-       straight over that. */
-    (() => {
-      const ids = [quotes.slot3?.id, quotes.slot2?.id].filter(Boolean) as string[];
-      return ids.length
-        ? supabase
-            .from("saved_content")
-            .select("content_id")
-            .eq("user_id", user.id)
-            .in("content_id", ids)
-        : Promise.resolve({ data: [] as { content_id: string }[] });
-    })(),
-  ]);
+  const previewKind = previewKindFrom(params.preview);
+  const isPreview = previewKind !== null && (await isAdminViewer(supabase, user.id));
 
-  /*
-   * Recorded, not inferred. `false` would be a lie on a day with no block —
-   * nothing was looked up, so nothing was skipped. The count that matters is
-   * "days where we wanted a pitch video for a real stage and had none", which
-   * is what measures the unfilmed library.
-   */
-  const pitchVideoSkipped = focus?.opCode && focus.stage ? pitchVideo === null : null;
+  const morning = isPreview
+    ? await previewMorning(supabase, service, user.id, rooftopId, today, previewKind!)
+    : await assembleMorning(supabase, service, user.id, rooftopId, today);
+
+  /* What the walkthrough had to substitute, for the banner. Empty on a real
+     morning, and empty on a preview that needed no substitution. */
+  const previewNotes: string[] =
+    isPreview && "notes" in morning ? (morning.notes as string[]) : [];
+
+  /* Which of the day's quote this advisor has already kept. Read through the
+     user's client so the private-save policy in 0059 is what decides — the
+     service role would step straight over it. */
+  const { data: savedRows } = morning.quote
+    ? await supabase
+        .from("saved_content")
+        .select("content_id")
+        .eq("user_id", user.id)
+        .eq("content_id", morning.quote.id)
+    : { data: [] as { content_id: string }[] };
+
   const savedIds = new Set((savedRows ?? []).map((r) => r.content_id as string));
 
-  const shapeQuote = (q: typeof quotes.slot3) =>
-    q
-      ? {
-          id: q.id,
-          title: q.title,
-          body: q.body,
-          voice: q.voice,
-          nugget: q.coaching_nugget,
-          saved: savedIds.has(q.id),
-        }
-      : null;
+  /*
+   * The closing line. RULING 6: it renders AFTER the streak advances, it gates
+   * nothing and it counts towards nothing. It is not in the day's gate and it
+   * is not a slot.
+   */
+  const closingQuote = morning.quote
+    ? {
+        id: morning.quote.id,
+        title: morning.quote.title,
+        body: morning.quote.body,
+        voice: morning.quote.voice,
+        nugget: morning.quote.coaching_nugget,
+        saved: savedIds.has(morning.quote.id),
+      }
+    : null;
 
   // (badgeNames, badgeRewards, dailyLoopSand and videoThreshold are drawn in
   // wave A above — none of them depended on anything down here.)
 
   // ---- Admin demo -------------------------------------------------------
-  // ?preview=1 walks the real daily loop with a canned outcome: nothing is
-  // written, the "already done today" screen is skipped, and it can be run as
-  // often as you like. Admins only — for anyone else the flag is ignored, so
-  // it can never be used to fake a completion.
-  const isPreview =
-    params.preview === "1" && (await isAdminViewer(supabase, user.id));
-
+  // The morning above was already assembled for the walkthrough; this is the
+  // canned OUTCOME that goes with it. Nothing is written: previewResult
+  // short-circuits completeDayAction, so no completion row, no consumption, no
+  // pool cursor, no track entry, no badge, no Sand Dollars, and the streak is
+  // untouched. It can be run as often as you like.
   let previewResult = null;
   if (isPreview) {
     // Real amounts, so the demo quotes what the engine would actually have
@@ -456,6 +459,8 @@ export default async function TodayPage({
       sandEarned: dailyLoop + firstLight,
       badgeEarned: "first_light",
       newBalance: dailyLoop + firstLight,
+      certificationsEarned: [],
+      credential: null,
     };
   }
 
@@ -468,8 +473,8 @@ export default async function TodayPage({
   return (
     <DailyFlow
       previewResult={previewResult}
+      previewNotes={previewNotes}
       dailyLoopSand={dailyLoopSand}
-      lifestyle={lifestyle}
       videoThreshold={videoThreshold}
       alreadyCompleteOnLoad={alreadyCompleteOnLoad}
       offerSoftAsk={offerSoftAsk}
@@ -488,38 +493,35 @@ export default async function TodayPage({
       today={today}
       greetingName={firstName(appUser?.full_name ?? user.email ?? "there")}
       ackLabel={ackLabel(today)}
-      quote={shapeQuote(quotes.slot3)}
-      salesQuote={shapeQuote(quotes.slot2)}
+      /* RULING 6 — the close, not a slot. Named `closingQuote` rather than
+         `quote` so nothing reads it as step one ever again. */
+      closingQuote={closingQuote}
+      morningKind={morning.kind}
+      mindset={morning.mindset}
+      pitch={morning.pitch}
+      item={morning.item}
+      trackFilm={morning.track?.film ?? null}
+      track={
+        morning.track
+          ? { name: morning.track.name, entering: morning.track.entering }
+          : null
+      }
       focus={
-        block
+        morning.pitch
           ? {
-              // The BLOCK's family, not the pick's. They agree on day one and
-              // can diverge afterwards, and the block is what the advisor has
-              // actually been working — showing the pick would rename the
-              // conversation underneath them mid-pitch.
-              service: block.family,
-              // Rate and benchmark still come from the live pick when it is the
-              // same family; a locked block on a family the advisor has since
-              // recovered on shows no numbers rather than stale ones.
-              rate: pick && pick.family === block.family ? pick.rate : null,
-              storeAvg: pick && pick.family === block.family ? pick.storeAvg : null,
-              stage: block.stage,
-              stageNumber: block.served + 1,
-              stageCount: block.lengthDays,
+              service: morning.pitch.family,
+              /* Rate and benchmark come from the live pick only when it names
+                 the SAME family the assignment locked; a cycle on a family the
+                 advisor has since recovered on shows no numbers rather than
+                 stale ones. */
+              rate: pick && pick.family === morning.pitch.family ? pick.rate : null,
+              storeAvg:
+                pick && pick.family === morning.pitch.family ? pick.storeAvg : null,
+              position: morning.pitch.position,
+              total: morning.pitch.total,
             }
           : null
       }
-      cue={
-        coaching.cue
-          ? {
-              id: coaching.cue.id,
-              title: coaching.cue.title,
-              body: coaching.cue.body,
-            }
-          : null
-      }
-      cueMatch={coaching.matched}
-      pitchVideo={pitchVideo}
       /*
        * THE DAY, SIGNED WHERE IT WAS ASSEMBLED.
        *
@@ -528,25 +530,36 @@ export default async function TodayPage({
        * and completeDay writes what it verified — the ids stop being data the
        * request supplies and become a payload it cannot alter.
        *
-       * The watch tickets are NOT minted here any more. A ticket minted at
-       * render says when the page opened, which is a fact about the page and
-       * almost nothing about the video; they are minted when a player is
-       * actually opened. See lib/watch-ticket.ts.
+       * The retired keys go down as null rather than being dropped: removing
+       * them would shift every field left and an old stamp would parse as a
+       * different day. See lib/day-stamp.ts.
+       *
+       * The CYCLE NUMBERS travel with the ids because the completion writes the
+       * pool cursor, and it has to file the row under the pass the draw was
+       * actually made from — recomputing it at completion could land it in a
+       * pass that never served it.
        */
       dayStamp={mintDayStamp({
         u: user.id,
         d: today,
-        b: block?.id ?? null,
-        q1: quotes.slot3?.id ?? null,
-        q2: quotes.slot2?.id ?? null,
-        cue: coaching.cue?.id ?? null,
-        vid: lifestyle?.contentId ?? null,
-        pitch: pitchVideo?.contentId ?? null,
-        skipped: pitchVideoSkipped,
-        match: coaching.matched,
-        tier: block?.tier ?? null,
+        b: null,
+        q1: morning.quote?.id ?? null,
+        q2: null,
+        cue: null,
+        vid: morning.mindset?.contentId ?? null,
+        pitch: morning.pitch?.contentId ?? null,
+        skipped: null,
+        match: null,
+        tier: null,
+        kind: morning.kind,
+        item: morning.item?.contentId ?? null,
+        tfilm: morning.track?.film?.contentId ?? null,
+        /* Only when this morning is the one that ENTERS the track. An ordinary
+           morning mid-track must not re-stamp an entry. */
+        trk: morning.track?.entering ? morning.track.certificationId : null,
+        mcyc: morning.mindsetCycle,
+        qcyc: morning.quoteCycle,
       })}
-      totalRos={advisorDay?.totalRos ?? 0}
       badgeNames={badgeNames}
       badgeRewards={badgeRewards}
     />

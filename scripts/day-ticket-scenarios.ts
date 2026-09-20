@@ -44,10 +44,20 @@ const DAY = "2026-09-02";
 const CUE = "aaaaaaaa-0000-0000-0000-000000000001";
 const VIDEO = "bbbbbbbb-0000-0000-0000-000000000002";
 
+/*
+ * Listed in KEYS order (lib/day-stamp.ts) on purpose: the round-trip assertion
+ * below compares the decoded object against this one as serialised, so a key
+ * out of order fails for a reason that has nothing to do with the stamp.
+ *
+ * The six 0124 fields are appended rather than inserted, which is the same rule
+ * KEYS itself follows — inserting one would shift every later field and make an
+ * old stamp decode as a different day.
+ */
 const served: ServedDay = {
   u: USER, d: DAY, b: "block-1",
   q1: "q-1", q2: "q-2", cue: CUE, vid: VIDEO, pitch: null,
   skipped: null, match: "family", tier: "low",
+  kind: "normal", item: null, tfilm: null, trk: null, mcyc: 1, qcyc: 1,
 };
 
 /* ---- 1 · The day stamp ---------------------------------------------------- */

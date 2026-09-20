@@ -6,12 +6,14 @@ import { TrendAndHistory } from "@/components/advisor/TrendAndHistory";
 import { loadAdvisorTrend } from "@/lib/advisor-trend";
 import { formatPeriod, PERIOD_COLUMNS, toPeriodInfo } from "@/lib/period-label";
 import { loadMeasurementPeriod } from "@/lib/perf-period";
-import { storeToday } from "@/lib/mapping/epoch";
 import { formatRosterName } from "@/lib/manager";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
-import { cueTierForRate, listCuesForServices } from "@/lib/daily";
+import { CUES_PER_SERVICE } from "@/lib/daily";
+import { loadFamilyContent, loadFocusFamilyCard } from "@/lib/service-family";
+import { createServiceClient } from "@/lib/supabase/service";
+import { FocusFamilyCard } from "@/components/advisor/FocusFamilyCard";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
 import { BRAND } from "@/lib/brand";
@@ -222,33 +224,68 @@ export default async function AdvisorPage() {
   // open — two queries for the whole set instead of a round-trip per tap.
   // Lists, not singles: the pitch dialog previews several per service.
   /*
-   * THE STORE'S DATE, NOT UTC.
+   * ---- THE "TODAY'S CUE" ROTATION IS GONE, AND IT HAD TO GO ---------------
    *
-   * This date is not decoration: listCuesForServices feeds it to
-   * rotationIndex(), and its own comment says each list is "rotated so its head
-   * IS today's cue". /today resolves today through rooftop_today(), which is
-   * `now() at time zone <rooftop timezone>`. This page used
-   * `new Date().toISOString()`, so from about 7pm Central until midnight the two
-   * screens named different cues as today's — /today serving cue N while the
-   * pitch dialog here led with N+1.
+   * This used to resolve the rooftop's today and hand it to
+   * listCuesForServices, which rotated each family's cue list so its head WAS
+   * the cue the daily ritual named that morning. The two screens agreed, and
+   * the dialog badged its first cue "Today's cue".
    *
-   * The fallback is storeToday() rather than the UTC date: every rooftop is
-   * America/Chicago, which is the same assumption lib/mapping/epoch.ts already
-   * documents and stamps mapping edits with. A rooftop we cannot resolve is
-   * still a dealership, not a server in London.
+   * 3b ended that. The ritual's item slot serves the advisor's CRAFT
+   * curriculum in module order; it does not draw a family cue at all. There is
+   * no longer a "today's cue" for Belts & Cooling to agree with, so rotating to
+   * match one would be rotating to match nothing, and the badge would be a
+   * label on a claim the product stopped making.
+   *
+   * So the list is ordered by id — stable, and honest about being a shelf
+   * rather than a schedule. The badge is removed in PitchDialog for the same
+   * reason.
    */
-  const { data: cueDateRaw } = rooftopId
-    ? await supabase.rpc("rooftop_today", { _rooftop: rooftopId })
-    : { data: null };
-  const cueDate = (cueDateRaw as string | null) ?? storeToday();
 
-  const serviceCues = await listCuesForServices(
-    supabase,
-    cueDate,
-    families.map((f) => ({ family: f.family, tier: cueTierForRate(f.rate) }))
-  );
-  const canCoach = hasCoachingVolume(coachingRos);
+
+  /*
+   * ---- ONE RESOLVED FAMILY -----------------------------------------------
+   *
+   * This used to be listCuesForServices(), which read content.service_family
+   * and nothing else — so it returned cues and never a film, while the pitch
+   * slot served this same advisor a film from one of these same families that
+   * morning. 52 published films were reachable and invisible here.
+   *
+   * loadFamilyContent resolves BOTH paths through service_family_content
+   * (0125) and returns films and cues together, with each flagged `completed`
+   * from the same consumption record the loop reads.
+   */
+  const familyService = createServiceClient();
+  const [familyContent, focusCard] = await Promise.all([
+    loadFamilyContent(supabase, user.id, families.map((f) => f.family)),
+    loadFocusFamilyCard(supabase, familyService, user.id),
+  ]);
+
+  /* The dialog's shape, unchanged for the cue side. */
+  const serviceCues: Record<string, { id: string; title: string; body: string | null }[]> =
+    Object.fromEntries(
+      Object.entries(familyContent).map(([family, c]) => [
+        family,
+        c.cues.slice(0, CUES_PER_SERVICE).map((x) => ({
+          id: x.contentId,
+          title: x.title,
+          body: x.body,
+        })),
+      ])
+    );
+
+  /* How many films each family actually has, and how many are done — so the
+     dialog can stop badging an empty tab "Soon" over twelve of them. */
+  const serviceFilms: Record<string, { total: number; done: number }> =
+    Object.fromEntries(
+      Object.entries(familyContent).map(([family, c]) => [
+        family,
+        { total: c.films.length, done: c.films.filter((f) => f.completed).length },
+      ])
+    );
+
   const pick = eddiesPick(families, coachingRos);
+  const canCoach = hasCoachingVolume(coachingRos);
   const periodLabel = formatPeriod(rooftopName, toPeriodInfo(periodRow));
 
   // The pick's chip names the month the PICK came from, which is not always the
@@ -343,66 +380,89 @@ export default async function AdvisorPage() {
         <TrendAndHistory trend={trend} />
       </section>
 
-      {/* ---- Eddie's Pick: the one hero ---------------------------------- */}
-      {canCoach && pick && (
-        <section className="ediagd-hero mt-6" data-intentional-bleed>
-          <SunWaveMotif />
+      {/* ---- The one hero ------------------------------------------------ */}
+      {/*
+        EDDIE'S PICK BECOMES FOCUS-FAMILY PROGRESS.
 
-          <div className="relative">
-            <div className="flex items-center gap-2">
-              <p className="ediagd-eyebrow">
-                {BRAND.app}&apos;s Pick of the Day
-              </p>
-              {/* The pick is ranked from THIS period's attach rates. A screenshot
-                  of just this card would otherwise carry no date at all. */}
-              <PeriodChip label={pickLabel} />
-            </div>
-            <h2 className="mt-2 text-3xl font-extrabold leading-tight text-white">
-              {pick.family}
-            </h2>
-            {coachingPeriod && (
-              <p className="ediagd-numeral mt-1 text-xs text-ice-dim">
-                {`Based on ${coachingPeriod.label} — the last complete month`}
-              </p>
-            )}
+        TWO_LADDERS: "With the pitch inside the loop, an Eddie's Pick card
+        beside it repeats the film the advisor just watched. The card becomes a
+        focus-family progress card: Belts & Cooling - 3 of 7 - continue."
 
-            <p className="mt-3 text-sm leading-relaxed text-ice-dim">
-              Your {pick.family} attach is{" "}
-              <span className="font-extrabold text-white">
-                {formatPct(pick.rate)}
-              </span>{" "}
-              — the store averages{" "}
-              <span className="font-extrabold text-white">
-                {formatPct(pick.storeAvg)}
-              </span>
-              . Close the gap.
-            </p>
+        So when the advisor HAS a locked assignment the hero reports that —
+        where they are on the shelf, and a way to watch ahead. The attach-rate
+        pick stays underneath it as the reason, not the headline.
 
-            {/* The gap made visual: your rate against the store's. */}
-            <div className="mt-5" aria-hidden="true">
-              <div className="h-2 w-full overflow-hidden rounded-pill bg-white/15">
-                <div
-                  className="h-full rounded-pill bg-gold"
-                  style={{
-                    width: `${Math.max(
-                      4,
-                      Math.min(100, (pick.rate / Math.max(pick.storeAvg, 0.1)) * 100)
-                    )}%`,
-                  }}
-                />
+        WHEN THERE IS NO ASSIGNMENT the old pick is still the right card: an
+        advisor with no DMS history has no focus family, and "here is where you
+        are weak" is more use than an empty progress bar.
+      */}
+      {focusCard ? (
+        <FocusFamilyCard
+          card={focusCard}
+          periodLabel={pickLabel}
+          rate={pick && pick.family === focusCard.family ? pick.rate : null}
+          storeAvg={pick && pick.family === focusCard.family ? pick.storeAvg : null}
+        />
+      ) : (
+        canCoach &&
+        pick && (
+          <section className="ediagd-hero mt-6" data-intentional-bleed>
+            <SunWaveMotif />
+
+            <div className="relative">
+              <div className="flex items-center gap-2">
+                <p className="ediagd-eyebrow">
+                  {BRAND.app}&apos;s Pick of the Day
+                </p>
+                <PeriodChip label={pickLabel} />
               </div>
-              <div className="mt-2 flex justify-between text-xs font-bold uppercase tracking-wide text-ice-dim">
-                <span>You {formatPct(pick.rate)}</span>
-                <span>Store {formatPct(pick.storeAvg)}</span>
-              </div>
-            </div>
+              <h2 className="mt-2 text-3xl font-extrabold leading-tight text-white">
+                {pick.family}
+              </h2>
+              {coachingPeriod && (
+                <p className="ediagd-numeral mt-1 text-xs text-ice-dim">
+                  {`Based on ${coachingPeriod.label} — the last complete month`}
+                </p>
+              )}
 
-            <PitchButton
-              service={pick.family}
-              cues={serviceCues[pick.family] ?? []}
-            />
-          </div>
-        </section>
+              <p className="mt-3 text-sm leading-relaxed text-ice-dim">
+                Your {pick.family} attach is{" "}
+                <span className="font-extrabold text-white">
+                  {formatPct(pick.rate)}
+                </span>{" "}
+                — the store averages{" "}
+                <span className="font-extrabold text-white">
+                  {formatPct(pick.storeAvg)}
+                </span>
+                . Close the gap.
+              </p>
+
+              <div className="mt-5" aria-hidden="true">
+                <div className="h-2 w-full overflow-hidden rounded-pill bg-white/15">
+                  <div
+                    className="h-full rounded-pill bg-gold"
+                    style={{
+                      width: `${Math.max(
+                        4,
+                        Math.min(100, (pick.rate / Math.max(pick.storeAvg, 0.1)) * 100)
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-xs font-bold uppercase tracking-wide text-ice-dim">
+                  <span>You {formatPct(pick.rate)}</span>
+                  <span>Store {formatPct(pick.storeAvg)}</span>
+                </div>
+              </div>
+
+              <PitchButton
+                service={pick.family}
+                cues={serviceCues[pick.family] ?? []}
+                films={serviceFilms[pick.family] ?? { total: 0, done: 0 }}
+              />
+            </div>
+          </section>
+        )
       )}
 
       {/* ---- Your services ----------------------------------------------- */}
@@ -411,7 +471,7 @@ export default async function AdvisorPage() {
 
         {canCoach ? (
           <div className="ediagd-card mt-3 px-4">
-            <ServiceList families={families} cues={serviceCues} />
+            <ServiceList families={families} cues={serviceCues} films={serviceFilms} />
           </div>
         ) : (
           <div className="ediagd-card mt-3 p-6">

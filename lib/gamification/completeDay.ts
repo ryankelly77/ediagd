@@ -37,8 +37,15 @@ import {
   type SwellState,
 } from "./streak";
 import { loadScheduleContext } from "@/lib/work-schedule";
-import { readOpenBlock } from "@/lib/coaching-block";
-import type { CueMatch } from "@/lib/daily";
+import {
+  describeOutstanding,
+  evaluateDayGate,
+  type MorningKind,
+  type ServedMorning,
+  type SlotState,
+} from "./dayGate";
+import { accrueFromCompletion } from "@/lib/certification-server";
+import { completeModuleIfReady } from "@/lib/lms";
 import { readWatchTicket, watchTicketRef } from "@/lib/watch-ticket";
 import { readGate } from "@/lib/watch-gate";
 import { readDayStamp, type ServedDay } from "@/lib/day-stamp";
@@ -69,6 +76,27 @@ export type CompleteDayInput = {
   watchError?: boolean | null;
   pitchWatchTicket?: string | null;
   lifestyleWatchTicket?: string | null;
+  /**
+   * The item slot was worked through.
+   *
+   * ---------------------------------------------------------------------------
+   * THIS IS CLIENT-ASSERTED, AND IT IS THE SAME TRUST BOUNDARY AS BEFORE
+   * ---------------------------------------------------------------------------
+   * A text item has nothing for the server to measure. There is no player, no
+   * coverage, no ticket — reading is not observable. The old loop had exactly
+   * this: step 2 served a coaching cue and a Continue button, and the server
+   * recorded that the day completed without any evidence the cue was read.
+   *
+   * So this does not widen anything. What it does do is make the assertion
+   * VISIBLE instead of implicit: `itemAck` is a named claim the client makes,
+   * and the gate records it as a leg like any other, rather than the day
+   * silently counting because the client navigated.
+   *
+   * When an item is a FILM the acknowledgement is ignored and the watch gate
+   * decides — see buildMorning(). The moment Mitch attaches videos to modules,
+   * this leg becomes genuinely measured with no further change.
+   */
+  itemAck?: boolean | null;
 };
 
 export type CompleteDayResult = {
@@ -84,6 +112,15 @@ export type CompleteDayResult = {
   sandEarned: number;
   badgeEarned: string | null;
   newBalance: number;
+  /**
+   * Certification slugs this morning finished. Usually empty.
+   *
+   * BOTH LADDERS LAND HERE. The pitch film can finish a SERVICE track and the
+   * item can finish a CRAFT one, and a single morning can in principle do both
+   * — so this is a list, not a field.
+   */
+  certificationsEarned: string[];
+  credential: { level: "certified" | "master"; certificateId: string } | null;
 };
 
 /** Daily picks needed for Eddie's Pick. */
@@ -142,21 +179,24 @@ export async function completeDay(
   const wasScheduled = scheduledOn(today, scheduleContext);
 
   /*
-   * ---- 1c. The coaching block, READ SERVER-SIDE AND NOT TAKEN FROM THE CLIENT
+   * ---- 1c. THE COACHING BLOCK IS GONE FROM THIS PATH ----------------------
    *
-   * The block decides which family an advisor is coached on, which op code
-   * inside it, and where in the six stages they are. Accepting those from the
-   * request would let anyone POST themselves a block id — including someone
-   * else's — and write a coaching history that never happened. They are derived
-   * here from the same function the page rendered from, so the record and the
-   * screen agree without the screen being trusted.
+   * It used to be read here and asserted against the stamp, because the block
+   * decided the family, the op code and the stage, and accepting those from the
+   * request would have let anyone POST themselves somebody else's coaching
+   * history.
    *
-   * Read BEFORE the day is claimed, for the same reason as the schedule above:
-   * a failure here throws with nothing written. It also matters arithmetically —
-   * the block's stage cursor is a COUNT of completions against it, so reading it
-   * after the insert would report tomorrow's stage as today's.
+   * 0124 retires the block from the loop: `advisor_focus_family` owns the
+   * family now and the pitch slot walks its films. Two things cannot both own
+   * the op code. The migration closes every open block, so there is nothing
+   * left to assert against and reading it every morning would be a query whose
+   * answer is always null.
+   *
+   * The provenance that assertion protected has not been dropped — it moved.
+   * The op code and stage below are read from the PITCH FILM the stamp names,
+   * which is server-side authority over a signed id, and is strictly better
+   * than a cursor the client had to agree with.
    */
-  const block = await readOpenBlock(supabase, userId);
 
   /*
    * ---- 1d. WHAT WAS ACTUALLY SERVED --------------------------------------
@@ -169,6 +209,10 @@ export async function completeDay(
    * day with null ids would look like a day with no content served, which is a
    * different and untrue statement — and it is the shape a forger would aim
    * for. The advisor is told to reload, which re-mints the stamp.
+   *
+   * A stamp minted by the PREVIOUS deploy fails here on length, because 0124
+   * appended six keys. That is the intended behaviour and it costs one reload
+   * to anybody holding a page open across the deploy.
    */
   const stampCheck = readDayStamp(content.dayStamp, userId, today);
   if (!stampCheck.ok) {
@@ -179,40 +223,34 @@ export async function completeDay(
   }
   const served: ServedDay = stampCheck.day;
 
-  /*
-   * THE STAMP AND THE OPEN BLOCK HAVE TO BE THE SAME DAY.
-   *
-   * The block is read server-side and is the authority on the coaching
-   * position; the stamp is the authority on what content was put in front of
-   * the advisor. If they disagree, the day being submitted is not the day that
-   * is open — a block closed in another tab, or a stamp held over from an
-   * earlier render — and writing either version would record a conversation
-   * that did not happen in the order it claims.
-   */
-  if ((served.b ?? null) !== (block?.id ?? null)) {
-    throw new CompleteDayError(
-      "This day was served against a different coaching block. Reload the day and try again.",
-      "day.block"
-    );
-  }
-
   const watch = await verifyWatch(supabase, userId, today, content, served);
 
   /*
-   * ---- 1e. Did the cue that was served actually carry this stage? ---------
+   * ---- 1e. THE GATE, ASKED ONCE ------------------------------------------
    *
-   * The block's cursor says which of the six stages today is, and that is the
-   * right thing to serve FROM. It is not evidence that the cue served was
-   * written for that stage — no published cue carries a stage at all today, so
-   * every completion was recording "At the Kiosk" for a passage that has no
-   * position in the pitch. A column read later as a measurement of where an
-   * advisor has been coached would have been reading a fiction.
+   * Three morning shapes, one function. buildMorning turns the signed stamp and
+   * the server's own watch record into the shape lib/gamification/dayGate.ts
+   * judges, and that judgement is the only place "complete" is decided.
    *
-   * So the stage is written only when the served cue agrees with it. The rung
-   * is still recorded in `cue_match`, which is where "we wanted a stage and
-   * dropped to the family shelf" already lives.
+   * REFUSING HERE IS BEFORE ANYTHING IS WRITTEN. The completion row is the
+   * idempotency guard and the first write of the saga; a day that does not
+   * clear the gate must not claim the date, or the advisor could never retry it.
    */
-  const stage = await servedStage(supabase, served.cue, block);
+  const morning = await buildMorning(supabase, userId, today, served, content, watch);
+  const gate = evaluateDayGate(morning);
+  if (!gate.complete) {
+    throw new CompleteDayError(
+      `Not finished yet — ${describeOutstanding(gate.outstanding)} still to go.`,
+      "day.gate"
+    );
+  }
+
+  /*
+   * The op code and the stage of the pitch film that was served, read from the
+   * content row rather than taken from the request. Null on a two-slot or
+   * track-entry morning, which is what the completion should say.
+   */
+  const pitchFacts = await pitchProvenance(supabase, served.pitch);
 
   // ---- 2 & 3. Claim the day. The unique index IS the idempotency guard. ---
   const { data: completion, error: completionError } = await supabase
@@ -223,20 +261,33 @@ export async function completeDay(
       completion_date: today,
       /* From the stamp, never from the request body. */
       quote_content_id: served.q1,
-      quote2_content_id: served.q2,
-      cue_content_id: served.cue,
       video_content_id: served.vid,
       pitch_video_content_id: served.pitch,
-      pitch_video_skipped: served.skipped,
-      block_id: block?.id ?? null,
-      op_code: block?.opCode ?? null,
-      // A stage without an op code violates daily_completion_stage_needs_op_code
-      // (0067), and is meaningless anyway — a position in a pitch that isn't
-      // named is not a position. Null too when the cue served carried no stage
-      // of its own; see servedStage().
-      stage,
-      cue_tier: block?.tier ?? null,
-      cue_match: (served.match as CueMatch | null) ?? null,
+      item_content_id: served.item,
+      morning_kind: morning.kind,
+      entered_certification_id: served.trk,
+      /*
+       * RETIRED COLUMNS, WRITTEN NULL RATHER THAN REPURPOSED.
+       *
+       * cue_content_id in particular: 3,038 historical rows join it to
+       * content.service_family to prove coaching coverage, and putting a craft
+       * item there would make every one of those rows mean two things. The item
+       * has its own column. See 0124 §1.
+       */
+      quote2_content_id: null,
+      cue_content_id: null,
+      cue_match: null,
+      cue_tier: null,
+      pitch_video_skipped: null,
+      block_id: null,
+      /*
+       * READ FROM THE PITCH FILM, not from a block cursor the client had to
+       * agree with. A stage without an op code violates
+       * daily_completion_stage_needs_op_code (0067), and pitchProvenance
+       * returns them together or not at all.
+       */
+      op_code: pitchFacts.opCode,
+      stage: pitchFacts.stage,
       pitch_video_watch_pct: watch.pitchPct,
       lifestyle_video_watch_pct: watch.lifestylePct,
       watch_error: watch.error,
@@ -265,11 +316,50 @@ export async function completeDay(
   const awardedBadgeKeys: string[] = [];
   let priorSwell: Record<string, unknown> | null = null;
   let swellExisted = false;
+  /* Only what THIS run wrote, so compensation cannot undo an earlier day. */
+  const markedProgress: string[] = [];
+  const markedPools: { pool: "mindset" | "quote"; contentId: string; cycle: number }[] = [];
+  let recordedEntry: string | null = null;
 
   const rollback = async () => {
     try {
       await supabase.from("sand_dollar_entry").delete().eq("ref_id", completionId);
       await supabase.from("paddle_out_entry").delete().eq("ref_id", completionId);
+      /*
+       * THE CONSUMPTION AND CURSOR WRITES COMPENSATE TOO, and they are the ones
+       * that would hurt most if they did not: a content_progress row left
+       * behind by a failed day marks a film watched that the advisor was never
+       * credited for, and they would never be offered it again. The pool
+       * cursors are the same failure one pool over.
+       *
+       * Scoped to THIS day's ids, never a blanket delete — an earlier, honest
+       * completion of the same content must survive. `markedProgress` is empty
+       * until the writes below succeed, so a failure before them removes
+       * nothing.
+       */
+      if (markedProgress.length) {
+        await supabase
+          .from("content_progress")
+          .update({ completed_at: null })
+          .eq("user_id", userId)
+          .in("content_id", markedProgress);
+      }
+      for (const p of markedPools) {
+        await supabase
+          .from("advisor_pool_seen")
+          .delete()
+          .eq("user_id", userId)
+          .eq("pool", p.pool)
+          .eq("content_id", p.contentId)
+          .eq("cycle", p.cycle);
+      }
+      if (recordedEntry) {
+        await supabase
+          .from("advisor_track_entry")
+          .delete()
+          .eq("user_id", userId)
+          .eq("certification_id", recordedEntry);
+      }
       for (const key of awardedBadgeKeys) {
         await supabase
           .from("user_badge")
@@ -289,6 +379,105 @@ export async function completeDay(
   };
 
   try {
+    /*
+     * ---- 3b. WHAT THE MORNING CONSUMED ------------------------------------
+     *
+     * THE PITCH AND THE ITEM ARE THE TWO LADDERS, AND THIS IS WHERE BOTH
+     * ADVANCE. Writing completed_at is not bookkeeping — it is the cursor:
+     *
+     *   the pitch slot   skips completed films, so this is what moves the
+     *                    advisor to the next film and eventually ends the cycle
+     *                    and re-derives the family (advance_focus_family).
+     *   the item slot    skips completed items, so this is what moves them
+     *                    through the module and eventually the track.
+     *   accrual          lib/certification-server.ts counts exactly these rows.
+     *
+     * completed_at, NOT merely a row. record_watch_progress (0057) already
+     * inserted a row on the first watch ping and never sets completed_at; the
+     * upsert below is what turns "started" into "finished".
+     *
+     * SERVICE ROLE, and it has to be: content_progress is the record service
+     * certifications accrue from, so the loop writing it as the advisor would
+     * mean a credential advancing on a row the advisor's own client produced.
+     * The entitlement that governs it is enforced at SERVE time — every pool in
+     * lib/loop.ts is read through the advisor's client — so a film they cannot
+     * see was never in the morning to be completed.
+     */
+    const consumed = [served.pitch, served.item].filter(Boolean) as string[];
+    for (const contentId of consumed) {
+      const { error } = await supabase.from("content_progress").upsert(
+        {
+          user_id: userId,
+          rooftop_id: rooftopId,
+          content_id: contentId,
+          watched_pct: 100,
+          completed_at: new Date().toISOString(),
+          source: "loop",
+        },
+        { onConflict: "user_id,content_id" }
+      );
+      if (error) throw new CompleteDayError(error.message, "progress.consume");
+      markedProgress.push(contentId);
+    }
+
+    /*
+     * ---- 3c. THE POOL CURSORS ---------------------------------------------
+     *
+     * Written HERE and not at serve time, deliberately. Marking a film seen
+     * when the page rendered would mean an advisor who opened the app and
+     * walked away has "seen" it, and tomorrow would move on without them.
+     *
+     * The cycle number comes from the STAMP, so it is the pass the draw was
+     * actually made from. Recomputing it here could disagree with the draw if
+     * the pool turned over between render and completion, and the row would
+     * then be filed under a pass that never served it.
+     */
+    const poolWrites: { pool: "mindset" | "quote"; contentId: string; cycle: number }[] = [];
+    if (served.vid && served.mcyc != null) {
+      poolWrites.push({ pool: "mindset", contentId: served.vid, cycle: Number(served.mcyc) });
+    }
+    if (served.q1 && served.qcyc != null) {
+      poolWrites.push({ pool: "quote", contentId: served.q1, cycle: Number(served.qcyc) });
+    }
+    for (const w of poolWrites) {
+      const { error } = await supabase
+        .from("advisor_pool_seen")
+        .upsert(
+          { user_id: userId, pool: w.pool, content_id: w.contentId, cycle: w.cycle },
+          { onConflict: "user_id,pool,content_id,cycle" }
+        );
+      if (error) throw new CompleteDayError(error.message, "pool.seen");
+      markedPools.push(w);
+    }
+
+    /*
+     * ---- 3d. TRACK ENTRY ---------------------------------------------------
+     *
+     * RULING 2: recorded REGARDLESS of whether a film exists. The advisor has
+     * started the track either way, and the entry row is what stops the loop
+     * asking again tomorrow. Today no track has a film, so every entry recorded
+     * here is a track that simply began on an ordinary three-slot morning —
+     * which is the intended behaviour, not a degraded one.
+     *
+     * The primary key (user_id, certification_id) is the serve-once guard, so
+     * ignoreDuplicates makes a re-run harmless rather than an error.
+     */
+    if (served.trk) {
+      const { error } = await supabase
+        .from("advisor_track_entry")
+        .upsert(
+          {
+            user_id: userId,
+            certification_id: served.trk,
+            rooftop_id: rooftopId,
+            film_content_id: served.tfilm,
+          },
+          { onConflict: "user_id,certification_id", ignoreDuplicates: true }
+        );
+      if (error) throw new CompleteDayError(error.message, "track.entry");
+      recordedEntry = served.trk;
+    }
+
     // ---- 4. Settings — every number below comes from here ----------------
     const { data: settingsRow, error: settingsError } = await supabase
       .from("game_settings")
@@ -525,7 +714,63 @@ export async function completeDay(
       badgeEarned = candidate.key;
     }
 
-    // ---- 10. Balance + result -------------------------------------------
+    /*
+     * ---- 10. BOTH CREDENTIAL COUNTERS -------------------------------------
+     *
+     * THE DAILY LOOP HAS NEVER ACCRUED ANYTHING UNTIL NOW, AND THAT WAS THE
+     * GAP. accrueFromCompletion was wired only to lib/library-actions.ts — an
+     * advisor who did the loop every morning and never opened the library
+     * advanced no certification at all. TWO_LADDERS: "Every completed day
+     * advances two credentials. The advisor is never asked to think about
+     * either."
+     *
+     * ONE FUNCTION, CALLED PER CONSUMED ITEM, AND IT ALREADY KNOWS THE
+     * DIFFERENCE. accrueFromCompletion looks at the content row: a module_id
+     * routes to the craft track, a family routes to the service track. The
+     * pitch film resolves its family through op_code, the item resolves its
+     * module — so calling it with each id advances the right ladder without
+     * this function needing to know which is which. Re-implementing that split
+     * here is how the two would come to disagree.
+     *
+     * AFTER THE COMPLETION IS PAID, AND NOT PART OF THE SAGA. A certification
+     * is derived state: if this throws, the day still counted, the streak still
+     * advanced, and the next completion recomputes it. Rolling back a whole
+     * morning because a credential recount failed would be the tail wagging the
+     * dog — and unlike the ledger rows, nothing here is money.
+     */
+    const certificationsEarned: string[] = [];
+    let credential: CompleteDayResult["credential"] = null;
+    try {
+      /*
+       * THE CRAFT LADDER RUNS THROUGH module_completion, NOT content_progress.
+       *
+       * craftComplete() in lib/certification-server.ts reads module_completion
+       * and deliberately does not recompute what "module complete" means. So
+       * finishing the item is not enough on its own — the module row has to be
+       * written, and until 3b only the library ever wrote one. An advisor who
+       * did the loop every morning and never opened the library would have
+       * advanced no craft track at all.
+       *
+       * completeModuleIfReady is the LIBRARY'S function, shared rather than
+       * copied (lib/lms.ts). Bonus 0: the loop pays sand_daily_loop and adding
+       * a second currency source to the morning is a product decision nobody
+       * has taken. The row it writes — which is what the credential reads — is
+       * identical to the library's.
+       */
+      if (served.item) {
+        await completeModuleIfReady(supabase, userId, served.item, rooftopId, 0);
+      }
+
+      for (const contentId of consumed) {
+        const accrual = await accrueFromCompletion(supabase, userId, rooftopId, contentId);
+        certificationsEarned.push(...accrual.earned);
+        if (accrual.credential) credential = accrual.credential;
+      }
+    } catch {
+      /* Swallowed on purpose — see above. The completion stands. */
+    }
+
+    // ---- 11. Balance + result -------------------------------------------
     const newBalance = await readBalance(supabase, userId);
 
     return {
@@ -541,6 +786,8 @@ export async function completeDay(
       sandEarned,
       badgeEarned,
       newBalance,
+      certificationsEarned,
+      credential,
     };
   } catch (error) {
     await rollback();
@@ -732,40 +979,6 @@ async function verifyWatch(
   };
 }
 
-/**
- * The stage to record: the block's, but only if the cue served carries it.
- *
- * `stage` on daily_completion is meant to say where in the pitch this advisor
- * was coached, and the six stages are a sequence a certification will be
- * credited from. The block's cursor is the right thing to SERVE from; it is not
- * on its own evidence about the content that came back.
- *
- * The cue id is the client's claim about what it rendered, and everything the
- * server derives here is checked against the database rather than taken from
- * it — the content row's own `stage` is what decides. A cue that carries no
- * stage, or a different one, records null: the block still says which stage was
- * intended, and `cue_match` says which rung actually fired.
- *
- * NULL ON ANY DOUBT. A missing block, a missing op code, a cue id that does not
- * resolve, a read that fails — all of them mean "we cannot say", and a column
- * somebody later reads as a measurement must not hold a guess.
- */
-async function servedStage(
-  supabase: ServiceClient,
-  cueId: string | null | undefined,
-  block: { opCode: string | null; stage: string } | null
-): Promise<string | null> {
-  if (!block?.opCode || !block.stage || !cueId) return null;
-
-  const { data, error } = await supabase
-    .from("content")
-    .select("stage")
-    .eq("id", cueId)
-    .maybeSingle();
-  if (error || !data) return null;
-
-  return data.stage === block.stage ? block.stage : null;
-}
 
 async function readBalance(supabase: ServiceClient, userId: string): Promise<number> {
   const { data } = await supabase
@@ -801,5 +1014,119 @@ async function currentState(
     sandEarned: 0,
     badgeEarned: null,
     newBalance: balance,
+    /* Nothing was earned by a call that granted nothing. An already-complete
+       day re-reporting a credential would re-fire the celebration. */
+    certificationsEarned: [],
+    credential: null,
   };
+}
+
+/* ---------------------------------------------------------------------------
+   THE MORNING, AS THE GATE SEES IT
+--------------------------------------------------------------------------- */
+
+/**
+ * Turn the signed stamp plus this server's own watch record into the shape
+ * lib/gamification/dayGate.ts judges.
+ *
+ * ---------------------------------------------------------------------------
+ * EVERY `met` HERE IS THE SERVER'S, EXCEPT ONE THAT SAYS SO
+ * ---------------------------------------------------------------------------
+ * For a film it is readGate() — the watch gate this server already checked and
+ * wrote, after the ticket and wall-clock tests in verifyWatch. It is not the
+ * percentage the browser reported, and it survives a reload, which is the whole
+ * reason the gate record exists (0086).
+ *
+ * The one exception is a TEXT item, which has nothing observable to measure and
+ * falls back to the client's acknowledgement. That is called out in
+ * CompleteDayInput.itemAck rather than buried: it is the same trust boundary
+ * the old cue step had, not a new one.
+ *
+ * WHICH SLOTS ARE `null` IS THE LOAD-BEARING PART. null means the slot was not
+ * offered — a two-slot morning genuinely has no pitch — and the gate treats
+ * that as "cannot hold the day open". Passing a not-met slot instead would
+ * deadlock every two-slot morning.
+ */
+async function buildMorning(
+  supabase: ServiceClient,
+  userId: string,
+  today: IsoDate,
+  served: ServedDay,
+  content: CompleteDayInput,
+  watch: { pitchPct: number | null; lifestylePct: number | null }
+): Promise<ServedMorning> {
+  /*
+   * A stamp from before 0124 has no `kind`. It cannot reach here — readDayStamp
+   * rejects it on length first — so this default is for a stamp minted by this
+   * deploy with a kind somehow absent, and "normal" is the strictest reading:
+   * it requires the most legs.
+   */
+  const kind = (served.kind as MorningKind | null) ?? "normal";
+
+  const film = async (contentId: string | null): Promise<SlotState | null> => {
+    if (!contentId) return null;
+    const gate = await readGate(supabase, userId, contentId, today);
+    return { contentId, met: gate !== null };
+  };
+
+  const [mindset, pitch, trackFilm] = await Promise.all([
+    film(served.vid),
+    film(served.pitch),
+    film(served.tfilm),
+  ]);
+
+  let item: SlotState | null = null;
+  if (served.item) {
+    /*
+     * A FILM ITEM IS GATED LIKE A FILM. The moment Mitch attaches videos to
+     * modules this leg stops being client-asserted, with no change here — which
+     * is the point of asking the content row rather than trusting the stamp to
+     * have told us the format.
+     */
+    const { data: row } = await supabase
+      .from("content")
+      .select("mux_playback_id")
+      .eq("id", served.item)
+      .maybeSingle();
+
+    if (row?.mux_playback_id) {
+      item = await film(served.item);
+    } else {
+      item = { contentId: served.item, met: content.itemAck === true };
+    }
+  }
+
+  void watch; /* verifyWatch already wrote what it verified; the gate reads the
+                 record rather than the percentages, so this is here to make the
+                 dependency visible rather than to be used. */
+
+  return { kind, mindset, pitch, item, trackFilm };
+}
+
+/**
+ * The op code and stage of the pitch film that was served.
+ *
+ * READ FROM THE CONTENT ROW. The stamp names the film and the film knows its
+ * own op code; taking either from the request would re-open exactly the hole
+ * lib/day-stamp.ts was written to close.
+ *
+ * BOTH OR NEITHER. daily_completion_stage_needs_op_code (0067) refuses a stage
+ * without an op code, and a stage that is not attached to a named service is
+ * not a position in anything anyway.
+ */
+async function pitchProvenance(
+  supabase: ServiceClient,
+  pitchId: string | null
+): Promise<{ opCode: string | null; stage: string | null }> {
+  if (!pitchId) return { opCode: null, stage: null };
+
+  const { data } = await supabase
+    .from("content")
+    .select("op_code, stage")
+    .eq("id", pitchId)
+    .maybeSingle();
+
+  const opCode = (data?.op_code as string | null) ?? null;
+  if (!opCode) return { opCode: null, stage: null };
+  return { opCode, stage: (data?.stage as string | null) ?? null };
 }
