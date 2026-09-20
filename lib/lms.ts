@@ -448,3 +448,72 @@ export async function moduleForItem(
 
   return (data?.module_id as string | null) ?? null;
 }
+
+/* ---------------------------------------------------------------------------
+   FINISHING A MODULE — the one place it happens
+--------------------------------------------------------------------------- */
+
+/**
+ * Write the module_completion row, if the module's requirements are now met.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS MOVED HERE
+ * ---------------------------------------------------------------------------
+ * It lived inside lib/library-actions.ts as a private helper, which was correct
+ * while the LIBRARY was the only thing that could finish an item. The Two
+ * Ladders loop's item slot finishes one every morning, and craft certification
+ * is read from module_completion — `craftComplete` in lib/certification-server.ts
+ * says so and deliberately does not recompute the rule.
+ *
+ * So without this being shared there were two possible outcomes and both were
+ * bad: the loop writes nothing and no advisor ever earns a craft track from the
+ * daily ritual, or the loop writes its own copy and there are two accountings
+ * of what "module complete" means. TWO_LADDERS asks for the opposite — "Track
+ * completion is expressed in exactly one place" — and says it is worth
+ * insisting on regardless of any one feature.
+ *
+ * THE PRIMARY KEY IS THE PAY-ONCE GUARD. (user_id, module_id), so a second call
+ * loses and returns null rather than celebrating twice.
+ *
+ * `bonus` IS THE CALLER'S, and the two callers pass different things on
+ * purpose. The library pays game_settings.sand_module. The daily loop passes 0:
+ * the loop's own payout is sand_daily_loop and adding a second currency source
+ * to the morning is a product decision nobody has taken. The completion row —
+ * which is what the credential reads — is written identically either way.
+ */
+export async function completeModuleIfReady(
+  service: Client,
+  userId: string,
+  contentId: string,
+  rooftopId: string,
+  bonus: number
+): Promise<{ moduleId: string; bonus: number } | null> {
+  const moduleId = await moduleForItem(service, contentId);
+  if (!moduleId) return null;
+
+  const req = await moduleRequirementsMet(service, userId, moduleId);
+  /* Not met is the NORMAL case — items left, or a quiz still to pass. The quiz
+     path calls this too after grading, so whichever finishes last triggers it. */
+  if (!req.met) return null;
+
+  const { error } = await service.from("module_completion").insert({
+    user_id: userId,
+    module_id: moduleId,
+    rooftop_id: rooftopId,
+  });
+
+  // Already celebrated. The primary key decided; nothing to pay, nothing to show.
+  if (error) return null;
+
+  if (bonus > 0) {
+    await service.from("sand_dollar_entry").insert({
+      user_id: userId,
+      amount: bonus,
+      reason: "module_complete",
+      ref_id: moduleId,
+      note: "Module completed",
+    });
+  }
+
+  return { moduleId, bonus };
+}

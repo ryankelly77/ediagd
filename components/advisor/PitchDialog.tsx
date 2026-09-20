@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Modal } from "@/components/brand/Modal";
+import Link from "next/link";
 import { CueCard } from "@/components/advisor/CueCard";
 import type { ServiceCue } from "@/lib/daily";
 
@@ -19,11 +20,21 @@ type Tab = "video" | "cues";
 export function PitchDialog({
   service,
   cues,
+  films,
   onClose,
 }: {
   service: string;
   /** Resolved server-side — the dialog never fetches, so nothing pops in. */
   cues: ServiceCue[];
+  /**
+   * How many pitch films this family has, and how many this advisor has done.
+   *
+   * THE TAB USED TO SAY "SOON" UNCONDITIONALLY. It said it for Belts & Cooling,
+   * which has twelve — on the same day the loop served the advisor one of them.
+   * The count comes through service_family_content (0125), which resolves the
+   * op-code path this screen never read.
+   */
+  films: { total: number; done: number };
   onClose: () => void;
 }) {
   // Video leads even though it's empty: it's what the button promised, and
@@ -66,10 +77,16 @@ export function PitchDialog({
           selected={tab === "video"}
           onSelect={() => setTab("video")}
         >
-          Video
-          <span className="ml-2 rounded-pill bg-gold-soft px-1.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy">
-            Soon
-          </span>
+          Films
+          {films.total > 0 ? (
+            <span className="ediagd-numeral ml-2 text-xs font-bold text-ink-soft">
+              {films.done} / {films.total}
+            </span>
+          ) : (
+            <span className="ml-2 rounded-pill bg-gold-soft px-1.5 py-0.5 text-xs font-extrabold uppercase tracking-wide text-navy">
+              Soon
+            </span>
+          )}
         </TabButton>
 
         <TabButton
@@ -95,7 +112,15 @@ export function PitchDialog({
           aria-labelledby={`${base}-video`}
           className="p-6"
         >
-          <VideoComingSoon service={service} onSeeCues={() => setTab("cues")} hasCues={cues.length > 0} />
+          {films.total > 0 ? (
+            <FilmsReady service={service} films={films} />
+          ) : (
+            <VideoComingSoon
+              service={service}
+              onSeeCues={() => setTab("cues")}
+              hasCues={cues.length > 0}
+            />
+          )}
         </div>
       ) : (
         <div
@@ -143,6 +168,52 @@ function TabButton({
     >
       {children}
     </button>
+  );
+}
+
+/* ---- Films: the ones that were there all along --------------------------- */
+/**
+ * The dialog does not play them, and that is a deliberate boundary.
+ *
+ * It is a modal on the numbers screen with no scroll position of its own worth
+ * keeping and no route to come back to. A film is three or four minutes; that
+ * belongs on a page an advisor can land on, leave and return to, which is what
+ * /service/[family] is. So this says what exists and hands over.
+ *
+ * It is also what makes the count honest: the tab now reports the shelf, and
+ * tapping through reaches the same shelf rather than a second, dialog-shaped
+ * copy of it that would need its own completion handling.
+ */
+function FilmsReady({
+  service,
+  films,
+}: {
+  service: string;
+  films: { total: number; done: number };
+}) {
+  const left = films.total - films.done;
+  return (
+    <div className="rounded-card border border-line bg-cream-card px-6 py-8 text-center">
+      <p className="text-base font-extrabold text-navy">
+        {films.total === 1
+          ? `1 pitch film for ${service}.`
+          : `${films.total} pitch films for ${service}.`}
+      </p>
+      <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-soft">
+        {films.done === 0
+          ? "One lands in your morning loop. You can watch ahead any time."
+          : left === 0
+            ? "You have watched all of them."
+            : `You have watched ${films.done}. ${left} to go.`}
+      </p>
+
+      <Link
+        href={`/service/${encodeURIComponent(service)}`}
+        className="mt-5 inline-flex rounded-xl bg-gold px-4 py-2.5 text-sm font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      >
+        {films.done === 0 ? "Start watching" : left === 0 ? "Watch again" : "Continue"}
+      </Link>
+    </div>
   );
 }
 
@@ -221,11 +292,16 @@ function CueList({ service, cues }: { service: string; cues: ServiceCue[] }) {
       </p>
 
       <ul className="mt-3 space-y-3">
-        {cues.map((cue, i) => (
+        {cues.map((cue) => (
           <li key={cue.id}>
-            {/* The head of the list is the same cue the daily ritual names
-                today — worth saying, so the two screens feel connected. */}
-            <CueCard cue={cue} badge={i === 0 ? "Today's cue" : undefined} />
+            {/*
+              NO "TODAY'S CUE" BADGE ANY MORE. It was true while the ritual
+              drew a family cue each morning and this list was rotated to lead
+              with it. 3b's item slot serves the craft curriculum instead, so
+              there is no family cue today to be the head of — and a badge
+              pointing at a claim the product stopped making is worse than none.
+            */}
+            <CueCard cue={cue} />
           </li>
         ))}
       </ul>

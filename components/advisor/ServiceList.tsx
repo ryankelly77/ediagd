@@ -18,12 +18,15 @@ import type { ServiceCue } from "@/lib/daily";
 export function ServiceList({
   families,
   cues,
+  films,
 }: {
   families: ServiceFamily[];
   /** Service -> its coaching cues, resolved server-side. Absent where the
    *  caller has none to offer (the manager drill-in), and the section is then
    *  simply omitted. */
   cues?: Record<string, ServiceCue[]>;
+  /** Family -> how many pitch films it has and how many are done. */
+  films?: Record<string, { total: number; done: number }>;
 }) {
   const [selected, setSelected] = useState<ServiceFamily | null>(null);
   // The pitch dialog REPLACES the detail rather than stacking on top of it —
@@ -66,6 +69,7 @@ export function ServiceList({
         <PitchDialog
           service={pitchFor.family}
           cues={cues?.[pitchFor.family] ?? []}
+          films={films?.[pitchFor.family] ?? { total: 0, done: 0 }}
           onClose={() => setPitchFor(null)}
         />
       )}

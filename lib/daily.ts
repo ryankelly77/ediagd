@@ -860,7 +860,7 @@ function rotate<T>(list: T[], start: number): T[] {
  */
 const LIFESTYLE_COLLECTIONS = ["Mindset", "Craft"] as const;
 
-type VideoRow = {
+export type VideoRow = {
   id: string;
   title: string;
   stage?: string | null;
@@ -1036,7 +1036,7 @@ export async function pickTechnicianVideo(
  * treatment — vertical preferred, progress read, linked quote resolved — and
  * differ only in how the row was chosen.
  */
-async function shapeVideo(
+export async function shapeVideo(
   client: Client,
   row: VideoRow,
   userId: string,

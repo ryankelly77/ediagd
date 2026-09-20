@@ -11,9 +11,12 @@ import type { ServiceCue } from "@/lib/daily";
 export function PitchButton({
   service,
   cues,
+  films,
 }: {
   service: string;
   cues: ServiceCue[];
+  /** How many pitch films this family has, and how many are done. */
+  films: { total: number; done: number };
 }) {
   const [open, setOpen] = useState(false);
 
@@ -24,13 +27,14 @@ export function PitchButton({
         onClick={() => setOpen(true)}
         className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3.5 text-base font-extrabold text-navy shadow-[0_4px_16px_rgba(12,28,44,0.24)] transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
       >
-        Watch the pitch
+        {films.total > 0 ? "Watch the pitch" : "Read the cues"}
       </button>
 
       {open && (
         <PitchDialog
           service={service}
           cues={cues}
+          films={films}
           onClose={() => setOpen(false)}
         />
       )}

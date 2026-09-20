@@ -150,18 +150,49 @@ export const ADMIN_PREVIEWS: readonly AdminTool[] = [
     /*
      * THE DAILY LOOP ON ITS OWN. The onboarding preview ends with the daily
      * loop, which made it the only way to see the ritual — six screens of
-     * setup before the thing you actually wanted to look at. This is the same
-     * five steps with the same canned outcome, straight in.
+     * setup before the thing you actually wanted to look at.
      *
-     * The machinery already existed; it was simply never listed. ?preview=1 is
-     * checked against isAdminViewer server-side, so the flag is inert for
-     * anyone else and can never be used to fake a completion. Nothing is
-     * written: previewResult short-circuits completeDayAction, so no
-     * completion row, no badge, no Sand Dollars, and the streak is untouched.
+     * ?preview= is checked against isAdminViewer server-side, so the flag is
+     * inert for anyone else and can never be used to fake a completion.
+     * Nothing is written: previewResult short-circuits completeDayAction, so no
+     * completion row, no consumption, no pool cursor, no track entry, no badge,
+     * no Sand Dollars, and the streak is untouched.
+     *
+     * `preview=1` still means this row — it is what the menu linked to before
+     * the loop had shapes, and what any bookmark still holds.
      */
-    href: "/today?preview=1",
-    label: "Daily Loop",
-    hint: "The five steps with a canned first-day result. Nothing is saved.",
+    href: "/today?preview=normal",
+    label: "Daily Loop — a normal morning",
+    hint: "Mindset film, pitch, item, then the quote on the celebration. No day is saved.",
+  },
+  {
+    /*
+     * ---- THE OTHER TWO SHAPES, LISTED RATHER THAN DISCOVERED -------------
+     *
+     * 3b gave the morning three shapes and only one of them is reachable from
+     * an admin's own data — the pitch slot derives from a DMS book, which an
+     * admin account does not have. Before these rows the walkthrough silently
+     * served a two-slot morning every time and called it "the daily loop".
+     *
+     * Listed as separate entries rather than tabs inside one preview because
+     * ADMIN_PREVIEWS is a menu of things to look at, and "the morning where the
+     * family runs out of film" is a different thing to look at.
+     */
+    href: "/today?preview=two-slot",
+    label: "Daily Loop — a two-slot morning",
+    hint: "What an advisor gets when their focus family has no film left: mindset, then the item.",
+  },
+  {
+    /*
+     * REACHABLE EVEN THOUGH IT CANNOT HAPPEN YET. No certification has an entry
+     * film — which film opens which track is Mitch's ruling — so the real loop
+     * never serves this shape today. The walkthrough borrows a Craft film and
+     * says on screen that it did; see lib/loop-preview.ts. The alternative was
+     * that the one screen nobody can review is the one nobody has agreed to.
+     */
+    href: "/today?preview=track-entry",
+    label: "Daily Loop — a track-entry morning",
+    hint: "Mindset film, then the film that opens a track. Uses a stand-in film, named on screen.",
   },
 ] as const;
 
@@ -279,4 +310,10 @@ export const NAV_EXEMPT: Readonly<Record<string, string>> = {
     + "Upload links here and Mitch has the URL.",
   "/admin/mapping/dealer-codes/confirm":
     "Correction or Change for one sub-category, opened from Dealer Codes.",
+  "/service/[family]":
+    "One service family's films and cues, opened from the focus-family card on "
+    + "/advisor and from the pitch dialog. Deliberately not a menu row: an "
+    + "advisor has one focus family at a time and reaches it from the card that "
+    + "names it, so a list of twenty families would be a second, competing way "
+    + "in. See 0125 and the 3c report.",
 } as const;

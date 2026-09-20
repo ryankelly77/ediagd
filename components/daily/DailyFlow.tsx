@@ -20,9 +20,7 @@ import { SoftAsk } from "@/components/notifications/SoftAsk";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
-import { MIN_ROS_FOR_COACHING, formatPct } from "@/lib/advisor";
 import { citationFor } from "@/lib/content";
-import { splitCueHeading, stripEmphasis } from "@/lib/text";
 import type { CompleteDayResult } from "@/lib/gamification/completeDay";
 import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { PullQuote } from "@/components/brand/ScreenBlocks";
@@ -39,31 +37,72 @@ type Quote = {
   nugget: string | null;
   saved: boolean;
 };
-type Cue = { id: string; title: string; body: string | null };
 type Focus = {
   service: string;
   /**
-   * Null when the block has outlived the pick that opened it — the advisor has
-   * since recovered on this family, so there is no gap to quote. The block runs
-   * to its end regardless; it just stops claiming a number it no longer has.
+   * Null when the assignment has outlived the pick that opened it — the advisor
+   * has since recovered on this family, so there is no gap to quote. The cycle
+   * runs to the end of the shelf regardless; it just stops claiming a number it
+   * no longer has.
    */
   rate: number | null;
   storeAvg: number | null;
-  /** Where in the six-stage pitch today sits. */
-  stage: string;
-  stageNumber: number;
-  stageCount: number;
+  /** Nth film of this family's shelf, and how deep the shelf is. */
+  position: number;
+  total: number;
 };
 
-/** Signed playback for step 3's pitch video. Same shape as the lifestyle slot. */
-type PitchVideo = LifestyleVideo & { stage: string | null };
+/** Signed playback for the pitch slot. Same shape as the mindset slot. */
+type PitchVideo = LifestyleVideo & {
+  family: string;
+  stage: string | null;
+  position: number;
+  total: number;
+};
 
 /**
- * The daily ritual: quote → focus → pitch → lifestyle video → celebration.
+ * Slot 3.
  *
- * Steps 1-3 are pure UI. The ONLY mutation is completeDayAction(), fired once
- * on entering step 4 — so bailing out early genuinely means the day isn't
- * complete, and nothing is earned.
+ * FORMAT IS RENDERED, NEVER FILTERED. TWO_LADDERS: "The moment the loop decides
+ * 'only text here, video elsewhere,' two orderings compete — the module's and
+ * the loop's." The server hands over whatever is next in module order and this
+ * component draws it accordingly. Today every published module item is text; a
+ * video item already works.
+ */
+type Item = {
+  contentId: string;
+  format: "text" | "video";
+  title: string;
+  body: string | null;
+  video: LifestyleVideo | null;
+  moduleName: string;
+  trackName: string;
+  position: number;
+  total: number;
+};
+
+type Track = { name: string; entering: boolean };
+
+type MorningKind = "normal" | "two_slot" | "track_entry";
+
+/**
+ * The daily ritual, in the Two Ladders shape.
+ *
+ *   track entry   mindset -> track film            -> celebration
+ *   two-slot      mindset -> item                  -> celebration
+ *   normal        mindset -> pitch      -> item    -> celebration
+ *
+ * THE MINDSET FILM RUNS FIRST NOW. It used to be step 4 of 5 — the last beat
+ * before the celebration — which meant "get your head right" happened after the
+ * work, and an advisor who abandoned the morning early never reached it at all.
+ * The reversal is the point of the phase, not a refactor artifact.
+ *
+ * THE QUOTE IS NO LONGER A STEP. It renders on the celebration, after the
+ * streak has advanced. It gates nothing and counts towards nothing — ruling 6.
+ *
+ * Every step before the celebration is pure UI. The ONLY mutation is
+ * completeDayAction(), fired once on entering the celebration — so bailing out
+ * early genuinely means the day is not complete and nothing is earned.
  */
 export function DailyFlow({
   alreadyCompleteOnLoad,
@@ -71,19 +110,20 @@ export function DailyFlow({
   today,
   greetingName,
   ackLabel,
-  quote,
-  salesQuote,
+  morningKind,
+  mindset,
+  pitch,
+  item,
+  trackFilm,
+  track,
+  closingQuote,
   focus,
-  cue,
-  cueMatch,
-  pitchVideo,
   dayStamp,
-  totalRos,
   badgeNames,
   badgeRewards,
   previewResult = null,
+  previewNotes = [],
   dailyLoopSand,
-  lifestyle,
   videoThreshold,
   restDay = null,
   nextWorkDayLabel = "",
@@ -105,20 +145,29 @@ export function DailyFlow({
   today: string;
   greetingName: string;
   ackLabel: string;
-  quote: Quote | null;
-  /** Slot 2 — the selling quote, shown with the focus cue on step 2. */
-  salesQuote: Quote | null;
-  focus: Focus | null;
-  cue: Cue | null;
+  /** Decided on the server, never inferred here. See lib/loop.ts. */
+  morningKind: MorningKind;
+  /** Slot 1. Always offered. */
+  mindset: LifestyleVideo | null;
+  /** Slot 2, or null on a two-slot or track-entry morning. */
+  pitch: PitchVideo | null;
+  /** Slot 3, or null on a track-entry morning. */
+  item: Item | null;
   /**
-   * Which rung of the four-rung ladder produced the cue, or null when there was
-   * no block and so no coaching to attempt. 'none' means the ladder ran out —
-   * see the honest empty state in FocusStep.
+   * The film that opens a track, on the morning an advisor enters one.
+   *
+   * RULING 2: null is the ordinary state today — no track has a film yet — and
+   * null means the advisor simply gets a normal morning while the track starts
+   * anyway. There is no placeholder and no "coming soon"; that is the whole
+   * point of the rule.
    */
-  cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
-  /** Step 3, or null when this stage has not been filmed. */
-  pitchVideo: PitchVideo | null;
-  /** True when a pitch video was looked for and not found; null when not looked for. */
+  trackFilm: LifestyleVideo | null;
+  /** Which track the item belongs to, and whether this morning enters it. */
+  track: Track | null;
+  /** RULING 6 — the line they carry onto the drive. Not a slot. */
+  closingQuote: Quote | null;
+  /** The family and the shelf position behind the pitch. Null without one. */
+  focus: Focus | null;
   /*
    * SIGNED "SERVED AT" STAMPS, minted by the page and handed straight back.
    * The client never reads or alters them — it could not; they carry an HMAC.
@@ -126,7 +175,6 @@ export function DailyFlow({
    * two seconds after the step appeared. See lib/watch-ticket.
    */
   dayStamp: string;
-  totalRos: number;
   badgeNames: Record<string, string>;
   /** Badge key -> Sand Dollars it pays, from game_settings / the catalog. */
   badgeRewards: Record<string, number>;
@@ -137,14 +185,19 @@ export function DailyFlow({
    * first-day arc can be walked as often as you like.
    */
   previewResult?: CompleteDayResult | null;
+  /**
+   * What the admin walkthrough had to substitute, in plain words.
+   *
+   * SHOWN, NOT SWALLOWED. lib/navigation.ts keeps these walkthroughs in their
+   * own section because they are "the one place an admin can see something that
+   * looks like a real result and isn't". A borrowed pitch film or a stand-in
+   * track film is exactly that, so the banner names it above the ritual. Empty
+   * on a real morning, and empty on a preview that needed no substitution —
+   * which is itself worth saying, so the banner says that too.
+   */
+  previewNotes?: readonly string[];
   /** sand_daily_loop from game_settings — itemised in the celebration. */
   dailyLoopSand: number;
-  /**
-   * The lifestyle / sales-skill video, signed and ready to play, or null when
-   * none is published. Null keeps the step in the flow with an honest empty
-   * state rather than silently skipping a beat of the ritual.
-   */
-  lifestyle: LifestyleVideo | null;
   /** game_settings.video_complete_pct — the bar a watch has to clear. */
   videoThreshold: number;
   /**
@@ -171,7 +224,19 @@ export function DailyFlow({
   const preview = Boolean(previewResult);
   // The close button in the rail needs it; the nested steps have their own.
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  /*
+   * Seeded from the session so a remount mid-ritual resumes where the advisor
+   * was. See stepKey() — the first Continue files a watch gate, and that is a
+   * server action.
+   */
+  const [step, setStepRaw] = useState(() => readStep(dayStamp) ?? 1);
+  const setStep = useCallback(
+    (next: number) => {
+      writeStep(dayStamp, next);
+      setStepRaw(next);
+    },
+    [dayStamp]
+  );
   const [confirmLeave, setConfirmLeave] = useState(false);
   // True once WE started the completion. From that moment the incoming
   // `alreadyCompleteOnLoad` prop flips true (the action's cookie write
@@ -208,7 +273,7 @@ export function DailyFlow({
    * each step's own `watch` state, below.
    */
   const [pitchWatch, setPitchWatch] = useState<WatchState | null>(null);
-  const [lifestyleWatch, setLifestyleWatch] = useState<WatchState | null>(null);
+  const [mindsetWatch, setMindsetWatch] = useState<WatchState | null>(null);
 
   /*
    * ---- THE GATE, HELD WHERE BOTH MOUNTS CAN SEE IT ------------------------
@@ -237,10 +302,36 @@ export function DailyFlow({
    * unmount would mean reversing that. Threshold-or-nothing: cross the bar on
    * the card and the loop knows; stop halfway and the loop starts at zero.
    */
-  const [lifestyleSessionGate, setLifestyleSessionGate] = useState<GateRecord | null>(null);
+  const [mindsetSessionGate, setMindsetSessionGate] = useState<GateRecord | null>(null);
   const [pitchSessionGate, setPitchSessionGate] = useState<GateRecord | null>(null);
-  const lifestyleGate = creditedGate(lifestyle?.gate ?? null, lifestyleSessionGate);
-  const pitchGate = creditedGate(pitchVideo?.gate ?? null, pitchSessionGate);
+  /*
+   * TWO MORE SLOTS CAN CARRY A FILM, AND BOTH ARE GATED THE SAME WAY.
+   *
+   * The track film is the whole of an entry morning, so it is the gate for that
+   * morning. A video ITEM is not possible today — no module carries a
+   * mux_playback_id — but the item slot is format-agnostic by design, so the
+   * machinery is here rather than waiting to be discovered missing on the day
+   * Mitch attaches the first one.
+   */
+  const [trackFilmSessionGate, setTrackFilmSessionGate] = useState<GateRecord | null>(null);
+  const [itemSessionGate, setItemSessionGate] = useState<GateRecord | null>(null);
+  const mindsetGate = creditedGate(mindset?.gate ?? null, mindsetSessionGate);
+  const pitchGate = creditedGate(pitch?.gate ?? null, pitchSessionGate);
+  const trackFilmGate = creditedGate(trackFilm?.gate ?? null, trackFilmSessionGate);
+  const itemGate = creditedGate(item?.video?.gate ?? null, itemSessionGate);
+
+  /*
+   * ---- THE ITEM'S ACKNOWLEDGEMENT ----------------------------------------
+   *
+   * A TEXT item has nothing to measure — reading is not observable — so the
+   * claim the client makes is that the advisor pressed Continue on it. That is
+   * exactly what the old cue step asserted implicitly; the difference is that
+   * it now travels as a named field and the server records it as a leg.
+   *
+   * A VIDEO item is not acknowledged, it is gated, and the server ignores this
+   * flag for one. See buildMorning in lib/gamification/completeDay.ts.
+   */
+  const [itemAck, setItemAck] = useState(false);
 
   /*
    * ---- WRITING THE GATE DOWN ----------------------------------------------
@@ -299,7 +390,9 @@ export function DailyFlow({
    * own machinery.
    */
   const pitchTicket = useRef<string | null>(null);
-  const lifestyleTicket = useRef<string | null>(null);
+  const mindsetTicket = useRef<string | null>(null);
+  const trackFilmTicket = useRef<string | null>(null);
+  const itemTicket = useRef<string | null>(null);
   const mintTicket = useCallback(
     (contentId: string | null, into: React.RefObject<string | null>) => {
       void (async () => {
@@ -390,9 +483,12 @@ export function DailyFlow({
             never be squeezed, it is the way out of the loop. */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <StepDots step={step} total={pitchVideo ? 5 : 4} />
+            {/* Three beats on a normal morning, two on the others. The dots
+                count what the advisor will actually see — promising a step
+                that never arrives reads as a bug. */}
+            <StepDots step={step} total={morningKind === "normal" ? 4 : 3} />
           </div>
-          {step < 5 && (
+          {step < 4 && (
             <button
               type="button"
               onClick={() => setConfirmLeave(true)}
@@ -420,62 +516,97 @@ export function DailyFlow({
         </div>
       </PhoneScreen.Rail>
 
-        {step === 1 && (
-          <QuoteStep
-            greetingName={greetingName}
-            quote={quote}
-            ackLabel={ackLabel}
-            onNext={() => setStep(2)}
-          />
-        )}
+      {/*
+        THE WALKTHROUGH SAYS WHAT IT FABRICATED.
 
-        {step === 2 && (
-          <FocusStep
-            focus={focus}
-            cue={cue}
-            cueMatch={cueMatch}
-            salesQuote={salesQuote}
-            totalRos={totalRos}
-            onNext={() => setStep(pitchVideo ? 3 : 4)}
+        Above the ritual and on every step, including the celebration — an
+        admin who scrolls straight to the numbers still needs to know the pitch
+        film was borrowed. `preview` alone is enough to render the header:
+        "nothing here is real" is true of the whole walkthrough, and an empty
+        `previewNotes` is a real answer ("your own account supplied all three
+        slots") rather than a reason to say nothing.
+      */}
+      {preview && <PreviewBanner notes={previewNotes} />}
+
+        {/*
+          THE ORDER IS THE PHASE. mindset first, then the pitch, then the item.
+          A track-entry morning replaces the middle and the end with one film.
+        */}
+        {step === 1 && (
+          <MindsetStep
+            greetingName={greetingName}
+            video={mindset && { ...mindset, gate: mindsetGate }}
+            threshold={videoThreshold}
+            onWatch={setMindsetWatch}
+            onFirstPlay={() => mintTicket(mindset?.contentId ?? null, mindsetTicket)}
+            onGateMet={(s) =>
+              fileGate(mindset?.contentId ?? null, mindsetTicket, s, setMindsetSessionGate)
+            }
+            /*
+             * A TWO-SLOT MORNING SKIPS STRAIGHT TO THE ITEM.
+             *
+             * The focus family ran out of film (or there is no assignment at
+             * all), so there is no pitch to serve. Rendering step 2 empty would
+             * be the placeholder card this phase deleted; jumping past it is
+             * the same decision the old loop made for its unfilmed pitch step,
+             * and the dots already promise three beats rather than four.
+             */
+            onNext={() => setStep(morningKind === "two_slot" ? 3 : 2)}
           />
         )}
 
         {/*
-          STEP 3 IS SKIPPED WHEN THERE IS NO VIDEO, not rendered empty.
+          STEP 2 IS THE TRACK FILM ON AN ENTRY MORNING, AND THE PITCH OTHERWISE.
 
-          It used to be a permanent placeholder card explaining that filming was
-          underway — a beat of the ritual that never did anything, every day, for
-          every advisor. An advisor standing on a service drive does not need a
-          screen to tell them a video does not exist. The skip is recorded on the
-          completion row instead, which is where the unfilmed-library count comes
-          from. When the pitch library lands the step appears on its own.
+          Not two steps with one hidden: they are the same beat of the ritual
+          answering "what are you working on today", and an entry morning ends
+          after it. Ruling 2 means this branch is unreachable today — no track
+          has a film — and it will start firing on its own the day Mitch rules
+          one, with no code change. That is the test.
         */}
-        {step === 3 && pitchVideo && (
-          <PitchStep
-            video={{ ...pitchVideo, gate: pitchGate }}
-            focus={focus}
+        {step === 2 && morningKind === "track_entry" && trackFilm && (
+          <TrackFilmStep
+            video={{ ...trackFilm, gate: trackFilmGate }}
+            trackName={track?.name ?? ""}
             threshold={videoThreshold}
-            onWatch={setPitchWatch}
-            onFirstPlay={() => mintTicket(pitchVideo?.contentId ?? null, pitchTicket)}
-            onGateMet={(s) => fileGate(pitchVideo.contentId, pitchTicket, s, setPitchSessionGate)}
-            onNext={() => setStep(4)}
+            onFirstPlay={() => mintTicket(trackFilm.contentId, trackFilmTicket)}
+            onGateMet={(s) =>
+              fileGate(trackFilm.contentId, trackFilmTicket, s, setTrackFilmSessionGate)
+            }
+            onNext={() => {
+              setRitualRun(true);
+              setStep(4);
+            }}
           />
         )}
 
-        {step === 4 && (
-          <LifestyleStep
-            video={lifestyle && { ...lifestyle, gate: lifestyleGate }}
+        {step === 2 && morningKind === "normal" && pitch && (
+          <PitchStep
+            video={{ ...pitch, gate: pitchGate }}
+            focus={focus}
             threshold={videoThreshold}
-            onWatch={setLifestyleWatch}
-            onFirstPlay={() => mintTicket(lifestyle?.contentId ?? null, lifestyleTicket)}
+            onWatch={setPitchWatch}
+            onFirstPlay={() => mintTicket(pitch.contentId, pitchTicket)}
+            onGateMet={(s) => fileGate(pitch.contentId, pitchTicket, s, setPitchSessionGate)}
+            onNext={() => setStep(3)}
+          />
+        )}
+
+        {step === 3 && (
+          <ItemStep
+            item={item}
+            video={item?.video ? { ...item.video, gate: itemGate } : null}
+            threshold={videoThreshold}
+            onFirstPlay={() => mintTicket(item?.video?.contentId ?? null, itemTicket)}
             onGateMet={(s) =>
-              fileGate(lifestyle?.contentId ?? null, lifestyleTicket, s, setLifestyleSessionGate)
+              fileGate(item?.video?.contentId ?? null, itemTicket, s, setItemSessionGate)
             }
+            onAck={() => setItemAck(true)}
             onNext={() => {
               // Mark the ritual as ours BEFORE the mutation fires, so the
               // server re-render it triggers can't bounce us to /advisor.
               setRitualRun(true);
-              setStep(5);
+              setStep(4);
             }}
           />
         )}
@@ -487,16 +618,20 @@ export function DailyFlow({
           />
         )}
 
-        {step === 5 && (
+        {step === 4 && (
           <CelebrationStep
             previewResult={previewResult}
             dailyLoopSand={dailyLoopSand}
             dayStamp={dayStamp}
             pitchWatchPct={pitchWatch ? pitchWatch.pct : null}
-            lifestyleWatchPct={lifestyleWatch ? lifestyleWatch.pct : null}
-            watchError={Boolean(pitchWatch?.error || lifestyleWatch?.error)}
+            lifestyleWatchPct={mindsetWatch ? mindsetWatch.pct : null}
+            watchError={Boolean(pitchWatch?.error || mindsetWatch?.error)}
             pitchWatchTicket={pitchTicket}
-            lifestyleWatchTicket={lifestyleTicket}
+            lifestyleWatchTicket={mindsetTicket}
+            itemAck={itemAck}
+            /* RULING 6 — after the streak advances, gating nothing. */
+            closingQuote={closingQuote}
+            ackLabel={ackLabel}
             badgeNames={badgeNames}
             badgeRewards={badgeRewards}
             today={today}
@@ -739,21 +874,21 @@ export type LifestyleVideo = {
   gate: GateRecord | null;
 };
 
-/* ---- Step 4: the lifestyle / sales-skill video --------------------------- */
+/* ---- Step 1: the mindset film -------------------------------------------- */
 /**
- * The first real video in the daily loop.
+ * The film that opens the day. Get your head right, then go to work.
  *
- * WATCHING IS NOT GATED. Continue is always enabled, deliberately: the ritual
- * is three minutes on a service drive, and a hard watch-gate turns a habit into
- * a hurdle the first time somebody's signal drops. The watch is RECORDED —
- * content_progress via the player, and daily_completion.video_content_id when
- * the day completes — so the data is honest about who actually watched without
- * the app policing it.
+ * THIS IS THE STEP THAT MOVED. It was step 4 of 5 — the last beat before the
+ * celebration — and it is now the first thing an advisor meets. Same shelf,
+ * same player, same gate; only the position changed, and the position was the
+ * whole complaint.
  *
- * The button changes its words once the bar is cleared, which is
- * acknowledgement rather than enforcement.
+ * The greeting moved with it. It used to sit on the quote step, which no longer
+ * exists as a step, and a morning ritual that opens without saying good morning
+ * to anybody reads as a kiosk.
  */
-function LifestyleStep({
+function MindsetStep({
+  greetingName,
   video,
   threshold,
   onWatch,
@@ -761,6 +896,7 @@ function LifestyleStep({
   onGateMet,
   onNext,
 }: {
+  greetingName: string;
   video: LifestyleVideo | null;
   threshold: number;
   onWatch: (state: WatchState) => void;
@@ -782,7 +918,7 @@ function LifestyleStep({
           was below the fold and on a long one it clipped. */}
       <PhoneScreen.Body>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-        Today&apos;s three minutes
+        Good morning, {greetingName}
       </p>
       <h1 className="mt-1 text-3xl font-extrabold text-navy">
         {video?.title ?? "Coming soon"}
@@ -814,16 +950,18 @@ function LifestyleStep({
       <PhoneScreen.Footer>
         {/*
           NO VIDEO IS NOT A GATE. When nothing is published the step renders its
-          honest empty state, and holding the day shut behind a video that does
-          not exist would strand every advisor on step 4 — the exact "must never
-          cost an advisor their streak" case, arriving from the content side
-          rather than the network.
+          honest empty state and Continue stays live. Holding the day shut
+          behind a film that does not exist would strand every advisor on step 1
+          — the exact "must never cost an advisor their streak" case, arriving
+          from the content side rather than the network. The server agrees: a
+          slot that was never offered cannot hold the gate open, see
+          lib/gamification/dayGate.ts.
         */}
         <PrimaryButton
           disabled={Boolean(video) && !watch.met && !watch.error}
           onClick={onNext}
         >
-          {watch.met || !video ? "Finish the day" : "Continue"}
+          Continue
         </PrimaryButton>
         {video && !watch.met && !watch.error && (
           <WatchGateLine pct={watch.pct} met={watch.met} />
@@ -836,13 +974,13 @@ function LifestyleStep({
 /**
  * The dots count the steps the advisor will actually see.
  *
- * When step 3 has no video the day is four steps long, and showing five dots
- * would promise a beat that never arrives — the rail would jump from dot 2 to
+ * A two-slot or track-entry morning is three beats, not four, and showing four
+ * dots would promise one that never arrives — the rail would jump from dot 2 to
  * dot 4 and read as a bug. `step` stays the real step number so the rest of the
- * flow does not have to renumber itself; only the dot it lights up shifts down.
+ * flow does not renumber itself; only the dot that lights up shifts down.
  */
 function StepDots({ step, total }: { step: number; total: number }) {
-  const active = total === 4 && step >= 4 ? step - 1 : step;
+  const active = total === 3 && step >= 3 ? step - 1 : step;
   return (
     /*
      * CAPPED, LIKE THE LOGO — a progress indicator is not type.
@@ -874,256 +1012,272 @@ function StepDots({ step, total }: { step: number; total: number }) {
   );
 }
 
-/* ---- Step 1: Quote of the Day -------------------------------------------- */
-
-function QuoteStep({
-  greetingName,
-  quote,
-  ackLabel,
+/* ---- Step 3: the item ---------------------------------------------------- */
+/**
+ * The advisor's next item in their craft curriculum.
+ *
+ * ---------------------------------------------------------------------------
+ * THE FORMAT IS RENDERED, NOT SELECTED ON
+ * ---------------------------------------------------------------------------
+ * TWO_LADDERS is explicit: "No filtering by format. The moment the loop decides
+ * 'only text here, video elsewhere,' two orderings compete — the module's and
+ * the loop's. One ordering, and it lives in the module."
+ *
+ * So the server hands over whatever is next and this draws it. Every published
+ * module item is text today — no module carries a mux_playback_id at all — and
+ * the video branch is written and reachable rather than deferred, because the
+ * day the first one is attached it must simply work.
+ *
+ * WHAT "DONE" MEANS DIFFERS BY FORMAT, AND THAT IS HONEST RATHER THAN
+ * INCONSISTENT. A film has a watch gate. Text has nothing observable, so
+ * Continue is the acknowledgement and it travels to the server as a named claim
+ * — the same trust boundary the old coaching-cue step had, said out loud.
+ */
+function ItemStep({
+  item,
+  video,
+  threshold,
+  onFirstPlay,
+  onGateMet,
+  onAck,
   onNext,
 }: {
-  greetingName: string;
-  quote: Quote | null;
-  ackLabel: string;
+  item: Item | null;
+  video: LifestyleVideo | null;
+  threshold: number;
+  onFirstPlay: () => void;
+  onGateMet: (state: WatchState) => void;
+  onAck: () => void;
   onNext: () => void;
 }) {
+  const [watch, setWatch] = useState<WatchState>(() =>
+    video?.gate
+      ? { pct: video.gate.pct ?? 0, met: !video.gate.error, error: video.gate.error }
+      : { pct: 0, met: false, error: false }
+  );
+
+  const gated = Boolean(video) && !watch.met && !watch.error;
+
   return (
     <>
-      {/* The CTA lives in the footer, not the flow: on a short screen it
-          was below the fold and on a long one it clipped.
-
-          NO LONGER `centre`. That was right when this screen was a kicker and
-          one short line: pinned to the top it left most of the display empty
-          and read as a page that had failed to load. It now carries the quote,
-          the coaching nugget and the keep control, and centring all of that
-          floated the greeting away from the progress dots — the exact gap that
-          got fixed on every other screen. Every screen starts in one place. */}
       <PhoneScreen.Body>
-      <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-        {BRAND.greeting}, {greetingName}
-      </p>
-
-      {/* A pull quote, not a headline. At display size a coaching passage
-          fills the screen, forces a scroll for three sentences, and reads as
-          shouting; the citation was also crammed against the bottom edge.
-
-          The citation is the VOICE now, not the title. Before the quote import
-          this pool held generic coaching cues, so `title` was the nearest thing
-          to an attribution available — "The Money Objection — Sunbit Before
-          They Finish the Sentence" cited beneath a paragraph. A quote knows who
-          said it. */}
-      <div className="py-8">
-        {quote ? (
-          <>
-            <PullQuote cite={citationFor(quote.voice) ?? undefined}>
-              <p>{quote.body ?? quote.title}</p>
-            </PullQuote>
-
-            {/* Why this quote is here — the rule says it, so it does not need
-                a label saying it too. Quote, separator, coaching.
-
-                NOT CLAMPED. LongCopy exists to keep long copy scannable in a
-                LIST, and this is a single screen inside PhoneScreen.Body, which
-                is already a scroll region with a fade when there is more below.
-                Clamping here spent a "Read the rest" tap to hide two words and
-                a whole screen of empty space. Scrolling is the cheaper gesture
-                and the copy arrives whole. */}
-            {quote.nugget && (
-              <div className="mt-6 border-t border-line pt-5">
-                <Prose text={quote.nugget} />
-              </div>
-            )}
-
-            <div className="mt-6">
-              <SaveHeart contentId={quote.id} initialSaved={quote.saved} />
-            </div>
-          </>
-        ) : (
-          <p className="text-2xl font-extrabold leading-snug text-navy">
-            {BRAND.tagline}.
+        <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
+          {item ? item.trackName : "Your curriculum"}
+        </p>
+        <h1 className="mt-1 text-3xl font-extrabold text-navy">
+          {item?.title ?? "Nothing left to work"}
+        </h1>
+        {item && (
+          /* The module, and where in the track they are. The advisor is never
+             asked to think about the credential — this is orientation, not a
+             scoreboard. */
+          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+            {item.moduleName} · {item.position} of {item.total}
           </p>
         )}
-      </div>
+
+        <div className="flex flex-1 flex-col justify-center py-6">
+          {item && video ? (
+            <TrackedVideo
+              policy="gate-continue"
+              onFirstPlay={onFirstPlay}
+              contentId={video.contentId}
+              renditions={video.renditions}
+              title={video.title}
+              threshold={threshold}
+              initialWatchedPct={video.watchedPct}
+              initialPositionSec={video.positionSec}
+              initialMet={video.gate}
+              onGateMet={onGateMet}
+              onWatchChange={setWatch}
+            />
+          ) : item ? (
+            <Prose text={item.body ?? item.title} />
+          ) : (
+            /*
+             * EVERY CORE TRACK FINISHED, or none has publishable content yet.
+             * An honest empty rather than a fabricated item — and it does not
+             * hold the day, because a slot that was not offered cannot.
+             */
+            <p className="text-lg leading-relaxed text-ink-soft">
+              You are through everything published. More is being written.
+            </p>
+          )}
+        </div>
       </PhoneScreen.Body>
       <PhoneScreen.Footer>
-        <PrimaryButton onClick={onNext}>{ackLabel}</PrimaryButton>
+        <PrimaryButton
+          disabled={gated}
+          onClick={() => {
+            /* The acknowledgement is only meaningful for text; for a film the
+               server reads the gate and ignores this. Sent either way so the
+               client never has to know which rule applied. */
+            onAck();
+            onNext();
+          }}
+        >
+          Finish the day
+        </PrimaryButton>
+        {gated && <WatchGateLine pct={watch.pct} met={watch.met} />}
       </PhoneScreen.Footer>
     </>
   );
 }
 
-/* ---- Step 2: today's focus + coaching cue -------------------------------- */
-
-function FocusStep({
-  focus,
-  cue,
-  cueMatch,
-  salesQuote,
-  totalRos,
+/* ---- Step 2 (entry mornings): the track film ----------------------------- */
+/**
+ * The film that opens a track. On this morning, the film IS the day.
+ *
+ * ---------------------------------------------------------------------------
+ * RULING 2 — THIS SCREEN IS UNREACHABLE TODAY, AND THAT IS CORRECT
+ * ---------------------------------------------------------------------------
+ * No certification has an entry film: six Craft films exist against eight core
+ * tracks, none named for a core track, and two of the six are already wired as
+ * pitch-stage fallbacks. So `certification.entry_film_content_id` is null for
+ * all eight and this branch never fires.
+ *
+ * It is built anyway, and NOT behind a placeholder. An advisor entering a track
+ * with no film gets an ordinary three-slot morning and the track starts — no
+ * "coming soon" card, no borrowed film from another track. The day Mitch rules
+ * which film opens which track, an UPDATE makes entry mornings start appearing
+ * with no code change. That is the test this shape exists to pass.
+ *
+ * GATED, UNLIKE THE OTHER FILMS. The other slots let Continue through on a
+ * failed watch because a habit must not become a hurdle. This one is the whole
+ * morning: letting it through would mean an advisor entering a track having
+ * watched nothing, which is the orphan the gate was invented to prevent. The
+ * gate still yields to a watch ERROR, so our own machinery cannot cost a streak.
+ */
+function TrackFilmStep({
+  video,
+  trackName,
+  threshold,
+  onFirstPlay,
+  onGateMet,
   onNext,
 }: {
-  focus: Focus | null;
-  cue: Cue | null;
-  cueMatch: "op_code_stage_tier" | "op_code_stage" | "op_code" | "family" | "none" | null;
-  /** Slot 2 — the selling quote that sits with the cue. */
-  salesQuote: Quote | null;
-  totalRos: number;
+  video: LifestyleVideo;
+  trackName: string;
+  threshold: number;
+  onFirstPlay: () => void;
+  onGateMet: (state: WatchState) => void;
   onNext: () => void;
 }) {
+  const [watch, setWatch] = useState<WatchState>(() =>
+    video.gate
+      ? { pct: video.gate.pct ?? 0, met: !video.gate.error, error: video.gate.error }
+      : { pct: 0, met: false, error: false }
+  );
+
   return (
     <>
-      {/* The CTA lives in the footer, not the flow: on a short screen it
-          was below the fold and on a long one it clipped. */}
       <PhoneScreen.Body>
-      {focus ? (
-        <>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-            Today&apos;s focus
-          </p>
-          <h1 className="mt-1 text-3xl font-extrabold text-navy">{focus.service}</h1>
-          {/* Where in the pitch today sits. The block is six days of one
-              conversation, and without this the advisor has no way to tell
-              day 4 from day 1. */}
-          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
-            {focus.stage} · {focus.stageNumber} of {focus.stageCount}
-          </p>
-          {focus.rate != null && focus.storeAvg != null ? (
-            <p className="mt-2 text-sm text-ink-soft">
-              You&apos;re at{" "}
-              <span className="font-extrabold text-navy">{formatPct(focus.rate)}</span> —
-              the store averages{" "}
-              <span className="font-extrabold text-navy">{formatPct(focus.storeAvg)}</span>
-              . One good conversation moves it.
-            </p>
-          ) : (
-            /* The block outlived the gap that opened it. Finishing the pitch is
-               still worth the three minutes; quoting a gap that has closed is
-               not. */
-            <p className="mt-2 text-sm text-ink-soft">
-              You&apos;ve pulled this one back up to the store average — let&apos;s
-              finish the pitch anyway.
-            </p>
-          )}
-        </>
-      ) : (
-        <>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-            Today&apos;s coaching
-          </p>
-          <h1 className="mt-1 text-3xl font-extrabold text-navy">
-            Building your picture
-          </h1>
-          <p className="mt-2 text-sm text-ink-soft">
-            {totalRos > 0
-              ? `Just ${totalRos} ${totalRos === 1 ? "RO" : "ROs"} so far this period — your focus service unlocks at ${MIN_ROS_FOR_COACHING}.`
-              : "Your focus service appears once this month's numbers land."}{" "}
-            Here&apos;s something to carry onto the drive today.
-          </p>
-        </>
-      )}
+        <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
+          Starting {trackName}
+        </p>
+        <h1 className="mt-1 text-3xl font-extrabold text-navy">{video.title}</h1>
 
-      <div className="flex flex-1 flex-col justify-center py-6">
-        <div className="rounded-card border border-line bg-surface-card p-5 shadow-card">
-          {cue ? (
-            <>
-              {/* The title is not a title for most of these rows — the import
-                  put the whole teaching paragraph in it. splitCueHeading takes
-                  the opening phrase Mitch already wrote as a heading and leaves
-                  the rest as readable prose, instead of setting 500 characters
-                  in bold. */}
-              {(() => {
-                const { heading, rest } = splitCueHeading(cue.title);
-                return (
-                  <>
-                    {heading && (
-                      <p className="text-base font-extrabold text-navy">{heading}</p>
-                    )}
-                    {rest && <Prose text={rest} className={heading ? "mt-3" : ""} />}
-                  </>
-                );
-              })()}
-              {/* Also unclamped, and for the same reason as the nugget on step
-                  1: one screen in a scroll region, not a row in a list. The 94
-                  restored cues run to 1,200 characters now, which is exactly
-                  the case where a "Read the rest" tap buys nothing — the words
-                  were the point of restoring them. */}
-              {cue.body && <Prose text={stripEmphasis(cue.body)} className="mt-3" />}
-            </>
-          ) : cueMatch === "none" && focus ? (
-            /*
-             * THE EXPLICIT NO-CONTENT STATE.
-             *
-             * Every rung of the ladder came back empty for this family. The old
-             * loop served a generic passage here and recorded it as the coaching
-             * cue, which meant a family with nothing written for it was
-             * indistinguishable from one that was working — for as long as
-             * nobody happened to look. Saying so costs the advisor one card and
-             * buys a number somebody can act on.
-             */
-            <>
-              <p className="text-base font-extrabold text-navy">
-                Nothing written for this one yet
-              </p>
-              <p className="mt-3 text-[15px] leading-relaxed text-ink">
-                {focus.service} coaching for {focus.stage} hasn&apos;t been filmed
-                or written yet. It&apos;s on the list — take the line below onto
-                the drive today.
-              </p>
-            </>
-          ) : (
-            <p className="text-base leading-relaxed text-ink">
-              Every customer conversation today is a chance to help someone leave
-              safer than they arrived.
-            </p>
-          )}
+        <div className="flex flex-1 flex-col justify-center py-6">
+          <TrackedVideo
+            policy="gate-continue"
+            onFirstPlay={onFirstPlay}
+            contentId={video.contentId}
+            renditions={video.renditions}
+            title={video.title}
+            threshold={threshold}
+            initialWatchedPct={video.watchedPct}
+            initialPositionSec={video.positionSec}
+            initialMet={video.gate}
+            onGateMet={onGateMet}
+            onWatchChange={setWatch}
+          />
         </div>
-
-        {/*
-          Slot 2: a quote carrying a SELLING lesson.
-
-          IT IS NOT ABOUT THE SERVICE ABOVE IT, AND IT NOW SAYS SO. This used to
-          claim it was "the line to remember the cue by" — but pickQuoteForSlot
-          draws slot 2 from the whole selling pool on a date rotation and never
-          looks at the focus family. It cannot: not one of the 280 slot-2
-          quotes carries a service_family or an op_code. So the pairing was a
-          coincidence dressed as a pairing, and Ryan read it exactly that way —
-          a Ryan Serhant line under "Today's focus: Differentials", "seems
-          misplaced".
-
-          The fix is a label, not a filter. These are general selling wisdom and
-          are good as that; what was wrong was the implied promise. With its own
-          eyebrow it reads as a second thing on the screen rather than a
-          conclusion drawn from the first.
-
-          Outside the card on purpose — one hero per screen, and the cue is the
-          hero. This reads as a margin note, which is what it is.
-        */}
-        {salesQuote && (
-          <div className="mt-5 border-l-2 border-teal pl-4">
-            <p className="ediagd-eyebrow">A line to sell by</p>
-            <p className="mt-2 text-[15px] italic leading-relaxed text-ink">
-              {salesQuote.body ?? salesQuote.title}
-            </p>
-            {citationFor(salesQuote.voice) && (
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
-                {citationFor(salesQuote.voice)}
-              </p>
-            )}
-            <div className="mt-3">
-              <SaveHeart
-                contentId={salesQuote.id}
-                initialSaved={salesQuote.saved}
-                label="Keep"
-              />
-            </div>
-          </div>
-        )}
-      </div>
       </PhoneScreen.Body>
       <PhoneScreen.Footer>
-        <PrimaryButton onClick={onNext}>Got it</PrimaryButton>
+        <PrimaryButton disabled={!watch.met && !watch.error} onClick={onNext}>
+          Finish the day
+        </PrimaryButton>
+        {!watch.met && !watch.error && <WatchGateLine pct={watch.pct} met={watch.met} />}
       </PhoneScreen.Footer>
     </>
+  );
+}
+
+/* ---- The admin walkthrough's banner -------------------------------------- */
+/**
+ * What this walkthrough is, and what it had to invent.
+ *
+ * CLAY, NOT GOLD, AND NEVER THE BRAND COLOURS. Gold means "you earned this" all
+ * the way through this flow; a demo notice wearing it would be the exact
+ * confusion the notice exists to prevent.
+ */
+function PreviewBanner({ notes }: { notes: readonly string[] }) {
+  return (
+    <div className="mx-5 mb-2 rounded-card border border-clay bg-surface-card px-3 py-2">
+      {/*
+        "NO DAY IS SAVED", NOT "NOTHING IS SAVED".
+        
+        The ritual's outcome is genuinely not written — no completion row, no
+        consumption, no pool cursor, no track entry, no module completion, no
+        Sand Dollars, no streak; verified by walking this screen against an
+        account with zero rows and re-counting all eight tables afterwards.
+        
+        But opening a player and clearing its bar still files a watch_gate row,
+        because recordGateMetAction is not preview-aware and should not be: the
+        admin really did watch the video, and that record is what stops the app
+        asking them to watch it again today. Claiming "nothing" would be the
+        one false sentence on a banner whose whole job is not to mislead.
+      */}
+      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-clay">
+        Admin walkthrough · no day is saved
+      </p>
+      {notes.length === 0 ? (
+        /* Worth saying out loud: it means the account being previewed has a
+           real DMS book and the morning on screen is genuinely its own. */
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+          Every slot came from this account&apos;s own data — nothing was
+          substituted.
+        </p>
+      ) : (
+        <ul className="mt-1 space-y-1">
+          {notes.map((n) => (
+            <li key={n} className="text-xs leading-relaxed text-ink-soft">
+              {n}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ---- The closing line ---------------------------------------------------- */
+/**
+ * The quote, on the celebration screen, after the streak has advanced.
+ *
+ * RULING 6. It is not a slot and it is not a step: it gates nothing, it counts
+ * towards nothing, and 393 quotes folded into the item sequence would have made
+ * the credential twenty-seven months instead of nine. What it is, is the line
+ * the advisor carries onto the drive.
+ *
+ * The keep control comes with it. A save is the advisor's own act and always
+ * was — moving the quote did not change whose it is.
+ */
+function ClosingQuote({ quote }: { quote: Quote }) {
+  return (
+    <div className="border-t border-line pt-6">
+      <PullQuote cite={citationFor(quote.voice) ?? undefined}>
+        <p>{quote.body ?? quote.title}</p>
+      </PullQuote>
+      {quote.nugget && (
+        <div className="mt-5 border-t border-line pt-4">
+          <Prose text={quote.nugget} />
+        </div>
+      )}
+      <div className="mt-5">
+        <SaveHeart contentId={quote.id} initialSaved={quote.saved} />
+      </div>
+    </div>
   );
 }
 
@@ -1216,26 +1370,92 @@ function PitchStep({
  * A per-mount ref isn't enough: the action writes Supabase session cookies, so
  * Next re-renders this page on the server, which can remount this component.
  * On remount the effect re-fires, the engine's idempotency returns
- * alreadyComplete, and the real numbers would be lost. Caching by date means a
- * remount re-displays the same celebration instead of discarding it.
+ * alreadyComplete, and the real numbers would be lost. Caching means a remount
+ * re-displays the same celebration instead of discarding it.
+ *
+ * ---------------------------------------------------------------------------
+ * KEYED ON THE DAY STAMP, NOT ON THE DATE
+ * ---------------------------------------------------------------------------
+ * It was `ediagd:celebration:${today}` — the date alone. One browser, two
+ * advisors, one day is enough to break that: the second signs in, finishes
+ * their morning, and is shown the FIRST one's streak, badge and Sand Dollars,
+ * because the cache hit short-circuits the action before it ever runs. Their
+ * day is then never completed at all.
+ *
+ * Found while photographing the three morning types, which is exactly the
+ * shared-device case a service drive has: one iPad, several advisors.
+ *
+ * The stamp's signature is an HMAC over user AND store-local date AND the
+ * content served, so it is unique per advisor per day by construction — and
+ * unlike a raw user id it is already on this component and is not a secret
+ * worth hiding in storage.
  */
-function cacheKey(today: string) {
-  return `ediagd:celebration:${today}`;
+function dayKey(dayStamp: string): string {
+  /* The MAC half, which is the part that varies by user. Trimmed because a
+     storage key does not need 43 characters to be unique here. */
+  return (dayStamp.split(".")[1] ?? dayStamp).slice(0, 16);
 }
 
-function readCachedResult(today: string): CompleteDayResult | null {
+function cacheKey(dayStamp: string) {
+  return `ediagd:celebration:${dayKey(dayStamp)}`;
+}
+
+/**
+ * Which step the advisor is on, kept across a remount.
+ *
+ * ---------------------------------------------------------------------------
+ * THE SAME REMOUNT THE CELEBRATION ALREADY DEFENDS AGAINST, ONE BEAT EARLIER
+ * ---------------------------------------------------------------------------
+ * Filing a watch gate is a server action, so it refreshes the route and can
+ * remount this component — the comment above has said so for as long as the
+ * gate has existed. What changed in 3b is WHEN the first gate is filed: the
+ * mindset film is now step 1, so the very first Continue can throw the advisor
+ * from step 2 back to step 1 while the write lands.
+ *
+ * Under the old order the first gate was filed on step 3 of 5 and the exposure
+ * was the same; it simply bit less often. Moving the film to the front is the
+ * point of the phase, so the flow has to stop losing its place.
+ *
+ * SESSION STORAGE, NOT A REF. A ref does not survive a remount either — that is
+ * the whole problem. Session-scoped so closing the tab genuinely starts over,
+ * and keyed per advisor per day for the reason above.
+ */
+function stepKey(dayStamp: string) {
+  return `ediagd:step:${dayKey(dayStamp)}`;
+}
+
+function readStep(dayStamp: string): number | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(cacheKey(today));
+    const raw = window.sessionStorage.getItem(stepKey(dayStamp));
+    const n = raw == null ? NaN : Number(raw);
+    return Number.isInteger(n) && n >= 1 && n <= 4 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStep(dayStamp: string, step: number) {
+  try {
+    window.sessionStorage.setItem(stepKey(dayStamp), String(step));
+  } catch {
+    /* Private mode / quota. The flow still works; it just forgets its place. */
+  }
+}
+
+function readCachedResult(dayStamp: string): CompleteDayResult | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(cacheKey(dayStamp));
     return raw ? (JSON.parse(raw) as CompleteDayResult) : null;
   } catch {
     return null;
   }
 }
 
-function writeCachedResult(today: string, result: CompleteDayResult) {
+function writeCachedResult(dayStamp: string, result: CompleteDayResult) {
   try {
-    window.sessionStorage.setItem(cacheKey(today), JSON.stringify(result));
+    window.sessionStorage.setItem(cacheKey(dayStamp), JSON.stringify(result));
   } catch {
     // Private mode / quota — the celebration still shows this mount.
   }
@@ -1248,6 +1468,9 @@ function CelebrationStep({
   watchError,
   pitchWatchTicket,
   lifestyleWatchTicket,
+  itemAck,
+  closingQuote,
+  ackLabel,
   badgeNames,
   badgeRewards,
   today,
@@ -1261,6 +1484,11 @@ function CelebrationStep({
   watchError: boolean;
   pitchWatchTicket: React.RefObject<string | null>;
   lifestyleWatchTicket: React.RefObject<string | null>;
+  /** The item slot was worked through. See CompleteDayInput.itemAck. */
+  itemAck: boolean;
+  /** RULING 6 — rendered below the payoff, gating nothing. */
+  closingQuote: Quote | null;
+  ackLabel: string;
   badgeNames: Record<string, string>;
   badgeRewards: Record<string, number>;
   today: string;
@@ -1273,7 +1501,7 @@ function CelebrationStep({
   // In demo mode the outcome is handed in, and the cache is bypassed entirely
   // so a real day's celebration can't leak into the demo or vice versa.
   const [result, setResult] = useState<CompleteDayResult | null>(() =>
-    previewResult ?? readCachedResult(today)
+    previewResult ?? readCachedResult(dayStamp)
   );
   const [alreadyDone, setAlreadyDone] = useState<CompleteDayResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1322,6 +1550,7 @@ function CelebrationStep({
         watchError: watchError || unverifiable,
         pitchWatchTicket: pitchWatchTicket.current,
         lifestyleWatchTicket: lifestyleWatchTicket.current,
+        itemAck,
       });
       if (!response.ok) {
         setError(response.error);
@@ -1334,11 +1563,12 @@ function CelebrationStep({
         setAlreadyDone(response.result);
         return;
       }
-      writeCachedResult(today, response.result);
+      writeCachedResult(dayStamp, response.result);
       setResult(response.result);
     })();
   }, [
     dayStamp,
+    itemAck,
     pitchWatchPct,
     lifestyleWatchPct,
     watchError,
@@ -1537,12 +1767,43 @@ function CelebrationStep({
         </p>
       )}
 
+      {/* ---- Certifications, when a morning finished one ---------------- */}
+      {/*
+        BOTH LADDERS REPORT HERE. The pitch film can finish a service track and
+        the item can finish a craft one, so this is a list. It is the first time
+        the daily loop has been able to say this at all — accrual used to be
+        wired only to the library, so an advisor who did the loop every morning
+        advanced no certification.
+      */}
+      {result.certificationsEarned.length > 0 && (
+        <p className="mt-5 rounded-card border border-gold bg-surface-card p-3 text-sm font-bold leading-relaxed text-navy">
+          {result.certificationsEarned.length === 1
+            ? "Certification earned."
+            : `${result.certificationsEarned.length} certifications earned.`}{" "}
+          It is on your profile.
+        </p>
+      )}
+
       <p
         className="mt-6 text-4xl text-teal"
         style={{ fontFamily: "var(--font-script)" }}
       >
         {BRAND.signoff}
       </p>
+
+      {/*
+        ---- THE CLOSING LINE, RULING 6 ---------------------------------------
+
+        Below the signoff, after the streak has advanced and the money is
+        counted. It is the last thing on the screen because it is the thing
+        they take with them, and it is left-aligned inside a centred section
+        because a pull quote that is centred stops being a pull quote.
+      */}
+      {closingQuote && (
+        <div className="mt-8 text-left">
+          <ClosingQuote quote={closingQuote} />
+        </div>
+      )}
 
       </section>
       </PhoneScreen.Body>
@@ -1554,7 +1815,7 @@ function CelebrationStep({
         <PrimaryButton
           onClick={() => router.push(previewResult ? "/admin" : "/advisor")}
         >
-          {previewResult ? "Back to admin" : "See my numbers"}
+          {previewResult ? "Back to admin" : closingQuote ? ackLabel : "See my numbers"}
         </PrimaryButton>
       </PhoneScreen.Footer>
     </>

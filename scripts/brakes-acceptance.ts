@@ -6,44 +6,63 @@
      "a test advisor whose brake fluid attach (BFF-012) is 4% against a 22%
       benchmark gets the brake fluid pitch"
 
-   Phase 0 found that cannot be expressed against today's data, and said so
-   rather than faking it: advisor_op_metric is keyed by DMS op codes, zero of
-   the 208 DMS codes at Doggett appear in op_code_catalog, and there is no
-   per-op-code benchmark anywhere. So there is no such thing as "BFF-012 attach
-   is 4%" to test against.
+   That cannot be expressed against today's data and never could: advisor_op_metric
+   is keyed by DMS op codes, zero of the 208 DMS codes at Doggett appear in
+   op_code_catalog, and there is no per-op-code benchmark anywhere. So this
+   tests the thing that IS true — the pick is made at FAMILY grain, and the op
+   code is chosen inside the family through op_code_family.
 
-   THIS TESTS THE THING THAT IS TRUE. Under contract option (a) the pick is made
-   at FAMILY grain — Brake Service attach, which really is measured, really does
-   have a benchmark — and the op code is chosen INSIDE the family through
-   op_code_family. So the test asserts the whole chain at the grain the data
-   supports:
+   ---------------------------------------------------------------------------
+   REWRITTEN IN 3D. WHAT WAS REMOVED, AND WHY
+   ---------------------------------------------------------------------------
+   This suite was red for weeks before anybody looked, and when phase 3d looked
+   it turned out to be red for a GOOD reason: 3b retired the three things its
+   last section asserted.
+
+     the four-rung cue ladder    pickCoachingCueForBlock. The item slot serves
+                                 the craft curriculum in module order now; there
+                                 is no family cue ladder and no `cue_match`.
+     pitch_video_skipped         the pitch slot no longer looks up by stage, so
+                                 there is no "we wanted one and had none" flag.
+     the generic passage         the no-block fallback went with the block.
+
+     the six-stage block         0124 retired coaching_block from the loop
+                                 entirely: advisor_focus_family owns the family
+                                 and consumption order owns the position. The
+                                 pure functions still exist in
+                                 lib/coaching-block.ts and nothing calls them.
+
+   A red suite that is red for a good reason teaches everyone to ignore red
+   suites, so it does not stay as it was. What is KEPT is everything still load
+   bearing, and section 2 is re-pointed at the resolution that replaced the
+   ladder:
 
      4% against a 22% benchmark  ->  Eddie's Pick = Brake Service
-                                 ->  a block locks Brake Service
-                                 ->  an op code is chosen from its catalog codes
-                                 ->  six stages advance in order
-                                 ->  the cue ladder reaches real Brake content
+                                 ->  under the floor, NO pick at all
+                                 ->  the op-code bridge reaches real content
+                                 ->  the SAME floor gates the loop's derivation
 
-   When the DMS bridge lands and option (b) becomes buildable, sections 1 and 2
-   stay exactly as they are and section 3's expected rung moves up the ladder.
+   That last one is new, and it is the bug 3d found: eddiesPick() has always
+   floored at min_ros_for_coaching() and derive_focus_family() floored at zero,
+   so 42% of measured operators were getting a confident focus family off a
+   handful of ROs. The two agreeing is now asserted here rather than assumed.
 
    READ-ONLY. Nothing is written. Run with `npm run test:brakes`.
    ============================================================================ */
 
 import { createClient } from "@supabase/supabase-js";
 import {
+  MIN_ROS_FOR_COACHING,
   buildServiceFamilies,
   eddiesPick,
   type FamilyAttach,
   type FamilyBenchmark,
 } from "@/lib/advisor";
-import { cueTierForRate, pickCoachingCueForBlock, pickPitchVideo } from "@/lib/daily";
-import {
-  STAGES,
-  loadCoachableCodes,
-  opCodeForBlock,
-  stageForIndex,
-} from "@/lib/coaching-block";
+import { cueTierForRate } from "@/lib/daily";
+/* loadCoachableCodes survives the block's retirement: it reads op_code_family,
+   which is the bridge, not the block. STAGES, stageForIndex and opCodeForBlock
+   are no longer imported — 0124 retired the block from the loop. */
+import { loadCoachableCodes } from "@/lib/coaching-block";
 
 const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
   auth: { persistSession: false },
@@ -78,7 +97,6 @@ function section(title: string) {
 
 /* A fixed date, so the rotations are reproducible. Date.now() would make this
    test pass or fail depending on the day it ran, which is not a test. */
-const TODAY = "2026-08-31" as const;
 
 async function main() {
   /* =========================================================================
@@ -118,48 +136,41 @@ async function main() {
   check("under 20 ROs there is no pick", eddiesPick(families, 19), null);
 
   /* =========================================================================
-     2 · The block — pure, offline
+     2 · The floor — the two parts of the product now agree
      ========================================================================= */
-  section("2 · The block locks the family and walks the six stages");
+  section("2 · Below the floor, neither part of the product coaches");
 
-  const brakeCodes = ["BCS-032", "BFF-012", "BFF-013", "RTF-030", "RTR-031"];
-
-  check("stage 1 of a block is Pre-Write", stageForIndex(0), "Pre-Write");
+  /*
+   * THE BUG 3D FOUND, ASSERTED SO IT CANNOT COME BACK.
+   *
+   * eddiesPick() has always returned null below min_ros_for_coaching().
+   * derive_focus_family() floored at `advisor_ros > 0` until 0124, so 25 of the
+   * 59 operators with rows in Doggett's latest period — 42% — were getting a
+   * confident focus family off a handful of ROs, one of them off a single
+   * missed RO. A pick derived from one missed RO is indistinguishable on screen
+   * from a pick derived from two hundred.
+   *
+   * This asserts the SQL floor against the TypeScript one by value, so a later
+   * ruling that moves the number has to move it in min_ros_for_coaching() and
+   * both follow.
+   */
+  const { data: sqlFloor } = await sb.rpc("min_ros_for_coaching");
   check(
-    "the six stages advance in Mitch's order",
-    [0, 1, 2, 3, 4, 5].map(stageForIndex),
-    [...STAGES]
-  );
-  check("a missed day does not skip a stage", stageForIndex(2), "At the Kiosk");
-
-  /*
-   * THE FIVE-DAY CONSEQUENCE, ASSERTED RATHER THAN ARGUED. Mitch has not
-   * confirmed the block length; the brief proposed five days and there are six
-   * stages. This is what five costs, written down so the decision is made with
-   * it in view — game_settings.coaching_block_days defaults to 6 for exactly
-   * this reason.
-   */
-  const fiveDayStages = [0, 1, 2, 3, 4].map(stageForIndex);
-  ok(
-    "a five-day block never reaches Objections",
-    !fiveDayStages.includes("Objections"),
-    fiveDayStages.join(" · ")
-  );
-  ok(
-    "a six-day block reaches all six",
-    new Set([0, 1, 2, 3, 4, 5].map(stageForIndex)).size === STAGES.length
+    "the database and lib/advisor agree on the floor",
+    Number(sqlFloor),
+    MIN_ROS_FOR_COACHING
   );
 
-  const first = opCodeForBlock(brakeCodes, TODAY);
-  ok("the block's op code comes from the family", brakeCodes.includes(first!), first!);
-  check("the choice is deterministic", opCodeForBlock(brakeCodes, TODAY), first);
+  check("at the floor there is still a pick", eddiesPick(families, MIN_ROS_FOR_COACHING) !== null, true);
+  check("one RO below it there is none", eddiesPick(families, MIN_ROS_FOR_COACHING - 1), null);
+
   /*
-   * A later block on the same family teaches a different code, so an advisor who
-   * stays weak on brakes is not handed the same six cues again.
+   * THAT THE LOOP'S DERIVATION USES THE SAME FLOOR is asserted where it can be
+   * asserted honestly — accept:loop derives for a real below-floor advisor and
+   * checks they get no family, then lifts their volume and checks they do.
+   * This suite is read-only and has no advisor to derive for, so it proves the
+   * half it can: that the two definitions of the NUMBER agree.
    */
-  const later = opCodeForBlock(brakeCodes, "2026-09-07");
-  ok("a later block on the same family rotates the code", later !== first, `${first} -> ${later}`);
-  check("an empty family yields no code", opCodeForBlock([], TODAY), null);
 
   /* =========================================================================
      3 · The bridge — live, against the real catalog and the real library
@@ -169,150 +180,62 @@ async function main() {
   const codes = await loadCoachableCodes(sb, "Brake Service");
   ok("Brake Service has coachable catalog codes", codes.length > 0, `${codes.length} codes`);
 
-  // The bridge must round-trip: every code the block can pick maps back to the
-  // family it was picked for, or the pick and the coaching are about different
-  // services.
-  const { data: mapped } = await sb
-    .from("op_code_family")
-    .select("code, family, coachable")
-    .in("code", codes);
+  /*
+   * THE BRIDGE IS WHAT SURVIVED. The cue ladder that used to be tested here is
+   * gone (see the header), but op_code -> op_code_family -> content is exactly
+   * what the pitch slot, the family shelf and the certification catalogue all
+   * ride on now — 0125 made it one view, and this is the live check that the
+   * view reaches real Brake Service rows.
+   */
+  const { data: bridged, error: bridgeErr } = await sb
+    .from("service_family_content")
+    .select("content_id, via")
+    .eq("family", "Brake Service");
+
+  /*
+   * A MISSING RELATION MUST NOT READ AS AN EMPTY ONE.
+   *
+   * supabase-js hands back `data: null` with the error in a separate field, so
+   * `?? []` turns "this view does not exist" into "zero mappings" — the exact
+   * confident-wrong-answer shape this whole phase is about, committed by the
+   * suite that is supposed to catch it. Written out the first time this ran
+   * against production, where 0125 is not yet applied.
+   */
+  if (bridgeErr) {
+    ok(
+      "service_family_content exists",
+      false,
+      `${bridgeErr.code ?? "error"}: ${bridgeErr.message} — 0125 is probably not applied here`
+    );
+  }
+
+  const rows = (bridged ?? []) as { content_id: string; via: string }[];
   ok(
-    "every coachable code maps back to Brake Service",
-    (mapped ?? []).every((r) => r.family === "Brake Service" && r.coachable),
-    (mapped ?? []).map((r) => r.code).sort().join(", ")
+    "service_family_content resolves Brake Service",
+    rows.length > 0,
+    bridgeErr ? "relation absent, see above" : `${rows.length} mappings`
+  );
+  ok(
+    "…by the op-code path, not only the family tag",
+    rows.some((r) => r.via === "op_code"),
+    "the op-code bridge resolved nothing — films would be invisible again"
   );
 
-  const { data: inCatalog } = await sb
-    .from("op_code_catalog")
-    .select("code")
-    .in("code", codes);
-  check("every code exists in the catalog", inCatalog?.length, codes.length);
+  const ids = [...new Set(rows.map((r) => r.content_id))];
+  const { data: real } = await sb
+    .from("content")
+    .select("id, type, mux_playback_id")
+    .eq("status", "published")
+    .is("retired_at", null)
+    .in("id", ids.slice(0, 200));
 
-  const opCode = opCodeForBlock(codes, TODAY);
-  const block = {
-    family: "Brake Service",
-    opCode,
-    stage: stageForIndex(0),
-    tier: "low" as const,
-  };
-
-  /*
-   * WHICH RUNG FIRES DEPENDS ON WHICH CODE THE BLOCK LOCKED, and after the
-   * re-import that is no longer one answer. Brake Service has SEVEN coachable
-   * codes and the knowledge tabs produced content for exactly one of them —
-   * BFF-012, two rows, and only because an EV Hybrid row happens to be about
-   * brake fluid. So a block rotates onto op-code content roughly one day in
-   * seven and onto the family shelf the other six.
-   *
-   * Asserting only the rotated code would make this test pass or fail on the
-   * calendar, which is not a test. Both cases are asserted instead, and the
-   * op-code case is the one that proves the import changed anything.
-   */
-  const coaching = await pickCoachingCueForBlock(sb, TODAY, block);
-
-  /*
-   * RUNG 4 IS THE EXPECTED ANSWER TODAY, AND THAT IS THE POINT OF THE TEST.
-   *
-   * Rungs 1-3 need content carrying an op code, and 0 rows have one until the
-   * knowledge re-import lands. So a pass here proves the thing that actually
-   * had to be proved: an advisor picked at family grain, locked into a block
-   * that names an op code, still reaches the 120 Brake Service cues Mitch has
-   * already written. The bridge does not strand anybody while the library is
-   * being rebuilt.
-   *
-   * When the re-import lands this assertion is expected to CHANGE to
-   * 'op_code_stage_tier'. It failing at that point is the test doing its job.
-   */
-  ok("a real cue came back", coaching.cue !== null, `${opCode} -> ${coaching.matched}`);
-  check(
-    "and it is a Brake Service cue",
-    (coaching.cue as { service_family?: string } | null)?.service_family,
-    "Brake Service"
+  const found = (real ?? []) as { id: string; type: string; mux_playback_id: string | null }[];
+  ok("and they are real published rows", found.length > 0, `${found.length} rows`);
+  ok(
+    "including at least one playable film",
+    found.some((r) => r.type === "advisor_video" && r.mux_playback_id),
+    "Brake Service has 4 films in production; none resolved"
   );
-
-  /*
-   * THE IMPORT'S SIGNAL, AND THE GATE THAT NOW SITS IN FRONT OF IT.
-   *
-   * Before Phase 1 no content row carried an op code at all, so rungs 1-3 could
-   * not fire for anybody. 714 published cues carry one now — but rung 3 is
-   * gated on the code having enough cues to fill a block, and BFF-012 has two.
-   * Two cues over six days is each one three times, which is the failure the
-   * family gate in lib/coachable-families.ts was written to prevent, one level
-   * down. So a Brake block correctly lands on the family shelf, which has
-   * hundreds.
-   *
-   * This assertion is expected to CHANGE to 'op_code' when Mitch writes four
-   * more BFF-012 cues, and to 'op_code_stage_tier' when the pitch videos are
-   * filmed and tagged with a stage — the knowledge workbook has no stage column
-   * on any of its 76 sheets, so rungs 1 and 2 stay unreachable until then. It
-   * failing at either point is the test doing its job.
-   */
-  const onBff = await pickCoachingCueForBlock(sb, TODAY, {
-    ...block,
-    opCode: "BFF-012",
-  });
-  check(
-    "BFF-012 has too few cues for a block, so it falls to the family rung",
-    onBff.matched,
-    "family"
-  );
-  ok("and the cue is about brakes", onBff.cue !== null, onBff.cue?.title?.slice(0, 60) ?? "none");
-
-  /*
-   * THE OTHER SIDE OF THE GATE. A code with real depth still reaches rung 3, so
-   * this proves the gate is a threshold and not an off switch. TMB-039 is not a
-   * Brake code — no Brake code has six cues yet — and using it here is the
-   * honest way to assert the positive case rather than asserting nothing.
-   */
-  const deep = await pickCoachingCueForBlock(sb, TODAY, {
-    family: "Belts & Cooling",
-    opCode: "TMB-039",
-    stage: block.stage,
-    tier: block.tier,
-  });
-  check("a code with enough cues reaches op-code content", deep.matched, "op_code");
-
-  /* A Brake code the tabs produced nothing for still lands on the family shelf
-     rather than falling through to nothing — the bridge doing its job. */
-  const uncovered = await pickCoachingCueForBlock(sb, TODAY, { ...block, opCode: "BPR-029" });
-  check("a code with no content falls to the family rung", uncovered.matched, "family");
-
-  /*
-   * Step 3 is skipped and RECORDED as skipped. Nothing is in 'Pitches by Op
-   * Code' yet, so this is what every day records until the pitches are filmed —
-   * which is exactly the count that says how much filming is left.
-   */
-  const pitch = await pickPitchVideo(sb, TODAY, "00000000-0000-0000-0000-000000000000", block);
-  check("no pitch video exists for this stage yet", pitch, null);
-  check(
-    "so the day records it as skipped, not as absent",
-    block.opCode && block.stage ? pitch === null : null,
-    true
-  );
-
-  /*
-   * The other half of the honest-empty rule: a family with nothing written
-   * returns `none` rather than a generic passage wearing a coaching cue's
-   * clothes. Asserted against a family that cannot have content — the old
-   * ladder would have returned a generic cue here and recorded it as coaching.
-   */
-  const bare = await pickCoachingCueForBlock(sb, TODAY, {
-    family: "A Family That Does Not Exist",
-    opCode: null,
-    stage: "Pre-Write",
-    tier: "low",
-  });
-  check("an empty family reports 'none'", bare.matched, "none");
-  check("and returns no cue at all", bare.cue, null);
-
-  /*
-   * No block is not the same as no content. An advisor at or above store
-   * average everywhere has nothing to be coached on — nothing failed, so this
-   * must not be recorded as a content gap.
-   */
-  const noBlock = await pickCoachingCueForBlock(sb, TODAY, null);
-  check("no block records no attempt, not a failure", noBlock.matched, null);
-  ok("and still serves the generic passage", noBlock.cue !== null);
 
   /* ---- Report ----------------------------------------------------------- */
   console.log(`\n  ${passed} passed, ${failed} failed`);

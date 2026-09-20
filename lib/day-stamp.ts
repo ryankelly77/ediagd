@@ -58,21 +58,41 @@ function secret(): string {
 export type ServedDay = {
   /** user id */ u: string;
   /** store-local date */ d: string;
-  /** open coaching block id, or null */ b: string | null;
-  /** life quote */ q1: string | null;
-  /** selling quote */ q2: string | null;
-  /** coaching cue */ cue: string | null;
-  /** lifestyle video */ vid: string | null;
-  /** op-code pitch video */ pitch: string | null;
-  /** step 3 looked up and found nothing */ skipped: boolean | null;
-  /** which rung of the ladder fired */ match: string | null;
-  /** the block's tier at serve time */ tier: string | null;
+  /** open coaching block id, or null. Always null from 0124 — see below. */ b: string | null;
+  /** the closing quote (ruling 6) */ q1: string | null;
+  /** RETIRED. The old selling quote; always null from 0124. */ q2: string | null;
+  /** RETIRED. The old family-ladder cue; always null from 0124. */ cue: string | null;
+  /** the mindset film */ vid: string | null;
+  /** the pitch film */ pitch: string | null;
+  /** RETIRED. The old step-3 skip flag; always null from 0124. */ skipped: boolean | null;
+  /** RETIRED. Which rung of the cue ladder fired. */ match: string | null;
+  /** RETIRED. The block's tier at serve time. */ tier: string | null;
+
+  /* ---- 0124: the Two Ladders shape ------------------------------------- */
+  /** which morning this was: normal | two_slot | track_entry */ kind: string | null;
+  /** the item slot */ item: string | null;
+  /** the track film, on a track-entry morning */ tfilm: string | null;
+  /** the certification this morning entered, if any */ trk: string | null;
+  /** which pass through the mindset pool this draw was */ mcyc: number | null;
+  /** which pass through the quote pool this draw was */ qcyc: number | null;
 };
 
-/* One canonical ordering, used for signing and verifying alike. Sorting keys at
-   runtime would work too and would hide the fact that the order is load-bearing. */
+/*
+ * One canonical ordering, used for signing and verifying alike. Sorting keys at
+ * runtime would work too and would hide the fact that the order is load-bearing.
+ *
+ * THE RETIRED KEYS STAY IN THIS LIST. Removing them would change the canonical
+ * length and shift every field left, so a stamp minted by the previous deploy
+ * would not merely fail its signature — it would parse as a DIFFERENT day with
+ * ids in the wrong slots. Keeping them means an old stamp fails cleanly on
+ * length, which is the honest refusal the reader below already gives.
+ *
+ * Appending rather than inserting is the same rule one level down: a new key
+ * goes on the END.
+ */
 const KEYS: (keyof ServedDay)[] = [
   "u", "d", "b", "q1", "q2", "cue", "vid", "pitch", "skipped", "match", "tier",
+  "kind", "item", "tfilm", "trk", "mcyc", "qcyc",
 ];
 
 function canonical(day: ServedDay): string {
