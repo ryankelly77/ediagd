@@ -13,6 +13,7 @@
    about future badges and for the same reason.
 ============================================================================ */
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { rooftopToday } from "@/lib/admin-advisor-detail";
@@ -146,8 +147,23 @@ function Tile({ tile }: { tile: CertificationTile }) {
   const earned = tile.state !== "unearned";
   const state = earned ? "earned" : tile.active ? "locked" : "soon";
 
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card">
+  /*
+   * ---- RULING 7: WHAT IS LEFT, AND THE WAY TO DO IT ----------------------
+   *
+   * The failure this closes: a track at 100% of modules, incomplete, and
+   * nothing saying why. statusLine already NAMES the outstanding story; until
+   * the form existed that was as far as it could go, and "Your Good News
+   * Story" with no way to write one is a better dead end than "Finishing up"
+   * but a dead end all the same.
+   *
+   * Now it is a link. Same shape as describeOutstanding for a morning: what is
+   * left, and the way to do it, in one place.
+   */
+  const needsStory = !earned && tile.active && tile.storyRequired && !tile.storySubmitted;
+  const storyHref = `/certifications/${encodeURIComponent(tile.slug)}/story`;
+
+  const inner = (
+    <>
       <SealMedallion
         glyphKey={tile.glyphKey}
         name={tile.name}
@@ -155,7 +171,30 @@ function Tile({ tile }: { tile: CertificationTile }) {
         size={96}
       />
       <p className="text-sm font-bold leading-tight text-navy">{tile.name}</p>
-      <p className="text-xs leading-tight text-ink-soft">{statusLine(tile)}</p>
+      <p
+        className={`text-xs leading-tight ${
+          needsStory ? "font-extrabold text-ocean underline underline-offset-2" : "text-ink-soft"
+        }`}
+      >
+        {statusLine(tile)}
+      </p>
+    </>
+  );
+
+  if (needsStory) {
+    return (
+      <Link
+        href={storyHref}
+        className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card">
+      {inner}
     </div>
   );
 }
