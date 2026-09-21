@@ -23,7 +23,7 @@ import {
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
 import { TechnicianDay } from "@/components/daily/TechnicianDay";
-import { milestoneLine } from "@/lib/gamification/streak";
+import { milestoneLine, swellAsOf } from "@/lib/gamification/streak";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 export default async function TodayPage({
@@ -243,7 +243,9 @@ export default async function TodayPage({
        target left is their own record. */
     supabase
       .from("swell")
-      .select("current_len, longest_len")
+      /* Every field swellAsOf needs: the Swell is read through the engine,
+         not straight off the row — see lib/gamification/streak.ts. */
+      .select("current_len, longest_len, last_completed_on, paddle_out_available, paddle_out_last_granted")
       .eq("user_id", user.id)
       .maybeSingle(),
     loadPushPref(supabase, user.id),
@@ -278,7 +280,7 @@ export default async function TodayPage({
     loadBadgeRewards(supabase),
     supabase
       .from("game_settings")
-      .select("sand_daily_loop, video_complete_pct")
+      .select("sand_daily_loop, video_complete_pct, paddle_out_per_month, paddle_out_cap")
       .limit(1)
       .maybeSingle(),
     /*
@@ -311,7 +313,43 @@ export default async function TodayPage({
   void openStamp;
 
   const alreadyCompleteOnLoad = Boolean(existing);
-  const currentStreak = Number(swellRow?.current_len ?? 0);
+
+  /*
+   * ---- THE SWELL IS READ THROUGH THE ENGINE, NOT OFF THE ROW -------------
+   *
+   * `current_len` only moves when somebody COMPLETES a day, so between a lapse
+   * and the next completion it is a corpse. This page used to render it raw and
+   * tell a lapsed advisor "Day 7 holds today. Three minutes on Monday makes it
+   * Day 8" — then reset them to Day 1 when they did it.
+   *
+   * swellAsOf runs the same applyDailyCompletion the writer runs, against a
+   * copy, and hands back what is actually true. Free here: scheduleContext is
+   * already loaded above for the rest card.
+   */
+  const swellNow = swellAsOf(
+    {
+      currentLen: Number(swellRow?.current_len ?? 0),
+      longestLen: Number(swellRow?.longest_len ?? 0),
+      lastCompletedOn: (swellRow?.last_completed_on as IsoDate | null) ?? null,
+      paddleOutAvailable: Number(swellRow?.paddle_out_available ?? 0),
+      paddleOutLastGranted:
+        (swellRow?.paddle_out_last_granted as IsoDate | null) ?? null,
+    },
+    today,
+    {
+      paddleOutCap: Number(gameSettings?.paddle_out_cap ?? 0),
+      paddleOutPerMonth: Number(gameSettings?.paddle_out_per_month ?? 0),
+      sandDailyLoop: 0,
+      sandSwell7: 0,
+      sandSwell30: 0,
+      sandSwell90: 0,
+      sandSwell365: 0,
+      sandBadge: 0,
+      sandCertification: 0,
+    },
+    scheduleContext
+  );
+  const currentStreak = swellNow.current;
   const restDay = restDayFor(today, scheduleContext);
 
   /* THE SAME SENTENCE THE SWELL CARD SHOWS, from the same selector — the rest

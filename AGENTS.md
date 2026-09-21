@@ -96,6 +96,38 @@ therefore served. **Name the roles that will really call it — including
 each.** A permission written as "not X" has decided something about every role
 that is not X, and one of them is usually the caller.
 
+## A defect you find is a class, not an instance
+
+Rule two says check the label against what is behind it. This is the other half:
+**once you have found one, go and ask where else the same question is asked.**
+
+0102 wrote this down, in a comment, and it is exactly right:
+
+> *"`swell.current_len` is only recomputed when somebody COMPLETES a day, so an
+> advisor who ran a 3-day streak and then missed a work day still reads
+> `current_len = 3` until their next completion. Sending them 'Day 3 is on the
+> line' would be a lie about a streak that is already gone."*
+
+The bug was identified, understood, and correctly defended against — with
+`previous_scheduled_day()`, in the **notification layer only**. Twenty-four
+migrations later the screens were still reading the same number raw, and the app
+told a lapsed advisor "Day 7 holds today. Three minutes on Monday makes it Day
+8" before resetting them to Day 1 for doing it.
+
+Nobody was careless. The fix went exactly where the bug was found. **What nobody
+did was ask who else reads `current_len`** — which is one `grep`, and would have
+found the answer two years earlier.
+
+**In practice:** when you fix something, write down the *question* the bug was an
+answer to — "who reads this value raw", "which roles does this gate exclude",
+"what else pages without an ORDER BY" — and then answer it everywhere before you
+close the work. If the sweep is too large for the change in hand, say so and
+record the question; an unasked question is the thing that survives.
+
+And be suspicious of a fix that lands in one layer. A value read in one place is
+rare; the same value is usually read by a screen, a notification, an export and a
+report, and only one of them was in front of you.
+
 **In practice:** when you write or touch anything that reports, previews,
 labels, counts, or claims a state — a menu entry, a badge, a cursor, a progress
 number, a check — name the viewer it will really have and exercise it as them.

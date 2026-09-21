@@ -12,6 +12,7 @@ import {
   addDays,
   applyDailyCompletion,
   countMissedWorkDays,
+  swellAsOf,
   isWorkDay,
   isoWeekday,
   type GameSettings,
@@ -443,6 +444,78 @@ section("12. milestoneLine");
     "25 days to your 30-Day Swell"
   );
 }
+
+/* ==========================================================================
+   THE SWELL AS IT IS READ, NOT AS IT WAS WRITTEN
+
+   Every other scenario in this file calls applyDailyCompletion FIRST and then
+   asserts on what comes back — which is the operation that makes current_len
+   true again. So 112 passing assertions could not see a stale Swell: the test
+   performed the repair before it looked.
+
+   These read the number BEFORE any day is completed, which is what every
+   screen does. Against the old code — `Number(swellRow?.current_len ?? 0)` —
+   the first assertion below reads 7 and fails.
+   ========================================================================== */
+function staleSwellScenarios() {
+  section("A Swell read before the day completes");
+
+  const ctx = { schedule: MON_FRI };
+
+  /* Completed Tue 2026-09-15, read on Sun 2026-09-20. Wed/Thu/Fri missed, and
+     no grace to cover three days. This is Ryan Kelly's real row on the day the
+     bug was found: the app said "Day 7 holds today ... makes it Day 8". */
+  const lapsed = state({
+    currentLen: 7,
+    longestLen: 9,
+    lastCompletedOn: "2026-09-15",
+    paddleOutAvailable: 1,
+    paddleOutLastGranted: "2026-09-02",
+  });
+
+  const dead = swellAsOf(lapsed, "2026-09-20", SETTINGS, ctx);
+  check("a Swell broken by three missed work days reads 0, not 7", dead.current, 0);
+  check("  and it knows it is gone", dead.alive, false);
+  check("  and the next rep is honestly Day 1", dead.nextIfCompleted, 1);
+  check("  three work days missed", dead.gapDays, 3);
+
+  /* The stored number is untouched — this is a projection, not a repair. */
+  check("  the written record is not mutated", lapsed.currentLen, 7);
+
+  /* An unbroken Swell must still read as itself, or the fix is just a zero. */
+  const live = state({ currentLen: 7, lastCompletedOn: "2026-09-18" }); // Friday
+  const alive = swellAsOf(live, "2026-09-21", SETTINGS, ctx); // Monday
+  check("an unbroken Swell still reads 7 over the weekend", alive.current, 7);
+  check("  and promises Day 8", alive.nextIfCompleted, 8);
+  check("  because the weekend is not a gap", alive.gapDays, 0);
+
+  /* Grace is not a corpse. previous_scheduled_day() is deliberately not
+     grace-aware and stays silent; a SCREEN must not under-report instead. */
+  const bridged = state({
+    currentLen: 4,
+    lastCompletedOn: "2026-09-16", // Wednesday
+    paddleOutAvailable: 2,
+    paddleOutLastGranted: "2026-09-01",
+  });
+  const saved = swellAsOf(bridged, "2026-09-18", SETTINGS, ctx); // Friday, 1 missed
+  check("a Swell grace would bridge still reads alive", saved.alive, true);
+  check("  and says grace is what carries it", saved.bridgedByGrace, true);
+  check("  and it reads 4, not 0", saved.current, 4);
+
+  /* Already completed today: the written number IS current. */
+  const doneToday = state({ currentLen: 3, lastCompletedOn: "2026-09-18" });
+  const done = swellAsOf(doneToday, "2026-09-18", SETTINGS, ctx);
+  check("a day already completed reads its written number", done.current, 3);
+  check("  and is flagged as completed", done.completedOnDate, true);
+
+  /* Never started. */
+  const fresh = state({ currentLen: 0, longestLen: 0, lastCompletedOn: null });
+  const none = swellAsOf(fresh, "2026-09-21", SETTINGS, ctx);
+  check("a Swell that never started reads 0 and is not 'alive'", none.alive, false);
+  check("  and the first rep is Day 1", none.nextIfCompleted, 1);
+}
+
+staleSwellScenarios();
 
 /* ---- Summary ------------------------------------------------------------- */
 

@@ -247,6 +247,29 @@ Also worth carrying forward, and cheaper than a migration:
   `lib/service-family.ts:132` exists at all. If that pager is ever rewritten,
   the invoker-view shape is the better starting point.
 
+### F6 — The last display surface still reading `current_len` raw
+
+**Trigger:** before 1 October. **Owner:** Ryan. **Not a patch — a proper fix.**
+
+`lib/admin-advisor-detail.ts:289` feeds `/admin/engagement` and
+`/admin/rooftop/[id]`. Every advisor-facing surface now asks `swellAsOf`; this
+one still reads the stored number, so a manager can be shown a Swell that has
+been dead since last Wednesday.
+
+**It was left out of the hotfix deliberately.** `loadAdvisorDetails(client,
+userIds, today)` takes no rooftop and loads no closures, and
+`countMissedWorkDays` without closures counts a shut store as a missed day. The
+quick version would therefore tell a manager that a **live** streak is gone.
+
+> A manager congratulating somebody on a stale streak is awkward. Telling
+> somebody their live streak is dead is a wound. **Trading an over-report for an
+> under-report is not a hotfix.**
+
+The fix is to thread the rooftop and its confirmed closures through the bulk
+loader so `swellAsOf` can be called per advisor with a complete context — the
+same three inputs `loadScheduleContext` already assembles for one user, batched.
+Do it properly or leave it reading raw; do not do it halfway.
+
 ## Standing rules, unchanged
 
 `pg_dump` before every prod migration. Migrations left written and validated on a full

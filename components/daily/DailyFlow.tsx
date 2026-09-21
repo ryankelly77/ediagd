@@ -770,7 +770,20 @@ function RestDayCard({
           <h1 className="mt-4 hyphens-auto break-words text-3xl font-extrabold leading-tight text-white">
             {heading}
           </h1>
-          <p className="mt-2 text-base font-bold text-gold">Your streak is safe</p>
+          {/*
+            ONLY WHEN THERE IS ONE TO BE SAFE. `streak` now arrives from
+            swellAsOf, which reads 0 for a Swell that is already broken — so
+            this line used to tell a lapsed advisor their streak was safe
+            minutes before the engine reset them to Day 1. It also said it to
+            somebody who had never started one.
+
+            Nothing replaces it. A rest day with no live Swell has nothing
+            reassuring to say that is also true, and the honest version of this
+            card is the two lines below it.
+          */}
+          {streak > 0 && (
+            <p className="mt-2 text-base font-bold text-gold">Your streak is safe</p>
+          )}
 
           <p className="mt-3 text-sm leading-relaxed text-ice-dim">
             {because} Nothing is owed — skipping today costs you nothing.

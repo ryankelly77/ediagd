@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { BRAND } from "@/lib/brand";
-import { milestoneLine } from "@/lib/gamification/streak";
+import { milestoneLine, swellAsOf } from "@/lib/gamification/streak";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { PaddleOutIcon } from "@/components/brand/PaddleOutIcon";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { IslandBalanceLine } from "@/components/schedule/IslandBalanceLine";
-import { loadIslandBalance } from "@/lib/work-schedule";
+import { loadIslandBalance, loadScheduleContext } from "@/lib/work-schedule";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 export default async function StreakPage() {
@@ -42,7 +42,7 @@ export default async function StreakPage() {
         .maybeSingle(),
       supabase
         .from("game_settings")
-        .select("paddle_out_cap, sand_paddle_out_price")
+        .select("paddle_out_cap, sand_paddle_out_price, paddle_out_per_month")
         .limit(1)
         .maybeSingle(),
       /* WHAT THEY ALREADY HOLD, because the milestone line is not allowed to
@@ -51,7 +51,6 @@ export default async function StreakPage() {
       supabase.from("user_badge").select("badge_key").eq("user_id", user.id),
     ]);
 
-  const streak = Number(swell?.current_len ?? 0);
   const longest = Number(swell?.longest_len ?? 0);
   const paddleOut = Number(swell?.paddle_out_available ?? 0);
   const paddleOutCap = Number(settings?.paddle_out_cap ?? 5);
@@ -77,6 +76,42 @@ export default async function StreakPage() {
     if (todayRaw) today = todayRaw as IsoDate;
   }
   const islandBalance = await loadIslandBalance(supabase, user.id, today);
+
+  /*
+   * ---- THE NUMBER THIS WHOLE SCREEN IS ABOUT -----------------------------
+   *
+   * Read through the engine, not off the row. `current_len` is a write-time
+   * value: it only moves when a day is completed, so a Swell broken last
+   * Wednesday still reads its old length here until the next rep. This screen
+   * printing "Day 7" over a dead Swell is the same lie the rest card told.
+   *
+   * The context load is the cost of asking the real question, and this is a
+   * screen somebody opened deliberately — not a per-page-load tax.
+   */
+  const swellNow = swellAsOf(
+    {
+      currentLen: Number(swell?.current_len ?? 0),
+      longestLen: longest,
+      lastCompletedOn: (swell?.last_completed_on as IsoDate | null) ?? null,
+      paddleOutAvailable: paddleOut,
+      paddleOutLastGranted:
+        (swell?.paddle_out_last_granted as IsoDate | null) ?? null,
+    },
+    today,
+    {
+      paddleOutCap,
+      paddleOutPerMonth: Number(settings?.paddle_out_per_month ?? 0),
+      sandDailyLoop: 0,
+      sandSwell7: 0,
+      sandSwell30: 0,
+      sandSwell90: 0,
+      sandSwell365: 0,
+      sandBadge: 0,
+      sandCertification: 0,
+    },
+    await loadScheduleContext(supabase, user.id, rooftopId)
+  );
+  const streak = swellNow.current;
 
   /* One selector, shared with the rest-day card. The arithmetic that used to
      live here is what told Ryan he was two days from a badge he had held since

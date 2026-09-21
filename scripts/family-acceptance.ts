@@ -316,14 +316,22 @@ async function run() {
     "the view filters content state, which is the consumers' job"
   );
 
+  /*
+   * 0126 — THE PRECEDENCE. This used to assert the opposite: that a row
+   * reachable both ways appeared under BOTH vias. That was the UNION falling
+   * out of the query shape rather than anyone deciding it, and 0126 rules that
+   * an explicit service_family settles the question. The assertion moved with
+   * the ruling, which is the only honest thing to do with a test that encodes
+   * a behaviour on purpose.
+   */
   const bothArms = rows.filter((r) => r.content_id === fx.cueBoth);
   ok(
-    "a row reachable BOTH ways appears under both vias",
-    new Set(bothArms.map((r) => r.via)).size === 2,
-    `got ${bothArms.map((r) => r.via).join(",")}`
+    "a row carrying BOTH resolves by its own tag, not its op code",
+    bothArms.length === 1 && bothArms[0].via === "family_tag",
+    `got ${bothArms.map((r) => r.via).join(",") || "nothing"}`
   );
   ok(
-    "…but counts once as membership",
+    "…and still counts once as membership",
     [...ids].filter((i) => i === fx.cueBoth).length === 1
   );
 
