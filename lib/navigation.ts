@@ -144,7 +144,10 @@ export const ADMIN_PREVIEWS: readonly AdminTool[] = [
   {
     href: "/onboarding?preview=1",
     label: "Onboarding Flow",
-    hint: "All six screens, the first daily loop and First Light. Nothing is saved.",
+    /* SEVEN, NOT SIX — 3e added the credential screen. The count in a hint is
+       the same kind of claim as anything else on a screen, and this one had
+       been wrong since the moment it stopped being true. */
+    hint: "All seven screens, the first daily loop and First Light. Nothing is saved.",
   },
   {
     /*
@@ -193,6 +196,25 @@ export const ADMIN_PREVIEWS: readonly AdminTool[] = [
     href: "/today?preview=track-entry",
     label: "Daily Loop — a track-entry morning",
     hint: "Mindset film, then the film that opens a track. Uses a stand-in film, named on screen.",
+  },
+  {
+    /*
+     * ---- THE OTHER END OF A TRACK ----------------------------------------
+     *
+     * The loop previews show a morning. This shows the screen an advisor meets
+     * after roughly fifty of them, which nobody can reach today — no track is
+     * near 100%, and none completes before February. That is precisely why it
+     * needs a menu entry: the one screen that cannot be reached by using the
+     * product is the one nobody would otherwise review before it ships.
+     *
+     * NOTHING IS WRITTEN, and unlike the loop preview that is a property of
+     * the code rather than a claim about it — the preview branch returns
+     * before the server action is called. Measured, not asserted: see the
+     * before/after advisor_story count in reports/phase-3i-story-form.md.
+     */
+    href: "/certifications/craft-walk-around/story?preview=1",
+    label: "Good News Story — the end of a track",
+    hint: "What an advisor writes to finish a track. Always the empty form; nothing is saved.",
   },
 ] as const;
 

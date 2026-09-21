@@ -101,7 +101,13 @@ async function main() {
   });
   if (uErr) throw new Error(uErr.message);
   const uid = u.user!.id;
-  await sb.from("app_user").upsert({ id: uid, full_name: "Dana Whitfield" });
+  /*
+   * A NAME NOTHING ELSE USES. "Dana Whitfield" collided with two advisors in
+   * the demo seed, and a later step that looked the fixture user up by name got
+   * one of the other two. Names collide; see AGENTS.md. The id is printed below
+   * so nothing downstream has to guess.
+   */
+  await sb.from("app_user").upsert({ id: uid, full_name: `${TAG} Advisor` });
   await sb
     .from("membership")
     .insert({ user_id: uid, rooftop_id: roof!.id, role: "advisor", active: true });
@@ -148,7 +154,8 @@ async function main() {
     .limit(1)
     .maybeSingle();
 
-  console.log(`\n  rooftop        ${roof!.id}`);
+  console.log(`\n  advisor        ${uid}`);
+  console.log(`  rooftop        ${roof!.id}`);
   console.log(`  certification  ${cert!.id}  "Tyres on the Drive"`);
   console.log(`  story_required ${settings?.story_required}`);
   console.log(`  items          ${itemIds.length} of ${itemIds.length} done`);
