@@ -502,3 +502,98 @@ export function applyDailyCompletion(
 
   return { next, outcome };
 }
+
+/* ---- What the Swell actually is, right now ------------------------------- */
+
+/**
+ * The Swell as of `onDate`, for anything that DISPLAYS it.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS EXISTS: current_len IS A WRITE-TIME NUMBER
+ * ---------------------------------------------------------------------------
+ * `swell.current_len` is only recomputed when somebody COMPLETES a day. Between
+ * a lapse and the next completion it is a corpse: an advisor who ran seven days
+ * and then missed three work days still reads `current_len = 7` until they next
+ * finish a rep.
+ *
+ * Every display surface used to read it raw, so the app told a lapsed advisor
+ * "Day 7 holds today. Three minutes on Monday makes it Day 8" — and then reset
+ * them to Day 1 the moment they did the three minutes. We told them something
+ * false and then punished them for acting on it, on the one mechanic the whole
+ * product is built around, at the exact moment they came back.
+ *
+ * The notification layer already knew. 0102's `previous_scheduled_day()` exists
+ * for precisely this reason and says so in its comment — "sending them 'Day 3
+ * is on the line' would be a lie about a streak that is already gone". The
+ * knowledge existed; it just never crossed into the screens.
+ *
+ * ---------------------------------------------------------------------------
+ * NO SECOND DEFINITION OF "IS THIS SWELL ALIVE"
+ * ---------------------------------------------------------------------------
+ * This does not re-derive the rule. It runs `applyDailyCompletion` — the same
+ * function `completeDay` writes with — against a COPY and keeps the verdict. So
+ * the answer cannot drift from the engine, because it IS the engine. Nothing
+ * here writes, and the caller's state object is not mutated.
+ *
+ * Cheap by construction: pure arithmetic over a schedule the two highest-
+ * traffic callers (`/today` and the app layout) already load for the rest card.
+ *
+ * @param onDate the day being projected — today for a badge, the next work day
+ *               for a card that promises what the next rep will do.
+ */
+export type SwellDisplay = {
+  /** Show this. Zero when the stored streak is already broken. */
+  current: number;
+  /** What it becomes if they complete `onDate`. Always safe to promise. */
+  nextIfCompleted: number;
+  /** False when `current_len` is a corpse. */
+  alive: boolean;
+  /** `onDate` is already completed, so the stored number is current. */
+  completedOnDate: boolean;
+  /** Scheduled work days missed since the last completion. */
+  gapDays: number;
+  /** The streak survives only because grace would bridge the gap. */
+  bridgedByGrace: boolean;
+};
+
+export function swellAsOf(
+  state: SwellState,
+  onDate: IsoDate,
+  settings: GameSettings,
+  context: ScheduleContext = {}
+): SwellDisplay {
+  const { next, outcome } = applyDailyCompletion(
+    { ...state },
+    onDate,
+    settings,
+    context
+  );
+
+  /* Already done (or the clock slipped): the written number is the true one. */
+  if (outcome.noop) {
+    return {
+      current: state.currentLen,
+      nextIfCompleted: state.currentLen,
+      alive: state.currentLen > 0,
+      completedOnDate: true,
+      gapDays: 0,
+      bridgedByGrace: false,
+    };
+  }
+
+  /*
+   * `alive` means "there is a Swell and it is unbroken" — so a first-ever
+   * completion is NOT alive, it is about to begin. Without the length test
+   * `firstEver` would report alive:true alongside current:0, and a caller
+   * asking "is there a streak to protect" would get yes about nothing.
+   */
+  const alive = !outcome.streakReset && state.currentLen > 0;
+  return {
+    current: alive ? state.currentLen : 0,
+    nextIfCompleted: next.currentLen,
+    alive,
+    completedOnDate: false,
+    gapDays: outcome.gapDays,
+    bridgedByGrace: outcome.graceUsed,
+  };
+}

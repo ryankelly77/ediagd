@@ -7,6 +7,7 @@ import { DayRollover } from "@/components/nav/DayRollover";
 import { SwipeNavigation } from "@/components/nav/SwipeNavigation";
 import type { IsoDate } from "@/lib/gamification/streak";
 import { loadScheduleContext, restDayFor, type RestDay } from "@/lib/work-schedule";
+import { swellAsOf } from "@/lib/gamification/streak";
 import { TAB_ROUTES } from "@/lib/navigation";
 
 /** First letter of the name (or email) for the avatar. */
@@ -72,7 +73,7 @@ export default async function AppLayout({
          recompute it — if the two could disagree, that is a chip bug. */
       supabase
         .from("swell")
-        .select("current_len")
+        .select("current_len, longest_len, last_completed_on, paddle_out_available, paddle_out_last_granted")
         .eq("user_id", user.id)
         .maybeSingle(),
     ]);
@@ -100,7 +101,16 @@ export default async function AppLayout({
     .is("read_at", null);
 
   const displayName = profile?.full_name ?? user.email ?? "there";
-  const streak = Number(swell?.current_len ?? 0);
+  /*
+   * Filled in below, once we know the rooftop's date and this advisor's
+   * schedule. NOT `swell.current_len` — that only moves on completion, so the
+   * chip used to wear a number that had been dead since the last missed work
+   * day. See swellAsOf in lib/gamification/streak.ts.
+   *
+   * Zero until proven otherwise: with no rooftop there is no date to judge
+   * liveness against, and a chip is not worth a number nothing has checked.
+   */
+  let streak = 0;
   const balance = balanceRow?.balance == null ? null : Number(balanceRow.balance);
 
   const roles = new Set((memberships ?? []).map((m) => m.role as string));
@@ -132,6 +142,11 @@ export default async function AppLayout({
       supabase.rpc("rooftop_today", { _rooftop: rooftopId }),
       supabase.from("rooftop").select("timezone").eq("id", rooftopId).maybeSingle(),
     ]);
+    const { data: settingsRow } = await supabase
+      .from("game_settings")
+      .select("paddle_out_per_month, paddle_out_cap")
+      .limit(1)
+      .maybeSingle();
     const today =
       (todayRaw as IsoDate | null) ?? new Date().toISOString().slice(0, 10);
     renderedDate = today;
@@ -153,6 +168,32 @@ export default async function AppLayout({
     completedToday = Boolean(done);
     if (done) todayHref = "/advisor";
     restToday = restDayFor(today as IsoDate, context);
+
+    /* The chip asks the engine, over the context it just loaded for restDayFor
+       — so the chip, the rest card and the Swell screen cannot disagree. */
+    streak = swellAsOf(
+      {
+        currentLen: Number(swell?.current_len ?? 0),
+        longestLen: Number(swell?.longest_len ?? 0),
+        lastCompletedOn: (swell?.last_completed_on as IsoDate | null) ?? null,
+        paddleOutAvailable: Number(swell?.paddle_out_available ?? 0),
+        paddleOutLastGranted:
+          (swell?.paddle_out_last_granted as IsoDate | null) ?? null,
+      },
+      today as IsoDate,
+      {
+        paddleOutCap: Number(settingsRow?.paddle_out_cap ?? 0),
+        paddleOutPerMonth: Number(settingsRow?.paddle_out_per_month ?? 0),
+        sandDailyLoop: 0,
+        sandSwell7: 0,
+        sandSwell30: 0,
+        sandSwell90: 0,
+        sandSwell365: 0,
+        sandBadge: 0,
+        sandCertification: 0,
+      },
+      context
+    ).current;
   }
 
   // Max 5 tabs. Admin lives inside More rather than taking a slot, so a
