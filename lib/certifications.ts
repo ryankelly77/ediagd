@@ -8,6 +8,7 @@
    agree about what "current" means by construction rather than by care.
 ============================================================================ */
 
+import { loadStoryGate } from "@/lib/story";
 import {
   certificationState,
   coreBuildLine,
@@ -42,6 +43,14 @@ export type CertificationTile = {
   doneItems: number;
   totalModules: number;
   doneModules: number;
+
+  /*
+   * THE THIRD LEG — 3e. Carried on the tile so statusLine can name what is
+   * actually outstanding instead of saying "Finishing up" to somebody who is
+   * one paragraph short of eight months of work.
+   */
+  storyRequired: boolean;
+  storySubmitted: boolean;
 
   earnedAt: string | null;
   /*
@@ -91,7 +100,7 @@ export async function loadCertifications(
   userId: string,
   today: IsoDate
 ): Promise<CertificationsView> {
-  const [{ data: catalogue }, { data: held }, { data: progress }, { data: cred }] =
+  const [{ data: catalogue }, { data: held }, { data: progress }, storyGate, { data: cred }] =
     await Promise.all([
       client
         .from("certification")
@@ -104,6 +113,9 @@ export async function loadCertifications(
         .select("certification_id, earned_at")
         .eq("user_id", userId),
       client.rpc("my_certification_progress"),
+      /* The story gate. Read here rather than per tile so the flag is fetched
+         once and the page cannot ask the same question two different ways. */
+      loadStoryGate(client as never, userId),
       client
         .from("advisor_credential")
         .select("level, certificate_id, current_through, earned_at")
@@ -151,6 +163,8 @@ export async function loadCertifications(
       doneItems: Number(p?.done_items ?? 0),
       totalModules: Number(p?.total_modules ?? 0),
       doneModules: Number(p?.done_modules ?? 0),
+      storyRequired: storyGate.storyRequired,
+      storySubmitted: storyGate.toldFor.has(c.id as string),
       earnedAt: (mine?.earned_at as string | undefined) ?? null,
       state: certificationState({ earnedOn }),
       currency: earnedLine({ earnedOn }),

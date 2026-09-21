@@ -119,39 +119,46 @@ Item count *is* the certification's length. One item, one morning.
 Two assumptions not yet confirmed: five mornings a week (advisors work Saturdays), and
 one item per morning. If either changes, every number above changes.
 
-## APPROVED 20 September — the Good News Story
+## BUILT — the Good News Story (phase 3e, 0127)
 
-A written account, at track exit, of something the advisor did differently on the drive.
-The film opens the track; the story closes it. Eight tracks, eight films, eight stories.
+A written account, at track exit, of something the advisor did differently on the drive
+because of what the track taught them. The film opens the track; the story closes it.
+**Eight tracks, eight films, eight stories.** Never per module, never per day.
 
-This would take the credential from two legs (attendance, recall) to four (attendance,
-recall, **application**, outcome). Attach rate movement is the fourth leg and should be
-**reported, not required** — it moves for reasons that have nothing to do with the
-advisor, and gating a credential on a number invites gaming it.
+The credential has four legs: **showing up, passing the checks, writing what you did
+differently, and your numbers moving.** The fourth is **reported, not required** — attach
+rate moves for reasons that have nothing to do with the advisor, and gating a credential
+on a number invites gaming it. Nothing computes a causal claim; movement is shown over
+the certification timeline and no more is asserted than that.
 
-**Approved 20 September**: the direction, the placement at track exit, and attach rate
-reported rather than required. Built in phase 3e, sequenced after 0123/0124/0125 land.
+**The leg gates a TRACK, not a day.** `dayGate.ts` decides a morning; `certification.ts`
+decides a track, and that is where the leg lives — `trackComplete()`, beside the module
+rule. An earlier version of this document stated the formula ambiguously and the note
+landed in `dayGate.ts`; 0127 moved it and corrected the comment.
 
-Two working assumptions not yet confirmed by Mitch — submission counts immediately with
-manager review non-blocking, and team sharing off by default — are flagged in the 3e
-prompt rather than buried.
+How the three reversibility constraints were met:
 
-**The leg gates a TRACK, not a day.** `dayGate.ts` decides a morning;
-`certification.ts` decides a track, and that is where the leg lives. An earlier version
-of this document stated the formula ambiguously and the note landed in the wrong file.
+1. **A flag, not a structure.** `game_settings.story_required`, read in exactly one
+   place — `loadStoryGate()` in `lib/story.ts`. Turning it off is
+   `update game_settings set story_required = false;` and no migration.
+   It **ships ON**: no advisor completes a track before February, so a dark launch would
+   have created the very cohort mismatch the flag exists to avoid.
+2. **Track completion is expressed in exactly one place.** `TRACK_LEGS` in
+   `lib/certification.ts` — the legs are data, so removing the story later is deleting an
+   entry rather than hunting a condition through three components.
+3. **It is decided, so it goes in the pitch.**
 
-If it is approved, three constraints keep it reversible:
+Two working assumptions, mine rather than Mitch's and cheap to reverse: submission counts
+immediately with manager review visible but never blocking, and team sharing off by
+default. Both are built that way and both are flagged in `reports/phase-3e-*`.
 
-1. **The gate is a flag, not a structure** — `itemsDone && quizPassed !== false &&
-   (storyRequired ? storySubmitted : true)`. Turning it off is config, not a migration.
-2. **Track completion is expressed in exactly one place.** If three components each
-   decide what "complete" means, removing a leg means finding all three and missing one.
-   Worth insisting on regardless of this feature.
-3. **It does not go into the pitch until it is decided.** Selling it and then removing it
-   costs more than never building it.
+**The RLS is the feature.** This is the first place an advisor writes free text about
+their own work and a manager reads it. Four rules — own always; manager at their own
+rooftop; shared stories to that rooftop only; nobody across rooftops — each proved as a
+refusal over PostgREST in `accept:story`, and each proved non-vacuous.
 
-The only genuinely irreversible part is the credential's definition, and no advisor
-holds this credential before February — the 8-to-15-month clock starts 1 October.
+Onboarding says all four legs on day one (phase 3e Piece A), so the story is never news
+in month eight.
 
 ## Open — Mitch's
 

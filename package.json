@@ -89,7 +89,9 @@
     "accept:focus-family": "rm -rf .tmp-ff && tsc -p scripts/tsconfig.focusfamily.json && node .tmp-ff/focus-family-acceptance.js",
     "accept:loop": "rm -rf .tmp-loop && tsc -p scripts/tsconfig.loop.json && mkdir -p .tmp-loop/node_modules/server-only && echo \"module.exports={};\" > .tmp-loop/node_modules/server-only/index.js && ln -sfn .. .tmp-loop/node_modules/@ && node .tmp-loop/scripts/loop-acceptance.js",
     "fixture:loop": "rm -rf .tmp-shot && tsc -p scripts/tsconfig.shotfixture.json && node .tmp-shot/loop-screenshot-fixture.js",
-    "accept:family": "rm -rf .tmp-fam && tsc -p scripts/tsconfig.family.json && mkdir -p .tmp-fam/node_modules/server-only && echo \"module.exports={};\" > .tmp-fam/node_modules/server-only/index.js && ln -sfn .. .tmp-fam/node_modules/@ && node .tmp-fam/scripts/family-acceptance.js"
+    "accept:family": "rm -rf .tmp-fam && tsc -p scripts/tsconfig.family.json && mkdir -p .tmp-fam/node_modules/server-only && echo \"module.exports={};\" > .tmp-fam/node_modules/server-only/index.js && ln -sfn .. .tmp-fam/node_modules/@ && node .tmp-fam/scripts/family-acceptance.js",
+    "accept:story": "rm -rf .tmp-story && tsc -p scripts/tsconfig.story.json && node .tmp-story/story-acceptance.js",
+    "fixture:story": "rm -rf .tmp-shot2 && tsc -p scripts/tsconfig.storyshot.json && node .tmp-shot2/story-screenshot-fixture.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

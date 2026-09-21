@@ -178,6 +178,20 @@ function statusLine(t: CertificationTile): string {
 
   if (t.itemCount > 0 && t.doneItems >= t.itemCount) {
     if (t.totalModules > 0 && t.doneModules < t.totalModules) return "Quiz remaining";
+
+    /*
+     * ---- 3e RULING 5: AN UNWRITTEN STORY MUST BE LOUD --------------------
+     *
+     * The failure this prevents: an advisor at 100% of modules with an
+     * incomplete track and no idea why. Months of work, one sentence short,
+     * and a line reading "Finishing up" — which is true, useless, and looks
+     * like the app is thinking rather than waiting for them.
+     *
+     * Named, not hinted, and it reads like describeOutstanding does every
+     * morning in dayGate.ts. The track should not invent a second voice for
+     * the same job.
+     */
+    if (t.storyRequired && !t.storySubmitted) return "Your Good News Story";
     return "Finishing up";
   }
   return `${t.doneItems} of ${t.itemCount} items`;
