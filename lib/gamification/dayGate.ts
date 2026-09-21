@@ -20,18 +20,25 @@
    ---------------------------------------------------------------------------
    AND WHY THE LEGS ARE DATA
    ---------------------------------------------------------------------------
-   TWO_LADDERS §PROPOSED marks the Good News Story undecided, and asks that if
-   it is ever approved the gate be `itemsDone && quizPassed !== false &&
-   (storyRequired ? storySubmitted : true)` — "a flag, not a structure. Turning
-   it off is config, not a migration."
+   THE GOOD NEWS STORY IS NOT A LEG OF THIS GATE, AND THIS FILE USED TO IMPLY
+   IT MIGHT BE. It quoted the story formula from TWO_LADDERS §PROPOSED as
+   something that would one day become an entry in LEGS below. That was wrong,
+   and the fault is in the source: the formula was written ambiguously and
+   copied here faithfully.
 
-   NO STORY LEG IS DEFINED HERE. It is not approved, and 3d says do not design
-   schema for it speculatively. What is here is the shape that makes it one
-   entry in LEGS when and if it is: a key, when it is required, and how to tell
-   whether it was met. Dropping it again would be deleting that entry. That
-   preparation costs nothing and is worth having on its own — the reason to
-   insist on it is that three components each deciding what "complete" means is
-   how a leg gets removed everywhere but one place.
+   A story does not complete a MORNING. It completes a TRACK. An advisor who
+   writes one has not finished that day's ritual; they have finished eight
+   months of work. 3e approved it at track exit, mirroring the track film at
+   track entry — one per track, eight per credential, never per day.
+
+   The gate that carries it is trackComplete() in lib/certification.ts, beside
+   the module rule it belongs to. Nothing about the story belongs here.
+
+   WHAT DOES SURVIVE IS THE DISCIPLINE, and it is why that gate looks like this
+   one: the legs are DATA. Removing the story later is deleting an entry, not
+   unpicking a condition from three call sites — because three components each
+   deciding what "complete" means is how a leg gets removed everywhere but one
+   place.
    ============================================================================ */
 
 /** Which shape of morning was served. Recorded on daily_completion. */

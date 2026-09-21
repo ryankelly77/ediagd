@@ -329,6 +329,114 @@ export function certificationEarned(modules: ModuleProgress[]): boolean {
   return modules.every(moduleComplete);
 }
 
+/* ---- The track gate, and its legs are data ------------------------------- */
+
+/**
+ * WHAT A TRACK NEEDS, IN ONE PLACE.
+ *
+ * `certificationEarned` above answers only "is every module done". Since 3e a
+ * track also needs its Good News Story — the advisor's own account of something
+ * they did differently on the drive because of what the track taught them. One
+ * per track, eight per credential, at track exit, mirroring the track film at
+ * track entry.
+ *
+ * ---------------------------------------------------------------------------
+ * THE LEGS ARE DATA, THE SAME WAY dayGate's ARE
+ * ---------------------------------------------------------------------------
+ * Not `modules.every(...) && (storyRequired ? storySubmitted : true)` written
+ * out at each call site. One list, one reducer, so removing the story later is
+ * deleting an entry — not hunting a condition through three components, which
+ * is how a leg ends up removed everywhere but one place.
+ *
+ * `required` is what the flag decides; `met` is what happened. Keeping them
+ * apart is what lets describeTrackOutstanding say WHICH leg is missing rather
+ * than just "not yet".
+ */
+export type TrackLegKey = "modules" | "story";
+
+export type TrackState = {
+  modules: ModuleProgress[];
+  /** game_settings.story_required — see lib/story.ts loadStoryGate(). */
+  storyRequired: boolean;
+  /** Is there a live advisor_story row for this track? */
+  storySubmitted: boolean;
+};
+
+export type TrackLeg = {
+  key: TrackLegKey;
+  required: boolean;
+  met: boolean;
+};
+
+const TRACK_LEGS: {
+  key: TrackLegKey;
+  required: (t: TrackState) => boolean;
+  met: (t: TrackState) => boolean;
+}[] = [
+  {
+    key: "modules",
+    /*
+     * ALWAYS, and a track with no modules is never earned — `every()` on an
+     * empty array is true, which would hand out a certification for a course
+     * nobody has written. certificationEarned carries that check; this defers
+     * to it rather than restating the rule.
+     */
+    required: () => true,
+    met: (t) => certificationEarned(t.modules),
+  },
+  {
+    key: "story",
+    required: (t) => t.storyRequired,
+    met: (t) => t.storySubmitted,
+  },
+];
+
+/** Every leg, offered or not — the shape describeTrackOutstanding reads. */
+export function trackLegs(t: TrackState): TrackLeg[] {
+  return TRACK_LEGS.map((l) => ({
+    key: l.key,
+    required: l.required(t),
+    met: l.met(t),
+  }));
+}
+
+/**
+ * The one answer to "is this track finished".
+ *
+ * Fails closed on an unrequired-and-unmet story by construction: an unrequired
+ * leg is simply not consulted, so turning the flag off cannot strand anybody.
+ */
+export function trackComplete(t: TrackState): boolean {
+  return trackLegs(t).every((l) => !l.required || l.met);
+}
+
+/** Which legs are required and still missing, in list order. */
+export function trackOutstanding(t: TrackState): TrackLegKey[] {
+  return trackLegs(t)
+    .filter((l) => l.required && !l.met)
+    .map((l) => l.key);
+}
+
+/**
+ * Said plainly, because the failure this prevents is an advisor at 100% of
+ * modules with an incomplete track and no idea why — months of work, one
+ * sentence short, and nothing on screen saying so.
+ *
+ * Reads like describeOutstanding in dayGate.ts on purpose: an advisor meets
+ * that sentence every morning, and the track should not invent a second voice
+ * for the same job.
+ */
+export function describeTrackOutstanding(keys: TrackLegKey[]): string {
+  const NAMES: Record<TrackLegKey, string> = {
+    modules: "the rest of the modules",
+    story: "your Good News Story",
+  };
+  const names = keys.map((k) => NAMES[k]);
+  if (names.length === 0) return "";
+  if (names.length === 1) return names[0];
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 /** How far through, for the ring. 0..1, and never NaN on an empty track. */
 export function certificationProgress(modules: ModuleProgress[]): number {
   if (modules.length === 0) return 0;

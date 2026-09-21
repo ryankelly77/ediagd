@@ -128,6 +128,28 @@ And be suspicious of a fix that lands in one layer. A value read in one place is
 rare; the same value is usually read by a screen, a notification, an export and a
 report, and only one of them was in front of you.
 
+## Never identify a person by name
+
+**Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
+collide, and a query that matches on one will happily return the wrong person
+without erroring.
+
+Two instances, one layer apart:
+
+- A screenshot fixture looked an advisor up by `app_user.full_name`, got the
+  wrong one of two rows sharing that name, and **backfilled progress onto a user
+  who was not the browser session** — then reported a state that belonged to
+  nobody on screen.
+- `membership.op_code_id` pointed four app accounts at other people's DMS books,
+  which is the same defect in production: **reading from the wrong person's
+  record because the identifier was human-readable rather than unique.** One of
+  them showed an advisor a colleague's attach rates labelled "Your".
+
+Derive the id from the thing you actually mean — the session, the row you just
+inserted, the membership you are acting on — and carry the id. A name is for
+printing, never for matching. If a lookup must start from a name, assert it
+returned exactly one row before using it.
+
 **In practice:** when you write or touch anything that reports, previews,
 labels, counts, or claims a state — a menu entry, a badge, a cursor, a progress
 number, a check — name the viewer it will really have and exercise it as them.

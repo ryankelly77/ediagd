@@ -24,7 +24,7 @@ import type { IsoDate } from "@/lib/gamification/streak";
    swipe or tap to move.
    ============================================================================ */
 
-const TOTAL = 6;
+const TOTAL = 7;
 
 export function OnboardingFlow({
   alreadyOnboarded,
@@ -68,7 +68,7 @@ export function OnboardingFlow({
 
   // Narrative screens move freely; once the schedule is saved there's no going
   // back to re-answer it, so 6 is terminal.
-  const canAdvance = step <= 4;
+  const canAdvance = step <= 5;
   const next = () => setStep((s) => Math.min(s + 1, TOTAL));
   const back = () => setStep((s) => Math.max(s - 1, 1));
 
@@ -82,7 +82,7 @@ export function OnboardingFlow({
     const delta = (e.changedTouches[0]?.clientX ?? from) - from;
     if (Math.abs(delta) < 48) return; // a tap, or a scroll that wandered
     if (delta < 0 && canAdvance) next();
-    if (delta > 0 && step > 1 && step < 6) back();
+    if (delta > 0 && step > 1 && step < 7) back();
   }
 
   return (
@@ -91,7 +91,7 @@ export function OnboardingFlow({
       onTouchEnd={onTouchEnd}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight" && canAdvance) next();
-        if (e.key === "ArrowLeft" && step > 1 && step < 6) back();
+        if (e.key === "ArrowLeft" && step > 1 && step < 7) back();
       }}
       tabIndex={-1}
     >
@@ -114,17 +114,22 @@ export function OnboardingFlow({
           )}
           {step === 2 && <Screen2 onNext={next} />}
           {step === 3 && <Screen3 onNext={next} />}
-          {step === 4 && <Screen4 onNext={next} />}
-          {step === 5 && (
+          {/* THE CREDENTIAL, BEFORE THE GEAR. Ordered deliberately: the loop is
+              what they do, this is what it builds toward, and the swag is the
+              sugar on top. An advisor who meets the gear first reads the whole
+              thing as a points app. */}
+          {step === 4 && <ScreenCredential onNext={next} />}
+          {step === 5 && <Screen4 onNext={next} />}
+          {step === 6 && (
             <Screen5
               firstName={firstName}
               saturdays={saturdays}
               today={today}
               preview={preview}
-              onSaved={() => setStep(6)}
+              onSaved={() => setStep(7)}
             />
           )}
-          {step === 6 && (
+          {step === 7 && (
             <WelcomeGift
               cap={paddleOutCap}
               preview={preview}
@@ -283,7 +288,13 @@ function Screen2({ onNext }: { onNext: () => void }) {
           {" "}— not a generic playbook written for somebody else&apos;s store.
         </p>
         <p className="text-base font-extrabold leading-relaxed text-ocean">
-          No classroom. No binder. No homework.
+          {/* "No homework" was here, and 3e made it false: the credential asks
+              for a Good News Story at the end of each track — eight paragraphs
+              across eight to fifteen months, about work they already did. It is
+              not homework in the binder sense and it is not nothing either, so
+              the claim goes rather than getting quietly stretched. The rhythm of
+              three survives; the promise we cannot keep does not. */}
+          No classroom. No binder. Nothing to take home.
         </p>
       </div>
     </Narrative>
@@ -294,7 +305,7 @@ function Screen2({ onNext }: { onNext: () => void }) {
 
 function Screen3({ onNext }: { onNext: () => void }) {
   return (
-    <Narrative onNext={onNext} cta="What can I earn?">
+    <Narrative onNext={onNext} cta="Where does it lead?">
       <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
@@ -324,20 +335,34 @@ function Screen3({ onNext }: { onNext: () => void }) {
         filmed for that service yet, so "four" would be wrong on exactly the
         days the library is thin.
       */}
+      {/*
+        UPDATED FOR THE TWO LADDERS, AND IT WAS WRONG UNTIL IT WAS. This list
+        described the pre-3b loop — a quote first, the Pick, then two films —
+        and the live morning has been mindset, pitch, item since b2cdd64. An
+        advisor was told one order and handed another on the very next screen,
+        which is the single thing the comment above warns against.
+
+        Order and wording track DailyFlow's steps directly, using the eyebrows
+        those screens actually print, so the words are familiar when they
+        arrive. The quote moved to the END because 3b made it the close rather
+        than a slot.
+      */}
       <ol className="mt-6 space-y-3">
-        <LoopStep n={1} title="A quote to start on">
-          Something worth carrying out to the drive.
+        <LoopStep n={1} title="Get your head right">
+          A short film on the part of the job that isn&apos;t the car. Every
+          morning starts here.
         </LoopStep>
-        <LoopStep n={2} title="Today's focus, and the words for it">
-          The one service where you&apos;ve got the most room — measured against
-          your own store, not a national average — with the coaching cue for it
-          on the same screen.
+        <LoopStep n={2} title="The pitch">
+          A film on the one service where you&apos;ve got the most room —
+          measured against your own store, not a national average. It stays on
+          that service until you&apos;ve worked through it.
         </LoopStep>
-        <LoopStep n={3} title="The pitch">
-          A short film on that service, when one has been shot for it.
+        <LoopStep n={3} title="Today&apos;s item">
+          One piece of the craft, in order, from whichever track you&apos;re on.
         </LoopStep>
-        <LoopStep n={4} title="Today's three minutes">
-          One more short film, on the part of the job that isn&apos;t the car.
+        <LoopStep n={4} title="And a line to carry out">
+          Something worth taking to the drive. It closes the day rather than
+          starting it.
         </LoopStep>
       </ol>
     </Narrative>
@@ -372,6 +397,85 @@ function LoopStep({
 }
 
 /* ---- 4. What you earn ----------------------------------------------------- */
+
+/* ---- The credential, on day one ------------------------------------------ */
+
+/**
+ * PIECE A OF 3e, AND THE REASON THAT PHASE CAME BEFORE THE GATE ITSELF.
+ *
+ * Every advisor invited at Doggett meets onboarding in their first week. This
+ * is where the credential gets defined for them, and until now it was not
+ * defined here at all — the flow went loop, gear, schedule, and an advisor
+ * could finish onboarding believing this was a video app with a streak on it.
+ *
+ * Four legs, said plainly and in the order they happen:
+ *
+ *   showing up · passing the checks · writing what you did differently ·
+ *   your numbers moving
+ *
+ * TWO THINGS THIS BUYS, BOTH WORTH THE SCREEN:
+ *
+ * 1. It removes the Good News Story's worst failure mode almost entirely. An
+ *    advisor who learns on day one that the credential asks for their own words
+ *    is never surprised by it in month eight, one sentence short of a thing they
+ *    thought they had finished. The certification page still says so when the
+ *    time comes — but by then it is a reminder, not news.
+ *
+ * 2. It is the sales story told to the person it is about. Mitch says this to
+ *    dealers; the advisor should hear the same sentence, on their first morning,
+ *    rather than a softer version of it.
+ *
+ * THE NUMBERS LEG IS PHRASED AS MOVEMENT, NOT A TARGET, and that is deliberate:
+ * 3e Ruling 6 forbids a causal claim, and a promise here that the credential
+ * requires a number to go up would be both a harder claim than we can support
+ * and a different product. Attach rate is reported beside the credential; it
+ * never gates it.
+ */
+function ScreenCredential({ onNext }: { onNext: () => void }) {
+  return (
+    <Narrative onNext={onNext} cta="What can I earn?">
+      <section className="ediagd-hero" data-intentional-bleed>
+        <SunWaveMotif />
+        <div className="relative">
+          <p className="ediagd-eyebrow">What you&apos;re building</p>
+          <h2 className="mt-2 text-3xl font-extrabold leading-tight text-white">
+            A credential that says you can do the job
+          </h2>
+        </div>
+      </section>
+
+      <div className="mt-6 space-y-4">
+        <p className="text-lg leading-relaxed text-ink">
+          Not a certificate for watching videos. It rests on{" "}
+          <span className="font-extrabold text-navy">four things</span>, and the
+          third one is the part nobody else asks for.
+        </p>
+
+        <ol className="space-y-3">
+          <LoopStep n={1} title="Showing up">
+            Three minutes a day, on the days you work.
+          </LoopStep>
+          <LoopStep n={2} title="Passing the checks">
+            Short checks on what each module taught. You can take them again.
+          </LoopStep>
+          <LoopStep n={3} title="Writing what you did differently">
+            At the end of each track, a few lines in your own words about
+            something you changed on the drive because of it. Eight of them,
+            across the whole thing.
+          </LoopStep>
+          <LoopStep n={4} title="Your numbers moving">
+            Where you were when you started, and where you are now. Shown beside
+            the credential — it never blocks it.
+          </LoopStep>
+        </ol>
+
+        <p className="text-base font-extrabold leading-relaxed text-ocean">
+          That third one is why this isn&apos;t ASE.
+        </p>
+      </div>
+    </Narrative>
+  );
+}
 
 function Screen4({ onNext }: { onNext: () => void }) {
   return (

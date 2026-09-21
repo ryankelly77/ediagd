@@ -270,6 +270,36 @@ loader so `swellAsOf` can be called per advisor with a complete context — the
 same three inputs `loadScheduleContext` already assembles for one user, batched.
 Do it properly or leave it reading raw; do not do it halfway.
 
+### F7 — The story submission form, and the one line of copy it ships with
+
+**Trigger:** before February. **Owner:** Ryan. **Blocked by nothing.**
+
+0127 built the record, the RLS and the gate. **There is no submission form.**
+Nothing in the product writes an `advisor_story`, and nothing can before
+February, because no track completes sooner. `/certifications` names the
+outstanding story; it does not yet offer a way to write one.
+
+When it is built, **one line of copy goes above the textarea**:
+
+> Don't use customer names.
+
+Advisors will otherwise write *"Mrs. Henderson in the blue Pacifica wouldn't buy
+the alignment until…"*, because that is how people describe their work. It is
+copy, not policy; it costs nothing and it prevents most of what the retention
+policy would otherwise have to clean up.
+
+**The warm-up story was ruled out on 20 September**, and for this reason rather
+than on its merits. Onboarding could have invited an optional first story
+counting toward no track. Declined: as built, nothing can be written until
+February, so the customer-name question is a February question. A warm-up would
+have converted it into a nine-day one, for a feature nobody asked for.
+**Revisit in November**, once Doggett has used the product for a month and we
+know whether advisors want to write or have to be asked.
+
+Retention, deletion, and what a manager sees about a departed advisor remain
+proposed — `reports/phase-3e-good-news-story.md` §6, for Mitch and Ryan, before
+February.
+
 ## Standing rules, unchanged
 
 `pg_dump` before every prod migration. Migrations left written and validated on a full
