@@ -80,11 +80,54 @@ export default async function StoryPage({
    */
   const existing = isPreview ? null : await loadMyStory(supabase, user.id, cert.id);
 
+  /*
+   * ---- TWO FACTS THE SCREEN IS NOT ALLOWED TO GUESS ----------------------
+   *
+   * hasChecks — does this track have ANY quiz questions? Measured on
+   * production: only Walk Around does (28 across 7 modules), and six other
+   * tracks have modules and none. The hero line said "and every check", which
+   * on six of seven tracks told an advisor they had passed checks that never
+   * existed.
+   *
+   * completesTrack — is the story the LAST leg? True only when every module is
+   * already complete, which is how the tile that links here is chosen. Someone
+   * arriving by URL with modules outstanding must not be told the track is
+   * finished. One read of the same rollup the wall uses, so the two cannot
+   * disagree.
+   */
+  const { data: progress, error: progressError } = await supabase.rpc(
+    "my_certification_progress"
+  );
+  if (progressError) {
+    throw new Error(`certification progress: ${progressError.message}`);
+  }
+  const mine = ((progress ?? []) as {
+    certification_id: string;
+    total_modules: number;
+    done_modules: number;
+  }[]).find((r) => r.certification_id === cert.id);
+
+  /*
+   * THE PREVIEW ASSUMES A FINISHED TRACK, and the banner says so. The point of
+   * previewing this screen is the state an advisor actually meets — somebody
+   * at the end of fifty mornings — and an admin's own module progress is not
+   * that. Same posture as the track-entry morning borrowing a film: substitute,
+   * and name the substitution on screen.
+   */
+  const completesTrack = isPreview
+    ? true
+    : Boolean(mine) && Number(mine!.total_modules) > 0 &&
+      Number(mine!.done_modules) >= Number(mine!.total_modules);
+
+  const hasChecks = await trackHasChecks(supabase, cert.id as string);
+
   return (
     <StoryForm
       certificationId={cert.id as string}
       trackName={cert.name as string}
       itemCount={Number(cert.item_count ?? 0)}
+      hasChecks={hasChecks}
+      completesTrack={completesTrack}
       existing={
         existing
           ? {
@@ -100,4 +143,41 @@ export default async function StoryPage({
       preview={isPreview}
     />
   );
+}
+
+/**
+ * Does this track have any quiz questions at all?
+ *
+ * certification -> courses -> modules -> quiz_question_public, which is the
+ * definer view advisors may read (quiz_question itself has no advisor policy —
+ * see lib/quiz.ts). Every step takes its error: a refusal that read as "no
+ * checks" would quietly change what the hero line claims.
+ */
+async function trackHasChecks(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  certificationId: string
+): Promise<boolean> {
+  const { data: links, error: linkError } = await supabase
+    .from("certification_course")
+    .select("course_id")
+    .eq("certification_id", certificationId);
+  if (linkError) throw new Error(`certification_course: ${linkError.message}`);
+  const courseIds = (links ?? []).map((r) => r.course_id as string);
+  if (courseIds.length === 0) return false;
+
+  const { data: modules, error: moduleError } = await supabase
+    .from("module")
+    .select("id")
+    .in("course_id", courseIds);
+  if (moduleError) throw new Error(`module: ${moduleError.message}`);
+  const moduleIds = (modules ?? []).map((m) => m.id as string);
+  if (moduleIds.length === 0) return false;
+
+  const { count, error: quizError } = await supabase
+    .from("quiz_question_public")
+    .select("id", { count: "exact", head: true })
+    .in("module_id", moduleIds);
+  if (quizError) throw new Error(`quiz_question_public: ${quizError.message}`);
+
+  return Number(count ?? 0) > 0;
 }
