@@ -31,6 +31,24 @@ export type StoryFormProps = {
   trackName: string;
   /** Items in the track, for the line that says what they finished. */
   itemCount: number;
+  /**
+   * Does this track have any quiz questions at all?
+   *
+   * MEASURED, NOT ASSUMED. Only Walk Around has any — 28 across 7 modules —
+   * and six other tracks have modules and none. "and every check" would have
+   * told advisors on six of seven tracks that they passed checks which never
+   * existed.
+   */
+  hasChecks: boolean;
+  /**
+   * Is the story the LAST leg — every module already complete?
+   *
+   * trackComplete = modules.every(moduleComplete) && (storyRequired ?
+   * storySubmitted : true). When this is true, pressing submit finishes the
+   * track, and the screen is allowed to say so. When it is false — someone
+   * arrived by URL with modules outstanding — it must not.
+   */
+  completesTrack: boolean;
   existing: {
     body: string;
     sharedToTeam: boolean;
@@ -51,6 +69,8 @@ export function StoryForm({
   certificationId,
   trackName,
   itemCount,
+  hasChecks,
+  completesTrack,
   existing,
   rooftopName,
   preview = false,
@@ -58,16 +78,23 @@ export function StoryForm({
   const [body, setBody] = useState(existing?.body ?? "");
   const [shared, setShared] = useState(existing?.sharedToTeam ?? false);
   const [saved, setSaved] = useState(false);
+  /* Has a story been submitted AT ALL — loaded with one, or written just now. */
+  const [submitted, setSubmitted] = useState(existing !== null);
+  /* Unsaved changes sitting in the box. */
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const isEdit = existing !== null;
+
   /* Reject empty and whitespace-only. NOTHING ELSE — see lib/story-actions.ts
      for why there is no character minimum and why adding one is a mistake. */
   const canSave = body.trim().length > 0 && !pending;
 
   function save() {
     setError(null);
+    setDirty(false);
+    setSubmitted(true);
     if (preview) {
       /* The preview never calls the action. It is not "the action with a flag
          checked inside" — it does not reach the server at all, because the one
@@ -97,9 +124,21 @@ export function StoryForm({
 
   return (
     <main className="mx-auto max-w-app px-4 pb-16 pt-6">
+      {/*
+        THE PREVIEW FRAME LIVES HERE AND NOWHERE ELSE.
+        It used to leak into the product's own words — the confirmation read
+        "Saved — in the real thing.", which is the preview talking about itself
+        in the middle of a screen an advisor is supposed to read. A preview
+        exists to show what the real thing looks like, so every other string on
+        this page is now exactly what an advisor sees.
+        STICKY, because the honest worry was that this scrolls away and somebody
+        believes a preview submission was real. That is solved by keeping the
+        frame visible, not by rewriting the product into preview-speak.
+      */}
       {preview && (
-        <p className="mb-4 rounded-card bg-gold/15 px-4 py-3 text-sm font-bold text-navy">
-          Preview — nothing you type here is saved.
+        <p className="sticky top-0 z-10 -mx-4 mb-4 bg-gold/90 px-4 py-3 text-sm font-bold text-navy shadow-sm">
+          Preview — nothing you type here is saved. Shown as an advisor who has
+          finished the track would see it.
         </p>
       )}
 
@@ -114,9 +153,18 @@ export function StoryForm({
             {trackName}
           </h1>
           {!isEdit && itemCount > 0 && (
+            /*
+              Explicit {" "} after the expression: SWC drops a plain leading
+              space on a text node that wraps to the next line, which is how
+              this rendered "56items". Same fix, same reason, as the note in
+              OnboardingFlow.
+
+              AND "every check" ONLY WHEN THERE ARE CHECKS — see hasChecks.
+            */
             <p className="mt-3 text-sm leading-relaxed text-ice-dim">
-              That&apos;s all {itemCount} items and every check. One thing left, and
-              it&apos;s the part nobody else asks for.
+              That&apos;s all {itemCount}{" "}
+              {hasChecks ? "items and every check." : "items."} One thing left,
+              and it&apos;s the part nobody else asks for.
             </p>
           )}
           {isEdit && (
@@ -134,9 +182,11 @@ export function StoryForm({
 
       {/* ---- The prompt --------------------------------------------------- */}
       <div className="mt-6">
+        {/* "because of this track" came out: the hero says the track name in
+            40px directly above. Three lines of large bold become two and
+            nothing is lost. */}
         <label htmlFor="story" className="block text-lg font-extrabold leading-snug text-ink">
-          Tell us about a time you did something differently on the drive because
-          of this track.
+          Tell us about a time you did something differently on the drive.
         </label>
 
         <textarea
@@ -145,6 +195,7 @@ export function StoryForm({
           onChange={(e) => {
             setBody(e.target.value);
             setSaved(false);
+            setDirty(true);
           }}
           rows={9}
           placeholder="What happened, and what you did."
@@ -170,33 +221,88 @@ export function StoryForm({
         </p>
       )}
 
+      {/*
+        THE BUTTON STOPS OFFERING TO SUBMIT ONCE IT HAS BEEN SUBMITTED.
+        `submitted` rather than `isEdit`: isEdit is the state the page LOADED
+        in, so after a fresh submit it was still false and the button still
+        read "Submit my story" — which reads as though the first press did not
+        take. The label now tracks what is true, and with `dirty` it also says
+        whether there is anything to save.
+      */}
       <button
         type="button"
         onClick={save}
         disabled={!canSave}
         className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3.5 text-base font-extrabold text-navy shadow-[0_4px_16px_rgba(12,28,44,0.24)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
       >
-        {pending ? "Saving…" : isEdit ? "Save changes" : "Submit my story"}
+        {pending
+          ? "Saving…"
+          : !submitted
+            ? "Submit my story"
+            : dirty
+              ? "Save changes"
+              : "Saved"}
       </button>
 
-      {saved && (
-        <p className="mt-3 text-center text-sm font-bold text-ocean">
-          {preview ? "Saved — in the real thing." : "Saved."}
-        </p>
+      {/*
+        ---- THE CONFIRMATION IS A CREDENTIAL LANDING, NOT A SAVE -------------
+
+        Submitting the story is the LAST leg:
+
+            trackComplete = modules.every(moduleComplete)
+                            && (storyRequired ? storySubmitted : true)
+
+        The advisor has just finished roughly fifty mornings, and this press
+        finishes the track. "Saved" is what a form says; this is the moment the
+        hero card promised one screen earlier.
+
+        IT ONLY SAYS SO WHEN IT IS TRUE. completesTrack is false for somebody
+        who arrived by URL with modules outstanding, and then the honest
+        confirmation is the smaller one — the story is kept, the track is not
+        finished.
+      */}
+      {saved && !dirty && (
+        completesTrack ? (
+          <div className="mt-5 rounded-card bg-navy p-5 text-center">
+            <p className="text-xl font-extrabold leading-tight text-white">
+              That&apos;s {trackName} done.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ice-dim">
+              Every item, {hasChecks ? "every check, " : ""}and the part nobody
+              else asks for. It counts towards your credential from now.
+            </p>
+          </div>
+        ) : (
+          <p className="mt-3 text-center text-sm font-bold text-ocean">
+            Your story is saved. The track finishes when the rest of the modules
+            are done.
+          </p>
+        )
       )}
 
       {/* ---- Sharing: off, and it says who ------------------------------- */}
       {(isEdit || saved) && (
         <div className="mt-8 rounded-card border border-line bg-white p-4">
-          <Toggle
-            checked={shared}
-            onChange={toggleShared}
-            label={
-              shared
-                ? `Visible to advisors at ${rooftopName ?? "your store"}`
-                : "Only you and your manager can read this"
-            }
-          />
+          {/*
+            THE SWITCH NEEDS A VISIBLE LABEL, and Toggle's own doc says so —
+            `label` is the aria-label, "the visible text lives beside it". It
+            had none, so the control was a bare switch: before reading the
+            sentence underneath you could not tell what it governed, and you
+            could not read its state either.
+
+            The label names the thing. The sentence below still explains who
+            sees it, which is the part that was already working.
+          */}
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-base font-extrabold text-ink">
+              Share with my team
+            </span>
+            <Toggle
+              checked={shared}
+              onChange={toggleShared}
+              label="Share this story with advisors at my store"
+            />
+          </div>
           {/*
             RULING 6 — SAY WHAT SHARING DOES, NOT "SHARE".
             An advisor deciding whether to show colleagues a story about their
@@ -208,8 +314,8 @@ export function StoryForm({
           */}
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             {shared
-              ? "Advisors at your store can read it. Your manager can either way."
-              : "Turn this on to let advisors at your store read it too."}
+              ? `Advisors at ${rooftopName ?? "your store"} can read it. Your manager reads it either way.`
+              : `Off — only you and your manager. Turn it on to let advisors at ${rooftopName ?? "your store"} read it too.`}
           </p>
         </div>
       )}
