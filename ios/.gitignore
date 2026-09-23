@@ -1,4 +1,7 @@
 App/build
+# The SPM package builds to its own directory, which App/build does not cover.
+# A device build leaves this behind and it showed up untracked.
+App/CapApp-SPM/build
 App/Pods
 App/output
 App/App/public
