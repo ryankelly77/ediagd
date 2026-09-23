@@ -160,22 +160,37 @@ async function main() {
     ? JSON.parse(readFileSync(LEDGER, "utf8"))
     : {};
 
-  /* Only films this batch actually renamed. Anything left for a ruling has no
-     canonical name yet and nothing to trim against. */
-  const byCanonical = new Map<string, PlanFile>();
+  /*
+   * ---- KEYED ON source_filename, NOT canonical_filename --------------------
+   *
+   * `plan.renameTo` is the name the file has ON DISK. `content.source_filename`
+   * is that same name, recorded by the ingest. `content.canonical_filename` is
+   * a NORMALISED form the ingest invents — it moves the voice into parentheses,
+   * so `… — Mitch Hardt — v1.mov` becomes `… (Mitch Hardt) — v1.mov`.
+   *
+   * This matched on the canonical form and therefore matched NOTHING for any
+   * batch renamed under a convention that spells the voice differently.
+   * Measured on the September deck ingest: 0 of 73 matched on canonical,
+   * 73 of 73 on source_filename. Every one of those films uploaded with its
+   * slate still attached and the run reported success.
+   *
+   * The on-disk name is the stable key because it is the one thing the plan and
+   * the database both observed rather than derived.
+   */
+  const bySource = new Map<string, PlanFile>();
   for (const p of plan) {
     if (p.renameTo && p.action !== "review") {
-      byCanonical.set(p.renameTo.replace(/\.[a-z0-9]+$/i, ""), p);
+      bySource.set(p.renameTo.replace(/\.[a-z0-9]+$/i, ""), p);
     }
   }
 
   /* Everything in the library that this batch could have produced. */
   const res = await fetch(
-    `${url}/rest/v1/content?select=id,title,canonical_filename,duration_sec,status,mux_asset_id&canonical_filename=not.is.null`,
+    `${url}/rest/v1/content?select=id,title,canonical_filename,source_filename,duration_sec,status,mux_asset_id&source_filename=not.is.null`,
     { headers: { apikey: key, authorization: `Bearer ${key}` } }
   );
   const rows = (await res.json()) as {
-    id: string; title: string; canonical_filename: string;
+    id: string; title: string; canonical_filename: string; source_filename: string;
     duration_sec: number | null; status: string; mux_asset_id: string | null;
   }[];
 
@@ -184,9 +199,9 @@ async function main() {
   const skipped: { what: string; because: string }[] = [];
 
   for (const row of rows) {
-    const stem = row.canonical_filename.replace(/\.[a-z0-9]+$/i, "");
-    const entry = byCanonical.get(stem);
-    if (!entry) continue; // not from this batch
+    const stem = row.source_filename.replace(/\.[a-z0-9]+$/i, "");
+    const entry = bySource.get(stem);
+    if (!entry) continue; // genuinely a different batch — accounted for below
     const source = entry.file;
     if (ONLY && !row.canonical_filename.toLowerCase().includes(ONLY.toLowerCase())) continue;
 
@@ -217,6 +232,39 @@ async function main() {
       continue;
     }
     jobs.push({ id: row.id, title: row.title, canonical: row.canonical_filename, source, start });
+  }
+
+  /*
+   * ---- A STEP THAT CANNOT DO ITS JOB SAYS SO -------------------------------
+   *
+   * Every plan entry names a film this batch renamed. If one of them matches no
+   * content row, the trimmer has been handed work it cannot see — and the old
+   * behaviour was to trim whatever it DID match and exit 0, which is how 73
+   * films went up with their slates on while the run reported success.
+   *
+   * A missing plan and a plan that matches nothing produce the same silence, so
+   * neither is tolerated: name the unmatched entries and refuse. This is a
+   * constraint rather than a warning because it has now failed quietly once,
+   * and the failure is invisible in the artefact it produces.
+   */
+  const matchedSources = new Set(
+    rows.map((r) => r.source_filename.replace(/\.[a-z0-9]+$/i, ""))
+  );
+  const unmatched = [...bySource.keys()].filter((k) => !matchedSources.has(k));
+  if (unmatched.length) {
+    console.error(
+      `\n  REFUSING TO TRIM — ${unmatched.length} of ${bySource.size} plan entries ` +
+        `match no content row.\n` +
+        `  The plan is keyed on the ON-DISK name (source_filename). These were not found:\n`
+    );
+    for (const u of unmatched.slice(0, 20)) console.error(`    ${u}`);
+    if (unmatched.length > 20) console.error(`    … and ${unmatched.length - 20} more`);
+    console.error(
+      `\n  Either the ingest has not run for these, or the plan was written against\n` +
+        `  a different naming convention. Fix the plan; do not trim a partial set.\n`
+    );
+    release();
+    process.exit(1);
   }
 
   console.log(`\n  ${jobs.length} to trim, ${skipped.length} skipped\n`);
