@@ -69,6 +69,41 @@ const WATCHED = [
   "mileage",
 ];
 
+/**
+ * ===========================================================================
+ * EVERY TOP-LEVEL ROUTE IS EITHER WATCHED OR EXPLAINED. NOTHING IS SILENT.
+ * ===========================================================================
+ *
+ * WATCHED above is a fixed list, and a fixed list meets new things by saying
+ * nothing about them. Three routes proved it — certifications, service, then
+ * mileage — and in all three cases this suite printed "Every watched route is
+ * reachable" while the new route was outside the set it was describing. That
+ * reads identically to passing.
+ *
+ * So the list is now checked against the filesystem. A top-level directory under
+ * app/(app) that is in neither WATCHED nor this map is a HARD FAILURE, because
+ * an unfamiliar route is precisely the case this suite exists for. Adding one
+ * costs a line and a sentence; the alternative cost three silent passes.
+ *
+ * These are the trees deliberately out of scope, each with the reason. Not
+ * "unimportant" — differently checked, or not navigation at all.
+ */
+const UNWATCHED_REASON: Record<string, string> = {
+  today: "the ritual itself, and the tab bar's home. Reached by every path there is.",
+  advisor: "the numbers hub, on the tab bar.",
+  manager: "the manager hub, on the tab bar; its tools are checked via MANAGER_TOOLS.",
+  more: "the More menu — it is the thing that links other screens, not a screen linked from one.",
+  profile: "reached from More and from the avatar on every screen.",
+  streak: "the Swell hero on /today and /advisor link it; /streak/paddle-out is linked from /streak.",
+  badges: "linked from the celebration and from /profile.",
+  notifications: "linked from /profile and from the soft-ask card.",
+  saved: "linked from More.",
+  group: "linked from More, for multi-rooftop owners.",
+  "sand-dollars": "linked from the celebration and the economy strip.",
+  swag: "linked from More and from /sand-dollars.",
+  daily: "the legacy loop route. Superseded by /today and kept only so an old bookmark resolves.",
+};
+
 /** Every route under app/(app)/admin that has a page. */
 function routesUnder(dir: string, prefix: string): string[] {
   const found: string[] = [];
@@ -99,6 +134,52 @@ function main(): void {
        would read as an orphan. */
     ...Object.values(TAB_ROUTES),
   ]);
+
+  /*
+   * ---- THE LIST IS CHECKED AGAINST THE FILESYSTEM, BEFORE ANYTHING ELSE ----
+   *
+   * This runs first and exits non-zero, because every assertion below is scoped
+   * to WATCHED and is therefore worthless about a tree that is not in it. A
+   * suite that is silent by default is not a check.
+   */
+  const topLevel = readdirSync(APP_DIR).filter((e) => {
+    try {
+      return statSync(join(APP_DIR, e)).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+  const unaccounted = topLevel
+    .filter((d) => !WATCHED.includes(d) && !(d in UNWATCHED_REASON))
+    .sort();
+
+  if (unaccounted.length) {
+    console.error(
+      `\nUNACCOUNTED ROUTE TREE${unaccounted.length > 1 ? "S" : ""}: ` +
+        unaccounted.map((d) => `/${d}`).join(", ") +
+        `\n\nThis suite only checks the trees in WATCHED, so it would have said ` +
+        `nothing whatsoever about ${unaccounted.length > 1 ? "these" : "this"} ` +
+        `— which reads exactly like passing. That has happened three times ` +
+        `(certifications, service, mileage).\n\n` +
+        `Add each to WATCHED to have its links checked, or to UNWATCHED_REASON ` +
+        `with a sentence saying how it is reached instead.\n`
+    );
+    process.exit(1);
+  }
+
+  /* And the reverse: a reason left behind for a tree that no longer exists is a
+     stale excuse that would quietly cover a future route of the same name. */
+  const phantom = Object.keys(UNWATCHED_REASON)
+    .filter((d) => !topLevel.includes(d))
+    .sort();
+  if (phantom.length) {
+    console.error(
+      `\nUNWATCHED_REASON names ${phantom.length} tree(s) that no longer exist: ` +
+        `${phantom.join(", ")}\n\nRemove them — a leftover excuse would silently ` +
+        `cover a future route that happens to reuse the name.\n`
+    );
+    process.exit(1);
+  }
 
   const routes = WATCHED.flatMap((name) =>
     routesUnder(join(APP_DIR, name), `/${name}`)

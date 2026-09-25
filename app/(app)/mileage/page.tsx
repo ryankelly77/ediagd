@@ -43,14 +43,17 @@ export default async function MileagePage() {
       />
 
       {/*
-        THE LINE THAT DECIDES WHETHER THIS READS AS A SHELF OR AS HOMEWORK.
+        THE LINE THAT DECIDES WHETHER THIS READS AS A LOOKUP OR AS HOMEWORK.
         An advisor who lands here having watched none of it is not behind, and the
         page has to say so before they start counting.
+
+        IT LEADS WITH THE ACTION AND NEVER SAYS "SHELF". Shelf is our word for the
+        architecture, not the advisor's word for the thing — they do not think "I
+        will consult the reference shelf", they think "what do I offer at 40,000".
       */}
       <p className="mt-4 text-base leading-relaxed text-ink">
-        A reference shelf, not a course. Find the mileage on the repair order in
-        front of you and see what the factory recommends. There is nothing to
-        finish here.
+        Put the mileage on the repair order in front of you and see what the
+        factory recommends. There is nothing to finish here.
       </p>
 
       {rungs.length === 0 ? (
