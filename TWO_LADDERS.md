@@ -105,19 +105,74 @@ works. Craft is a curriculum — fifty-one cues in one sitting teaches nobody an
 would let an advisor speed-run to a credential over a weekend. Show craft progress on
 the certification page; offer no "continue" button.
 
-## Duration budget
+## The curriculum, and how long it takes
 
-Item count *is* the certification's length. One item, one morning.
+Settled 24 September. Supersedes the earlier duration budget, which counted cues as
+curriculum.
 
-- 195 items published today across the core eight; 191 of them sit in four finished
-  tracks (Walk Around 56, Success Cycle 55, Power of Positive Language 51,
-  Overcoming Objections 29).
-- At five mornings a week that is roughly nine months — inside the "8 to 15 months" claim.
-- Fifteen months is roughly 325 items. That leaves about **134 items for the remaining
-  four tracks — roughly 33 apiece**, not the 48 the finished tracks average.
+**Video is the curriculum. Cues are reinforcement.**
 
-Two assumptions not yet confirmed: five mornings a week (advisors work Saturdays), and
-one item per morning. If either changes, every number above changes.
+A cue can be read in seconds and teaches nothing by being ticked, so ticking cues cannot
+earn a credential. Cues appear in the morning and on the home screen, they recur, and they
+gate nothing.
+
+### The units
+
+- **A module** is one lesson video plus its quiz — **six mornings** at the settled rhythm
+  (lesson, two cue days, quiz, two cue days).
+- **A track** is an entry film, then its modules, then the advisor's Good News Story.
+  `entry + 6n + story` mornings.
+- **Slot 3** serves the next lesson or quiz when one is due, and a reinforcement cue
+  otherwise. An advisor is never blocked: when the filmed lessons run out, the loop
+  continues on cues.
+
+### The rhythm
+
+Something advances the credential every third morning. The two between are reinforcement.
+
+Lengthening the credential is done **by spacing, not by padding**. One more cue day between
+lessons costs nothing and no advisor can tell. Adding modules that re-cover material is how
+a credential stops meaning anything.
+
+### The budget, at five mornings a week
+
+| | tracks | modules | mornings | daily | every other day |
+|---|---|---|---|---|---|
+| EDIAGD Certified | 9 | 35 | 246 | 11.3 months | 22.7 months |
+| Master | 3 | 14 | 96 | 4.4 months | 8.8 months |
+| **Total** | **12** | **49** | **342** | **15.7 months** | **31 months** |
+
+Menus is a **core** track, not a Master one. Seven modules, every film already shot.
+
+### The mileage shelf
+
+The 51 mileage-rung films are **not modules and consume no mornings**. Fourteen rungs,
+5,075 through 70,000, two to six films apiece. They sit in the lesson library and the
+advisor looks up the rung matching the car in front of them.
+
+**The product does not and cannot know what is on an advisor's drive** — the DMS feed is a
+monthly spreadsheet of aggregate attach rates, not a live work-in-progress. It does not need
+to. The advisor wrote the mileage on the repair order ninety seconds ago.
+
+### Two ladders, both daily
+
+- **Ladder 1 — Service.** Slot 2. Derived from the advisor's own numbers, re-ranked only
+  when a family's films are exhausted. No quizzes, no story.
+- **Ladder 2 — Craft.** Slot 3. The twelve tracks above, in a fixed order, identical for
+  everybody. An advisor with no repair-order history gets Ladder 2 only — a two-slot
+  morning, which is correct behavior and not a fault.
+
+### Open
+
+- **Master Certification is undefined.** The tier is named and nothing states what earns it.
+- **Where the quiz surfaces** — Ryan's preference is slot 3 on the day a module closes, so
+  the morning stays three things. Not built.
+- **The entry-film gate.** `entry_film_content_id` is NULL on all thirty certifications.
+- **The mornings column and the stated formula disagree.** `entry + 6n + story` reads as
+  `2 + 6n` per track, which gives 228 / 90 / 318. The table's figures are `4 + 6n`
+  (35×6 + 9×4 = 246; 14×6 + 3×4 = 96). Either the entry film and the story are two mornings
+  each, or the formula is `4 + 6n`. Recorded rather than resolved, because two documents
+  disagreeing about the same fact is the bug.
 
 ## BUILT — the Good News Story (phase 3e, 0127)
 
@@ -170,6 +225,78 @@ in month eight.
 5. Captions on the eight track films. Only Pre-Write has them; mandatory track entry
    without captions is a different conversation.
 6. Which 10 filmless families to film first (see *Settled by phase 3a* below).
+
+## Open — architecture (2026-09-23)
+
+### A. Counts or dollars? The product already answers both ways.
+
+Rule 1's example is in RO counts ("two opportunities and zero sold… two hundred at 40%"),
+and `derive_focus_family` follows it: ranked on `missed_ros`, with `opportunity` kept only
+as a tie-break. But `rank()` in `lib/advisor.ts` is `f.opportunity ?? f.missedRos` —
+**dollars when we have them** — and that feeds the service list, Eddie's Pick, the tier
+score and the manager's team priorities.
+
+**So the /advisor screen and the morning pitch already rank the same question differently,
+and today they disagree for a live advisor** (op 35122: /advisor puts Battery on top at
+$424.89; the morning coaches Filters on 7.38 missed ROs). The shoot list Mitch works from
+is dollar-ranked too.
+
+Measured 2026-09-23 before any ruling:
+
+- **`opportunity` is not trustworthy at low RO counts.** `labor_per_ro = labor_sales /
+  fam_ros`, and **48% of `advisor_family_labor` rows have `fam_ros < 5`**. Period-over-period
+  volatility of `labor_per_ro`: median CV **0.65** at `fam_ros` 0–2 versus **0.10** at 50+,
+  median worst jump 3.9x versus 1.3x. Dollars are ~3.3x noisier on thin families.
+- A **store-level** denominator is thicker (median 17 ROs vs 5) and steadier (CV 0.38), but
+  at Doggett individual families are still thin — HVAC has 4 store ROs — so it picks HVAC on
+  0.53 missed ROs.
+- A **trailing window** barely helps: CV 0.38 → 0.32 from 1 to 12 periods.
+- For reference, `attach_rate_pct` itself has median CV **0.42**. The count side is not a
+  stable baseline either.
+- Under four rules, op 35122 gets **three different families**: count → Filters,
+  dollars(own) → Battery, dollars(own, `fam_ros>=5`) → Filters, dollars(store) → HVAC.
+
+Two constraints on any switch: `opportunity` is **null** wherever the DMS reports no labor,
+so a dollar sort has to decide what happens to those families rather than `coalesce` them
+onto a different scale; and a `fam_ros` floor produces two-slot mornings (it nulls op 400025
+outright).
+
+**Not a 1 October blocker** — two active accounts, agreeing under either measure. It matters
+before sixty. Whatever is decided, `lib/advisor.ts` and `derive_focus_family` have to be
+changed together, or the disagreement above survives the ruling.
+
+### B. Exhaustion is the wrong re-rank trigger.
+
+`advance_focus_family` returns the active assignment untouched while **any** unwatched film
+remains, so **publishing into a family an advisor is already on keeps them there longer** —
+op 400025 went from 12 mornings to 28 on 2026-09-22, for no reason connected to performance.
+The better a family is stocked, the longer an advisor is held in it, which is backwards from
+what filming is for.
+
+There is also a phase problem: the DMS refreshes **monthly**, the assignment refreshes every
+~28 mornings (about six weeks). An advisor can fix a family and keep being coached on it.
+
+The argument for stickiness is real — being moved mid-stream teaches nothing — so the
+question is the trigger, not the principle. Shape of the alternative:
+
+- `advisor_focus_family.period_id` **already records which period the pick came from**, so
+  "has the period changed" is a comparison against a stored column, not new state.
+- Candidate rule: re-rank at **period change or exhaustion, whichever comes first**, with
+  `source = 'manager'` still exempt from the period-change arm (a human ruling should not be
+  ended by a DMS drop — that is rule 2) while remaining exempt-until-exhausted as today.
+- **Leaving a family unfinished appears safe.** The pitch slot serves the next film the
+  advisor has not completed; `content_progress` is per-film, so an interrupted family is
+  resumable rather than lost, and `advisor_focus_family_one_active` already permits ending
+  one row and inserting another. It is "your biggest gap today", not a curriculum.
+- Open sub-question: `film_count` is frozen deliberately, so a card counting "3 of 7" does
+  not move overnight — but `advance_focus_family` decides exhaustion from **live** supply.
+  Those two numbers can already disagree (stored 12 vs live 28). Whatever trigger is chosen
+  has to say which one the card is counting towards.
+
+*Sweep answered 2026-09-23: who reads `film_count` raw? `lib/loop-preview.ts` reads the live
+view (correct); `lib/loop.ts` carries the stored value into `assignment.filmCount`, whose only
+consumer is `scripts/check-0124-production.ts`, a console diagnostic. No screen reads it. The
+staleness is real and the blast radius is nil — do not re-ask.*
 
 
 ---

@@ -128,6 +128,74 @@ And be suspicious of a fix that lands in one layer. A value read in one place is
 rare; the same value is usually read by a screen, a notification, an export and a
 report, and only one of them was in front of you.
 
+## A sample is evidence about the sample
+
+A check is evidence about **the thing it checked** — no wider. State the scope
+before the finding, because a scoped measurement reported as a general one is a
+confident wrong answer, which this file already says is worse than a crash.
+
+Four instances, all of them mine:
+
+- A trim verifier iterated the *rename* set and counted 51 never-uploaded MENU
+  films as "not checkable" rather than "not applicable". `72 + 52 = 124`, and the
+  upload set was 73. The table described a population that was not the one it
+  named.
+- Reporting `CANONICAL_STAGES` as the four values **in use** rather than the six
+  that exist. Objections is canonical; the sample said otherwise and a ruling was
+  made on it.
+- `xcodebuild` for the **simulator** succeeding, recorded as "the iOS shell
+  builds". Device archiving needed a platform component that was not installed,
+  and the error even misattributed itself — "SDK not installed" while the SDK was
+  demonstrably installed.
+- Counting non-core items through `certification_course → module → content` and
+  writing *"the only non-core certification with content is Chemical Warranty"*.
+  That was true of the path walked and false of the library: **42 via the
+  certification path, 1,582 via `service_family_content`.** A path-scoped count
+  stated as a fact about the subject.
+
+**In practice:** say what was measured, over what population, by which path,
+*before* saying what it means. If the number could be reached by a second route,
+measure both and reconcile them — the reconciliation is the proof. Yesterday's
+cue dump and today's differed by exactly the films published in between, and that
+is what made both numbers trustworthy.
+
+## Join on what was observed, not on what was derived
+
+Two records agree when they are keyed on something both of them **saw**. A
+normalised, reformatted or re-derived form of a key is a second definition, and
+it will match nothing on the day the derivation changes.
+
+`scripts/trim-slates.ts` compared the plan against `content.canonical_filename`
+— a form the ingest *invents*, moving the voice into parentheses. The plan holds
+the name the file has **on disk**, which is also what `content.source_filename`
+records. Measured on the batch: **0 of 73 matched on `canonical_filename`, 73 of
+73 on `source_filename`.** It then skipped all 73 silently and reported success.
+
+**In practice:** when joining two systems, pick the field each one *observed*
+rather than computed. If only a derived key is available, assert the match count
+before acting on it, and refuse rather than continue on zero.
+
+## Removing an impossibility inherits the other side's lessons
+
+When a change makes something possible that used to be structurally impossible,
+every safeguard the codebase never needed becomes required at once — and the
+lesson has usually already been paid for somewhere else in the same file.
+
+`content.module_id` is a single FK, so one film belongs to one module and craft
+`item_count` can safely be `count(*)`. Attaching one film to several modules —
+which is what *"Part 2 covers topics 2, 3, 4 and 6"* means — removes that
+guarantee and the count inflates threefold. `certification.item_count` gates
+`certification.active` and is the number the credential claims.
+
+**The fix is already twenty lines below, on the service branch:**
+`count(distinct sfc.content_id)`, with the comment *"because a row reachable both
+ways must not be counted twice."* The service side learned it in 0116; the craft
+side never had to.
+
+**In practice:** before removing a constraint, ask what the constraint was
+silently guaranteeing, then grep for the code that relies on that guarantee —
+starting with whichever part of the system never had it.
+
 ## Never identify a person by name
 
 **Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
@@ -180,3 +248,28 @@ which is this file's other standing rule wearing an infrastructure costume.
 *Written after the rule's wording stopped a deploy mid-phase. The instinct to
 stop was right; the ambiguity was the bug, so it is fixed here rather than
 answered once.*
+
+## The Drop Zone ingest pipeline
+
+`INGEST.md` is the ingest procedure — the seven phases from Mitch's raw uploads to draft
+content in Mux, the naming law, and the trim doctrine. It carries the hard-won parts:
+reshoots replace in place rather than creating rows, whisper mangles attributions so a
+quote's author comes from the Quote Master and never from the transcript, and the quote
+matcher assigns greedily over a shared pool so matches are refused by the voice gate
+rather than ruled out one at a time.
+
+**Read it before touching anything in the Drop Zone**, and before running the ingest,
+slate, trim or replace scripts.
+
+Two gates in it are absolute: nothing is renamed and nothing is uploaded without Ryan
+confirming the exact proposal shown, and a trim is verified from durations rather than
+from the ledger — `replace:video` trims inline without writing a ledger row, so the
+ledger is incomplete by construction and a double-trim is invisible.
+
+It carries YAML frontmatter because it is also the source for the `/ingest` skill. To
+make the slash command live without a second copy that can drift:
+
+```
+mkdir -p .claude/skills/ingest
+ln -s ../../../INGEST.md .claude/skills/ingest/SKILL.md
+```

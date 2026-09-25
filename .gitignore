@@ -107,3 +107,14 @@ data/*.png
 data/*.jpg
 data/*.jpeg
 data/*.heic
+
+# Claude Code workspace.
+#
+# The skill itself IS committed — .claude/skills/ingest/SKILL.md is a symlink to
+# INGEST.md in the repo root, so there is one file and one source of truth. Two
+# files saying the same thing is how most of this project's bugs started.
+#
+# settings.local.json is this machine's permission grants and nothing else's
+# business. It is why .claude/ was excluded wholesale from PR #8; excluding the
+# one file instead lets the skill be shared.
+.claude/settings.local.json
