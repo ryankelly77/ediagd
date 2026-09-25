@@ -91,3 +91,19 @@ backups/
 # customer or payroll data.
 data/Doggett_Key_Maintenance_Sales_*.xlsx
 data/KeyMaintenanceSales_*.xlsx
+
+# Anything dropped into data/ for a look rather than to be kept.
+#
+# Video masters are multi-megabyte and the real ones live in Mux — the repo is
+# not where a 4K master belongs. Screenshots land here the same way: a 2.9MB
+# phone capture sat untracked in data/ for three days, one `git add -A` away
+# from being committed forever, and nothing would have caught it.
+#
+# The xlsx rules above exclude named customer data. These exclude size.
+data/*.MOV
+data/*.mov
+data/*.mp4
+data/*.png
+data/*.jpg
+data/*.jpeg
+data/*.heic
