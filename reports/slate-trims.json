@@ -421,5 +421,297 @@
  "5b01f6eb-e9d1-4379-aa51-d28be5f19501": {
   "trimmedAt": "2026-09-12T19:30:27.584Z",
   "startTime": 4.91
+ },
+ "249b3f98-c658-4145-939e-a212a35977ab": {
+  "trimmedAt": "2026-09-23T04:03:24.803Z",
+  "startTime": 4.57
+ },
+ "c18f52fd-8e05-4113-9e7f-eaac21f92df6": {
+  "trimmedAt": "2026-09-23T04:07:44.487Z",
+  "startTime": 4.57
+ },
+ "8a61375b-7ee7-4b4a-b504-1446f9e77827": {
+  "trimmedAt": "2026-09-23T04:14:13.517Z",
+  "startTime": 5.83
+ },
+ "a118a9a8-b129-4dd6-86d0-5f9c21140efa": {
+  "trimmedAt": "2026-09-23T04:20:02.667Z",
+  "startTime": 5.53
+ },
+ "e119d101-da7a-4fd3-a51d-c971e83acd4c": {
+  "trimmedAt": "2026-09-23T04:29:04.149Z",
+  "startTime": 5.47
+ },
+ "6ce14ce1-e330-4b60-a67b-bbdd8d5e886a": {
+  "trimmedAt": "2026-09-23T04:36:32.567Z",
+  "startTime": 5.35
+ },
+ "72788ac6-48ff-4da8-a599-17624bf8358f": {
+  "trimmedAt": "2026-09-23T04:39:51.628Z",
+  "startTime": 5.77
+ },
+ "0f218884-1e78-48c2-9c85-9447de14f0d6": {
+  "trimmedAt": "2026-09-23T04:43:47.555Z",
+  "startTime": 5.67
+ },
+ "7574149a-5477-4959-adbf-e34a09c02479": {
+  "trimmedAt": "2026-09-23T04:47:58.228Z",
+  "startTime": 6.21
+ },
+ "f080ab6a-b69f-4ae8-841a-4c1967fc5e05": {
+  "trimmedAt": "2026-09-23T04:51:19.861Z",
+  "startTime": 4.91
+ },
+ "42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05": {
+  "trimmedAt": "2026-09-23T04:57:30.416Z",
+  "startTime": 5.31
+ },
+ "6ca783a5-8a7e-4f0e-984b-d7c9559a2c05": {
+  "trimmedAt": "2026-09-23T05:01:23.104Z",
+  "startTime": 4.99
+ },
+ "b79a1169-c060-4030-9daf-8bc8aa826ca0": {
+  "trimmedAt": "2026-09-23T05:05:45.959Z",
+  "startTime": 6.17
+ },
+ "14f20d45-178a-4cbc-9761-bb8a1d26f4f0": {
+  "trimmedAt": "2026-09-23T05:10:52.988Z",
+  "startTime": 6.47
+ },
+ "e488a2e5-504a-459e-ae51-85bfeb68775d": {
+  "trimmedAt": "2026-09-23T05:12:36.810Z",
+  "startTime": 3.57
+ },
+ "b156aeef-ca2e-4f47-8216-487c7a91b2ab": {
+  "trimmedAt": "2026-09-23T05:20:14.642Z",
+  "startTime": 4.95
+ },
+ "909fd2c8-d827-4efc-8ca9-ae94d03a5b15": {
+  "trimmedAt": "2026-09-23T05:25:38.940Z",
+  "startTime": 6.23
+ },
+ "e639f19b-77d5-4a08-bfc6-f6cb7e07d5e9": {
+  "trimmedAt": "2026-09-23T05:29:48.567Z",
+  "startTime": 5.93
+ },
+ "a69d69ed-4c08-49ee-91c2-a6acdeb0fc4c": {
+  "trimmedAt": "2026-09-23T05:36:25.075Z",
+  "startTime": 5.29
+ },
+ "19a689c4-faea-49d0-9a0f-1234e095ae4a": {
+  "trimmedAt": "2026-09-23T05:39:59.132Z",
+  "startTime": 5.59
+ },
+ "4a6946f1-9060-4bee-af53-9bea8e603c18": {
+  "trimmedAt": "2026-09-23T05:42:22.718Z",
+  "startTime": 5.39
+ },
+ "b24b51a7-43eb-4400-8664-a601f9059500": {
+  "trimmedAt": "2026-09-23T05:46:47.233Z",
+  "startTime": 7.07
+ },
+ "6c2182dc-4b42-4bc0-b739-2c80876279c3": {
+  "trimmedAt": "2026-09-23T05:51:52.382Z",
+  "startTime": 5.13
+ },
+ "ca5dc36a-442a-4726-be11-c5a06834e6af": {
+  "trimmedAt": "2026-09-23T05:55:18.707Z",
+  "startTime": 7.91
+ },
+ "2ff913f2-0a78-4f56-92ed-7ed02d9b20a4": {
+  "trimmedAt": "2026-09-23T06:01:17.582Z",
+  "startTime": 6.67
+ },
+ "8a5a2225-da50-4e8a-935c-916e423443d0": {
+  "trimmedAt": "2026-09-23T06:04:57.422Z",
+  "startTime": 5.89
+ },
+ "f6466f9e-c720-4b5a-960d-e1cb95538327": {
+  "trimmedAt": "2026-09-23T06:07:21.648Z",
+  "startTime": 5.45
+ },
+ "11a5d2ac-7a08-442a-8525-50fcc5825ed2": {
+  "trimmedAt": "2026-09-23T06:11:56.350Z",
+  "startTime": 6.81
+ },
+ "7cb3dd9a-9693-4548-b45d-947795082d49": {
+  "trimmedAt": "2026-09-23T06:14:48.272Z",
+  "startTime": 5.25
+ },
+ "6f69a096-6aef-453d-9784-e42faa9c15ba": {
+  "trimmedAt": "2026-09-23T06:17:56.958Z",
+  "startTime": 5.17
+ },
+ "f4bd7ac1-3d3a-4f03-9900-d768ec85bf45": {
+  "trimmedAt": "2026-09-23T06:22:46.323Z",
+  "startTime": 6.07
+ },
+ "063f6315-5488-43f8-b91a-4ca18950be88": {
+  "trimmedAt": "2026-09-23T06:26:15.350Z",
+  "startTime": 8.03
+ },
+ "8dac1564-efea-40ec-a8b7-c5e1ddbe9c41": {
+  "trimmedAt": "2026-09-23T06:29:58.049Z",
+  "startTime": 4.21
+ },
+ "1273cf85-9aec-46de-878f-0193bbf2d841": {
+  "trimmedAt": "2026-09-23T06:34:19.380Z",
+  "startTime": 6.47
+ },
+ "c06d008b-c607-4e0a-a49f-c76f231f878f": {
+  "trimmedAt": "2026-09-23T06:43:25.366Z",
+  "startTime": 5.21
+ },
+ "74f7fb33-6cf9-49d4-a9c4-7678841c6e4c": {
+  "trimmedAt": "2026-09-23T06:47:16.711Z",
+  "startTime": 5.09
+ },
+ "fb999538-62cd-48c6-b2c9-0ec5d13b2e61": {
+  "trimmedAt": "2026-09-23T06:50:10.884Z",
+  "startTime": 5.33
+ },
+ "4a579f12-d22a-4b28-81a1-959409891b10": {
+  "trimmedAt": "2026-09-23T06:54:59.292Z",
+  "startTime": 5.71
+ },
+ "1109e7da-9678-4f7f-af0d-27c5e5b18738": {
+  "trimmedAt": "2026-09-23T07:00:15.618Z",
+  "startTime": 5.75
+ },
+ "215e08e5-3cde-4c4e-928a-bf77bc79df3e": {
+  "trimmedAt": "2026-09-23T07:03:11.754Z",
+  "startTime": 5.95
+ },
+ "0017852c-1251-4a48-8f8b-5024d1dd32b7": {
+  "trimmedAt": "2026-09-23T07:06:48.294Z",
+  "startTime": 5.07
+ },
+ "a3212d65-7489-45b9-90a0-da91eab2ec99": {
+  "trimmedAt": "2026-09-23T07:12:27.037Z",
+  "startTime": 4.39
+ },
+ "50364c6c-ad8c-4785-a564-b595333f2d71": {
+  "trimmedAt": "2026-09-23T07:16:37.730Z",
+  "startTime": 5.47
+ },
+ "a5b0f57b-55a7-4d18-b06f-6c569b72d5f0": {
+  "trimmedAt": "2026-09-23T07:20:43.815Z",
+  "startTime": 18.07
+ },
+ "83300585-9cd6-44c6-83dd-d1bed3f4ff0d": {
+  "trimmedAt": "2026-09-23T07:25:39.531Z",
+  "startTime": 5.89
+ },
+ "8a8d48a6-a15d-4cac-8651-bb9a8e3c42ed": {
+  "trimmedAt": "2026-09-23T07:28:56.915Z",
+  "startTime": 5.21
+ },
+ "c30a9a18-6e78-4088-9b73-1e1ddfd5cfc4": {
+  "trimmedAt": "2026-09-23T07:32:56.384Z",
+  "startTime": 6.41
+ },
+ "598719b0-ca42-4a93-8197-a8349938cc26": {
+  "trimmedAt": "2026-09-23T07:34:55.186Z",
+  "startTime": 3.43
+ },
+ "65acad0b-b780-4004-97ac-7f52c701047a": {
+  "trimmedAt": "2026-09-23T07:40:19.308Z",
+  "startTime": 4.37
+ },
+ "24fff230-f051-46f9-8f78-d44fe1a21560": {
+  "trimmedAt": "2026-09-23T07:44:04.056Z",
+  "startTime": 4.51
+ },
+ "cb773ef0-9ae2-45a5-8a95-ff4bf2bdbed6": {
+  "trimmedAt": "2026-09-23T07:46:13.168Z",
+  "startTime": 5.25
+ },
+ "412e2cd0-75b9-4a8f-8a59-3c3a4c677523": {
+  "trimmedAt": "2026-09-23T07:49:40.787Z",
+  "startTime": 5.99
+ },
+ "248e91c6-68ba-4040-893f-6f19a4e159d5": {
+  "trimmedAt": "2026-09-23T07:52:36.476Z",
+  "startTime": 5.21
+ },
+ "d0b6f376-0510-4b16-8324-25921a4f2149": {
+  "trimmedAt": "2026-09-23T07:57:23.305Z",
+  "startTime": 5.77
+ },
+ "6574c4d9-adf4-49f4-b25f-5b0f5eb5f95f": {
+  "trimmedAt": "2026-09-23T08:00:27.073Z",
+  "startTime": 4.81
+ },
+ "ae60122e-8962-4c05-b8fd-b3b2f8e6b897": {
+  "trimmedAt": "2026-09-23T08:04:52.417Z",
+  "startTime": 6.33
+ },
+ "07c70b0d-ae3a-438a-8c99-4dbdc54917c8": {
+  "trimmedAt": "2026-09-23T08:10:12.320Z",
+  "startTime": 5.77
+ },
+ "980b7d3d-5498-4756-ba1e-98226ee4ef7c": {
+  "trimmedAt": "2026-09-23T08:14:16.558Z",
+  "startTime": 5.95
+ },
+ "b2d88174-b1b8-4cc3-b02f-1be41a345b3d": {
+  "trimmedAt": "2026-09-23T08:17:12.944Z",
+  "startTime": 3.81
+ },
+ "2dfb0041-137c-406d-a108-cab3e65f5fc9": {
+  "trimmedAt": "2026-09-23T08:20:41.272Z",
+  "startTime": 5.69
+ },
+ "0cb74364-c30f-4b29-837f-a7adea1651b7": {
+  "trimmedAt": "2026-09-23T08:25:13.254Z",
+  "startTime": 4.67
+ },
+ "48f897e0-87e3-4a38-9bcf-11a6ea980f36": {
+  "trimmedAt": "2026-09-23T08:30:09.550Z",
+  "startTime": 4.47
+ },
+ "ca2d353d-0957-48e6-8dd5-b72ef0d0fab0": {
+  "trimmedAt": "2026-09-23T08:35:52.389Z",
+  "startTime": 5.69
+ },
+ "13560b2e-5367-4c22-af28-0c1edeed01aa": {
+  "trimmedAt": "2026-09-23T08:39:40.379Z",
+  "startTime": 5.99
+ },
+ "ba0e07ad-f0b3-4d54-858b-4c4bbc422135": {
+  "trimmedAt": "2026-09-23T08:43:57.940Z",
+  "startTime": 3.77
+ },
+ "4b977923-5f60-4c4d-b517-84acffbb76c8": {
+  "trimmedAt": "2026-09-23T08:49:10.740Z",
+  "startTime": 6.39
+ },
+ "8e19a2f0-925e-46ec-bda3-833ea67eee22": {
+  "trimmedAt": "2026-09-23T08:52:08.416Z",
+  "startTime": 5.33
+ },
+ "fefd521a-7bc3-4e4d-a9cc-bfdebb177d07": {
+  "trimmedAt": "2026-09-23T08:56:45.360Z",
+  "startTime": 4.79
+ },
+ "4a130419-7898-4eac-9370-f088916d75e3": {
+  "trimmedAt": "2026-09-23T09:00:32.871Z",
+  "startTime": 5.05
+ },
+ "0298ebf1-89dc-40a5-9399-277b17693cec": {
+  "trimmedAt": "2026-09-23T09:04:42.609Z",
+  "startTime": 5.25
+ },
+ "448b7461-eb29-450b-b8cc-dfebb3fb5969": {
+  "trimmedAt": "2026-09-23T09:08:40.794Z",
+  "startTime": 5.45
+ },
+ "a593edb7-4609-442e-a224-63c5f8128379": {
+  "trimmedAt": "2026-09-23T09:12:17.646Z",
+  "startTime": 5.25
+ },
+ "fc301267-fa6a-48f7-930c-1e36b9da58d6": {
+  "trimmedAt": "2026-09-23T09:16:22.008Z",
+  "startTime": 4.29
  }
 }

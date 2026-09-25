@@ -1,223 +1,592 @@
 {
+ "source": "00 - Drop Zone",
+ "generated": "2026-09-22",
+ "batch": "deck ingest \u2014 73 films",
+ "note": "renameTo is the ON-DISK name and joins content.source_filename. Not canonical_filename, which normalises the voice into parentheses.",
  "plan": [
   {
-   "file": "IMG_2447 (1).MOV",
-   "slate": "Have patience with yourself. Author unknown.",
-   "title": "Have patience with yourself",
-   "voice": "Author unknown",
-   "alohaAt": 7.62,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Have Patience with Yourself (Author unknown) — v2.mov",
-   "matchTitle": "Have Patience with Yourself",
-   "matchFile": "MINDSET — Have Patience with Yourself (Author unknown) — v1.mov",
-   "score": 1
-  },
-  {
-   "file": "IMG_2485.MOV",
-   "slate": "Ideas, Events, People, Henry Thomas Buckle.",
-   "title": "Ideas, Events, People",
-   "voice": "Henry Thomas Buckle",
-   "alohaAt": 6.72,
+   "file": "IMG_2494.MOV",
+   "renameTo": "CRAFT \u2014 You Cannot Lose \u2014 unattributed \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 3.92,
    "action": "new",
-   "renameTo": "MINDSET — Ideas, Events, People (Henry Thomas Buckle) — v1.mov",
-   "score": 0.47
+   "title": "CRAFT \u2014 You Cannot Lose \u2014 unattributed \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "You cannot lose by demon."
   },
   {
-   "file": "IMG_2486.MOV",
-   "slate": "Problems or solutions by Eric Thomas.",
-   "title": "Problems or solutions",
-   "voice": "Eric Thomas",
-   "alohaAt": 5.66,
+   "file": "IMG_2526.MOV",
+   "renameTo": "CRAFT \u2014 Sing It \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 3.78,
    "action": "new",
-   "renameTo": "MINDSET — Problems or Solutions (Eric Thomas) — v1.mov",
-   "score": 0.41
+   "title": "CRAFT \u2014 Sing It \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Sing it."
   },
   {
-   "file": "IMG_2489.MOV",
-   "slate": "More life, author unknown.",
-   "title": "More life",
-   "voice": "author unknown",
-   "alohaAt": 5.06,
+   "file": "IMG_2527.MOV",
+   "renameTo": "CRAFT \u2014 Strawberry Lemonade \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.72,
    "action": "new",
-   "renameTo": "MINDSET — More Life (author unknown) — v1.mov",
-   "score": 0
+   "title": "CRAFT \u2014 Strawberry Lemonade \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Strawberry lemonade."
   },
   {
-   "file": "IMG_2491.MOV",
-   "slate": "The four F's, Author Unknown.",
-   "title": "The four F's",
-   "voice": "Author Unknown",
+   "file": "IMG_2529.MOV",
+   "renameTo": "CRAFT \u2014 The Big Ticket Visit, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.86,
+   "action": "new",
+   "title": "CRAFT \u2014 The Big Ticket Visit, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Big ticket visit, part one."
+  },
+  {
+   "file": "IMG_2531.MOV",
+   "renameTo": "CRAFT \u2014 The Big Ticket Visit, Part 2 \u2014 Mitch Hardt \u2014 v2.mov",
    "alohaAt": 5.26,
    "action": "new",
-   "renameTo": "MINDSET — The Four F's (Author Unknown) — v1.mov",
-   "score": 0
+   "title": "CRAFT \u2014 The Big Ticket Visit, Part 2 \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Big ticket visit part two."
   },
   {
-   "file": "IMG_2492.MOV",
-   "slate": "I'd rather be tired than wondering by Cole Campbell.",
-   "title": "I'd rather be tired than wondering",
-   "voice": "Cole Campbell",
-   "alohaAt": 7.82,
+   "file": "IMG_2533.MOV",
+   "renameTo": "CRAFT \u2014 The Big Ticket Visit, Part 3 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.6,
    "action": "new",
-   "renameTo": "MINDSET — I'd Rather Be Tired Than Wondering (Cole Campbell) — v1.mov",
-   "score": 0.47
+   "title": "CRAFT \u2014 The Big Ticket Visit, Part 3 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The Big Ticket Visit, Part 3"
   },
   {
-   "file": "IMG_2494.MOV",
-   "slate": "You cannot lose by demon.",
-   "title": "You cannot lose",
-   "voice": "demon",
-   "alohaAt": 3.92,
-   "action": "review",
-   "renameTo": null,
-   "note": "close to an existing film but not convincing — rule on it",
-   "matchTitle": "Four Things You Can Stop Doing",
-   "matchFile": "MINDSET — Four Things You Can Stop Doing — v2.mov",
-   "score": 0.58
-  },
-  {
-   "file": "IMG_2496.MOV",
-   "slate": "Knock down, not out by Les Brown.",
-   "title": "Knock down, not out",
-   "voice": "Les Brown",
-   "alohaAt": 5.36,
-   "action": "reshoot",
-   "renameTo": "MINDSET — You Don't Lose When You Get Knocked Down — v3.mov",
-   "matchTitle": "You Don't Lose When You Get Knocked Down",
-   "matchFile": "MINDSET — You Don't Lose When You Get Knocked Down — v2.mov",
-   "score": 0.78
-  },
-  {
-   "file": "IMG_2498.MOV",
-   "slate": "Rule number one, Warren Buffett.",
-   "title": "Rule number one",
-   "voice": "Warren Buffett",
-   "alohaAt": 4.54,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Never Lose Money (Buffett) — v2.mov",
-   "matchTitle": "Never Lose Money",
-   "matchFile": "MINDSET — Never Lose Money (Buffett) — v1.mov",
-   "score": 0.84
-  },
-  {
-   "file": "IMG_2499.MOV",
-   "slate": "Reputation by Warren Buffett",
-   "title": "Reputation",
-   "voice": "Warren Buffett",
-   "alohaAt": 4.38,
-   "action": "reshoot",
-   "renameTo": "MINDSET — 20 Years to Build a Reputation (Buffett) — v2.mov",
-   "matchTitle": "20 Years to Build a Reputation",
-   "matchFile": "MINDSET — 20 Years to Build a Reputation (Buffett) — v1.mov",
-   "score": 0.95
-  },
-  {
-   "file": "IMG_2500.MOV",
-   "slate": "The difference between people, Warren Buffett.",
-   "title": "The difference between people",
-   "voice": "Warren Buffett",
-   "alohaAt": 5.48,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Successful vs. Really Successful (Buffett) — v2.mov",
-   "matchTitle": "Successful vs. Really Successful",
-   "matchFile": "MINDSET — Successful vs. Really Successful (Buffett) — v1.mov",
-   "score": 0.86
-  },
-  {
-   "file": "IMG_2501.MOV",
-   "slate": "Holding period by Warren Buffett.",
-   "title": "Holding period",
-   "voice": "Warren Buffett",
-   "alohaAt": 5.24,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Owning Portions of Businesses (Buffett) — v2.mov",
-   "matchTitle": "Owning Portions of Businesses",
-   "matchFile": "MINDSET — Owning Portions of Businesses (Buffett) — v1.mov",
-   "score": 0.95
-  },
-  {
-   "file": "IMG_2502.MOV",
-   "slate": "Hang out with people better than you, Warren Buffett.",
-   "title": "Hang out with people better than you",
-   "voice": "Warren Buffett",
+   "file": "IMG_2534.MOV",
+   "renameTo": "CRAFT \u2014 Overcoming Objections, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
    "alohaAt": 6.24,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Hang With People Better Than You (Buffett) — v2.mov",
-   "matchTitle": "Hang With People Better Than You",
-   "matchFile": "MINDSET — Hang With People Better Than You (Buffett) — v1.mov",
-   "score": 0.95
+   "action": "new",
+   "title": "CRAFT \u2014 Overcoming Objections, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Overcoming objections, part one."
   },
   {
-   "file": "IMG_2504.MOV",
-   "slate": "Avoiding Problems by Warren Buffett",
-   "title": "Avoiding Problems",
-   "voice": "Warren Buffett",
-   "alohaAt": 4.98,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Solving Difficult Problems (Buffett) — v2.mov",
-   "matchTitle": "Solving Difficult Problems",
-   "matchFile": "MINDSET — Solving Difficult Problems (Buffett) — v1.mov",
-   "score": 0.63
+   "file": "IMG_2538.MOV",
+   "renameTo": "CRAFT \u2014 Overcoming Objections, Part 2 \u2014 How to Take a No \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.76,
+   "action": "new",
+   "title": "CRAFT \u2014 Overcoming Objections, Part 2 \u2014 How to Take a No \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "So, Overcoming Objections Part 2 \u2013 How to Take a No"
   },
   {
-   "file": "IMG_2505.MOV",
-   "slate": "Rolls Royce and the Subway, Warren Buffett.",
-   "title": "Rolls Royce and the Subway",
-   "voice": "Warren Buffett",
-   "alohaAt": 6.9,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Wall Street (Buffett) — v2.mov",
-   "matchTitle": "Wall Street",
-   "matchFile": "MINDSET — Wall Street (Buffett) — v1.mov",
-   "score": 0.95
-  },
-  {
-   "file": "IMG_2507.MOV",
-   "slate": "Diversification, Warren Buffett.",
-   "title": "Diversification",
-   "voice": "Warren Buffett",
-   "alohaAt": 5.66,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Diversification & Ignorance (Buffett) — v2.mov",
-   "matchTitle": "Diversification & Ignorance",
-   "matchFile": "MINDSET — Diversification & Ignorance (Buffett) — v1.mov",
-   "score": 0.95
-  },
-  {
-   "file": "IMG_2508.MOV",
-   "slate": "Greedy by Warren Buffett.",
-   "title": "Greedy",
-   "voice": "Warren Buffett",
-   "alohaAt": 4.52,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Fearful When Others Are Greedy (Buffett) — v2.mov",
-   "matchTitle": "Fearful When Others Are Greedy",
-   "matchFile": "MINDSET — Fearful When Others Are Greedy (Buffett) — v1.mov",
-   "score": 0.95
-  },
-  {
-   "file": "IMG_2509.MOV",
-   "slate": "Develop habits, Warren Buffett.",
-   "title": "Develop habits",
-   "voice": "Warren Buffett",
+   "file": "IMG_2542.MOV",
+   "renameTo": "EAF-001 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
    "alohaAt": 5.56,
-   "action": "reshoot",
-   "renameTo": "MINDSET — Build the Habits You Admire (Buffett) — v2.mov",
-   "matchTitle": "Build the Habits You Admire",
-   "matchFile": "MINDSET — Build the Habits You Admire (Buffett) — v1.mov",
-   "score": 0.95
+   "action": "new",
+   "title": "EAF-001 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Overcoming objections engine air filters."
   },
   {
-   "file": "IMG_2512.MOV",
-   "slate": "The Man in the Glass by Peter Dale Wimbrough Sr.",
-   "title": "The Man in the Glass",
-   "voice": "Peter Dale Wimbrough Sr",
+   "file": "IMG_2546.MOV",
+   "renameTo": "BFF-012 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.8,
+   "action": "new",
+   "title": "BFF-012 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Break fluid exchange overcoming objections."
+  },
+  {
+   "file": "IMG_2547.MOV",
+   "renameTo": "CLF-010 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.6,
+   "action": "new",
+   "title": "CLF-010 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Coolant Exchange Overcoming Objections"
+  },
+  {
+   "file": "IMG_2549.MOV",
+   "renameTo": "PSF-013 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.12,
+   "action": "new",
+   "title": "PSF-013 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Power steering fluid exchange overcoming objections."
+  },
+  {
+   "file": "IMG_2550.MOV",
+   "renameTo": "TRF-011 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.04,
+   "action": "new",
+   "title": "TRF-011 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Overcoming objections, transmission fluid."
+  },
+  {
+   "file": "IMG_2552.MOV",
+   "renameTo": "ACR-047 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 8.38,
+   "action": "new",
+   "title": "ACR-047 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge. AC recharge on the drive part one."
+  },
+  {
+   "file": "IMG_2553.MOV",
+   "renameTo": "ACR-047 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.56,
+   "action": "new",
+   "title": "ACR-047 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC Recharge, On the Drive, Part 2"
+  },
+  {
+   "file": "IMG_2555.MOV",
+   "renameTo": "ACR-047 \u2014 On the Drive, Part 3 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.82,
+   "action": "new",
+   "title": "ACR-047 \u2014 On the Drive, Part 3 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC Recharge on the Drive Part 3, the Diagnostic Close."
+  },
+  {
+   "file": "IMG_2557.MOV",
+   "renameTo": "ACR-047 \u2014 At the Kiosk, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.56,
+   "action": "new",
+   "title": "ACR-047 \u2014 At the Kiosk, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge at the kiosk part one."
+  },
+  {
+   "file": "IMG_2560.MOV",
+   "renameTo": "ACR-047 \u2014 At the Kiosk, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.52,
+   "action": "new",
+   "title": "ACR-047 \u2014 At the Kiosk, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge at the kiosk part two."
+  },
+  {
+   "file": "IMG_2562.MOV",
+   "renameTo": "ACR-047 \u2014 After-MPI, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.8,
+   "action": "new",
+   "title": "ACR-047 \u2014 After-MPI, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge after the multi -point part 1."
+  },
+  {
+   "file": "IMG_2568.MOV",
+   "renameTo": "ACR-047 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.6,
+   "action": "new",
+   "title": "ACR-047 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge at the kiosk."
+  },
+  {
+   "file": "IMG_2569.MOV",
+   "renameTo": "ACR-047 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.42,
+   "action": "new",
+   "title": "ACR-047 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2570.MOV",
+   "renameTo": "ACR-047 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.24,
+   "action": "new",
+   "title": "ACR-047 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge after the multi -point inspection."
+  },
+  {
+   "file": "IMG_2571.MOV",
+   "renameTo": "ACR-047 \u2014 After-MPI, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 7.16,
+   "action": "new",
+   "title": "ACR-047 \u2014 After-MPI, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC recharge after multi -point inspection selling part 2."
+  },
+  {
+   "file": "IMG_2572.MOV",
+   "renameTo": "TMB-039 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.04,
+   "action": "new",
+   "title": "TMB-039 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Timing belt on the drive, part one."
+  },
+  {
+   "file": "IMG_2573.MOV",
+   "renameTo": "TMB-039 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.02,
+   "action": "new",
+   "title": "TMB-039 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Timing belt on the drive part two."
+  },
+  {
+   "file": "IMG_2574.MOV",
+   "renameTo": "TMB-039 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 4.16,
+   "action": "reshoot",
+   "title": "TMB-039 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Timing Belt at the Kiosk."
+  },
+  {
+   "file": "IMG_2577.MOV",
+   "renameTo": "TMB-039 \u2014 After-MPI, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.12,
+   "action": "new",
+   "title": "TMB-039 \u2014 After-MPI, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Timing belt after a multi -point inspection part one."
+  },
+  {
+   "file": "IMG_2578.MOV",
+   "renameTo": "TMB-039 \u2014 After-MPI, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.3,
+   "action": "new",
+   "title": "TMB-039 \u2014 After-MPI, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Timing Belt After Multi -Point Inspection Part 2"
+  },
+  {
+   "file": "IMG_2580.MOV",
+   "renameTo": "TMB-039 \u2014 Piggyback \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.82,
+   "action": "new",
+   "title": "TMB-039 \u2014 Piggyback \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Timing Belt Piggyback Sales."
+  },
+  {
+   "file": "IMG_2581.MOV",
+   "renameTo": "CLH-042 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.42,
+   "action": "new",
+   "title": "CLH-042 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Coolant hoses on the drive."
+  },
+  {
+   "file": "IMG_2582.MOV",
+   "renameTo": "CLH-042 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.92,
+   "action": "new",
+   "title": "CLH-042 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Coolant hoses on the drive, part two."
+  },
+  {
+   "file": "IMG_2583.MOV",
+   "renameTo": "CLH-042 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 4.64,
+   "action": "reshoot",
+   "title": "CLH-042 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Coolant hoses at the kiosk."
+  },
+  {
+   "file": "IMG_2584.MOV",
+   "renameTo": "CLH-042 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v2.mov",
    "alohaAt": 6.3,
    "action": "reshoot",
-   "renameTo": "MINDSET — The Man in the Glass — v2.mov",
-   "matchTitle": "The Man in the Glass",
-   "matchFile": "MINDSET — The Man in the Glass — v1.mov",
-   "score": 1
+   "title": "CLH-042 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Coolant hoses setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2585.MOV",
+   "renameTo": "CLH-042 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 6.1,
+   "action": "reshoot",
+   "title": "CLH-042 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Coolant hoses after the multi -point inspection."
+  },
+  {
+   "file": "IMG_2587.MOV",
+   "renameTo": "CLH-042 \u2014 Piggyback \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.92,
+   "action": "new",
+   "title": "CLH-042 \u2014 Piggyback \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Coolant hoses, the piggyback sells."
+  },
+  {
+   "file": "IMG_2590.MOV",
+   "renameTo": "SRP-038 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 5.74,
+   "action": "reshoot",
+   "title": "SRP-038 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Serpentine Belt on the Drive Part 1."
+  },
+  {
+   "file": "IMG_2591.MOV",
+   "renameTo": "SRP-038 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 5.16,
+   "action": "reshoot",
+   "title": "SRP-038 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Serpentine Belts at the Kiosk."
+  },
+  {
+   "file": "IMG_2592.MOV",
+   "renameTo": "SRP-038 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 5.94,
+   "action": "reshoot",
+   "title": "SRP-038 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Serpentine belt, setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2593.MOV",
+   "renameTo": "SRP-038 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 6.68,
+   "action": "reshoot",
+   "title": "SRP-038 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Serpentine Belt Multi -Point Inspection Selling"
+  },
+  {
+   "file": "IMG_2595.MOV",
+   "renameTo": "WBF-018 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.14,
+   "action": "new",
+   "title": "WBF-018 \u2014 On the Drive, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Wiper blades on the drive part one."
+  },
+  {
+   "file": "IMG_2598.MOV",
+   "renameTo": "WBF-018 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.4,
+   "action": "new",
+   "title": "WBF-018 \u2014 On the Drive, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Wiper blades on the drive, part two."
+  },
+  {
+   "file": "IMG_2600.MOV",
+   "renameTo": "WBF-018 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 4.12,
+   "action": "reshoot",
+   "title": "WBF-018 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Wiper blades at the kiosk."
+  },
+  {
+   "file": "IMG_2601.MOV",
+   "renameTo": "WBF-018 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.68,
+   "action": "new",
+   "title": "WBF-018 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Wiper blades, setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2607.MOV",
+   "renameTo": "WBF-018 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v2.mov",
+   "alohaAt": 6.34,
+   "action": "reshoot",
+   "title": "WBF-018 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v2.mov",
+   "slate": "Wiper blades after the multi -point."
+  },
+  {
+   "file": "IMG_2609.MOV",
+   "renameTo": "WBF-018 \u2014 Piggyback \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.6,
+   "action": "new",
+   "title": "WBF-018 \u2014 Piggyback \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Wiper Blades Piggyback Sales"
+  },
+  {
+   "file": "IMG_2611.MOV",
+   "renameTo": "CRAFT \u2014 The Four Minute Walk-Around, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.66,
+   "action": "new",
+   "title": "CRAFT \u2014 The Four Minute Walk-Around, Part 1 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The Four Minute Walkaround Part 1"
+  },
+  {
+   "file": "IMG_2612.MOV",
+   "renameTo": "CRAFT \u2014 The Four Minute Walk-Around, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.82,
+   "action": "new",
+   "title": "CRAFT \u2014 The Four Minute Walk-Around, Part 2 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The 4 minute walk around, part 2."
+  },
+  {
+   "file": "IMG_2613.MOV",
+   "renameTo": "CRAFT \u2014 The Four Minute Walk-Around, Part 3 \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.7,
+   "action": "new",
+   "title": "CRAFT \u2014 The Four Minute Walk-Around, Part 3 \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The Four Minute Walkaround, Part 3."
+  },
+  {
+   "file": "IMG_2614.MOV",
+   "renameTo": "BAT-033 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.06,
+   "action": "new",
+   "title": "BAT-033 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Batteries on the drive."
+  },
+  {
+   "file": "IMG_2615.MOV",
+   "renameTo": "BAT-033 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.44,
+   "action": "new",
+   "title": "BAT-033 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Battery Sales at the kiosk"
+  },
+  {
+   "file": "IMG_2618.MOV",
+   "renameTo": "BAT-033 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.68,
+   "action": "new",
+   "title": "BAT-033 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Battery, setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2621.MOV",
+   "renameTo": "BAT-033 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.56,
+   "action": "new",
+   "title": "BAT-033 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Battery after the multi -point inspection."
+  },
+  {
+   "file": "IMG_2622.MOV",
+   "renameTo": "BAT-033 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.74,
+   "action": "new",
+   "title": "BAT-033 \u2014 Objections \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Battery Overcoming Objections and Piggyback Sales"
+  },
+  {
+   "file": "IMG_2629.MOV",
+   "renameTo": "CPC-051 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.88,
+   "action": "new",
+   "title": "CPC-051 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "2. Charge Port Cleaning on the Drive"
+  },
+  {
+   "file": "IMG_2633.MOV",
+   "renameTo": "CPC-051 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 4.74,
+   "action": "new",
+   "title": "CPC-051 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Charge port cleaning at the kiosk."
+  },
+  {
+   "file": "IMG_2637.MOV",
+   "renameTo": "CPC-051 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.82,
+   "action": "new",
+   "title": "CPC-051 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Charge port cleaning, setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2638.MOV",
+   "renameTo": "CPC-051 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.18,
+   "action": "new",
+   "title": "CPC-051 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "2. Charge port cleaning after a multi -point inspection"
+  },
+  {
+   "file": "IMG_2639.MOV",
+   "renameTo": "RDD-052 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.64,
+   "action": "new",
+   "title": "RDD-052 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Rodent deterrent on the drive."
+  },
+  {
+   "file": "IMG_2642.MOV",
+   "renameTo": "RDD-052 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.3,
+   "action": "new",
+   "title": "RDD-052 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Rodent Deterrent at the kiosk."
+  },
+  {
+   "file": "IMG_2643.MOV",
+   "renameTo": "RDD-052 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.28,
+   "action": "new",
+   "title": "RDD-052 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Rodent deterrent, setting up the multi -point inspection."
+  },
+  {
+   "file": "IMG_2644.MOV",
+   "renameTo": "RDD-052 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.58,
+   "action": "new",
+   "title": "RDD-052 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "Rodent deterrent after a multi -point inspection."
+  },
+  {
+   "file": "IMG_2646.MOV",
+   "renameTo": "ACE-053 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 7.02,
+   "action": "new",
+   "title": "ACE-053 \u2014 On the Drive \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC Evaporator Cleaning on the Drive"
+  },
+  {
+   "file": "IMG_2647.MOV",
+   "renameTo": "ACE-053 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.48,
+   "action": "new",
+   "title": "ACE-053 \u2014 At the Kiosk \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC EVAP at the kiosk."
+  },
+  {
+   "file": "IMG_2648.MOV",
+   "renameTo": "ACE-053 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 8.26,
+   "action": "new",
+   "title": "ACE-053 \u2014 MPI Setup \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC Evaporator Cleaning, setting up the MultiPoint Inspection."
+  },
+  {
+   "file": "IMG_2650.MOV",
+   "renameTo": "ACE-053 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 7.42,
+   "action": "new",
+   "title": "ACE-053 \u2014 After-MPI \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "AC Evaporator Core Cleaning Service after the Multi -Point Inspection"
+  },
+  {
+   "file": "IMG_2695.MOV",
+   "renameTo": "CRAFT \u2014 The OE Approach \u2014 The Maintenance Menu \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.56,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Approach \u2014 The Maintenance Menu \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The maintenance menu. OE approach."
+  },
+  {
+   "file": "IMG_2697.MOV",
+   "renameTo": "CRAFT \u2014 The OE Approach \u2014 Severe Conditions \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.02,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Approach \u2014 Severe Conditions \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "OE approach severe conditions."
+  },
+  {
+   "file": "IMG_2698.MOV",
+   "renameTo": "CRAFT \u2014 The OE Approach \u2014 Lifetime Fluid \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.12,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Approach \u2014 Lifetime Fluid \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "OE approach lifetime fluid."
+  },
+  {
+   "file": "IMG_2700.MOV",
+   "renameTo": "CRAFT \u2014 The OE Approach \u2014 Use the Chart \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 5.34,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Approach \u2014 Use the Chart \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "OE approach, use the chart."
+  },
+  {
+   "file": "IMG_2701.MOV",
+   "renameTo": "CRAFT \u2014 The OE Stagger \u2014 Why We Spread Them Out \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.34,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Stagger \u2014 Why We Spread Them Out \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The stagger. Why we spread them out."
+  },
+  {
+   "file": "IMG_2703.MOV",
+   "renameTo": "CRAFT \u2014 The OE Stagger \u2014 The Order and Why \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.82,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Stagger \u2014 The Order and Why \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The OE Stagger, The Order and Why"
+  },
+  {
+   "file": "IMG_2705.MOV",
+   "renameTo": "CRAFT \u2014 The OE Stagger \u2014 Running It \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 6.52,
+   "action": "new",
+   "title": "CRAFT \u2014 The OE Stagger \u2014 Running It \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "The OE Stagger \u2013 Running It"
+  },
+  {
+   "file": "IMG_2712.MOV",
+   "renameTo": "CRAFT \u2014 Dealer Upsell Menus and Interval Charts \u2014 Opener \u2014 Mitch Hardt \u2014 v1.mov",
+   "alohaAt": 18.42,
+   "action": "new",
+   "title": "CRAFT \u2014 Dealer Upsell Menus and Interval Charts \u2014 Opener \u2014 Mitch Hardt \u2014 v1.mov",
+   "slate": "1. Dealer upsell menu and interval charts. 2."
   }
  ]
 }

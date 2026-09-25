@@ -1,0 +1,223 @@
+{
+ "plan": [
+  {
+   "file": "IMG_2447 (1).MOV",
+   "slate": "Have patience with yourself. Author unknown.",
+   "title": "Have patience with yourself",
+   "voice": "Author unknown",
+   "alohaAt": 7.62,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Have Patience with Yourself (Author unknown) — v2.mov",
+   "matchTitle": "Have Patience with Yourself",
+   "matchFile": "MINDSET — Have Patience with Yourself (Author unknown) — v1.mov",
+   "score": 1
+  },
+  {
+   "file": "IMG_2485.MOV",
+   "slate": "Ideas, Events, People, Henry Thomas Buckle.",
+   "title": "Ideas, Events, People",
+   "voice": "Henry Thomas Buckle",
+   "alohaAt": 6.72,
+   "action": "new",
+   "renameTo": "MINDSET — Ideas, Events, People (Henry Thomas Buckle) — v1.mov",
+   "score": 0.47
+  },
+  {
+   "file": "IMG_2486.MOV",
+   "slate": "Problems or solutions by Eric Thomas.",
+   "title": "Problems or solutions",
+   "voice": "Eric Thomas",
+   "alohaAt": 5.66,
+   "action": "new",
+   "renameTo": "MINDSET — Problems or Solutions (Eric Thomas) — v1.mov",
+   "score": 0.41
+  },
+  {
+   "file": "IMG_2489.MOV",
+   "slate": "More life, author unknown.",
+   "title": "More life",
+   "voice": "author unknown",
+   "alohaAt": 5.06,
+   "action": "new",
+   "renameTo": "MINDSET — More Life (author unknown) — v1.mov",
+   "score": 0
+  },
+  {
+   "file": "IMG_2491.MOV",
+   "slate": "The four F's, Author Unknown.",
+   "title": "The four F's",
+   "voice": "Author Unknown",
+   "alohaAt": 5.26,
+   "action": "new",
+   "renameTo": "MINDSET — The Four F's (Author Unknown) — v1.mov",
+   "score": 0
+  },
+  {
+   "file": "IMG_2492.MOV",
+   "slate": "I'd rather be tired than wondering by Cole Campbell.",
+   "title": "I'd rather be tired than wondering",
+   "voice": "Cole Campbell",
+   "alohaAt": 7.82,
+   "action": "new",
+   "renameTo": "MINDSET — I'd Rather Be Tired Than Wondering (Cole Campbell) — v1.mov",
+   "score": 0.47
+  },
+  {
+   "file": "IMG_2494.MOV",
+   "slate": "You cannot lose by demon.",
+   "title": "You cannot lose",
+   "voice": "demon",
+   "alohaAt": 3.92,
+   "action": "review",
+   "renameTo": null,
+   "note": "close to an existing film but not convincing — rule on it",
+   "matchTitle": "Four Things You Can Stop Doing",
+   "matchFile": "MINDSET — Four Things You Can Stop Doing — v2.mov",
+   "score": 0.58
+  },
+  {
+   "file": "IMG_2496.MOV",
+   "slate": "Knock down, not out by Les Brown.",
+   "title": "Knock down, not out",
+   "voice": "Les Brown",
+   "alohaAt": 5.36,
+   "action": "reshoot",
+   "renameTo": "MINDSET — You Don't Lose When You Get Knocked Down — v3.mov",
+   "matchTitle": "You Don't Lose When You Get Knocked Down",
+   "matchFile": "MINDSET — You Don't Lose When You Get Knocked Down — v2.mov",
+   "score": 0.78
+  },
+  {
+   "file": "IMG_2498.MOV",
+   "slate": "Rule number one, Warren Buffett.",
+   "title": "Rule number one",
+   "voice": "Warren Buffett",
+   "alohaAt": 4.54,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Never Lose Money (Buffett) — v2.mov",
+   "matchTitle": "Never Lose Money",
+   "matchFile": "MINDSET — Never Lose Money (Buffett) — v1.mov",
+   "score": 0.84
+  },
+  {
+   "file": "IMG_2499.MOV",
+   "slate": "Reputation by Warren Buffett",
+   "title": "Reputation",
+   "voice": "Warren Buffett",
+   "alohaAt": 4.38,
+   "action": "reshoot",
+   "renameTo": "MINDSET — 20 Years to Build a Reputation (Buffett) — v2.mov",
+   "matchTitle": "20 Years to Build a Reputation",
+   "matchFile": "MINDSET — 20 Years to Build a Reputation (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2500.MOV",
+   "slate": "The difference between people, Warren Buffett.",
+   "title": "The difference between people",
+   "voice": "Warren Buffett",
+   "alohaAt": 5.48,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Successful vs. Really Successful (Buffett) — v2.mov",
+   "matchTitle": "Successful vs. Really Successful",
+   "matchFile": "MINDSET — Successful vs. Really Successful (Buffett) — v1.mov",
+   "score": 0.86
+  },
+  {
+   "file": "IMG_2501.MOV",
+   "slate": "Holding period by Warren Buffett.",
+   "title": "Holding period",
+   "voice": "Warren Buffett",
+   "alohaAt": 5.24,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Owning Portions of Businesses (Buffett) — v2.mov",
+   "matchTitle": "Owning Portions of Businesses",
+   "matchFile": "MINDSET — Owning Portions of Businesses (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2502.MOV",
+   "slate": "Hang out with people better than you, Warren Buffett.",
+   "title": "Hang out with people better than you",
+   "voice": "Warren Buffett",
+   "alohaAt": 6.24,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Hang With People Better Than You (Buffett) — v2.mov",
+   "matchTitle": "Hang With People Better Than You",
+   "matchFile": "MINDSET — Hang With People Better Than You (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2504.MOV",
+   "slate": "Avoiding Problems by Warren Buffett",
+   "title": "Avoiding Problems",
+   "voice": "Warren Buffett",
+   "alohaAt": 4.98,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Solving Difficult Problems (Buffett) — v2.mov",
+   "matchTitle": "Solving Difficult Problems",
+   "matchFile": "MINDSET — Solving Difficult Problems (Buffett) — v1.mov",
+   "score": 0.63
+  },
+  {
+   "file": "IMG_2505.MOV",
+   "slate": "Rolls Royce and the Subway, Warren Buffett.",
+   "title": "Rolls Royce and the Subway",
+   "voice": "Warren Buffett",
+   "alohaAt": 6.9,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Wall Street (Buffett) — v2.mov",
+   "matchTitle": "Wall Street",
+   "matchFile": "MINDSET — Wall Street (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2507.MOV",
+   "slate": "Diversification, Warren Buffett.",
+   "title": "Diversification",
+   "voice": "Warren Buffett",
+   "alohaAt": 5.66,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Diversification & Ignorance (Buffett) — v2.mov",
+   "matchTitle": "Diversification & Ignorance",
+   "matchFile": "MINDSET — Diversification & Ignorance (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2508.MOV",
+   "slate": "Greedy by Warren Buffett.",
+   "title": "Greedy",
+   "voice": "Warren Buffett",
+   "alohaAt": 4.52,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Fearful When Others Are Greedy (Buffett) — v2.mov",
+   "matchTitle": "Fearful When Others Are Greedy",
+   "matchFile": "MINDSET — Fearful When Others Are Greedy (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2509.MOV",
+   "slate": "Develop habits, Warren Buffett.",
+   "title": "Develop habits",
+   "voice": "Warren Buffett",
+   "alohaAt": 5.56,
+   "action": "reshoot",
+   "renameTo": "MINDSET — Build the Habits You Admire (Buffett) — v2.mov",
+   "matchTitle": "Build the Habits You Admire",
+   "matchFile": "MINDSET — Build the Habits You Admire (Buffett) — v1.mov",
+   "score": 0.95
+  },
+  {
+   "file": "IMG_2512.MOV",
+   "slate": "The Man in the Glass by Peter Dale Wimbrough Sr.",
+   "title": "The Man in the Glass",
+   "voice": "Peter Dale Wimbrough Sr",
+   "alohaAt": 6.3,
+   "action": "reshoot",
+   "renameTo": "MINDSET — The Man in the Glass — v2.mov",
+   "matchTitle": "The Man in the Glass",
+   "matchFile": "MINDSET — The Man in the Glass — v1.mov",
+   "score": 1
+  }
+ ]
+}
