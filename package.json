@@ -92,7 +92,8 @@
     "accept:family": "rm -rf .tmp-fam && tsc -p scripts/tsconfig.family.json && mkdir -p .tmp-fam/node_modules/server-only && echo \"module.exports={};\" > .tmp-fam/node_modules/server-only/index.js && ln -sfn .. .tmp-fam/node_modules/@ && node .tmp-fam/scripts/family-acceptance.js",
     "accept:story": "rm -rf .tmp-story && tsc -p scripts/tsconfig.story.json && node .tmp-story/story-acceptance.js",
     "fixture:story": "rm -rf .tmp-shot2 && tsc -p scripts/tsconfig.storyshot.json && node .tmp-shot2/story-screenshot-fixture.js",
-    "provision:advisor": "rm -rf .tmp-pa && tsc scripts/provision-advisor.ts --outDir .tmp-pa --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-pa/provision-advisor.js"
+    "provision:advisor": "rm -rf .tmp-pa && tsc scripts/provision-advisor.ts --outDir .tmp-pa --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-pa/provision-advisor.js",
+    "accept:reference": "rm -rf .tmp-ref && tsc -p scripts/tsconfig.reference.json && mkdir -p .tmp-ref/node_modules/server-only && echo \"module.exports={};\" > .tmp-ref/node_modules/server-only/index.js && ln -sfn .. .tmp-ref/node_modules/@ && node .tmp-ref/scripts/reference-leak-acceptance.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
