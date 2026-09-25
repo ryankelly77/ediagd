@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { VideoNotReady } from "@/components/video/MuxVideo";
 import type { VideoRenditions } from "@/lib/mux/playback";
@@ -1830,6 +1831,31 @@ function CelebrationStep({
         >
           {previewResult ? "Back to admin" : closingQuote ? ackLabel : "See my numbers"}
         </PrimaryButton>
+        {/*
+          THE MILEAGE SHELF, AND ONLY HERE.
+          -----------------------------------------------------------------------
+          The door opens AFTER the morning, never before. /today is the ritual,
+          and a shelf of fifty-one extra films sitting on it beforehand invites an
+          advisor to browse instead of doing the three minutes that actually move
+          the credential.
+
+          A quiet bordered link rather than a second button — the gold above is
+          the one thing the app is asking for, and this is somewhere to look
+          something up, not work to do. The label has to say so in the link
+          itself, because an unlabelled shelf on a completion screen reads as the
+          next task.
+
+          Hidden in preview: an admin walking the loop has no book, and the shelf
+          is not what the preview exists to show.
+        */}
+        {!previewResult && (
+          <Link
+            href="/mileage"
+            className="mt-3 block w-full rounded-xl border border-line px-4 py-3 text-center text-sm font-bold text-ocean transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            Look up what to offer at any mileage
+          </Link>
+        )}
       </PhoneScreen.Footer>
     </>
   );

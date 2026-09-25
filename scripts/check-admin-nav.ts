@@ -54,6 +54,19 @@ const WATCHED = [
      pitch dialog, never from a menu, which is exactly the shape that goes
      unnoticed. */
   "service",
+  /*
+   * Added with the mileage shelf. THIRD TIME — certifications, then service, now
+   * this — so the pattern is worth naming rather than just repeating: a new
+   * top-level route is outside this list by default, and the suite's green
+   * "every watched route is reachable" is then a statement about a set the new
+   * route is not in. The default is silence, which is the wrong default for a
+   * check.
+   *
+   * /mileage is reached from the celebration screen after a morning completes,
+   * never from a menu — the same shape as /service/[family], and the shape this
+   * suite is least likely to be asked about.
+   */
+  "mileage",
 ];
 
 /** Every route under app/(app)/admin that has a page. */
