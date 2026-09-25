@@ -89,7 +89,7 @@ export function MileageShelf({ films, label }: { films: MileageFilm[]; label: st
       </ul>
 
       <p className="mt-6 text-sm leading-relaxed text-ink-soft">
-        {`Everything the factory recommends at ${label} miles. Look it up as often as you like — nothing here is tracked and nothing needs finishing.`}
+        {`Everything the factory recommends at ${label} miles. Look it up as often as you like — nothing here is tracked.`}
       </p>
     </div>
   );

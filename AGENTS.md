@@ -196,6 +196,43 @@ side never had to.
 silently guaranteeing, then grep for the code that relies on that guarantee —
 starting with whichever part of the system never had it.
 
+## A check that is silent by default is not a check
+
+`check:nav` did not fail on three new routes. It said **nothing about them**,
+which on a terminal reads identically to passing: *"Every watched route is
+reachable"* is true and useless when the route in question is not in the watched
+set. It happened with `certifications`, then `service`, then `/mileage`.
+
+**Any check that enumerates a fixed list must fail when it meets something the
+list does not mention.** The list is a claim about coverage, and an unfamiliar
+item is exactly the case the check exists for — so meeting one is the moment to
+be loudest, not quietest.
+
+`check:nav` now reads the filesystem first and exits non-zero on a top-level
+route tree that is in neither `WATCHED` nor `UNWATCHED_REASON`. It also fails on
+the reverse — a reason left behind for a tree that no longer exists — because a
+stale excuse silently covers a future route that reuses the name. Both proven to
+exit 1 against a deliberately broken tree.
+
+**The general form, and it is the better half of the rule:** prefer a
+construction where the unsafe state cannot be represented over one where it is
+merely avoided.
+
+- `lib/mileage.ts` never reads `content_progress`, so a component **cannot**
+  render a completion tick — the data does not arrive. Not "does not"; *cannot*.
+- The mileage rungs are **discovered** from the films that exist rather than
+  declared as a list of fourteen, so the shelf cannot claim a rung it has no film
+  for. A fifteenth rung is a shoot and nothing else.
+- 0128's `reference` placement is excluded from all three slot pickers **by
+  construction**, because each already filters `placement` — no new condition for
+  anybody to remember.
+- The acceptance suite asserts the **positive** half by default, so it cannot be
+  satisfied by an empty catalog. A gate that achieved exclusion by making
+  reference rows unreadable everywhere would otherwise have passed every
+  exclusion test.
+
+Each of those closes a class. A convention closes a case.
+
 ## A definition that was only true when it was written
 
 `service_family_content` carried this, and it was correct on the day it was
