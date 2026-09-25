@@ -196,6 +196,37 @@ side never had to.
 silently guaranteeing, then grep for the code that relies on that guarantee —
 starting with whichever part of the system never had it.
 
+## A definition that was only true when it was written
+
+`service_family_content` carried this, and it was correct on the day it was
+typed:
+
+```sql
+true as coachable   -- A DIRECTLY TAGGED ROW IS COACHABLE BY DEFINITION
+```
+
+It was a fact about **who was doing the tagging** — at that moment, only a human
+hand-tagging a family for coaching — recorded as a property of **the data**. Then
+it sat there looking like a definition long after the thing it described had
+changed, and 0128 had to add reference content that is tagged with a family
+precisely so a shelf can group it and explicitly not so the loop can serve it.
+
+**An assumption wearing a definition's clothes is worse than a stale comment,
+because it actively instructs the reader not to look.** "By definition" and "of
+course" are the two phrases that end an investigation, and both of them were
+load-bearing here: the arm said `true` unconditionally, so a menu film carrying
+its family would have arrived in the pitch slot announcing itself coachable, past
+a `coachable` filter looking the other way.
+
+**In practice:** when a comment says something is true *by definition*, ask what
+would have to change for it to become false — and if the answer is "somebody
+starts creating rows a different way", it is an invariant that needs enforcing
+rather than a definition that needs stating. Write the condition, not the claim.
+
+This is the same failure as [a label not being evidence of what is behind
+it](#a-label-is-not-evidence-of-what-is-behind-it), one level more dangerous,
+because the label is asserting it does not need checking.
+
 ## Never identify a person by name
 
 **Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
