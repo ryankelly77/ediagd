@@ -49,6 +49,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { assembleMorning } from "@/lib/loop";
+import { loadMileageFilms, loadMileageRungs } from "@/lib/mileage";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 const URL = process.env.SB_URL!;
@@ -372,6 +373,47 @@ async function main() {
     );
 
     return { allHeld: results.every(Boolean), notEmpty };
+  }
+
+  /* ---------------------------------------------------------------------------
+     THE OTHER HALF. Excluded from the loop is only half the requirement — the
+     same films have to APPEAR on the shelf. A gate that achieved exclusion by
+     making reference rows unreadable everywhere would pass every assertion below
+     and ship an empty catalog, confidently.
+  --------------------------------------------------------------------------- */
+  section("  0. the shelf can see them");
+  {
+    const rungs = await loadMileageRungs(asAdvisor);
+    const byMiles = new Map(rungs.map((r) => [r.miles, r]));
+    ok(
+      "all three rungs appear on the shelf",
+      [25000, 30000, 35000].every((m) => byMiles.has(m)),
+      `rungs=${JSON.stringify(rungs.map((r) => r.miles))}`
+    );
+    ok(
+      "the rung label is formatted once, in lib/mileage",
+      byMiles.get(25000)?.label === "25,000",
+      `label=${byMiles.get(25000)?.label}`
+    );
+    ok(
+      "a rung reports the films it has, not a progress fraction",
+      byMiles.get(25000)?.filmCount === 1,
+      `filmCount=${byMiles.get(25000)?.filmCount}`
+    );
+    const films = await loadMileageFilms(asAdvisor, 25000);
+    ok(
+      "the rung's film is playable and carries renditions",
+      films.length === 1 && films[0].contentId === refTagged && Boolean(films[0].renditions),
+      `films=${JSON.stringify(films.map((f) => f.contentId.slice(0, 8)))}`
+    );
+    const all = (
+      await Promise.all([25000, 30000, 35000].map((m) => loadMileageFilms(asAdvisor, m)))
+    ).flat();
+    ok(
+      "a loop-placed film never appears on the shelf",
+      !all.some((f) => f.contentId === goodPitch),
+      "the shelf filters placement positively, as an allow-list"
+    );
   }
 
   section("  1. the gate holds");

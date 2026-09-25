@@ -332,6 +332,17 @@ export const NAV_EXEMPT: Readonly<Record<string, string>> = {
     + "Upload links here and Mitch has the URL.",
   "/admin/mapping/dealer-codes/confirm":
     "Correction or Change for one sub-category, opened from Dealer Codes.",
+  "/mileage":
+    "The mileage shelf — fourteen service-interval rungs of reference films. "
+    + "Reached from the celebration screen AFTER the morning is complete, never "
+    + "before: /today is the ritual, and fifty-one browsable films on it "
+    + "beforehand compete with the three minutes that move the credential. Also "
+    + "reached from the Menus track. Reference material, so it completes nothing "
+    + "and tracks nothing — see 0128 and lib/mileage.ts.",
+  "/mileage/[rung]":
+    "One rung's films: title, duration, play. No progress of any kind. A rung "
+    + "with no films 404s rather than rendering an empty shelf, because the rung "
+    + "list is built from the films that exist.",
   "/service/[family]":
     "One service family's films and cues, opened from the focus-family card on "
     + "/advisor and from the pitch dialog. Deliberately not a menu row: an "

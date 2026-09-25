@@ -196,6 +196,74 @@ side never had to.
 silently guaranteeing, then grep for the code that relies on that guarantee —
 starting with whichever part of the system never had it.
 
+## A check that is silent by default is not a check
+
+`check:nav` did not fail on three new routes. It said **nothing about them**,
+which on a terminal reads identically to passing: *"Every watched route is
+reachable"* is true and useless when the route in question is not in the watched
+set. It happened with `certifications`, then `service`, then `/mileage`.
+
+**Any check that enumerates a fixed list must fail when it meets something the
+list does not mention.** The list is a claim about coverage, and an unfamiliar
+item is exactly the case the check exists for — so meeting one is the moment to
+be loudest, not quietest.
+
+`check:nav` now reads the filesystem first and exits non-zero on a top-level
+route tree that is in neither `WATCHED` nor `UNWATCHED_REASON`. It also fails on
+the reverse — a reason left behind for a tree that no longer exists — because a
+stale excuse silently covers a future route that reuses the name. Both proven to
+exit 1 against a deliberately broken tree.
+
+**The general form, and it is the better half of the rule:** prefer a
+construction where the unsafe state cannot be represented over one where it is
+merely avoided.
+
+- `lib/mileage.ts` never reads `content_progress`, so a component **cannot**
+  render a completion tick — the data does not arrive. Not "does not"; *cannot*.
+- The mileage rungs are **discovered** from the films that exist rather than
+  declared as a list of fourteen, so the shelf cannot claim a rung it has no film
+  for. A fifteenth rung is a shoot and nothing else.
+- 0128's `reference` placement is excluded from all three slot pickers **by
+  construction**, because each already filters `placement` — no new condition for
+  anybody to remember.
+- The acceptance suite asserts the **positive** half by default, so it cannot be
+  satisfied by an empty catalog. A gate that achieved exclusion by making
+  reference rows unreadable everywhere would otherwise have passed every
+  exclusion test.
+
+Each of those closes a class. A convention closes a case.
+
+## A definition that was only true when it was written
+
+`service_family_content` carried this, and it was correct on the day it was
+typed:
+
+```sql
+true as coachable   -- A DIRECTLY TAGGED ROW IS COACHABLE BY DEFINITION
+```
+
+It was a fact about **who was doing the tagging** — at that moment, only a human
+hand-tagging a family for coaching — recorded as a property of **the data**. Then
+it sat there looking like a definition long after the thing it described had
+changed, and 0128 had to add reference content that is tagged with a family
+precisely so a shelf can group it and explicitly not so the loop can serve it.
+
+**An assumption wearing a definition's clothes is worse than a stale comment,
+because it actively instructs the reader not to look.** "By definition" and "of
+course" are the two phrases that end an investigation, and both of them were
+load-bearing here: the arm said `true` unconditionally, so a menu film carrying
+its family would have arrived in the pitch slot announcing itself coachable, past
+a `coachable` filter looking the other way.
+
+**In practice:** when a comment says something is true *by definition*, ask what
+would have to change for it to become false — and if the answer is "somebody
+starts creating rows a different way", it is an invariant that needs enforcing
+rather than a definition that needs stating. Write the condition, not the claim.
+
+This is the same failure as [a label not being evidence of what is behind
+it](#a-label-is-not-evidence-of-what-is-behind-it), one level more dangerous,
+because the label is asserting it does not need checking.
+
 ## Never identify a person by name
 
 **Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
