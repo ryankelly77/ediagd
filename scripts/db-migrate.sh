@@ -153,6 +153,74 @@ say "pg_dump $(pg_dump --version | awk '{print $3}')  ->  server major ${SERVER_
              Use a matching client (e.g. /opt/homebrew/opt/postgresql@${SERVER_VER}/bin)
              rather than forcing the dump."
 
+# ---- STEP 0: THE MIGRATION MUST HAVE A PATH INTO main ----------------------
+#
+# 0129 and 0130 were applied to production and their files never reached `main`.
+# Both were committed and pushed — to a branch whose PR had already been merged
+# and closed 27 minutes earlier. The push succeeded, the ledger recorded the
+# versions, the dump was verified, and the live schema was correct while the
+# source of it existed nowhere anybody would look.
+#
+# EVERY EXISTING CHECK IN THIS SCRIPT PASSED. The gate verified the backup and
+# read the ledger back, and neither of those can see version control. That is the
+# eleventh rule again — a total computed inside the filter cannot see what the
+# filter removed, and the filter here was "things about the database".
+#
+# So before anything is dumped or pushed, each PENDING migration must be:
+#
+#   tracked      not a new file nobody has added
+#   committed    no uncommitted edits, so the applied text is the recorded text
+#   routed       on main already, or on a branch with an OPEN pull request
+#
+# "Routed" is the one that catches what happened. Committed-and-pushed was true
+# and insufficient: the branch was a dead end.
+printf '\n  0. every pending migration has a path into main\n'
+
+LEDGER=$(PGPASSWORD="$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)" \
+  psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc \
+  "select version from supabase_migrations.schema_migrations;" 2>/dev/null) \
+  || fail "could not read supabase_migrations.schema_migrations"
+
+PENDING=()
+for f in supabase/migrations/*.sql; do
+  v=$(basename "$f" | sed -E 's/^([0-9]+).*/\1/')
+  grep -qx "$v" <<< "$LEDGER" || PENDING+=("$f")
+done
+
+if (( ${#PENDING[@]} == 0 )); then
+  say "no pending migrations — nothing to apply"
+  exit 0
+fi
+say "${#PENDING[@]} pending: $(printf '%s ' "${PENDING[@]##*/}")"
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+for f in "${PENDING[@]}"; do
+  git ls-files --error-unmatch "$f" >/dev/null 2>&1 \
+    || fail "$f is not tracked by git. Applying a migration whose file is not in
+             version control is how 0129 and 0130 ended up in production with no
+             source. Commit it first."
+  git diff --quiet HEAD -- "$f" \
+    || fail "$f has uncommitted changes. The text applied to production must be
+             the text that is recorded. Commit it first."
+done
+
+if [[ "$BRANCH" == "main" ]]; then
+  say "on main — pending migrations are already routed"
+else
+  command -v gh >/dev/null \
+    || fail "not on main and gh is unavailable, so whether these migrations can
+             reach main cannot be established. Refusing rather than guessing."
+  OPEN=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length' 2>/dev/null || echo "")
+  [[ -n "$OPEN" ]] \
+    || fail "could not ask GitHub whether '$BRANCH' has an open pull request."
+  if [[ "$OPEN" == "0" ]]; then
+    fail "branch '$BRANCH' has NO open pull request, so these migrations have no
+             path into main. This is exactly how 0129 and 0130 were lost: pushed
+             to a branch whose PR had already merged. Open a PR first."
+  fi
+  say "branch '$BRANCH' has $OPEN open PR(s) — routed"
+fi
+
 # ---- STEP 1: the dump ------------------------------------------------------
 mkdir -p "$BACKUP_DIR"
 STAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
