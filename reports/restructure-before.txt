@@ -1,0 +1,107 @@
+         track         | ord |            module             |              module_id               | items | published | quizzes | completions 
+-----------------------+-----+-------------------------------+--------------------------------------+-------+-----------+---------+-------------
+ Overcoming Objections |   1 | Knowledge Notes 1             | 5e120ce1-daf0-4e72-a54b-35534132a9a9 |     8 |         8 |       0 |           0
+ Overcoming Objections |   2 | Knowledge Notes 2             | d3e77ae2-ce32-4532-adef-5affe023c3f7 |     8 |         8 |       0 |           0
+ Overcoming Objections |   3 | Knowledge Notes 3             | 3266fbb3-70e8-4fe8-8b82-62f82a4c5c81 |     8 |         8 |       0 |           0
+ Overcoming Objections |   4 | Knowledge Notes 4             | 9e2bf447-b8d0-4e6d-ac75-1330e2f8a89c |     3 |         3 |       0 |           0
+ Overcoming Objections |   5 | Closing Strategies            | 665ca40a-be70-4d5a-b2c3-336a7a730c3f |     2 |         2 |       0 |           0
+ Walk Around           |   1 | 1. The Walk-Around Routine    | 96e4d762-48df-4734-a126-03cf8dc3d704 |     5 |         3 |       4 |           2
+ Walk Around           |   2 | 2. What the Vehicle Tells You | aad2141c-4a22-4dc4-b17b-3c4e1ea3b230 |    10 |        10 |       4 |           1
+ Walk Around           |   3 | 3. Reading the Customer       | c29e0fad-efaf-4dfc-8c51-9b6cb4b9baa2 |     8 |         8 |       4 |           0
+ Walk Around           |   4 | 4. Raising a Problem Well     | 27d27f22-1224-4348-bc8a-37f8e045644e |     6 |         6 |       4 |           1
+ Walk Around           |   5 | 5. Tires on the Drive         | 6ae4a12b-da1c-45c0-8c2c-044163b6bf55 |    10 |        10 |       4 |           0
+ Walk Around           |   6 | 6. Visibility and Wipers      | 22db40a6-9927-4395-80d5-adbfca5c567b |     8 |         8 |       4 |           0
+ Walk Around           |   7 | 7. The Handback               | ccf2291b-608a-4802-9365-7695eae9f80d |    11 |        11 |       4 |           0
+(12 rows)
+
+         track         | ord |            module             | pos | format |  status   |                      item                      
+-----------------------+-----+-------------------------------+-----+--------+-----------+------------------------------------------------
+ Overcoming Objections |   1 | Knowledge Notes 1             |   1 | cue    | published | No Is Not an Objection
+ Overcoming Objections |   1 | Knowledge Notes 1             |   2 | cue    | published | The Warranty Objection Handle
+ Overcoming Objections |   1 | Knowledge Notes 1             |   3 | cue    | published | The Decision Maker Objection — Information Ove
+ Overcoming Objections |   1 | Knowledge Notes 1             |   4 | cue    | published | The Competitor Objection — Never Tear Them Dow
+ Overcoming Objections |   1 | Knowledge Notes 1             |   5 | cue    | published | The Time Objection — Shuttle, Uber, or Voucher
+ Overcoming Objections |   1 | Knowledge Notes 1             |   6 | cue    | published | The Trade-In Objection — Appraisal Value Close
+ Overcoming Objections |   1 | Knowledge Notes 1             |   7 | cue    | published | The Money Objection — Sunbit Before They Finis
+ Overcoming Objections |   1 | Knowledge Notes 1             |   8 | cue    | published | The Takeaway Close — If Not Here, Go Somewhere
+ Overcoming Objections |   2 | Knowledge Notes 2             |   9 | cue    | published | Never Call the Spouse — No Matter What
+ Overcoming Objections |   2 | Knowledge Notes 2             |  10 | cue    | published | Track Every No — Write Down Why Customers Say 
+ Overcoming Objections |   2 | Knowledge Notes 2             |  11 | cue    | published | The Four Objection Categories — Have a Respons
+ Overcoming Objections |   2 | Knowledge Notes 2             |  12 | cue    | published | Introduce Sunbit at Write-Up — Not After the N
+ Overcoming Objections |   2 | Knowledge Notes 2             |  13 | cue    | published | Angry Customer on the Phone — Lower Your Voice
+ Overcoming Objections |   2 | Knowledge Notes 2             |  14 | cue    | published | Listen for Trigger Moments — Redirect Before t
+ Overcoming Objections |   2 | Knowledge Notes 2             |  15 | cue    | published | I Wouldn't Be Doing My Job If...' — The Effort
+ Overcoming Objections |   2 | Knowledge Notes 2             |  16 | cue    | published | The 5-Step De-Escalation Flow — For Angry Call
+ Overcoming Objections |   3 | Knowledge Notes 3             |  17 | cue    | published | Validate First, Solve Second — The Sequence Th
+ Overcoming Objections |   3 | Knowledge Notes 3             |  18 | cue    | published | Own the Call — Fall on the Sword for the Team
+ Overcoming Objections |   3 | Knowledge Notes 3             |  19 | cue    | published | Interrupt the Negative Momentum — 'May I Jump 
+ Overcoming Objections |   3 | Knowledge Notes 3             |  20 | cue    | published | Clarifying Questions — Find the Origin and the
+ Overcoming Objections |   3 | Knowledge Notes 3             |  21 | cue    | published | Close the Loop — Create an Action Item With a 
+ Overcoming Objections |   3 | Knowledge Notes 3             |  22 | cue    | published | I Want to Do a Reset' — For Customers With Mul
+ Overcoming Objections |   3 | Knowledge Notes 3             |  23 | cue    | published | Empathy Without Agreeing With the Facts
+ Overcoming Objections |   3 | Knowledge Notes 3             |  24 | cue    | published | Send Them Away Ethically — The Trust Move That
+ Overcoming Objections |   4 | Knowledge Notes 4             |  25 | cue    | published | Say the Number Out Loud — Acknowledge Sticker 
+ Overcoming Objections |   4 | Knowledge Notes 4             |  26 | cue    | published | Sunbit Builds Credit — The Third Benefit Advis
+ Overcoming Objections |   4 | Knowledge Notes 4             |  27 | cue    | published | Bad Video Recovery — Fall on Your Sword
+ Overcoming Objections |   5 | Closing Strategies            |  28 | cue    | published | Before You Say No
+ Overcoming Objections |   5 | Closing Strategies            |  29 | cue    | published | My Fluid Looks Fine — The Burnt Not Dirty Come
+ Walk Around           |   1 | 1. The Walk-Around Routine    |   0 | video  | draft     | Watch First — The Walk-Around
+ Walk Around           |   1 | 1. The Walk-Around Routine    |   1 | cue    | draft     | The 5% Who Click Approve Without Being Asked
+ Walk Around           |   1 | 1. The Walk-Around Routine    |   2 | cue    | published | The 30-Second Walk-Around (Full Script)
+ Walk Around           |   1 | 1. The Walk-Around Routine    |   3 | cue    | published | Train the Customer to Do What You Say Do
+ Walk Around           |   1 | 1. The Walk-Around Routine    |   4 | cue    | published | Offer Something Outside Every Time
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   5 | cue    | published | Use the Wipers — Don't Just Look at Them
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   6 | cue    | published | Slow Crank = Battery Conversation
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   7 | cue    | published | Color-Coded Tread Depth Gauge
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   8 | cue    | published | The Tire Born-On Date Close
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   9 | cue    | published | Windshield Washer Fluid Button — Opens Unexpec
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   9 | cue    | published | Windshield Washer Fluid Button — Opens Unexpec
+ Walk Around           |   2 | 2. What the Vehicle Tells You |   9 | cue    | published | Windshield Washer Fluid Button — Opens Unexpec
+ Walk Around           |   2 | 2. What the Vehicle Tells You |  10 | cue    | published | The Windshield Washer Fluid Motor Story
+ Walk Around           |   2 | 2. What the Vehicle Tells You |  10 | cue    | published | The Windshield Washer Fluid Motor Story
+ Walk Around           |   2 | 2. What the Vehicle Tells You |  10 | cue    | published | The Windshield Washer Fluid Motor Story
+ Walk Around           |   3 | 3. Reading the Customer       |  15 | cue    | published | Check the Radio and Backseat for Clues
+ Walk Around           |   3 | 3. Reading the Customer       |  16 | cue    | published | Mention Your Family — The Trust Signal
+ Walk Around           |   3 | 3. Reading the Customer       |  17 | cue    | published | Use Your DMS Notes — Store What You Learn
+ Walk Around           |   3 | 3. Reading the Customer       |  18 | cue    | published | Spot the Truck User — Payload, Hitch, and Gear
+ Walk Around           |   3 | 3. Reading the Customer       |  19 | cue    | published | Trailer Hitch and Overland Gear — The Drive-Si
+ Walk Around           |   3 | 3. Reading the Customer       |  19 | cue    | published | Trailer Hitch and Overland Gear — The Drive-Si
+ Walk Around           |   3 | 3. Reading the Customer       |  19 | cue    | published | Trailer Hitch and Overland Gear — The Drive-Si
+ Walk Around           |   3 | 3. Reading the Customer       |  19 | cue    | published | Trailer Hitch and Overland Gear — The Drive-Si
+ Walk Around           |   4 | 4. Raising a Problem Well     |  11 | cue    | published | Never Bring Up a Negative Without a Positive S
+ Walk Around           |   4 | 4. Raising a Problem Well     |  12 | cue    | published | Know Your Product Better Than Your Customer
+ Walk Around           |   4 | 4. Raising a Problem Well     |  13 | cue    | published | Speak to the 8-Year-Old AND the 88-Year-Old
+ Walk Around           |   4 | 4. Raising a Problem Well     |  14 | cue    | published | No Negative Without a Positive Solution — The 
+ Walk Around           |   4 | 4. Raising a Problem Well     |  14 | cue    | published | No Negative Without a Positive Solution — The 
+ Walk Around           |   4 | 4. Raising a Problem Well     |  14 | cue    | published | No Negative Without a Positive Solution — The 
+ Walk Around           |   5 | 5. Tires on the Drive         |  20 | cue    | published | The Tire Maintenance Ladder — Rotate · Balance
+ Walk Around           |   5 | 5. Tires on the Drive         |  21 | cue    | published | Print a Tire Quote for Every Customer — Even G
+ Walk Around           |   5 | 5. Tires on the Drive         |  22 | cue    | published | Balance — The Texas Rain Safety Close
+ Walk Around           |   5 | 5. Tires on the Drive         |  23 | cue    | published | Alignment — Emergency Braking Skid Angle
+ Walk Around           |   5 | 5. Tires on the Drive         |  24 | cue    | published | Road Force Balance — Quarter Ounce Precision, 
+ Walk Around           |   5 | 5. Tires on the Drive         |  24 | cue    | published | Road Force Balance — Quarter Ounce Precision, 
+ Walk Around           |   5 | 5. Tires on the Drive         |  24 | cue    | published | Road Force Balance — Quarter Ounce Precision, 
+ Walk Around           |   5 | 5. Tires on the Drive         |  25 | cue    | published | Four-Wheel Alignment — One-Tenth of One Degree
+ Walk Around           |   5 | 5. Tires on the Drive         |  25 | cue    | published | Four-Wheel Alignment — One-Tenth of One Degree
+ Walk Around           |   5 | 5. Tires on the Drive         |  25 | cue    | published | Four-Wheel Alignment — One-Tenth of One Degree
+ Walk Around           |   6 | 6. Visibility and Wipers      |  29 | cue    | published | Sell the Sizzle — Physical Demos Close
+ Walk Around           |   6 | 6. Visibility and Wipers      |  30 | cue    | published | Demo It in Your Own Vehicle First
+ Walk Around           |   6 | 6. Visibility and Wipers      |  31 | cue    | published | Check Wipers on Every RO — Including Big Ticke
+ Walk Around           |   6 | 6. Visibility and Wipers      |  31 | cue    | published | Check Wipers on Every RO — Including Big Ticke
+ Walk Around           |   6 | 6. Visibility and Wipers      |  31 | cue    | published | Check Wipers on Every RO — Including Big Ticke
+ Walk Around           |   6 | 6. Visibility and Wipers      |  32 | cue    | published | Windshield Treatment — 42% of Texas Collisions
+ Walk Around           |   6 | 6. Visibility and Wipers      |  32 | cue    | published | Windshield Treatment — 42% of Texas Collisions
+ Walk Around           |   6 | 6. Visibility and Wipers      |  32 | cue    | published | Windshield Treatment — 42% of Texas Collisions
+ Walk Around           |   7 | 7. The Handback               |  33 | cue    | published | Remove PPE Visibly in Front of the Customer
+ Walk Around           |   7 | 7. The Handback               |  33 | cue    | published | Remove PPE Visibly in Front of the Customer
+ Walk Around           |   7 | 7. The Handback               |  33 | cue    | published | Remove PPE Visibly in Front of the Customer
+ Walk Around           |   7 | 7. The Handback               |  34 | cue    | published | Proof the Car Before Delivery — Grease Stain C
+ Walk Around           |   7 | 7. The Handback               |  34 | cue    | published | Proof the Car Before Delivery — Grease Stain C
+ Walk Around           |   7 | 7. The Handback               |  34 | cue    | published | Proof the Car Before Delivery — Grease Stain C
+ Walk Around           |   7 | 7. The Handback               |  35 | cue    | published | Proof the Car for Grease Stains Before Deliver
+ Walk Around           |   7 | 7. The Handback               |  35 | cue    | published | Proof the Car for Grease Stains Before Deliver
+ Walk Around           |   7 | 7. The Handback               |  35 | cue    | published | Proof the Car for Grease Stains Before Deliver
+ Walk Around           |   7 | 7. The Handback               |  36 | cue    | published | Remove PPE Visibly in Front of the Customer
+ Walk Around           |   7 | 7. The Handback               |  36 | cue    | published | Remove PPE Visibly in Front of the Customer
+(87 rows)
+
