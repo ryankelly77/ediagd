@@ -233,6 +233,97 @@ merely avoided.
 
 Each of those closes a class. A convention closes a case.
 
+## A refusal is not self-verifying
+
+A gate that refuses looks like it is working whether it is right or wrong. So it
+must be proven to **accept a known-good input** as well as refuse a known-bad
+one — otherwise "it refused" is the only evidence, and that is compatible with
+the gate being broken.
+
+`db:migrate` refused its own good 24 MB production dump and named all ten
+required tables as missing while every one was present. The cause was
+`printf … | grep -q` under `set -o pipefail`: `grep -q` exits the instant it
+matches, `printf` then dies with EPIPE, and `pipefail` promotes that to the
+pipeline's status, so **a successful match reported failure**.
+
+```
+WITHOUT pipefail   grep -q in pipe : MATCH
+WITH    pipefail   grep -q in pipe : NO MATCH
+                   herestring      : MATCH
+```
+
+**Being wrong in the cautious direction is what hides it.** A false refusal
+survives review because it wears the costume of care — and *the same construction
+in a check that passes on match would have been silently wrong.*
+
+**In practice:** every gate gets both tests. Prove the refusal against a
+deliberately bad input, and prove the acceptance against a real good one. The
+acceptance test is the one that gets skipped, and it is the one that catches this.
+
+## An exclusion by value is not an exclusion unless the value is mandatory
+
+A rule written as "exclude the rows marked X" exempts every row that simply never
+got marked. **A rule that reads a column is only as strong as the guarantee that
+the column is always written.**
+
+0128 keyed the mileage shelf on `placement = 'reference'` — the shelf selects it,
+`service_family_content` excludes it. Then the ingest routed all 51 menu films
+with **`placement = NULL`**, because `Menu` was absent from the static `ROUTES`
+table and an alias cannot carry a placement. A NULL was the worst of both:
+**invisible to the surface that selects the value, and not excluded by the gate
+that excludes it.** The gate was correct and inert, because the rows never
+acquired the thing it keys on.
+
+The fix belongs where the value is created, not in a backfill afterwards — the
+window between "written" and "backfilled" is a window in which the gate is off. A
+backfill is a promise; a route is a property.
+
+**In practice:** after writing any rule that filters on a column value, ask what
+writes that column and whether it can decline to. If it can, the rule has a hole
+the size of every row that took the default.
+
+## A summary is not an observation, and neither is an exit code
+
+Both must be **derived from what happened**. A closing line that prints
+regardless is a claim the program is not entitled to make.
+
+`ingest-videos.ts` refused all 51 uploads for missing Mux credentials, printed
+*"Mux is transcoding. The webhook creates each content row as DRAFT when its asset
+is ready"*, and **exited 0**. 102 failure lines above a success summary, and a
+status code that told every caller it went fine.
+
+This matters more here than in most projects, because the operating model is that
+Code reports and Ryan acts on the report. A script that announces success on total
+failure is the failure mode this project can least afford.
+
+**In practice:** a summary is computed from counters the run incremented, and the
+exit code is a function of the failure count. If a line would print on the failure
+path unchanged, it is decoration and must not read as a result.
+
+## A statistic is a choice about what to throw away
+
+A mean throws away the extremes — so when the extremes are what hides the defect,
+the mean reports that there is no defect. **Name the summary you picked and what
+it discards, because that choice is an assumption and not arithmetic.**
+
+**Worked example, 26 September.** The muffle profiler smoothed high-frequency
+energy with a one-second mean. Bright consonants are brief and loud, so they
+lifted every window that was meant to reveal sustained dullness — **+13.9 dB of
+upward bias at 2:30 of CAF-002, the exact passage Ryan had identified by ear.**
+The film came back **1.0% muffled**. Rebuilt on 2.5-second medians, which a
+plosive cannot drag, the same film reads **26.9% muffled, worst −63.5 dB at
+2:09**, and agrees with what he heard.
+
+**The measure was wrong in the direction that looks like good news.** "1.0%
+muffled" reads as a clean library, which is the answer everybody wanted. That is
+the refusal rule from the other side: a false refusal survives review because it
+looks like caution, **and a false pass survives because it looks like success.**
+Both are a result nobody is motivated to question.
+
+**One external check the measure could have failed is what caught it** — a person
+naming the bad film from listening, before any number existed. Every measure we
+build wants one.
+
 ## A definition that was only true when it was written
 
 `service_family_content` carried this, and it was correct on the day it was
