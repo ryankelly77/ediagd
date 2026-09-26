@@ -115,6 +115,7 @@ type Route = {
     | "daily_pitch"
     | "onboarding_intro"
     | "technician_daily"
+    | "reference"
     | null;
   /** The shelf. Was `series` until 0063 replaced it. */
   collection: string | null;
@@ -147,6 +148,22 @@ const ROUTES: Record<string, Route> = {
    * shelf: entitlement is keyed on type, so this is what makes a tech video
    * readable by a technician and invisible to an advisor's daily pools.
    */
+  /*
+   * The mileage shelf (0128). REFERENCE — and the placement is what makes it
+   * safe, not the collection name.
+   *
+   * It lives here rather than being backfilled after upload because a menu
+   * film with a NULL placement is invisible to /mileage AND is not excluded
+   * by service_family_content — so the window between "uploaded" and
+   * "backfilled" is a window in which the gate is not doing its job.
+   * Encoding it in the route means a Menu film cannot be created without it.
+   *
+   * The MENU -> Menu alias in mapping_alias resolves the prefix; this supplies
+   * the placement an alias cannot carry. Both are needed — 0128 added the
+   * alias, and without this entry the dry run routed all 51 films with
+   * `placement=—`.
+   */
+  MENU: { placement: "reference", collection: "Menu", craftSeries: null },
   TECH: {
     placement: "technician_daily",
     collection: "Technician Training",
@@ -810,11 +827,35 @@ async function main() {
     console.log(`  failed:   ${failed.length}`);
     failed.forEach((f) => console.log(`    ${f.file}  ${f.error}`));
   }
-  console.log(
-    `\n  Mux is transcoding. The webhook creates each content row as DRAFT when\n` +
-      `  its asset is ready; the derive-vertical cron picks up the 9:16 within 30\n` +
-      `  minutes of that. Nothing is advisor-visible until somebody publishes it.\n`
-  );
+  /*
+   * THE SUMMARY IS DERIVED, AND SO IS THE EXIT CODE.
+   *
+   * This line used to print unconditionally. A run where all 51 uploads refused
+   * for missing Mux credentials printed 102 failure lines, then "Mux is
+   * transcoding. The webhook creates each content row as DRAFT…", and exited 0 —
+   * a success summary and a clean status over total failure. The operating model
+   * here is that this script reports and Ryan acts on the report, so that is the
+   * worst available defect: not a crash, a confident wrong answer.
+   *
+   * So the closing line is now a function of what actually uploaded, and the
+   * process exit is a function of the failure count.
+   */
+  if (done.length > 0) {
+    console.log(
+      `\n  Mux is transcoding ${done.length} file(s). The webhook creates each content row\n` +
+        `  as DRAFT when its asset is ready; the derive-vertical cron picks up the 9:16\n` +
+        `  within 30 minutes of that. Nothing is advisor-visible until somebody publishes it.\n`
+    );
+  } else {
+    console.log(
+      `\n  NOTHING WAS UPLOADED. ${failed.length} file(s) failed and no asset reached Mux,\n` +
+        `  so no content row will be created and there is nothing to publish.\n`
+    );
+  }
+
+  /* Non-zero when anything failed, so a caller — or a person reading $? — is not
+     told the run succeeded because it reached the end. */
+  if (failed.length > 0) process.exitCode = 1;
 }
 
 /*
