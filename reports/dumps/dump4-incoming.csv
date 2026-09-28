@@ -1,0 +1,126 @@
+file,slate_text,proposed_op_code,proposed_stage,pile,destination_family_or_track
+IMG_2494.MOV,You cannot lose by demon.,,,unrouted,
+IMG_2526.MOV,Sing it.,,,unrouted,
+IMG_2527.MOV,Strawberry lemonade.,,,unrouted,
+IMG_2529.MOV,"Big ticket visit, part one.",,,unrouted,
+IMG_2531.MOV,Big ticket visit part two.,,,unrouted,
+IMG_2533.MOV,"The Big Ticket Visit, Part 3",,,unrouted,
+IMG_2534.MOV,"Overcoming objections, part one.",,,unrouted,
+IMG_2538.MOV,"So, Overcoming Objections Part 2 – How to Take a No",,,unrouted,
+IMG_2542.MOV,Overcoming objections engine air filters.,EAF-001,Objections,non-canonical stage,Filters
+IMG_2546.MOV,Break fluid exchange overcoming objections.,BFF-012,Objections,non-canonical stage,Brake Service
+IMG_2547.MOV,Coolant Exchange Overcoming Objections,CLF-010,Objections,non-canonical stage,Fluids
+IMG_2549.MOV,Power steering fluid exchange overcoming objections.,PSF-013,Objections,non-canonical stage,Fluids
+IMG_2550.MOV,"Overcoming objections, transmission fluid.",TRF-011,Objections,non-canonical stage,Fluids
+IMG_2552.MOV,AC recharge. AC recharge on the drive part one.,ACR-047,On the Drive,restructure,HVAC
+IMG_2553.MOV,"AC Recharge, On the Drive, Part 2",ACR-047,On the Drive,restructure,HVAC
+IMG_2555.MOV,"AC Recharge on the Drive Part 3, the Diagnostic Close.",ACR-047,On the Drive,restructure,HVAC
+IMG_2557.MOV,AC recharge at the kiosk part one.,ACR-047,At the Kiosk,restructure,HVAC
+IMG_2560.MOV,AC recharge at the kiosk part two.,ACR-047,At the Kiosk,restructure,HVAC
+IMG_2562.MOV,AC recharge after the multi -point part 1.,ACR-047,After-MPI,restructure,HVAC
+IMG_2568.MOV,AC recharge at the kiosk.,ACR-047,At the Kiosk,restructure,HVAC
+IMG_2569.MOV,AC recharge setting up the multi -point inspection.,ACR-047,MPI Setup,clean addition,HVAC
+IMG_2570.MOV,AC recharge after the multi -point inspection.,ACR-047,After-MPI,restructure,HVAC
+IMG_2571.MOV,AC recharge after multi -point inspection selling part 2.,ACR-047,After-MPI,restructure,HVAC
+IMG_2572.MOV,"Timing belt on the drive, part one.",TMB-039,On the Drive,restructure,Belts & Cooling
+IMG_2573.MOV,Timing belt on the drive part two.,TMB-039,On the Drive,restructure,Belts & Cooling
+IMG_2574.MOV,Timing Belt at the Kiosk.,TMB-039,At the Kiosk,reshoot-replace,Belts & Cooling
+IMG_2576.MOV,"2. Timing belt, setting up the multi -point inspection.",TMB-039,MPI Setup,reshoot-replace,Belts & Cooling
+IMG_2577.MOV,Timing belt after a multi -point inspection part one.,TMB-039,After-MPI,restructure,Belts & Cooling
+IMG_2578.MOV,Timing Belt After Multi -Point Inspection Part 2,TMB-039,After-MPI,restructure,Belts & Cooling
+IMG_2580.MOV,Timing Belt Piggyback Sales.,TMB-039,Piggyback,non-canonical stage,Belts & Cooling
+IMG_2581.MOV,Coolant hoses on the drive.,CLH-042,On the Drive,restructure,Belts & Cooling
+IMG_2582.MOV,"Coolant hoses on the drive, part two.",CLH-042,On the Drive,restructure,Belts & Cooling
+IMG_2583.MOV,Coolant hoses at the kiosk.,CLH-042,At the Kiosk,reshoot-replace,Belts & Cooling
+IMG_2584.MOV,Coolant hoses setting up the multi -point inspection.,CLH-042,MPI Setup,reshoot-replace,Belts & Cooling
+IMG_2585.MOV,Coolant hoses after the multi -point inspection.,CLH-042,After-MPI,reshoot-replace,Belts & Cooling
+IMG_2587.MOV,"Coolant hoses, the piggyback sells.",CLH-042,Piggyback,non-canonical stage,Belts & Cooling
+IMG_2590.MOV,Serpentine Belt on the Drive Part 1.,SRP-038,On the Drive,reshoot-replace,Belts & Cooling
+IMG_2591.MOV,Serpentine Belts at the Kiosk.,SRP-038,At the Kiosk,reshoot-replace,Belts & Cooling
+IMG_2592.MOV,"Serpentine belt, setting up the multi -point inspection.",SRP-038,MPI Setup,reshoot-replace,Belts & Cooling
+IMG_2593.MOV,Serpentine Belt Multi -Point Inspection Selling,SRP-038,After-MPI,reshoot-replace,Belts & Cooling
+IMG_2595.MOV,Wiper blades on the drive part one.,WBF-018,On the Drive,clean addition,Wipers
+IMG_2598.MOV,"Wiper blades on the drive, part two.",WBF-018,On the Drive,clean addition,Wipers
+IMG_2600.MOV,Wiper blades at the kiosk.,WBF-018,At the Kiosk,reshoot-replace,Wipers
+IMG_2601.MOV,"Wiper blades, setting up the multi -point inspection.",WBF-018,MPI Setup,clean addition,Wipers
+IMG_2607.MOV,Wiper blades after the multi -point.,WBF-018,After-MPI,reshoot-replace,Wipers
+IMG_2609.MOV,Wiper Blades Piggyback Sales,WBF-018,Piggyback,non-canonical stage,Wipers
+IMG_2611.MOV,The Four Minute Walkaround Part 1,,,unrouted,
+IMG_2612.MOV,"The 4 minute walk around, part 2.",,,unrouted,
+IMG_2613.MOV,"The Four Minute Walkaround, Part 3.",,,unrouted,
+IMG_2614.MOV,Batteries on the drive.,BAT-033,On the Drive,no discriminating evidence,Battery
+IMG_2615.MOV,Battery Sales at the kiosk,BAT-033,At the Kiosk,no discriminating evidence,Battery
+IMG_2618.MOV,"Battery, setting up the multi -point inspection.",BAT-033,MPI Setup,no discriminating evidence,Battery
+IMG_2621.MOV,Battery after the multi -point inspection.,BAT-033,After-MPI,no discriminating evidence,Battery
+IMG_2622.MOV,Battery Overcoming Objections and Piggyback Sales,BAT-033,Objections,no discriminating evidence,Battery
+IMG_2629.MOV,2. Charge Port Cleaning on the Drive,CPC-051,On the Drive,clean addition,EV & Hybrid
+IMG_2633.MOV,Charge port cleaning at the kiosk.,CPC-051,At the Kiosk,clean addition,EV & Hybrid
+IMG_2637.MOV,"Charge port cleaning, setting up the multi -point inspection.",CPC-051,MPI Setup,clean addition,EV & Hybrid
+IMG_2638.MOV,2. Charge port cleaning after a multi -point inspection,CPC-051,After-MPI,clean addition,EV & Hybrid
+IMG_2639.MOV,Rodent deterrent on the drive.,RDD-052,On the Drive,clean addition,EV & Hybrid
+IMG_2642.MOV,Rodent Deterrent at the kiosk.,RDD-052,At the Kiosk,clean addition,EV & Hybrid
+IMG_2643.MOV,"Rodent deterrent, setting up the multi -point inspection.",RDD-052,MPI Setup,clean addition,EV & Hybrid
+IMG_2644.MOV,Rodent deterrent after a multi -point inspection.,RDD-052,After-MPI,clean addition,EV & Hybrid
+IMG_2646.MOV,AC Evaporator Cleaning on the Drive,ACE-053,On the Drive,no discriminating evidence,HVAC
+IMG_2647.MOV,AC EVAP at the kiosk.,ACE-053,At the Kiosk,no discriminating evidence,HVAC
+IMG_2648.MOV,"AC Evaporator Cleaning, setting up the MultiPoint Inspection.",ACE-053,MPI Setup,no discriminating evidence,HVAC
+IMG_2650.MOV,AC Evaporator Core Cleaning Service after the Multi -Point Inspection,ACE-053,After-MPI,no discriminating evidence,HVAC
+IMG_2695.MOV,The maintenance menu. OE approach.,,,unrouted,
+IMG_2697.MOV,OE approach severe conditions.,,,unrouted,
+IMG_2698.MOV,OE approach lifetime fluid.,,,unrouted,
+IMG_2700.MOV,"OE approach, use the chart.",,,unrouted,
+IMG_2701.MOV,The stagger. Why we spread them out.,,,unrouted,
+IMG_2703.MOV,"The OE Stagger, The Order and Why",,,unrouted,
+IMG_2705.MOV,The OE Stagger – Running It,,,unrouted,
+IMG_2712.MOV,1. Dealer upsell menu and interval charts. 2.,,,unrouted,
+IMG_2714.MOV,"The Ladder – 5 ,075 -hundred mile services",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2716.MOV,"5 ,075 Mile Dealer Upsale Intervals Signature Sense",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2717.MOV,"10 ,000 Mile Dealer Upsale Menus Part 1",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2719.MOV,"10 ,000 mile dealer upsell menu part 2.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2722.MOV,"10 ,000 mile dealer upsell menus, the glass treatment and demo.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2724.MOV,"10 ,000 mile dealer upsell intervals part 4, the solvent and the bundle.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2726.MOV,"15 ,000 mile dealer upsell interval part 1, the filter rung.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2727.MOV,"15 ,000 mile dealer upsell part 2. What's right behind the filter?",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2728.MOV,"15 ,000 mile service dealer up sale intervals, part 3. Beat the heat.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2729.MOV,"15 ,000 mile dealer upsell intervals and menus part 4 alignment",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2730.MOV,"15 ,000 mile dealer upsell intervals and menus part 5. Running the rung.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2731.MOV,"20 ,000 mile dealer upsell interval part one.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2734.MOV,"20 ,000 mile dealer upsell interval part 2 balance",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2736.MOV,"20 ,000 mile dealer interval upsells Part 3 – What is the balance really?",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2738.MOV,"20 ,000 mile dealer upsell intervals and menus part 4. The wipers again?",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2748.MOV,"25 ,000 mile dealer interval upsell on menus. Carbon is not where.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2749.MOV,"25 ,000 mile interval dealer upsell service on menus. Carbon is not where.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2753.MOV,"25 ,000 mile intervals, dealer upsells, part two, health analogies.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2755.MOV,"25 ,000 mile dealer interval upsells with menus, part 3, the decarb.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2756.MOV,"25 ,000 mile dealer upsell off of mineral, voles, and menus part 4, the injectors.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2758.MOV,"25 ,000 mile dealer upsell intervals part 5, the tank additive.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2760.MOV,"30 ,000 mile dealer upsell intervals and menus brake fluid.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2769.MOV,"30 ,000 mile dealer upsell menus and intervals. The stagger starts here.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2771.MOV,"30 ,000 mile dealer upsells with intervals and menus, part 3. The exceptions.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2773.MOV,"30 ,000 mile dealer upsells on intervals and menus part 4, the repeat offerings.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2774.MOV,"30 ,000 mile dealer upsells on intervals and menus, part five, prioritize.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2778.MOV,"35 ,000 mile dealer upsell menus and intervals part one, the differential.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2779.MOV,"35 ,000 mile dealer upsell menus and intervals part two, the coverage cliff.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2780.MOV,"35 ,000 mile dealer upsell menus and intervals part 3. The in between and the exceptions.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2783.MOV,"40 ,000 mile dealer upsell menus and intervals. Part 1 – Power Steering",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2785.MOV,"40 ,000 mile dealer upsell menus and intervals part two. The repeats and the exceptions.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2788.MOV,"40 ,000 mile dealer upsell menus and intervals part 3, the oil additive and the handoff.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2789.MOV,"45 ,000 mile dealer upsell menus and intervals part 1.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2790.MOV,"45 ,000 mile dealer upsell menus and intervals part 2, the questions and the CVT.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2793.MOV,"45 ,000 mile dealer upsell menus and intervals part 3, the repeats.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2794.MOV,"45 ,000 mile dealer upsells off menus and intervals part 4, the exceptions at 45k.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2799.MOV,"50 ,000 mile dealer upsell, menus and intervals part one, coolant.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2800.MOV,"50 ,000 mile dealer upsell menus and intervals part 2. The second powertrain cliff.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2801.MOV,"50 ,000 mile dealer upsells with menus and intervals part 3. The fuel system the second time around.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2802.MOV,"50 ,000 mile dealer upsells with menus and intervals part 4, the repeats and the deferrals.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2805.MOV,"55 ,000 mile dealer upsells with menus and intervals part 1. Tires.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2807.MOV,"55 ,000 mile dealer upsell with menus and interval charts part 2. The Nitrogen Calculator.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2809.MOV,"55 ,000 mile dealer upsell with menus and intervals part 3. The piggybacks on tire cells.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2810.MOV,"60 ,000 mile dealer upsell with menus and interval charts part one. Spark plugs.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2811.MOV,"60 ,000 mile dealer upsells using menus and intervals part 2, hoses and the coolant reset.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2814.MOV,"60 ,000 mile dealer upsells using menus and intervals part 3. The repeats.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2816.MOV,"60 ,000 mile dealer upsells using menus and intervals part 4. The exceptions at 60.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2817.MOV,"65 ,000 mile dealer upsell using menus and interval charts. Part 1 Differential Round 2",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2818.MOV,"65 ,000 mile dealer upsells using menus and intervals part 2, the in between and the exceptions.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2821.MOV,"70 ,000 mile dealer upsell using menus and interval charts part 2. The in -between and the exceptions.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)
+IMG_2822.MOV,"70 ,000 mile dealer upsells using menus and interval charts part 2, the in between and the exceptions.",MNU-*,,MNU non-coachable,Oil Change / Maintenance (menus)

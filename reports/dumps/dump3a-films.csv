@@ -1,0 +1,53 @@
+family,op_code,op_code_name,stage,film_title,duration_seconds,status
+Belts & Cooling,CLH-042,Coolant Hoses,After-MPI,After-MPI,210,published
+Belts & Cooling,CLH-042,Coolant Hoses,At the Kiosk,At the Kiosk,61,published
+Belts & Cooling,CLH-042,Coolant Hoses,MPI Setup,MPI Setup,134,published
+Belts & Cooling,CLH-042,Coolant Hoses,On the Drive,On the Drive,248,published
+Belts & Cooling,SRP-038,Serpentine Belt,After-MPI,After-MPI,226,published
+Belts & Cooling,SRP-038,Serpentine Belt,At the Kiosk,At the Kiosk,67,published
+Belts & Cooling,SRP-038,Serpentine Belt,MPI Setup,MPI Setup,212,published
+Belts & Cooling,SRP-038,Serpentine Belt,On the Drive,On the Drive,320,published
+Belts & Cooling,TMB-039,Timing Belt,After-MPI,After-MPI,308,published
+Belts & Cooling,TMB-039,Timing Belt,At the Kiosk,At the Kiosk,75,published
+Belts & Cooling,TMB-039,Timing Belt,MPI Setup,MPI Setup,108,published
+Belts & Cooling,TMB-039,Timing Belt,On the Drive,On the Drive,334,published
+Brake Service,BFF-012,Brake Fluid Flush,After-MPI,After-MPI,157,published
+Brake Service,BFF-012,Brake Fluid Flush,At the Kiosk,At the Kiosk,210,published
+Brake Service,BFF-012,Brake Fluid Flush,MPI Setup,MPI Setup,99,published
+Brake Service,BFF-012,Brake Fluid Flush,On the Drive,On the Drive,216,published
+Differential,DFF-014,Differential Fluid,After-MPI,After-MPI,211,published
+Differential,DFF-014,Differential Fluid,At the Kiosk,At the Kiosk,307,published
+Differential,DFF-014,Differential Fluid,MPI Setup,MPI Setup,109,published
+Differential,DFF-014,Differential Fluid,On the Drive,On the Drive,245,published
+Filters,CAF-002,Cabin Air Filter,After-MPI,After-MPI,228,published
+Filters,CAF-002,Cabin Air Filter,At the Kiosk,At the Kiosk,314,published
+Filters,CAF-002,Cabin Air Filter,MPI Setup,MPI Setup,158,published
+Filters,CAF-002,Cabin Air Filter,On the Drive,On the Drive,298,published
+Filters,EAF-001,Engine Air Filter,After-MPI,After-MPI,170,published
+Filters,EAF-001,Engine Air Filter,At the Kiosk,At the Kiosk,267,published
+Filters,EAF-001,Engine Air Filter,MPI Setup,MPI Setup,105,published
+Filters,EAF-001,Engine Air Filter,On the Drive,On the Drive,329,published
+Fluids,CLF-010,Coolant Flush,After-MPI,After-MPI,212,published
+Fluids,CLF-010,Coolant Flush,At the Kiosk,At the Kiosk,287,published
+Fluids,CLF-010,Coolant Flush,MPI Setup,MPI Setup,141,published
+Fluids,CLF-010,Coolant Flush,On the Drive,On the Drive,224,published
+Fluids,PSF-013,Power Steering Fluid,After-MPI,After-MPI,179,published
+Fluids,PSF-013,Power Steering Fluid,At the Kiosk,At the Kiosk,222,published
+Fluids,PSF-013,Power Steering Fluid,MPI Setup,MPI Setup,137,published
+Fluids,PSF-013,Power Steering Fluid,On the Drive,On the Drive,275,published
+Fluids,TRF-011,Transmission Fluid,After-MPI,After-MPI,212,published
+Fluids,TRF-011,Transmission Fluid,At the Kiosk,At the Kiosk,245,published
+Fluids,TRF-011,Transmission Fluid,MPI Setup,MPI Setup,143,published
+Fluids,TRF-011,Transmission Fluid,On the Drive,On the Drive,308,published
+HVAC,ABT-054,Arctic Blast,At the Kiosk,At the Kiosk,70,published
+HVAC,ABT-054,Arctic Blast,MPI Setup,MPI Setup,67,published
+HVAC,ABT-054,Arctic Blast,On the Drive,On the Drive,238,published
+HVAC,ACO-055,AC Odor Treatment,At the Kiosk,At the Kiosk,273,published
+HVAC,ACO-055,AC Odor Treatment,MPI Setup,MPI Setup,264,published
+HVAC,ACO-055,AC Odor Treatment,On the Drive,On the Drive,223,published
+HVAC,ACR-047,AC Recharge,,Part 2,295,published
+HVAC,ACR-047,AC Recharge,After-MPI,After-MPI,319,published
+HVAC,ACR-047,AC Recharge,At the Kiosk,At the Kiosk,318,published
+HVAC,ACR-047,AC Recharge,On the Drive,On the Drive,314,published
+Wipers,WBF-018,Front Wiper Blades,After-MPI,After-MPI,232,published
+Wipers,WBF-018,Front Wiper Blades,At the Kiosk,At the Kiosk,268,published

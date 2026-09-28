@@ -175,6 +175,40 @@ records. Measured on the batch: **0 of 73 matched on `canonical_filename`, 73 of
 rather than computed. If only a derived key is available, assert the match count
 before acting on it, and refuse rather than continue on zero.
 
+### The same rule for quantities, and this is the sharper half
+
+> **Two numbers with the same name from different systems are not the same
+> measurement, and a consistent difference between them is more dangerous than a
+> wild one.**
+
+Eighteen hand-annotated files sat in the Drop Zone, each annotated by Mitch with a
+subject and a stage, and every op code and stage in the set already had a live
+film. So they read as eighteen reshoots to profile. Each one also measured about
+**five seconds longer** than the film it appeared to replace — 130 against 125,
+186 against 182, 204 against 198 — which read as a set of slightly longer retakes.
+
+They were **byte-identical to masters already published.** Profiling them would
+have compared each file against itself.
+
+`duration_sec` in the database is the **trimmed Mux asset**. `ffprobe` on disk is
+the **untrimmed file**. Same word, two quantities, and the difference between them
+was the spoken slate. Nothing was wrong with either number; the fault was
+subtracting one from the other.
+
+**Why it nearly worked is the part worth keeping.** A wild discrepancy looks like
+noise and gets investigated. **A consistent one looks like a finding** — eighteen
+files agreeing with each other to within a second is exactly the shape of a real
+pattern, and it is what a plausible false conclusion is made of. The same
+agreement that made it convincing is what should have prompted the question *what
+would make all eighteen differ by the same amount?*, whose only sensible answer is
+a systematic offset rather than eighteen independent decisions by a person.
+
+**In practice:** before comparing two quantities, name the system each came from.
+If they crossed a boundary — database against filesystem, API against log, report
+against ledger — establish that they measure the same thing before treating the
+gap as information. And when a difference is suspiciously uniform, that uniformity
+is the thing to explain, not the thing that makes it credible.
+
 ## Removing an impossibility inherits the other side's lessons
 
 When a change makes something possible that used to be structurally impossible,

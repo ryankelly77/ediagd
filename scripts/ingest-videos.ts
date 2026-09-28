@@ -48,7 +48,10 @@
 
      npm run ingest:videos -- --dir="/path/to/01 - Ready" --dry
      npm run ingest:videos -- --dir="/path/to/01 - Ready"
-     npm run ingest:videos -- --dir="…" --only=MINDSET
+
+   THE FLAG LIST IS NOT HERE. `--help` prints it, from the one Map the parser
+   itself reads. This block used to carry its own copy, which is how
+   `--publish-when-ready` outlived the code that never implemented it.
    ============================================================================ */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readdir, stat, readFile, copyFile, rm, mkdtemp, mkdir, rename } from "node:fs/promises";
@@ -107,16 +110,43 @@ const LIMIT = Number(arg("limit") ?? "0");
  * exactly the case to be loudest about — because the caller believed it did
  * something. Silence here is indistinguishable from obedience.
  */
-const KNOWN = new Set(["dir", "only", "limit", "dry"]);
+const KNOWN = new Map<string, string>([
+  ["dir", "the folder of masters to read (required)"],
+  ["only", "restrict to one prefix, e.g. --only=MINDSET"],
+  ["limit", "stop after N files"],
+  ["dry", "parse and route, upload nothing"],
+]);
+
+/*
+ * THIS MAP IS THE ONLY LIST OF FLAGS, and --help prints from it.
+ *
+ * The usage block at the top of this file used to carry its own list, and that
+ * is how `--publish-when-ready` survived: a hand-maintained description of the
+ * program sitting next to the program, with nothing comparing them. Two lists
+ * that must agree and no check that they do is the same shape as a stale
+ * placement enumeration — it is correct on the day it is typed and silently
+ * wrong afterwards.
+ *
+ * So the comment above no longer enumerates flags; it shows examples and defers
+ * here. One list cannot disagree with itself.
+ */
+if (args.includes("--help") || args.includes("-h")) {
+  console.log("\n  flags:");
+  for (const [k, help] of KNOWN) console.log(`    --${k.padEnd(8)} ${help}`);
+  console.log("");
+  process.exit(0);
+}
+
 {
   const unknown = args.filter((a) => {
+    if (a === "--help" || a === "-h") return false;
     if (!a.startsWith("--")) return true;
     return !KNOWN.has(a.slice(2).split("=")[0]);
   });
   if (unknown.length) {
     console.error(
       `\n  unrecognised argument(s): ${unknown.join(", ")}\n` +
-        `  known: ${[...KNOWN].map((k) => `--${k}`).join(", ")}\n\n` +
+        `  known: ${[...KNOWN.keys()].map((k) => `--${k}`).join(", ")}\n\n` +
         `  Refusing rather than ignoring them — a flag you passed and this\n` +
         `  program did not read is a difference of opinion about what just ran.\n`,
     );

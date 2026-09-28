@@ -1,8 +1,13 @@
 # Films with no track — a ten-minute conversation for Mitch
 
-**29 films are published and reachable by nobody**, because they belong to series
-that have no track. Separately, **22 more are published into tracks that exist and
-are empty**, and look like obvious matches that nobody has confirmed.
+> ## Four inactive tracks activate from films already published.
+>
+> Not a build, not a shoot, not a migration. **Five series need a home, and
+> confirming where they belong turns four dead tracks live.** Nothing else
+> available this week moves the credential as far.
+
+**51 films are published and reachable by nobody.** 29 belong to series with no
+track at all; 22 more match tracks that exist, are named for them, and are empty.
 
 Naming is not routing. These are all named, published and live in the catalog —
 the only missing decision is which track each series belongs to, and that is
