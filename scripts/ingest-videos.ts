@@ -24,7 +24,16 @@
    asset is ready would render a player pointing at nothing, and mid-batch that
    is a real advisor opening a real screen. So: ingest leaves everything draft,
    the vertical cron fills in the 9:16, and publishing is a separate deliberate
-   step (--publish-when-ready, or the admin screen).
+   step — the admin screen, or a migration that asserts a playback id and a
+   duration on every row before it flips the status.
+
+   `--publish-when-ready` USED TO BE NAMED HERE AND WAS NEVER IMPLEMENTED.
+   Nothing parsed it. A 67-file run was given that flag, ignored it silently, and
+   left every row draft while the closing summary said publishing was somebody
+   else's step — which was true, and read as though the flag had been honoured.
+   A documented flag that no code reads is a promise the file makes on the
+   program's behalf; unknown arguments are now refused outright, below, so the
+   next invented flag stops the run instead of being absorbed by it.
 
    ---------------------------------------------------------------------------
    THE FILENAME IS THE METADATA
@@ -82,6 +91,38 @@ const DIR = arg("dir");
 const ONLY = arg("only")?.toUpperCase();
 const DRY = args.includes("--dry");
 const LIMIT = Number(arg("limit") ?? "0");
+
+/*
+ * AN UNKNOWN FLAG STOPS THE RUN. IT DOES NOT GET ABSORBED.
+ *
+ * `--publish-when-ready` was named in this file's own usage block and parsed by
+ * nothing. A 67-file batch was invoked with it, ran for two hours, uploaded
+ * everything, and left all 67 rows draft — and neither the flag nor the summary
+ * said a word about it, because there was nothing to say: the argument simply
+ * fell through a `find` that never looked for it.
+ *
+ * This is the same shape as a check that enumerates a fixed list and says nothing
+ * when it meets something the list does not mention. The argument list is a claim
+ * about what this program accepts, and an argument it does not recognise is
+ * exactly the case to be loudest about — because the caller believed it did
+ * something. Silence here is indistinguishable from obedience.
+ */
+const KNOWN = new Set(["dir", "only", "limit", "dry"]);
+{
+  const unknown = args.filter((a) => {
+    if (!a.startsWith("--")) return true;
+    return !KNOWN.has(a.slice(2).split("=")[0]);
+  });
+  if (unknown.length) {
+    console.error(
+      `\n  unrecognised argument(s): ${unknown.join(", ")}\n` +
+        `  known: ${[...KNOWN].map((k) => `--${k}`).join(", ")}\n\n` +
+        `  Refusing rather than ignoring them — a flag you passed and this\n` +
+        `  program did not read is a difference of opinion about what just ran.\n`,
+    );
+    process.exit(2);
+  }
+}
 
 /*
  * CHECKED WHEN THE INGEST RUNS, not when the module loads.

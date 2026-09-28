@@ -59,7 +59,21 @@ declare
 begin
   select id into _v2 from content
    where type = 'advisor_video'
-     and canonical_filename = 'TMB-039 — MPI Setup — Mitch Hardt — v2.mov'
+     /*
+      * THE NAME THE INGEST INVENTS, NOT THE NAME ON DISK.
+      *
+      * The file staged as `TMB-039 — MPI Setup — Mitch Hardt — v2.mov`; the
+      * ingest's canonicalName() moves the voice into parentheses, so the row
+      * reads `TMB-039 — MPI Setup (Mitch Hardt) — v2.mov`. The first version of
+      * this predicate used the on-disk spelling and would have matched NOTHING —
+      * returning the quiet "reshoot not present" notice and leaving both takes
+      * live, which is the one outcome this migration exists to prevent.
+      *
+      * source_filename records what was on disk; canonical_filename records what
+      * the ingest made. Join on whichever the other system actually observed —
+      * and here the other system is the ingest, so it is the canonical.
+      */
+     and canonical_filename = 'TMB-039 — MPI Setup (Mitch Hardt) — v2.mov'
      and retired_at is null;
 
   /*

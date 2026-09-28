@@ -66,6 +66,48 @@ Apply confirmed renames only. Anything unconfirmed stays exactly as it was.
 
 Run the repo ingest script in dry-run mode. Every file must parse; list per-file route, op code, stage or film title, version, and disposition (replace vs. new draft). Unknown prefixes go to the review queue — **never guessed**. Replacements are called out separately: Ryan decides replace vs. new version before apply.
 
+## Phase 4b — A reshoot's disposition is decided by measurement, not by a ruling
+
+**When an incoming film matches a live film's identity, profile both. The cleaner
+take becomes v2 and retires the other. If the incoming take is not cleaner, it
+goes to Archive.** Report both numbers and which won.
+
+No ruling per file. `scripts/muffle-profile.py` is the instrument — HF ratio on
+voiced frames, 2.5-second medians. Run it on the incoming file **and** on the live
+master, and put both lines in the report.
+
+**Name the statistic that decided it, because the obvious one can be wrong.**
+`TMB-039 — MPI Setup`: the reshoot's HF *median* was marginally **worse** (−35.4
+against −34.1 dB) while it had **0.0 s muffled against 10.1 s across five
+passages**. Muffled means sustained passages below −48 dB, not average brightness.
+Deciding on the median would have retired the better film.
+
+### Three holds on this rule, and they are not optional
+
+1. **If the identity key cannot establish a match with confidence, hold and
+   report — never guess.** `identityOf()` includes the voice, and **84 of 321 live
+   films carry no parenthesised voice, 43 of them op-coded** (ABT-054, ACO-055,
+   ACR-047, BFF-012, CAF-002, CLF-010, CLH-042, DFF-014, EAF-001, PSF-013,
+   SRP-038, TMB-039, TRF-011). The dry run said `0 would REPLACE` for a file that
+   was demonstrably a reshoot. So a "no match" from the key is **not** evidence of
+   a new film, and this rule must not paper over that exposure. It is a known gap
+   on the 2 October list, not a solved problem.
+
+2. **If the incoming take is materially shorter, hold it** rather than retiring the
+   longer one on an audio score alone. SRP-038 is why: `On the Drive` at 320 s and
+   `On the Drive, Part 1` at 88 s are different films, and a shorter replacement can
+   be a re-cut that drops content. An audio score cannot see missing teaching.
+   A slate-length difference is not material; a minute is.
+
+3. **Retire, never delete, and record which take replaced it and by what margin**
+   in `content.retired_reason`. A retire that does not say why leaves the next
+   reader with a tombstone and no reasoning — eleven rows retired before 0134 have
+   exactly that problem.
+
+**The loser of a reshoot comparison goes to `04 - Archive` with its reason in that
+folder's README. The retired film's master stays in `02 - Published`** — its row is
+retired, the file is not discarded.
+
 ## Phase 5 — Apply, and the trim doctrine
 
 On Ryan's confirmation of the dry-run table: upload to Mux. New films land **draft** — publishing is Ryan and Mitch's step in admin, never this pipeline's. Reshoots replace their published rows in place, with full taxonomy preserved.
