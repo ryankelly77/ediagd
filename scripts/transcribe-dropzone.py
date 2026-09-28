@@ -225,8 +225,49 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
         list(pool.map(handle, todo))
 
-    ok = sum(1 for r in done.values() if r.get("transcript"))
-    print(f"\n  {ok} of {len(done)} transcribed -> {args.out}\n")
+    """
+    THE SUMMARY IS ABOUT THIS RUN, AND THE EXIT CODE IS DERIVED FROM IT.
+
+    Both halves were wrong, and both are the standing rules verbatim.
+
+    1  `len(done)` is the WHOLE accumulated store, because `done` is preloaded
+       from --out so the run is resumable. Counting against it reported "185 of
+       185 transcribed" for a run that was asked for 32 — a scoped measurement
+       stated as a general one. The population this run is evidence about is
+       `todo`, so say `todo`, and say it by name.
+
+    2  `return 0` regardless of failures. A file that raised printed FAILED to
+       stderr and still left the process announcing success, so a caller reading
+       the status code learned nothing. The exit code is now a function of the
+       failure count.
+
+    3  AND IT MUST SAY WHEN IT DID NOT FINISH. A run killed part-way never
+       reaches this line at all, which is how 17 of 32 read as a clean exit 0 —
+       the log simply stopped, with no error and no summary. Nothing here can
+       print after being killed, so the guard is the opposite one: reaching this
+       line with fewer results than `todo` is itself a failure, and it is loud.
+    """
+    attempted = len(todo)
+    ok = sum(1 for n in todo if done.get(n, {}).get("transcript"))
+    failed = [n for n in todo if done.get(n, {}).get("error")]
+    absent = [n for n in todo if n not in done]
+
+    print(f"\n  requested {attempted} · transcribed {ok} · failed {len(failed)}"
+          f" · never attempted {len(absent)}")
+    print(f"  store now holds {len(done)} transcripts -> {args.out}")
+
+    for n in failed:
+        print(f"    FAILED       {n}: {done[n]['error'][:120]}", file=sys.stderr)
+    for n in absent:
+        print(f"    NO RESULT    {n}", file=sys.stderr)
+
+    if failed or absent:
+        print(f"\n  INCOMPLETE — {len(failed) + len(absent)} of {attempted} "
+              f"produced no transcript. Re-run to resume; the store is not a "
+              f"claim that the folder was covered.", file=sys.stderr)
+        return 1
+
+    print(f"  all {attempted} requested files transcribed\n")
     return 0
 
 
