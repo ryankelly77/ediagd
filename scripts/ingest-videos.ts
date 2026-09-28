@@ -291,6 +291,26 @@ function parseName(file: string, knownVoices: Iterable<string> = SEED_VOICES): P
  * Collection and voice stay part of it because a title alone is not unique:
  * CRAFT and MINDSET can both hold a "Walk-Around", and the old bare-title key
  * collapsed them into one.
+ *
+ * ---- WHAT THIS KEY DOES NOT CATCH, STATED RATHER THAN DISCOVERED -----------
+ *
+ * It catches TWO TAKES SHARING A NAME. It does not catch ONE FILM FILED UNDER
+ * TWO NAMES, and that is the harder case because the only evidence is the
+ * content itself.
+ *
+ * Worked example, and the reason this paragraph exists. `CRAFT — Selling
+ * speech — v1.mov` and `MINDSET — Stay in a Great Mood (Alex Hormozi) — v1.mov`
+ * are two takes of the same Hormozi quote. Their identities are
+ * "craft — selling speech" and "mindset — stay in a great mood (alex hormozi)",
+ * which share nothing, so nothing here objected and both went live. It was found
+ * by transcribing the master, twenty-one days after the second one shipped, and
+ * only because somebody had flagged its audio by ear.
+ *
+ * So this key is evidence about names, not about films — the fifth rule. Closing
+ * the gap means content-based duplicate detection across the whole library
+ * (transcript similarity, or audio fingerprinting), which is a real project and
+ * deliberately not attempted here. Until then the gap is known and written down,
+ * which is a different object from a gap somebody finds in November.
  */
 function identityOf(canonical: string): string {
   return canonical.replace(/\s*—\s*v\d+\.[a-z0-9]+$/i, "").trim().toLowerCase();

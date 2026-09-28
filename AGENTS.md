@@ -355,6 +355,50 @@ This is the same failure as [a label not being evidence of what is behind
 it](#a-label-is-not-evidence-of-what-is-behind-it), one level more dangerous,
 because the label is asserting it does not need checking.
 
+## A hold that leaves no trace when it is overridden is not a hold
+
+`reports/dropzone-rename-plan.json` held `IMG_2294` — *"two films proposed for
+this same name; one is misread."* The hold was **right**. The file was renamed by
+hand and uploaded anyway, and nothing in the database records that a hold was
+bypassed: every provenance column on the row is null, and `mux_upload.draft`
+already carried the hand-typed name, so the pipeline never saw the camera file at
+all. **The only evidence that survived was the audio** — the film reached
+production titled "Selling speech" carrying Alex Hormozi's *Stay in a Great Mood*,
+a quote already published clean, and it was served on three mornings before
+anybody listened to it.
+
+**Why this is not [a refusal is not
+self-verifying](#a-refusal-is-not-self-verifying).** That rule is about refusals
+that are *wrong* — a gate that looks like it is working whether or not it is. This
+gate was right, and it was right at the moment it fired. What failed is that
+**being overridden left no record**, so afterwards a correct hold and a file that
+was never held are indistinguishable. The failure is not in the decision; it is
+that the decision had no consequence a later reader could see.
+
+**The pairing, which is what makes this actionable rather than a complaint about
+people.** One day produced both halves:
+
+- Mitch's hand-typed `timing belt setting up mpi` **caught a matcher error** that
+  had misfiled seven films under MPI-061, because "Multi-Point Inspection" appears
+  inside the stage phrase.
+- A hand rename **bypassed a correct hold** and put a mislabelled film into
+  production.
+
+> **An annotation adds evidence. An override removes a refusal.** A pipeline
+> should welcome the first and record the second.
+
+The two are not symmetrical and must not be treated as one policy about manual
+intervention. Invite the annotation — it is free evidence from the only person who
+was in the room. Record the override — not to prevent it, because Ryan overriding
+a hold is legitimate and sometimes correct, but so that the next reader of the row
+knows a machine once objected and what it said.
+
+**In practice:** when a held item is later published, the row says so, carrying the
+hold's own reason. Same rule for a retire: `content.retired_at` existed alone for
+fourteen retires, so eleven of them have reasons that live only in migration
+comments — 0134 adds `retired_reason` and writes the sentence into the row rather
+than only into the commit that made it.
+
 ## Never identify a person by name
 
 **Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
