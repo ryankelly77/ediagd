@@ -404,7 +404,32 @@ function publishedRoot(srcDir: string): string {
   /* Sibling of the Drop Zone, not a path in a config: the two folders are
      always in the same masters directory, and hard-coding an absolute path
      would break the moment somebody mounts the Drive somewhere else. */
-  return path.join(path.dirname(srcDir), "02 - Published");
+
+  /*
+   * THE TRAILING SLASH MOVED 51 MASTERS INTO THE WRONG FOLDER.
+   *
+   * `--dir=".../01 - Ready/"` makes path.dirname return "01 - Ready" itself
+   * rather than its parent, so this resolved to
+   * `01 - Ready/02 - Published/Menu` and filed 51 finished MENU masters one
+   * level too deep. Nothing errored: the rows were live, the bytes were in Mux,
+   * and the move "succeeded" — into a folder that looked right in the log and
+   * was wrong on disk. `02 - Published/Menu` held 26 of 77 films for days.
+   *
+   * It is the label rule in a filesystem: a folder named `02 - Published`
+   * nested inside `01 - Ready` claims a state its location contradicts, and the
+   * per-collection subfolder made the mistake look plausible either way.
+   *
+   * path.resolve normalises the separator away, so the shell's tab-completion
+   * can no longer decide where masters land.
+   */
+  const src = path.resolve(srcDir);
+  const parent = path.dirname(src);
+  if (path.basename(parent) === path.basename(src)) {
+    throw new Error(
+      `refusing to file masters: ${src} resolves to a parent with the same name`,
+    );
+  }
+  return path.join(parent, "02 - Published");
 }
 
 async function fileAway(
