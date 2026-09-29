@@ -71,6 +71,21 @@ const REFERENCE = "reference";
 
 export const formatMiles = (miles: number) => miles.toLocaleString("en-US");
 
+/*
+ * THE HEADING IS DERIVED, AND THAT IS WHY A WRONG ONE SURVIVED.
+ *
+ * Two films sat at rung 5075 — a transcription of "5,000–7,500", which is what
+ * the film says in its own first sentence. Editing their titles would have
+ * changed nothing an advisor sees, because this heading is computed from
+ * `mileage_rung` and never read from the title. The field a human would edit and
+ * the label a human reads were two different things.
+ *
+ * `mileage_label` lets a rung say what the integer cannot. It is NULL for every
+ * ordinary rung, so formatMiles stays the answer for twenty-three of
+ * twenty-four — the override exists for genuine pairs, not as a way to rename
+ * rungs by hand.
+ */
+
 /**
  * Every rung that has at least one playable film, ascending.
  *
@@ -81,7 +96,7 @@ export const formatMiles = (miles: number) => miles.toLocaleString("en-US");
 export async function loadMileageRungs(client: SupabaseClient): Promise<MileageRung[]> {
   const { data, error } = await client
     .from("content")
-    .select("mileage_rung")
+    .select("mileage_rung, mileage_label")
     .eq("type", "advisor_video")
     .eq("placement", REFERENCE)
     .eq("status", "published")
@@ -99,14 +114,36 @@ export async function loadMileageRungs(client: SupabaseClient): Promise<MileageR
   if (error) throw new Error(`loadMileageRungs: ${error.message}`);
 
   const counts = new Map<number, number>();
+  const labels = new Map<number, string>();
   for (const row of data ?? []) {
-    const m = Number((row as { mileage_rung: number }).mileage_rung);
+    const r = row as { mileage_rung: number; mileage_label: string | null };
+    const m = Number(r.mileage_rung);
     counts.set(m, (counts.get(m) ?? 0) + 1);
+
+    /*
+     * A rung's films must agree about its label, and disagreement is reported
+     * rather than resolved by whichever row paged in first. Picking silently is
+     * how a screen ends up confidently naming the wrong interval.
+     */
+    const prior = labels.get(m);
+    if (r.mileage_label) {
+      if (prior && prior !== r.mileage_label) {
+        throw new Error(
+          `loadMileageRungs: rung ${m} has conflicting labels ` +
+            `"${prior}" and "${r.mileage_label}"`,
+        );
+      }
+      labels.set(m, r.mileage_label);
+    }
   }
 
   return [...counts.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([miles, filmCount]) => ({ miles, label: formatMiles(miles), filmCount }));
+    .map(([miles, filmCount]) => ({
+      miles,
+      label: labels.get(miles) ?? formatMiles(miles),
+      filmCount,
+    }));
 }
 
 /**

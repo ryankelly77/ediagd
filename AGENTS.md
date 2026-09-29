@@ -175,6 +175,40 @@ records. Measured on the batch: **0 of 73 matched on `canonical_filename`, 73 of
 rather than computed. If only a derived key is available, assert the match count
 before acting on it, and refuse rather than continue on zero.
 
+### The same rule for quantities, and this is the sharper half
+
+> **Two numbers with the same name from different systems are not the same
+> measurement, and a consistent difference between them is more dangerous than a
+> wild one.**
+
+Eighteen hand-annotated files sat in the Drop Zone, each annotated by Mitch with a
+subject and a stage, and every op code and stage in the set already had a live
+film. So they read as eighteen reshoots to profile. Each one also measured about
+**five seconds longer** than the film it appeared to replace — 130 against 125,
+186 against 182, 204 against 198 — which read as a set of slightly longer retakes.
+
+They were **byte-identical to masters already published.** Profiling them would
+have compared each file against itself.
+
+`duration_sec` in the database is the **trimmed Mux asset**. `ffprobe` on disk is
+the **untrimmed file**. Same word, two quantities, and the difference between them
+was the spoken slate. Nothing was wrong with either number; the fault was
+subtracting one from the other.
+
+**Why it nearly worked is the part worth keeping.** A wild discrepancy looks like
+noise and gets investigated. **A consistent one looks like a finding** — eighteen
+files agreeing with each other to within a second is exactly the shape of a real
+pattern, and it is what a plausible false conclusion is made of. The same
+agreement that made it convincing is what should have prompted the question *what
+would make all eighteen differ by the same amount?*, whose only sensible answer is
+a systematic offset rather than eighteen independent decisions by a person.
+
+**In practice:** before comparing two quantities, name the system each came from.
+If they crossed a boundary — database against filesystem, API against log, report
+against ledger — establish that they measure the same thing before treating the
+gap as information. And when a difference is suspiciously uniform, that uniformity
+is the thing to explain, not the thing that makes it credible.
+
 ## Removing an impossibility inherits the other side's lessons
 
 When a change makes something possible that used to be structurally impossible,
@@ -354,6 +388,50 @@ rather than a definition that needs stating. Write the condition, not the claim.
 This is the same failure as [a label not being evidence of what is behind
 it](#a-label-is-not-evidence-of-what-is-behind-it), one level more dangerous,
 because the label is asserting it does not need checking.
+
+## A hold that leaves no trace when it is overridden is not a hold
+
+`reports/dropzone-rename-plan.json` held `IMG_2294` — *"two films proposed for
+this same name; one is misread."* The hold was **right**. The file was renamed by
+hand and uploaded anyway, and nothing in the database records that a hold was
+bypassed: every provenance column on the row is null, and `mux_upload.draft`
+already carried the hand-typed name, so the pipeline never saw the camera file at
+all. **The only evidence that survived was the audio** — the film reached
+production titled "Selling speech" carrying Alex Hormozi's *Stay in a Great Mood*,
+a quote already published clean, and it was served on three mornings before
+anybody listened to it.
+
+**Why this is not [a refusal is not
+self-verifying](#a-refusal-is-not-self-verifying).** That rule is about refusals
+that are *wrong* — a gate that looks like it is working whether or not it is. This
+gate was right, and it was right at the moment it fired. What failed is that
+**being overridden left no record**, so afterwards a correct hold and a file that
+was never held are indistinguishable. The failure is not in the decision; it is
+that the decision had no consequence a later reader could see.
+
+**The pairing, which is what makes this actionable rather than a complaint about
+people.** One day produced both halves:
+
+- Mitch's hand-typed `timing belt setting up mpi` **caught a matcher error** that
+  had misfiled seven films under MPI-061, because "Multi-Point Inspection" appears
+  inside the stage phrase.
+- A hand rename **bypassed a correct hold** and put a mislabelled film into
+  production.
+
+> **An annotation adds evidence. An override removes a refusal.** A pipeline
+> should welcome the first and record the second.
+
+The two are not symmetrical and must not be treated as one policy about manual
+intervention. Invite the annotation — it is free evidence from the only person who
+was in the room. Record the override — not to prevent it, because Ryan overriding
+a hold is legitimate and sometimes correct, but so that the next reader of the row
+knows a machine once objected and what it said.
+
+**In practice:** when a held item is later published, the row says so, carrying the
+hold's own reason. Same rule for a retire: `content.retired_at` existed alone for
+fourteen retires, so eleven of them have reasons that live only in migration
+comments — 0134 adds `retired_reason` and writes the sentence into the row rather
+than only into the commit that made it.
 
 ## Never identify a person by name
 

@@ -24,7 +24,16 @@
    asset is ready would render a player pointing at nothing, and mid-batch that
    is a real advisor opening a real screen. So: ingest leaves everything draft,
    the vertical cron fills in the 9:16, and publishing is a separate deliberate
-   step (--publish-when-ready, or the admin screen).
+   step — the admin screen, or a migration that asserts a playback id and a
+   duration on every row before it flips the status.
+
+   `--publish-when-ready` USED TO BE NAMED HERE AND WAS NEVER IMPLEMENTED.
+   Nothing parsed it. A 67-file run was given that flag, ignored it silently, and
+   left every row draft while the closing summary said publishing was somebody
+   else's step — which was true, and read as though the flag had been honoured.
+   A documented flag that no code reads is a promise the file makes on the
+   program's behalf; unknown arguments are now refused outright, below, so the
+   next invented flag stops the run instead of being absorbed by it.
 
    ---------------------------------------------------------------------------
    THE FILENAME IS THE METADATA
@@ -39,7 +48,10 @@
 
      npm run ingest:videos -- --dir="/path/to/01 - Ready" --dry
      npm run ingest:videos -- --dir="/path/to/01 - Ready"
-     npm run ingest:videos -- --dir="…" --only=MINDSET
+
+   THE FLAG LIST IS NOT HERE. `--help` prints it, from the one Map the parser
+   itself reads. This block used to carry its own copy, which is how
+   `--publish-when-ready` outlived the code that never implemented it.
    ============================================================================ */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readdir, stat, readFile, copyFile, rm, mkdtemp, mkdir, rename } from "node:fs/promises";
@@ -82,6 +94,65 @@ const DIR = arg("dir");
 const ONLY = arg("only")?.toUpperCase();
 const DRY = args.includes("--dry");
 const LIMIT = Number(arg("limit") ?? "0");
+
+/*
+ * AN UNKNOWN FLAG STOPS THE RUN. IT DOES NOT GET ABSORBED.
+ *
+ * `--publish-when-ready` was named in this file's own usage block and parsed by
+ * nothing. A 67-file batch was invoked with it, ran for two hours, uploaded
+ * everything, and left all 67 rows draft — and neither the flag nor the summary
+ * said a word about it, because there was nothing to say: the argument simply
+ * fell through a `find` that never looked for it.
+ *
+ * This is the same shape as a check that enumerates a fixed list and says nothing
+ * when it meets something the list does not mention. The argument list is a claim
+ * about what this program accepts, and an argument it does not recognise is
+ * exactly the case to be loudest about — because the caller believed it did
+ * something. Silence here is indistinguishable from obedience.
+ */
+const KNOWN = new Map<string, string>([
+  ["dir", "the folder of masters to read (required)"],
+  ["only", "restrict to one prefix, e.g. --only=MINDSET"],
+  ["limit", "stop after N files"],
+  ["dry", "parse and route, upload nothing"],
+]);
+
+/*
+ * THIS MAP IS THE ONLY LIST OF FLAGS, and --help prints from it.
+ *
+ * The usage block at the top of this file used to carry its own list, and that
+ * is how `--publish-when-ready` survived: a hand-maintained description of the
+ * program sitting next to the program, with nothing comparing them. Two lists
+ * that must agree and no check that they do is the same shape as a stale
+ * placement enumeration — it is correct on the day it is typed and silently
+ * wrong afterwards.
+ *
+ * So the comment above no longer enumerates flags; it shows examples and defers
+ * here. One list cannot disagree with itself.
+ */
+if (args.includes("--help") || args.includes("-h")) {
+  console.log("\n  flags:");
+  for (const [k, help] of KNOWN) console.log(`    --${k.padEnd(8)} ${help}`);
+  console.log("");
+  process.exit(0);
+}
+
+{
+  const unknown = args.filter((a) => {
+    if (a === "--help" || a === "-h") return false;
+    if (!a.startsWith("--")) return true;
+    return !KNOWN.has(a.slice(2).split("=")[0]);
+  });
+  if (unknown.length) {
+    console.error(
+      `\n  unrecognised argument(s): ${unknown.join(", ")}\n` +
+        `  known: ${[...KNOWN.keys()].map((k) => `--${k}`).join(", ")}\n\n` +
+        `  Refusing rather than ignoring them — a flag you passed and this\n` +
+        `  program did not read is a difference of opinion about what just ran.\n`,
+    );
+    process.exit(2);
+  }
+}
 
 /*
  * CHECKED WHEN THE INGEST RUNS, not when the module loads.
@@ -291,6 +362,26 @@ function parseName(file: string, knownVoices: Iterable<string> = SEED_VOICES): P
  * Collection and voice stay part of it because a title alone is not unique:
  * CRAFT and MINDSET can both hold a "Walk-Around", and the old bare-title key
  * collapsed them into one.
+ *
+ * ---- WHAT THIS KEY DOES NOT CATCH, STATED RATHER THAN DISCOVERED -----------
+ *
+ * It catches TWO TAKES SHARING A NAME. It does not catch ONE FILM FILED UNDER
+ * TWO NAMES, and that is the harder case because the only evidence is the
+ * content itself.
+ *
+ * Worked example, and the reason this paragraph exists. `CRAFT — Selling
+ * speech — v1.mov` and `MINDSET — Stay in a Great Mood (Alex Hormozi) — v1.mov`
+ * are two takes of the same Hormozi quote. Their identities are
+ * "craft — selling speech" and "mindset — stay in a great mood (alex hormozi)",
+ * which share nothing, so nothing here objected and both went live. It was found
+ * by transcribing the master, twenty-one days after the second one shipped, and
+ * only because somebody had flagged its audio by ear.
+ *
+ * So this key is evidence about names, not about films — the fifth rule. Closing
+ * the gap means content-based duplicate detection across the whole library
+ * (transcript similarity, or audio fingerprinting), which is a real project and
+ * deliberately not attempted here. Until then the gap is known and written down,
+ * which is a different object from a gap somebody finds in November.
  */
 function identityOf(canonical: string): string {
   return canonical.replace(/\s*—\s*v\d+\.[a-z0-9]+$/i, "").trim().toLowerCase();
@@ -384,7 +475,32 @@ function publishedRoot(srcDir: string): string {
   /* Sibling of the Drop Zone, not a path in a config: the two folders are
      always in the same masters directory, and hard-coding an absolute path
      would break the moment somebody mounts the Drive somewhere else. */
-  return path.join(path.dirname(srcDir), "02 - Published");
+
+  /*
+   * THE TRAILING SLASH MOVED 51 MASTERS INTO THE WRONG FOLDER.
+   *
+   * `--dir=".../01 - Ready/"` makes path.dirname return "01 - Ready" itself
+   * rather than its parent, so this resolved to
+   * `01 - Ready/02 - Published/Menu` and filed 51 finished MENU masters one
+   * level too deep. Nothing errored: the rows were live, the bytes were in Mux,
+   * and the move "succeeded" — into a folder that looked right in the log and
+   * was wrong on disk. `02 - Published/Menu` held 26 of 77 films for days.
+   *
+   * It is the label rule in a filesystem: a folder named `02 - Published`
+   * nested inside `01 - Ready` claims a state its location contradicts, and the
+   * per-collection subfolder made the mistake look plausible either way.
+   *
+   * path.resolve normalises the separator away, so the shell's tab-completion
+   * can no longer decide where masters land.
+   */
+  const src = path.resolve(srcDir);
+  const parent = path.dirname(src);
+  if (path.basename(parent) === path.basename(src)) {
+    throw new Error(
+      `refusing to file masters: ${src} resolves to a parent with the same name`,
+    );
+  }
+  return path.join(parent, "02 - Published");
 }
 
 async function fileAway(

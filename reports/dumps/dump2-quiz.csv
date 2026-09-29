@@ -1,0 +1,514 @@
+track,module,question_order,question_text,status
+Walk Around,1. The Walk-Around Routine,1,What is the number one reason to do a walk-around?,published
+Walk Around,1. The Walk-Around Routine,2,Roughly what percentage of customers approve all recommendations without a phone call?,published
+Walk Around,1. The Walk-Around Routine,3,Which of these is the easiest thing to offer a customer on the drive?,published
+Walk Around,1. The Walk-Around Routine,4,"In the 30-second walk-around, what do you ask the customer to do first?",published
+Walk Around,2. What the Vehicle Tells You,1,Why should you press the washer fluid button instead of just looking at the wipers?,published
+Walk Around,2. What the Vehicle Tells You,2,A vehicle that barely turns over on start-up is your cue for which conversation?,published
+Walk Around,2. What the Vehicle Tells You,3,Why use a color-coded tread depth gauge instead of quoting 32nds?,published
+Walk Around,2. What the Vehicle Tells You,4,What does a tire's born-on date tell the customer?,published
+Walk Around,3. Reading the Customer,1,Why check the backseat and radio during a walk-around?,published
+Walk Around,3. Reading the Customer,2,"On a truck walk-around, which three things should you look for?",published
+Walk Around,3. Reading the Customer,3,What should you do with a personal detail a customer mentions?,published
+Walk Around,3. Reading the Customer,4,Why mention your family during a walk-around?,published
+Walk Around,4. Raising a Problem Well,1,What is the rule when you find something negative on a vehicle?,published
+Walk Around,4. Raising a Problem Well,2,Who should be able to understand every explanation you give?,published
+Walk Around,4. Raising a Problem Well,3,"What has the internet done to customers, according to this lesson?",published
+Walk Around,4. Raising a Problem Well,4,A customer has a small scratch. What is the right move?,published
+Walk Around,5. Tires on the Drive,1,"In the tire maintenance ladder, how often should a rotation happen?",published
+Walk Around,5. Tires on the Drive,2,Who should get a tire quote?,published
+Walk Around,5. Tires on the Drive,3,What is the Texas rain safety close for balance?,published
+Walk Around,5. Tires on the Drive,4,What alignment detail breaks through where 'it pulls left' does not?,published
+Walk Around,6. Visibility and Wipers,1,"Why check wipers even on a $7,000 engine job?",published
+Walk Around,6. Visibility and Wipers,2,What share of Texas collisions involve reduced visibility?,published
+Walk Around,6. Visibility and Wipers,3,What makes a physical demo effective?,published
+Walk Around,6. Visibility and Wipers,4,"Before pitching a chemical or service product, what should you do?",published
+Walk Around,7. The Handback,1,When should PPE be removed from a customer's vehicle?,published
+Walk Around,7. The Handback,2,What should you check before handing back the keys?,published
+Walk Around,7. The Handback,3,Why does proofing the car matter more than the repair quality?,published
+Walk Around,7. The Handback,4,What two things does visibly removing PPE communicate?,published
+,,0,"Beyond the alignment, what else rides along?",draft
+,,0,What's the factory interval for an A/C odor treatment?,draft
+,,0,"Instead of asking when they last had one, what do you say?",draft
+,,0,Why does 'all I need is your approval' beat 'want me to take care of that?',draft
+,,0,True or False: A quick lane customer who says no at the counter is a lost sale.,draft
+,,0,"True or False: In quick lane, 'no additional time' is worth more than any dollar comparison.",draft
+,,0,What word should never describe a customer in your lounge?,draft
+,,0,What is the actual difference between your shop and a quick lube?,draft
+,,0,Why not skip the setup speech when the customer is staying in the lounge?,draft
+,,0,True or False: 'I'll come find you' is a small promise kept in twenty minutes.,draft
+,,0,"True or False: If they already declined the treatment, remind them during the setup.",draft
+,,0,Where do you have this conversation in quick lane?,draft
+,,0,Why not sell in the lounge?,draft
+,,0,What's the strongest close on this op code?,draft
+,,0,"True or False: If he said no at the counter, reference that when you re-pitch.",draft
+,,0,"True or False: With Hector's photo in hand, you can finally mention the odor.",draft
+,,0,What is your job on the drive on this op code?,draft
+,,0,Why can't you quote on the drive?,draft
+,,0,The left front reads red. What now?,draft
+,,0,Why photograph the sidewall?,draft
+,,0,True or False: Green valve stem caps mean the vehicle is running nitrogen.,draft
+,,0,Which question do almost no advisors ask?,draft
+,,0,'They were loud.' What do you lead with?,draft
+,,0,"What is option one, always?",draft
+,,0,What is THE piggyback on tires?,draft
+,,0,"What's wrong with: 'That's $1,100 for the tires... and would you like an alignment with that?'",draft
+,,0,What makes tires unique on the inspection sheet?,draft
+,,0,True or False: 'He'll gauge all four' answers a question before the customer asks it.,draft
+,,0,How should you present the tread numbers?,draft
+,,0,How many things go in a pre-write packet?,draft
+,,0,Why does Mitch prefer 'deferred' over 'declined'?,draft
+,,0,What's the point of counting a customer's visits during the pre-write?,draft
+,,0,True or False: Items completed on the last visit are worth mentioning as current green items.,draft
+,,0,True or False: A pre-write packet is only worth building for customers with a known concern.,draft
+,,0,What does 'sing it' actually mean?,draft
+,,0,Which of these is a 'note' that does NOT move?,draft
+,,0,What's the difference between gusto and sing it?,draft
+,,0,True or False: You should expect to sound like yourself the first time you use a new word track.,draft
+,,0,True or False: Lady Gaga's Super Bowl anthem proves you have to reinvent a song to make it yours.,draft
+,,0,"In the four voices, who is talking during a pre-write or BDC bump?",draft
+,,0,Which voice is doing the selling during a walk-around?,draft
+,,0,Which of the four voices is the ONLY one where the authority is yours?,draft
+,,0,True or False: The four ways to sell must be used in order and can't stand alone.,draft
+,,0,"True or False: When all four voices say the same thing, it stops being a pitch.",draft
+,,0,"On a big repair visit, what happens to the pre-write?",draft
+,,0,Why walk a vehicle that came in for a knocking noise?,draft
+,,0,What's the most expensive skip on a big-ticket visit?,draft
+,,0,True or False: A big repair replaces the need for a multi-point inspection.,draft
+,,0,"True or False: Everybody looks good writing a 5,000-mile service.",draft
+,,0,"The ticket is already $2,200. Why offer maintenance on top of it?",draft
+,,0,What separates a good advisor from a great one on a repair day?,draft
+,,0,What's the honest way to offer maintenance on a big number?,draft
+,,0,True or False: On a big repair visit you should skip the setup speech since the customer already knows the car is staying.,draft
+,,0,"True or False: If they decline the extra maintenance, note it as deferred so next visit starts where this one ended.",draft
+,,0,How many root reasons are there behind every objection?,draft
+,,0,What's the right way to handle outside influence as an objection?,draft
+,,0,A customer says no but never tells you why. What does Part 1 teach about that?,draft
+,,0,True or False: 'Time equals urgency' means telling the customer the service takes very little time.,draft
+,,0,True or False: The five reasons are op-code specific and change from service to service.,draft
+,,0,A customer says 'I can do it myself.' What's the right response?,draft
+,,0,'Can't you just blow it out?' — what's the honest answer?,draft
+,,0,'It doesn't look that bad to me.' What should you do?,draft
+,,0,True or False: 'I just had that done' is a moment to correct the customer's memory.,draft
+,,0,"True or False: 'Not today' is your most common outcome, and handled well it becomes next visit's pre-write packet.",draft
+,,0,Which step of the walk-around opens the engine air filter conversation?,draft
+,,0,A customer says no to the filter on the drive. What do you do?,draft
+,,0,What's the correct way to describe a used filter?,draft
+,,0,True or False: You should pull the engine air filter on the drive for every vehicle.,draft
+,,0,True or False: Banging the filter against a tire to knock the dirt loose is a good way to show the customer how much it caught.,draft
+,,0,What's the ONE line in the kiosk speech where the authority is yours?,draft
+,,0,Why does 'by 2:30' matter in the close?,draft
+,,0,A customer says no at the kiosk. What's the right move?,draft
+,,0,"True or False: The kiosk close includes a price, a time, and an authorization ask.",draft
+,,0,True or False: 'Are you familiar with our engine air filters?' is a closing question.,draft
+,,0,What goes in the third GYR slot for this op code?,draft
+,,0,What is the quickest way for the customer to get their vehicle back?,draft
+,,0,Why ask 'do you mind if I give you a quick call?',draft
+,,0,True or False: The multi-point inspection includes a 90-second highlight video.,draft
+,,0,True or False: This speech only works if you did a pre-write first.,draft
+,,0,How many green items do you name before you name the red?,draft
+,,0,What's the piggyback on the engine air filter at MPI selling?,draft
+,,0,What are the three things to remember before you give this speech?,draft
+,,0,"True or False: If the customer says yes to 'are you familiar with our engine air filters,' you skip to the close.",draft
+,,0,True or False: The MPI selling speech changes depending on whether the customer came in for this specific item.,draft
+,,0,What's the one rule about the brake fluid reservoir on the drive?,draft
+,,0,What word do you use for old brake fluid?,draft
+,,0,What's the stopping-distance improvement from a brake fluid exchange?,draft
+,,0,True or False: Brake fluid runs on mileage more than time.,draft
+,,0,True or False: The piggyback on the drive is asking permission for Hector to measure the pads and rotors.,draft
+,,0,What's THE objection on brake fluid at the kiosk?,draft
+,,0,What does BTM stand for?,draft
+,,0,Roughly what window do most manufacturers land in for brake fluid?,draft
+,,0,True or False: 'A review of your history' is just a courtesy line on this op code.,draft
+,,0,True or False: You should say 'brake fluid flush' when the customer uses that term first.,draft
+,,0,What goes in the third GYR slot on this op code?,draft
+,,0,When does the setup speech happen?,draft
+,,0,Why does this stage work even when you did nothing else?,draft
+,,0,True or False: 'Get The Hell Outta Here' is the certification for this speech.,draft
+,,0,"True or False: If the customer already said no at the kiosk, mention it again during the setup.",draft
+,,0,How does Hector's recommendation get phrased?,draft
+,,0,What happens to brake fluid's boiling point as it absorbs moisture?,draft
+,,0,Where does the copper in old brake fluid come from?,draft
+,,0,True or False: The word 'found' should be avoided in favor of 'graded.',draft
+,,0,True or False: This op code grades red only on customers who complained about their brakes.,draft
+,,0,What is the one absolute rule about a cooling system on the drive?,draft
+,,0,Customers think coolant's job is to cool. What's the other half?,draft
+,,0,What's the trust move on this op code?,draft
+,,0,True or False: The word 'flush' is acceptable on coolant since that's what the DMS op code says.,draft
+,,0,True or False: Coolant gets sold with a different reason in summer than in winter.,draft
+,,0,"At 60,000 miles, what has changed that most customers don't know?",draft
+,,0,Why does telling them the bad warranty news work?,draft
+,,0,The customer says the coolant looks fine. What's the answer?,draft
+,,0,"True or False: A Hyundai customer at 60,000 miles is definitely past bumper-to-bumper.",draft
+,,0,"True or False: 'Run better, cooler, and longer' is the benefit line for this op code.",draft
+,,0,What goes in the third GYR slot?,draft
+,,0,Why might the coolant conversation get bigger than you set up?,draft
+,,0,What's the purpose of the third slot in the setup speech?,draft
+,,0,True or False: You should promise a grade on something Hector isn't actually going to measure.,draft
+,,0,True or False: This speech is the same regardless of what op code you're chasing.,draft
+,,0,What's the benefit line in the word track?,draft
+,,0,What does Hector's photo show on this op code?,draft
+,,0,What's the piggyback at MPI selling?,draft
+,,0,True or False: The warranty point belongs in the MPI selling speech as well as the kiosk.,draft
+,,0,True or False: Old coolant looks obviously bad long before it stops protecting.,draft
+,,0,What makes this op code different from every other drive-stage conversation?,draft
+,,0,What are you looking for before you say a word?,draft
+,,0,Why does launching a boat change the service interval?,draft
+,,0,True or False: Most front-wheel-drive cars have a rear differential you can service.,draft
+,,0,True or False: Differential service is one of the most under-recommended services in the business.,draft
+,,0,What phrase does Mitch call out as a great connector on this op code?,draft
+,,0,How many differential service points does a typical 4WD truck have?,draft
+,,0,What's THE objection on this op code?,draft
+,,0,True or False: You should check the number of differential components before presenting.,draft
+,,0,True or False: Hector having the truck on a lift is the first time all day anybody can actually see these.,draft
+,,0,What goes in the third GYR slot on this op code?,draft
+,,0,Which line in the setup speech does extra work on this op code?,draft
+,,0,Why is the jump from kiosk to MPI bigger on this op code than most?,draft
+,,0,True or False: The transfer case is a separate service point with separate fluid and labor.,draft
+,,0,True or False: You should tell the customer about all three service points only after they approve the first one.,draft
+,,0,What does the word track say we're doing?,draft
+,,0,What color is fresh gear oil?,draft
+,,0,What's the piggyback at MPI selling?,draft
+,,0,True or False: The photo is the first and only evidence that has existed all day on this op code.,draft
+,,0,True or False: A neglected differential is typically a cheaper repair than the service that prevents it.,draft
+,,0,What's the first thing you check on this op code?,draft
+,,0,Which walk-around step exposes a failing power steering pump?,draft
+,,0,What's the anchor line on this op code?,draft
+,,0,True or False: Most manufacturers publish a power steering fluid interval.,draft
+,,0,True or False: The customer has probably already heard the pump noise without knowing what it was.,draft
+,,0,What question works just as well at the counter as on the drive?,draft
+,,0,The customer says the steering feels fine. What's the answer?,draft
+,,0,Why is this op code so badly undersold?,draft
+,,0,True or False: European and domestic systems can share the same power steering fluid.,draft
+,,0,True or False: This service is small enough to ride along with anything else on the menu.,draft
+,,0,What goes in the third GYR slot?,draft
+,,0,Why does the third slot matter more on this op code than most?,draft
+,,0,What happens if Hector doesn't grade it?,draft
+,,0,True or False: You should still verify the vehicle has hydraulic power steering even at the kiosk.,draft
+,,0,True or False: This op code has a factory interval you can point to.,draft
+,,0,What's the strongest close on this op code?,draft
+,,0,What does degraded fluid do to the pump?,draft
+,,0,What color is fresh power steering fluid?,draft
+,,0,True or False: 'A smooth steer is a safe steer' belongs in the MPI selling speech too.,draft
+,,0,True or False: A pump is typically more expensive to replace than a rack.,draft
+,,0,What are advisors NOT doing on the drive on this op code?,draft
+,,0,What's the best question on this op code?,draft
+,,0,Why does towing matter to the interval?,draft
+,,0,True or False: This is the highest-stakes service you sell on the drive.,draft
+,,0,True or False: 'Flush' is acceptable on a transmission if the customer says it first.,draft
+,,0,"The truck is at 88,000 miles. Why is that a better conversation than 110,000?",draft
+,,0,What does 'lifetime fluid' actually mean?,draft
+,,0,What local argument closes the lifetime fluid objection?,draft
+,,0,True or False: CVT transmissions generally need service LESS often than conventional automatics.,draft
+,,0,True or False: You should tell the customer he was lied to about lifetime fluid.,draft
+,,0,What goes in the third GYR slot?,draft
+,,0,Why is telling him NOT to pull the dipstick on the drive an advantage here?,draft
+,,0,Why does the customer open the text on this op code?,draft
+,,0,True or False: The setup speech is optional if you already discussed the transmission on the drive.,draft
+,,0,True or False: Hector will check the fluid at the right operating temperature on a lift.,draft
+,,0,What's happening inside a transmission with old fluid?,draft
+,,0,What does the customer feel first?,draft
+,,0,"If he hesitates, what do you hand him back?",draft
+,,0,True or False: Fresh transmission fluid is bright red.,draft
+,,0,True or False: There's a filter in most transmissions that can be handled at the same time.,draft
+,,0,Which walk-around step puts you in position to find the cabin filter conversation?,draft
+,,0,What is the biggest rule on this op code?,draft
+,,0,How do you mention a pleasant scent without implying an unpleasant one?,draft
+,,0,True or False: You should try to pull the cabin filter on the drive to show the customer.,draft
+,,0,True or False: Debris in the cowl gets pulled into the system and ends up on the evaporator.,draft
+,,0,What's the interval range most manufacturers use for cabin filters?,draft
+,,0,What's the 'happy birthday' framing for?,draft
+,,0,The customer says the air seems fine. What's the honest answer?,draft
+,,0,True or False: The 'never sell on smell' rule relaxes at the counter.,draft
+,,0,"True or False: Beat the Heat is cabin filter, evaporator cleaning, and a third A/C item.",draft
+,,0,What goes in the third GYR slot on this op code?,draft
+,,0,Why is 'you'll get to see parts you don't normally see' literally true here?,draft
+,,0,Why does this op code have one of the best MPI closes in the library?,draft
+,,0,True or False: You should say 'oil change' in the setup speech.,draft
+,,0,"True or False: If they already said no, mention it again in the setup speech.",draft
+,,0,"Even with a filthy filter photo in hand, what do you still NOT say?",draft
+,,0,"After showing the photo, what's the right move?",draft
+,,0,What's the piggyback at MPI selling?,draft
+,,0,True or False: You should say the brand — 'a brand-new Toyota one.',draft
+,,0,True or False: 'Don't forget your piggyback sales' belongs at the end of this film.,draft
+,,0,When should a lengthy A/C diagnosis get flagged?,draft
+,,0,Why does a waiting customer hurt this op code?,draft
+,,0,Why can't you quote a recharge from memory?,draft
+,,0,True or False: A clogged cabin air filter can be the reason the air isn't cold enough.,draft
+,,0,True or False: You should give a ballpark price so the customer isn't surprised.,draft
+,,0,What turns a diagnostic fee from a charge into a deposit?,draft
+,,0,What makes 'certified A/C specialist' more than a title?,draft
+,,0,What should you sell alongside the diagnosis?,draft
+,,0,True or False: You can promise the air will be cold by two o'clock.,draft
+,,0,True or False: You should promise a specific temperature improvement.,draft
+,,0,"True or False: If they decline the diagnosis, there's still something you can offer free.",draft
+,,0,What's the first thing you tell a concern customer at the kiosk?,draft
+,,0,Why say 'because that's what we do on every vehicle'?,draft
+,,0,Why does the text message matter more on this op code than in quick lane?,draft
+,,0,True or False: A concern customer gets a shortened version of the setup speech.,draft
+,,0,True or False: There is a factory interval for an A/C recharge.,draft
+,,0,What gets handled first at the MPI selling stage on a concern visit?,draft
+,,0,What's the difference between an evac and recharge and topping it off?,draft
+,,0,Why say 'let's check out the results of his MPI' instead of 'let me walk you through what Hector found'?,draft
+,,0,True or False: 'Your total will be X after removing the diagnostic fee' should be said out loud.,draft
+,,0,True or False: Arctic Blast and Beat the Heat should be offered before the diagnosis.,draft
+,,0,What's the opening question on this op code?,draft
+,,0,Why does 'maximized' work as a word?,draft
+,,0,What's the strongest phrase in the word track?,draft
+,,0,True or False: This can substitute for a recharge if the system is low.,draft
+,,0,What are the three parts of Beat the Heat?,draft
+,,0,Why bundle instead of offering three separate services?,draft
+,,0,What order should the three be presented in?,draft
+,,0,"True or False: If they only want one of the three, take it.",draft
+,,0,True or False: The bundle satisfies the one-off-menu-item-per-presentation rule.,draft
+,,0,What's the wrinkle on this op code at the setup stage?,draft
+,,0,So what do you actually set up?,draft
+,,0,"If they already said YES to Beat the Heat, what do you add?",draft
+,,0,True or False: 'The condition of your filters' does triple duty on this op code.,draft
+,,0,True or False: The customer in the lounge should be described as waiting.,draft
+,,0,Everything came back green. What's the mistake most advisors make?,draft
+,,0,Why does the Arctic Blast re-pitch work better after an all-green report?,draft
+,,0,What else works in your favor on an all-green vehicle?,draft
+,,0,True or False: An all-green report means there's nothing to say to that customer.,draft
+,,0,"True or False: If they decline, you still did the most important thing today.",draft
+,,0,Which walk-around step IS the wiper sale?,draft
+,,0,Which of these is NOT a condition you're watching for?,draft
+,,0,"What's wrong with: 'Man, those wipers are shot — you waited way too long on these.'",draft
+,,0,You've sold the front blades on an SUV. What's next?,draft
+,,0,True or False: You should lead with inserts if the price seems high.,draft
+,,0,What kills a wiper blade?,draft
+,,0,Why is the rear blade usually worse than the fronts?,draft
+,,0,"Finish the windshield treatment pitch: 'It bonds right to the glass and makes it hydrophobic, so rain...'",draft
+,,0,What's the frame that ties blades and the windshield treatment together?,draft
+,,0,True or False: Most manufacturers put wipers somewhere around six months to a year.,draft
+,,0,What goes in the third GYR slot?,draft
+,,0,True or False: Wipers are the one inspection item a customer can verify themselves.,draft
+,,0,True or False: You should add the tensioner after the customer agrees to the belt.,draft
+,,0,Why is this one of the easiest closes on the inspection sheet?,draft
+,,0,"True or False: If the ticket is already big, wipers can wait until next visit.",draft
+,,0,Why can't you assess a modern belt by looking?,draft
+,,0,What's wrong with: 'I looked at your belt and it looks good to me.',draft
+,,0,What does that one belt run?,draft
+,,0,True or False: Electric vehicles have serpentine belts.,draft
+,,0,What are you actually selling at the kiosk on this op code?,draft
+,,0,What's the inspection interval most manufacturers publish?,draft
+,,0,The customer says 'I already did my belt last year.' What do you say?,draft
+,,0,"True or False: The tensioner should be quoted with the belt, up front.",draft
+,,0,True or False: You should quote a belt replacement before it's been gauged.,draft
+,,0,What goes in the third GYR slot?,draft
+,,0,True or False: Adding 'he's actually going to measure that belt with a gauge' is worth eleven words.,draft
+,,0,What's the sale on this op code?,draft
+,,0,How does a coolant hose usually fail?,draft
+,,0,Which of these is NOT something worth spotting on the drive?,draft
+,,0,Why does a hose failure matter more than a customer expects?,draft
+,,0,True or False: Modern cooling systems run higher pressure than older ones.,draft
+,,0,True or False: You can tell a customer their hoses look fine if nothing is visibly wrong.,draft
+,,0,What are you really selling at this desk?,draft
+,,0,How should this be presented?,draft
+,,0,The customer says the hoses look fine to him. What do you say?,draft
+,,0,True or False: The labor argument is you telling a customer how to spend less money.,draft
+,,0,True or False: The don't-mix-coolant warning belongs in this conversation.,draft
+,,0,What goes in the third slot on THIS op code?,draft
+,,0,True or False: Squeezing a hose is something you can do on the drive.,draft
+,,0,What can you actually see in Hector's hose photo?,draft
+,,0,"True or False: This is a two-service close — coolant, then hoses.",draft
+,,0,What's step one on this op code?,draft
+,,0,What happens on most engines when a timing belt breaks?,draft
+,,0,Why is this a calendar sale and not an evidence sale?,draft
+,,0,True or False: The water pump and pulleys should be quoted separately after the belt is approved.,draft
+,,0,"True or False: If they decline, note it as deferred with the mileage it was recommended at.",draft
+,,0,Why is this the shortest kiosk film in the library?,draft
+,,0,"If they said no on the drive, what do you do at the kiosk?",draft
+,,0,True or False: You still set up the multi-point even though the belt isn't on it.,draft
+,,0,"True or False: The timing belt is a calendar item, not an inspection item.",draft
+,,0,What's the honest frame for this op code?,draft
+,,0,What's the trap in the setup speech on this op code?,draft
+,,0,"True or False: You should close that gap out loud, even if they already declined the belt.",draft
+,,0,What's the best version of this conversation?,draft
+,,0,True or False: An all-green report is the dangerous outcome on this op code.,draft
+,,0,How does this op code usually arrive?,draft
+,,0,What three things does an engine need to run?,draft
+,,0,The customer says his car is hesitating. What do you say?,draft
+,,0,True or False: Confirming you heard the rough idle matters to the customer.,draft
+,,0,True or False: You should pile the induction service on before the diagnosis.,draft
+,,0,What's your job with a concern customer at the kiosk?,draft
+,,0,Why does the concern customer get the FULL setup speech?,draft
+,,0,True or False: You can give a ballpark on the plugs if they push.,draft
+,,0,"True or False: 'Because that's what we do on every vehicle' makes the inspection a standard, not a suspicion.",draft
+,,0,What does a concern customer fear most about the inspection?,draft
+,,0,"On the 100K menu, what pairs with the plugs?",draft
+,,0,"Finish the frame: 'A hundred thousand is a milestone, and it's the right time to...'",draft
+,,0,How should the 100K be presented?,draft
+,,0,"True or False: On the menu path, nobody complained about anything.",draft
+,,0,"True or False: Modern plugs generally land between 60,000 and 100,000 miles.",draft
+,,0,Why does the third slot stay generic on this op code?,draft
+,,0,True or False: The mileage plant is the real setup on this op code.,draft
+,,0,What can Hector give you even though plugs aren't graded?,draft
+,,0,True or False: This is the place for the full technical explanation of direct injection.,draft
+,,0,What are the two ways this op code arrives?,draft
+,,0,A customer says he had to jump it Tuesday. What do you NOT do?,draft
+,,0,Which walk-around step catches a weak battery?,draft
+,,0,True or False: Terminal corrosion is sometimes the whole problem.,draft
+,,0,True or False: Most customers with a slow crank have already noticed it.,draft
+,,0,What are you asking for on the drive?,draft
+,,0,What makes this op code different from every other one?,draft
+,,0,"What kills batteries, and what reveals them?",draft
+,,0,Finish the seasonal close: 'I'd rather you replace it here on your schedule than...',draft
+,,0,"True or False: The battery kit with felt pads is protecting the purchase, not an add-on.",draft
+,,0,What line in the setup speech lands differently on this op code?,draft
+,,0,True or False: You can quote a battery before Hector tests the charging system.,draft
+,,0,What's the concern customer actually afraid of?,draft
+,,0,True or False: A concern customer gets a shortened setup speech.,draft
+,,0,The customer pushes for a price at the counter. What do you say?,draft
+,,0,What's almost the whole story on battery BTM?,draft
+,,0,What takes four seconds and gives you the whole argument?,draft
+,,0,The customer says it's starting fine. What do you say?,draft
+,,0,True or False: The kit should be presented as protecting what they're buying.,draft
+,,0,True or False: There is no factory interval for a battery.,draft
+,,0,What's the third-slot swap on this op code?,draft
+,,0,"True or False: Saying 'that's an actual reading, not somebody looking at it' is worth adding.",draft
+,,0,What should you say FIRST on a concern visit?,draft
+,,0,"True or False: On this op code, cranking amps moves from your first green to your red.",draft
+,,0,Which walk-around step names three op codes at once?,draft
+,,0,"Worn on ONE shoulder, fine everywhere else. What is it?",draft
+,,0,"Cupped or scalloped, wavy to the touch. What is it?",draft
+,,0,You just showed a customer a worn inside shoulder. What must go with the tire?,draft
+,,0,True or False: Never give a measurement without a color.,draft
+,,0,A customer asks for an oil change. What's your answer?,draft
+,,0,How many should you bump?,draft
+,,0,Which sounds like confirming an order rather than selling?,draft
+,,0,"True or False: If you have no history on them, skip the bump.",draft
+,,0,A rotation is approved. What does that give you that nothing else does?,draft
+,,0,What's the cadence?,draft
+,,0,"At 15,000-mile intervals, what's due at 45,000?",draft
+,,0,The customer notices this visit costs more than last. What do you say?,draft
+,,0,True or False: Telling a customer they DON'T need something builds the next sale.,draft
+,,0,They only want the rotation. What do you do?,draft
+,,0,What's the safety reason for a rotation?,draft
+,,0,How precise is a road force balance?,draft
+,,0,How precise is the alignment?,draft
+,,0,True or False: The alignment printout is a GYR report card for their tires.,draft
+,,0,What's the safety reason for a balance?,draft
+,,0,What goes in the third slot on this op code?,draft
+,,0,"If the rotation is approved, what does Hector have access to that he otherwise wouldn't?",draft
+,,0,The tread came back GREEN but the wear pattern is bad. What's that?,draft
+,,0,What rides along when the wheels are already off?,draft
+,,0,What's the most useful question on this op code?,draft
+,,0,The steering wheel shakes when they brake. What does that point at?,draft
+,,0,A soft or spongy pedal points at what?,draft
+,,0,True or False: You can get a good enough sense of pad thickness through the wheel spokes.,draft
+,,0,The customer describes a grinding noise. What do you add?,draft
+,,0,What's the one thing a competitor genuinely cannot match?,draft
+,,0,Why is 'matched system' more than a sales phrase?,draft
+,,0,What's the history play on this op code?,draft
+,,0,True or False: You should quote a brake job before all four wheels are off.,draft
+,,0,The customer says the shop down the street quoted less. What do you say?,draft
+,,0,What does the brake quiet treatment actually prevent?,draft
+,,0,What does copper grease on the shims and contact points do?,draft
+,,0,Why is brake fluid the right piggyback on a brake job?,draft
+,,0,True or False: All three piggybacks should be framed as protecting what they're spending.,draft
+,,0,True or False: You should ask the customer when their brake fluid was last exchanged.,draft
+,,0,What goes in the third slot on this op code?,draft
+,,0,True or False: A customer can be down to two millimeters and not hear anything yet.,draft
+,,0,How do you state a pad measurement?,draft
+,,0,The rears came back green. What do you do with that?,draft
+,,0,What makes this op code different from everything else?,draft
+,,0,What's the conditions argument?,draft
+,,0,True or False: 'Your wipers are streaking' is better than 'your wipers are bad.',draft
+,,0,Which benefits do you promise?,draft
+,,0,Finish the best line on this op code: 'Here's the good news — that's not wear...',draft
+,,0,True or False: A direct-injected engine builds carbon on the intake valves faster.,draft
+,,0,What's the machine service interval?,draft
+,,0,What are the three parts of the service?,draft
+,,0,"At 100,000 miles, what pairs with this service?",draft
+,,0,True or False: Proper induction chemistry won't harm oxygen sensors or catalytic converters.,draft
+,,0,True or False: Most manufacturers publish an interval for carbon cleaning.,draft
+,,0,"What do you offer BETWEEN the 30,000-mile services?",draft
+,,0,Why is the additive one of the best offers in the building?,draft
+,,0,They said no to the full service. What do you offer?,draft
+,,0,Why does the fuel filter belong in this conversation?,draft
+,,0,'I've never had that done and the car runs fine.' What do you say?,draft
+,,0,Why does the third slot stay generic here?,draft
+,,0,True or False: 'He'll scan it while he's in there' does the job the third slot would have.,draft
+,,0,How technical should you get at this stage?,draft
+,,0,"If Hector noted a rough idle, what does that give you?",draft
+,,0,What is this customer expecting to buy?,draft
+,,0,Which punctures are repairable?,draft
+,,0,Why ask about sealant?,draft
+,,0,True or False: You should sell a can of sealant to a customer whose car is already in your shop.,draft
+,,0,True or False: A proper repair means the tire comes off the wheel and is fixed from the inside.,draft
+,,0,What does this customer need to hear first?,draft
+,,0,Why mention that you're a full tire outlet?,draft
+,,0,True or False: You should give a ballpark repair price if they ask.,draft
+,,0,What should you sell alongside the repair at the kiosk?,draft
+,,0,True or False: The tire tread depth line in your setup speech does real work here.,draft
+,,0,What do you lead with?,draft
+,,0,The tread came back yellow but nothing needs doing today. What do you say?,draft
+,,0,The wheel was already off. What's the honest piggyback?,draft
+,,0,"True or False: When it isn't repairable, say 'anybody' rather than 'we won't.'",draft
+,,0,True or False: The money on this op code is in the ticket.,draft
+,,0,Why doesn't the customer know a bulb is out?,draft
+,,0,Which walk-around tier covers the full lighting check?,draft
+,,0,The customer is already sitting in the car. What's the easiest way to check the brake lights?,draft
+,,0,One headlight is out. What do you offer?,draft
+,,0,True or False: Every burned-out light is a simple bulb swap.,draft
+,,0,What's the BTM interval on bulbs?,draft
+,,0,A customer says a headlight is out. What do you confirm first?,draft
+,,0,"Cloudy, yellowed headlight lenses. What is that?",draft
+,,0,What pairs naturally with a bulb conversation?,draft
+,,0,True or False: You should replace tail lights in pairs too.,draft
+,,0,What goes in the third slot?,draft
+,,0,True or False: A quick lube is checking whether the customer's brake lights work.,draft
+,,0,What does Hector's photo show?,draft
+,,0,"On an MPI bulb close, what are your piggybacks?",draft
+,,0,What is the purpose of the third item in the GYR list?,draft
+,,0,How long is the highlight video?,draft
+,,0,How many items does Hector grade?,draft
+,,0,What's the quickest way for a customer to get their vehicle back?,draft
+,,0,Why ask permission to call?,draft
+,,0,True or False: You should promise a grade on an item Hector isn't going to measure.,draft
+,,0,True or False: The setup speech only works if you did a pre-write first.,draft
+,,0,"True or False: If the customer already said no, reference it during the setup.",draft
+,,0,Put the setup speech in order.,draft
+,,0,The customer is heading to your lounge instead of leaving. What changes?,draft
+,,0,How many greens do you name before the red?,draft
+,,0,What are the three things to remember before this speech?,draft
+,,0,Why say 'graded' instead of 'found'?,draft
+,,0,How does the recommendation get phrased?,draft
+,,0,What does the visit count do?,draft
+,,0,True or False: The speech changes depending on whether they came in for that item.,draft
+,,0,"True or False: If they say they're familiar with the service, skip to the close.",draft
+,,0,True or False: This item only grades red on customers who complained about it.,draft
+,,0,Finish the universal track: 'What we're doing is getting rid of your old part that's...',draft
+,,0,What's wrong with this: 'Hector found your cabin filter is filthy — when's the last time you had it done?',draft
+,,0,Put the 4-Step Close in order.,draft
+,,0,How should a presentation end?,draft
+,,0,Why does giving a time matter?,draft
+,,0,How many off-menu items should you offer per presentation?,draft
+,,0,You just quoted the price and the customer is quiet. What do you say?,draft
+,,0,True or False: 'Want me to take care of that?' is an acceptable close.,draft
+,,0,What do we say instead of 'flush'?,draft
+,,0,What do we say instead of 'declined'?,draft
+,,0,What do we say instead of 'oil change'?,draft
+,,0,What do we say instead of 'waiting'?,draft
+,,0,Which of these describes a part correctly?,draft
+,,0,What's wrong with: 'While you're waiting we'll do your oil change and flush your coolant.',draft
+,,0,'Toyota says this is what's good for your Camry.' Which voice is talking?,draft
+,,0,You hand the customer the old filter on the drive. Which voice?,draft
+,,0,"'My favorite part of the 75,000-mile package is...' Which voice?",draft
+,,0,Hector's photo comes back with a measurement. Which voice?,draft
+,,0,True or False: The four voices must be used in order.,draft
+,,0,Which of these should you NEVER do?,draft
+,,0,"Before pitching a rear differential service, what do you verify?",draft
+,,0,"Before pitching power steering fluid, what do you verify?",draft
+,,0,"Before pitching a timing belt, what do you verify?",draft
+,,0,Where should you NOT present inspection results?,draft
+,,0,True or False: You can quote a price before the item has been measured.,draft
+,,0,True or False: It's fine to tell a customer their belt looks good if it looks good.,draft
+,,0,The customer says 'the shop down the street quoted me less.' What do you say?,draft
+,,0,Which walk-around step exposes a slipping belt?,draft
+,,0,Why is this service built for quick lane?,draft
+,,0,How do you sell an odor service without mentioning odor?,draft
+,,0,"If the customer brings up the smell themselves, what changes?",draft
+,,0,True or False: The first hot day of the year is when customers bring this up unprompted.,draft
+,,0,True or False: You should end this pitch with 'want me to add it?',draft
