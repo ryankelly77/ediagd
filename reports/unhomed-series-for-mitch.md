@@ -6,7 +6,8 @@
 > confirming where they belong turns four dead tracks live.** Nothing else
 > available this week moves the credential as far.
 
-**51 films are published and reachable by nobody.** 29 belong to series with no
+**102 films are published and reachable by nobody**, against twelve videos
+reachable inside tracks. 29 belong to series with no
 track at all; 22 more match tracks that exist, are named for them, and are empty.
 
 Naming is not routing. These are all named, published and live in the catalog —
@@ -20,22 +21,30 @@ slate**, not inferred.
 
 ## The state of the credential right now
 
-| track | ladder | films it can serve | active |
-|---|---|---|---|
-| Walk Around | core | 59 | yes |
-| Success Cycle | core | 55 | yes |
-| Power of Positive Language | core | 51 | yes |
-| Overcoming Objections | core | 31 | yes |
-| Menus | core | 7 | yes |
-| Four Step Close | core | 2 | **no** |
-| Setting up the MPI | core | 2 | **no** |
-| **CSI** | core | **0** | **no** |
-| **Lasting Impressions** | core | **0** | **no** |
-| Chemical Warranty | Master | 2 | **no** |
-| **Phones and Tones** | Master | **0** | **no** |
-| **A Day in the Life** | Master | **0** | **no** |
+**Corrected 28 September.** An earlier version of this table had a column headed
+*"films it can serve"* that was counting `item_count` — which counts **cues**. The
+numbers below separate them, and the picture is very different: Success Cycle and
+Power of Positive Language, previously shown as 55 and 51 films, have **no video
+at all**.
 
-Five tracks have two films or fewer. Four have none at all.
+| track | ladder | **videos** | cues | active |
+|---|---|---|---|---|
+| Menus | core | **7** | 0 | yes |
+| Walk Around | core | **3** | 56 | yes |
+| Overcoming Objections | core | **2** | 29 | yes |
+| Success Cycle | core | **0** | 55 | yes |
+| Power of Positive Language | core | **0** | 51 | yes |
+| Setting up the MPI | core | **0** | 2 | **no** |
+| Four Step Close | core | **0** | 2 | **no** |
+| CSI | core | **0** | 0 | **no** |
+| Lasting Impressions | core | **0** | 0 | **no** |
+| Chemical Warranty | Master | **0** | 2 | **no** |
+| Phones and Tones | Master | **0** | 0 | **no** |
+| A Day in the Life | Master | **0** | 0 | **no** |
+
+**Three tracks contain any video. Twelve videos across the whole credential.**
+Under the video-is-the-curriculum ruling that is the number that matters, and it
+is why routing these series is worth more than anything else available.
 
 ---
 
