@@ -613,6 +613,108 @@ async function completedIds(
 }
 
 /* ---------------------------------------------------------------------------
+   THE QUIZ THAT IS WAITING
+--------------------------------------------------------------------------- */
+
+export type PendingQuiz = {
+  moduleId: string;
+  moduleName: string;
+  trackName: string;
+};
+
+/**
+ * The first module, in track order, whose lesson is finished but whose quiz is
+ * not: items done, a published quiz, no passing attempt, not yet completed.
+ *
+ * ---------------------------------------------------------------------------
+ * THIS PREDICATE IS THE SEED OF THE IN-LOOP QUIZ, SHIPPED AS A LINK FIRST
+ * ---------------------------------------------------------------------------
+ * TWO_LADDERS records Ryan's preference — the quiz in slot 3 on the day a
+ * module closes — as not built. Building it is a change to the day stamp, the
+ * day gate, the celebration's economy and the ritual's step machinery, none of
+ * which should move the night before sixty advisors meet the loop. What ships
+ * tonight is the same DECISION exposed the smallest honest way: the completion
+ * screen names the waiting quiz and links to the page that already knows how
+ * to give, grade and complete it. When slot 3 learns to serve a quiz, it asks
+ * this exact question — that is why this lives here and not in a component.
+ *
+ * READ AS THE ADVISOR. my_module_progress is scoped to auth.uid() and already
+ * carries all four flags; the service role would see nobody's progress. The
+ * quiz page's own gate (`!itemsDone` redirects) uses the same view, so this
+ * link can never point at a page that bounces the person it was shown to.
+ *
+ * `items_done` requires at least one GATING item, all complete (0143), so a
+ * cue-only module — which can never complete — can never surface a quiz here,
+ * published questions or not. The vacuous-truth case is refused by the view,
+ * not re-litigated here.
+ *
+ * ORDERED THE WAY THE LOOP WALKS: certification.sort, then course sort, then
+ * module sort_order — the first pending quiz is the one the advisor most
+ * recently earned the right to sit.
+ */
+export async function pendingQuiz(client: Client): Promise<PendingQuiz | null> {
+  const { data: rows } = await client
+    .from("my_module_progress")
+    .select("module_id, course_id, module_name, sort_order, items_done, has_quiz, quiz_passed, completed_at")
+    .eq("items_done", true)
+    .eq("has_quiz", true)
+    .eq("quiz_passed", false)
+    .is("completed_at", null)
+    .limit(PAGE);
+
+  const candidates = (rows ?? []) as {
+    module_id: string;
+    course_id: string;
+    module_name: string;
+    sort_order: number;
+  }[];
+  if (candidates.length === 0) return null;
+
+  /* Track order, from the same tables pickItem walks. Core tracks only — the
+     morning's link should never point outside the certification it advances. */
+  const [{ data: certRows }, { data: ccRows }] = await Promise.all([
+    client.from("certification").select("id, name, sort").eq("is_core", true),
+    client.from("certification_course").select("certification_id, course_id, sort"),
+  ]);
+  const certs = new Map(
+    ((certRows ?? []) as { id: string; name: string; sort: number }[]).map((c) => [c.id, c])
+  );
+  const courseRank = new Map<string, { rank: number; track: string }>();
+  for (const cc of (ccRows ?? []) as {
+    certification_id: string;
+    course_id: string;
+    sort: number;
+  }[]) {
+    const cert = certs.get(cc.certification_id);
+    if (!cert) continue;
+    courseRank.set(cc.course_id, {
+      rank: cert.sort * 1000 + cc.sort,
+      track: cert.name,
+    });
+  }
+
+  const ranked = candidates
+    .map((m) => ({ m, at: courseRank.get(m.course_id) }))
+    .filter((x): x is { m: (typeof candidates)[number]; at: { rank: number; track: string } } =>
+      Boolean(x.at)
+    )
+    .sort(
+      (a, b) =>
+        a.at.rank - b.at.rank ||
+        a.m.sort_order - b.m.sort_order ||
+        a.m.module_id.localeCompare(b.m.module_id)
+    );
+
+  const first = ranked[0];
+  if (!first) return null;
+  return {
+    moduleId: first.m.module_id,
+    moduleName: first.m.module_name,
+    trackName: first.at.track,
+  };
+}
+
+/* ---------------------------------------------------------------------------
    THE MORNING
 --------------------------------------------------------------------------- */
 

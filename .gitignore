@@ -118,3 +118,6 @@ data/*.heic
 # business. It is why .claude/ was excluded wholesale from PR #8; excluding the
 # one file instead lets the skill be shared.
 .claude/settings.local.json
+
+# Restored-dump workspace under reports/ — production data, never committed.
+reports/dumps/

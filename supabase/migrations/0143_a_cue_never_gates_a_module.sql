@@ -185,6 +185,20 @@ begin
   end if;
 
   /*
+   * REPAIRED 30 Sep, found by the full local replay for 0144/0145: a fresh
+   * local has no content at all — no cue-only module, no gating item, no
+   * attached cue — so all three proofs below are untestable there and the
+   * refusal made the chain unreplayable from 0143 on. The allowlist check
+   * above still runs everywhere; the data proofs run wherever there is data
+   * to prove them against. Production has both populations and proves both
+   * directions, and check:gating re-proves the allowlist on every run.
+   */
+  if not exists (select 1 from content where module_id is not null and status = 'published') then
+    raise notice '0143: no module-attached content on this database — data proofs skipped; view and functions created';
+    return;
+  end if;
+
+  /*
    * THE REFUSAL HALF. A cue-only module must NOT read items_done — that is the
    * self-completing credential this migration exists to prevent. Checked against
    * the view's own expression rather than a restatement of it, because a

@@ -130,6 +130,7 @@ export function DailyFlow({
   nextWorkDayLabel = "",
   milestoneText = null,
   offerSoftAsk = false,
+  quizWaiting = null,
 }: {
   alreadyCompleteOnLoad: boolean;
   /**
@@ -167,6 +168,15 @@ export function DailyFlow({
   track: Track | null;
   /** RULING 6 — the line they carry onto the drive. Not a slot. */
   closingQuote: Quote | null;
+  /**
+   * A quiz the advisor has earned the right to sit: lesson finished, questions
+   * published, no pass yet. Named on the completion screens with a link into
+   * the library page that already gives and grades it — the smallest honest
+   * version of "the quiz closes the module in the loop", shipped as a door
+   * rather than a slot. Null when nothing is waiting, and null in preview.
+   * See pendingQuiz in lib/loop.ts for why the predicate lives there.
+   */
+  quizWaiting?: { moduleId: string; moduleName: string; trackName: string } | null;
   /** The family and the shelf position behind the pitch. Null without one. */
   focus: Focus | null;
   /*
@@ -429,7 +439,11 @@ export function DailyFlow({
   // navigates on its own.
   if (doneOnArrival && !ritualRun && !preview) {
     return immersive(
-      <DoneForTodayScreen streak={currentStreak} offerSoftAsk={offerSoftAsk} />
+      <DoneForTodayScreen
+        streak={currentStreak}
+        offerSoftAsk={offerSoftAsk}
+        quizWaiting={quizWaiting}
+      />
     );
   }
 
@@ -637,6 +651,7 @@ export function DailyFlow({
             badgeRewards={badgeRewards}
             today={today}
             fallbackStreak={currentStreak}
+            quizWaiting={quizWaiting}
           />
         )}
     </PhoneScreen>
@@ -1491,6 +1506,7 @@ function CelebrationStep({
   fallbackStreak,
   previewResult = null,
   dailyLoopSand,
+  quizWaiting = null,
 }: {
   dayStamp: string;
   pitchWatchPct: number | null;
@@ -1510,6 +1526,8 @@ function CelebrationStep({
   previewResult?: CompleteDayResult | null;
   /** sand_daily_loop, so the breakdown never hardcodes an amount. */
   dailyLoopSand: number;
+  /** The quiz whose lesson is finished — see pendingQuiz in lib/loop.ts. */
+  quizWaiting?: QuizWaiting | null;
 }) {
   const router = useRouter();
   // In demo mode the outcome is handed in, and the cache is bypassed entirely
@@ -1594,7 +1612,12 @@ function CelebrationStep({
   ]);
 
   if (alreadyDone) {
-    return <DoneForTodayScreen streak={alreadyDone.streak || fallbackStreak} />;
+    return (
+      <DoneForTodayScreen
+        streak={alreadyDone.streak || fallbackStreak}
+        quizWaiting={quizWaiting}
+      />
+    );
   }
 
   if (error) {
@@ -1848,6 +1871,19 @@ function CelebrationStep({
           Hidden in preview: an admin walking the loop has no book, and the shelf
           is not what the preview exists to show.
         */}
+        {/*
+          THE WAITING QUIZ, ABOVE THE SHELF. Unlike the mileage link this IS
+          work the credential wants — the lesson is finished and the module
+          stays open until this is passed — so it carries the gold border and
+          sits first. It is still a door, not a demand: the day is already
+          complete either way, which is what "a failed quiz also completes the
+          day" means in the link-first shape.
+        */}
+        {!previewResult && quizWaiting && (
+          <div className="mt-3">
+            <QuizWaitingLink quiz={quizWaiting} />
+          </div>
+        )}
         {!previewResult && (
           <Link
             href="/mileage"
@@ -1979,9 +2015,11 @@ function LeaveConfirm({
 function DoneForTodayScreen({
   streak,
   offerSoftAsk = false,
+  quizWaiting = null,
 }: {
   streak: number;
   offerSoftAsk?: boolean;
+  quizWaiting?: QuizWaiting | null;
 }) {
   const router = useRouter();
   return (
@@ -2001,6 +2039,12 @@ function DoneForTodayScreen({
         <p className="mt-3 text-base leading-relaxed text-ink-soft">
           Come back tomorrow to keep it rolling.
         </p>
+
+        {quizWaiting && (
+          <div className="mt-6">
+            <QuizWaitingLink quiz={quizWaiting} />
+          </div>
+        )}
 
         {/* Below the streak, above the sign-off: they have just seen what the
             number is, which is the only argument the card has. Renders nothing
@@ -2030,6 +2074,28 @@ function DoneForTodayScreen({
 }
 
 /* ---- Shared ------------------------------------------------------------- */
+
+type QuizWaiting = { moduleId: string; moduleName: string; trackName: string };
+
+/**
+ * The door to a quiz whose lesson is finished.
+ *
+ * A quiet bordered link, same register as the mileage shelf below it: the
+ * gold button is the one thing the screen asks for, and this is the next
+ * thing the credential wants, offered rather than demanded. The library page
+ * it opens already checks the items, gives the questions, grades the attempt
+ * and completes the module — one grading path, reused by reference.
+ */
+function QuizWaitingLink({ quiz }: { quiz: QuizWaiting }) {
+  return (
+    <Link
+      href={`/library/m/${quiz.moduleId}/quiz`}
+      className="block w-full rounded-xl border border-gold px-4 py-3 text-center text-sm font-bold text-navy transition hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      Quiz waiting: {quiz.trackName} — {quiz.moduleName}
+    </Link>
+  );
+}
 
 function PrimaryButton({
   onClick,

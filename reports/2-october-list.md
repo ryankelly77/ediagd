@@ -188,20 +188,32 @@ Also: **87 of them use `MPI Selling`**, which the naming law forbids in favour o
 
 ## 11 · Is Power of Positive Language a track at all?
 
-51 cues, **zero films in any state**, and its seven modules are named **Knowledge
-Notes 1–6** and **Closing Strategies** — cue containers, not lesson names. It was
-never structured to hold a film, which is the best explanation anybody has produced
-for why nothing Mitch delivered was ever for it.
+51 cues, **zero films named for it in any state**, and its seven modules are named
+**Knowledge Notes 1–6** and **Closing Strategies** — cue containers, not lesson
+names. It was never structured to hold a film, which is the best explanation
+anybody has produced for why nothing Mitch delivered was ever for it.
+
+**Corrected 30 September.** An earlier version of this item leaned on the hopper's
+"Success Cycle 0 videos" line, which counted films **attached to modules** rather
+than films that exist — Success Cycle had twelve published films the whole time,
+and 0144 attaches them. Power of Positive Language's zero survives the correction
+(nothing is *named* for it), but the argument now has a positive half:
+
+**The quiz bank already holds a curriculum for this track that nobody has named as
+one.** Decks `Vocabulary` (7), `Four voices` (5), `Lines` (8), `Sing It` (5) and
+`Wrap-Up` (5) total 30 questions, and the films `Success Cycle, Part 2, Vocabulary
+That Sails`, `Part 3, More Vocabulary`, `Sing It`, `Wrap-Up` and `Pre-Write` are
+published — the first two now attached to Success Cycle by 0144 (where the slate
+puts them), the other three unattached. **Presented to Ryan and Mitch as the
+candidate answer to this item. Nothing is attached on this evidence** — a deck
+name is a label, and the ruling is theirs.
 
 **So do not put six Positive Language films on a shoot list.** The prior question is
 whether it is a track, the skill library's first resident, or a cue theme that runs
 across every track. Ryan's, and a better question than when to shoot six films.
 
-It stays **active and visible** meanwhile — Master ladder, eleven months of runway.
-
-The two films that teach vocabulary — `Success Cycle, Part 2, Vocabulary That Sails`
-and `Part 3, More Vocabulary` — are slated Success Cycle, published, unattached, and
-**stay where the slate puts them** until Mitch says otherwise.
+It stays **active and visible** meanwhile — eleven months of runway before any
+advisor reaches it.
 
 ## 12 · Two modules show completed_at with items_done false
 
@@ -232,3 +244,70 @@ Mitch, not a migration.
 
 `The Four Minute Walk-Around`, `30 Second Walk-Around`, `2 Minute Walk-Around` —
 plus Mitch's list of 26 against 29 in the catalog. Never reconciled.
+
+## 15 · Interleave the cues into the lesson modules (post-0144)
+
+0144 put the lesson modules first and moved the Knowledge Notes cue modules to
+the end of Setting up the MPI, Four Step Close, Success Cycle and Overcoming
+Objections. The October half is matching each cue's text to a film transcript
+and repointing it into its lesson module, so the module shape `[film, cue, cue,
+cue, cue]` produces the settled rhythm (lesson, cue days, quiz) from data with
+no loop change. After repointing: an empty cue module with **no**
+`module_completion` rows can be removed; one **with** rows stays — a row earned
+is never deleted, and `module_completion_module_id_fkey` is still `ON DELETE
+CASCADE` (item 4: repoint, never dissolve).
+
+## 16 · Walk Around modules 4–7: three orphans against four subjects
+
+Modules 4–7 (Raising a Problem Well, Tires on the Drive, Visibility and Wipers,
+The Handback) have quizzes and cues and **no film**, and at five mornings a week
+a Doggett advisor reaches module 4 around **24 October**. Three published
+Walk-Around films are unattached: `30 Second Walk-Around` Parts 8 and 9 and
+`Two Minute Walk-Around` Part 2. Transcript-compare the three orphans against
+the four module subjects; propose; **Mitch rules**. While here, reconcile his
+list of 26 films against the catalog's 29 (item 14).
+
+## 17 · The six-module cap and the Master overflow split
+
+0142 answered the span question: the split is an `UPDATE module.course_id` once
+Ryan names the second courses — no film moves. It now applies to **Success
+Cycle 12, Overcoming Objections 12, Lasting Impressions 12, Name Tag 10, Four
+Step Close 10, Setting up the MPI 9**. All stay on one track for launch.
+
+## 18 · Captions are an API job, not Mitch's
+
+**2 of 100 published craft films have `captions_ready`** (measured 29 Sep).
+Enable Mux auto-generated subtitles on the published craft films over the API
+and report the before and after count. This was Mitch's open item (TWO_LADDERS
+"Open — Mitch's" #5); it never needed him.
+
+## 19 · The hopper gains an unattached-films column
+
+The hopper counts films **attached to modules**, and that measurement wearing
+the name "films" is what hid twelve published Success Cycle films (see the
+30 Sep correction in `unhomed-series-for-mitch.md`). Add a column: unattached
+published films whose series name matches the track. The population line under
+the table must name all three measurements — attached, unattached-matching, and
+cues — so no single number gets read as "what exists".
+
+## 20 · The quiz in slot 3, the built version
+
+What shipped for 1 October is the link: the completion screen names the first
+pending quiz (`pendingQuiz` in `lib/loop.ts` — items done, published questions,
+no pass, not completed) and links into `/library/m/<id>/quiz`. The in-loop
+version — slot 3 serves the quiz on the day a module closes — needs a day-stamp
+field, a day-gate leg, an inline grading surface in DailyFlow and a ruling on
+whether a loop-morning quiz pays `sand_module`; `pendingQuiz` is already the
+selection predicate. Build it against the acceptance in the WP3 section of the
+1 October report.
+
+## 21 · The migration ledger stops at 0133 while production carries 0143
+
+`supabase_migrations.schema_migrations` in production records nothing after
+**0133**, yet the effects of 0134–0143 are all present (probed 29 Sep:
+`retired_reason`, the 114 SCMQB questions, the Name Tag rename,
+`gating_content_types()`, the published series). The migrations ran without the
+ledger being written — so the next `supabase db push --linked` will try to
+**re-apply 0134 onward**. 0140/0142/0144/0145 are proven re-runnable; the rest
+of the range is not. Reconcile the ledger (insert the missing version rows)
+before or as part of the next `npm run db:migrate`.
