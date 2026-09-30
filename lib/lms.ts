@@ -373,6 +373,16 @@ export type ModuleRequirements = {
  * RLS-filtered one. A user must not be able to make a module look finished by
  * being unable to see part of it.
  */
+/**
+ * The content types whose completion gates a module.
+ *
+ * THE DATABASE IS THE SOURCE — `gating_content_types()`, added in 0143 and used by
+ * `my_module_progress.items_done`. This is a mirror so the hot path does not need a
+ * round-trip, and `npm run check:gating` asserts the two agree rather than trusting
+ * that they do.
+ */
+export const GATING_CONTENT_TYPES = ["advisor_video"] as const;
+
 export async function moduleRequirementsMet(
   service: Client,
   userId: string,
@@ -383,7 +393,27 @@ export async function moduleRequirementsMet(
       .from("content")
       .select("id")
       .eq("module_id", moduleId)
-      .eq("status", "published"),
+      .eq("status", "published")
+      /*
+       * ONLY GATING TYPES. A cue is reinforcement and never gates a module.
+       *
+       * This used to have no type filter, so a Walk Around module demanded eleven
+       * completions — three film, eight cue — before the credential would move. A
+       * cue that gates a lesson turns the lesson into a checklist.
+       *
+       * MIRRORS gating_content_types() IN THE DATABASE (0143), which is the one
+       * definition and which my_module_progress.items_done also uses. The rule was
+       * implemented twice and both copies counted cues; changing one would have
+       * made the gate and the library screen disagree about the same module.
+       * `npm run check:gating` fails if these two lists ever differ — two lists
+       * that must agree with nothing comparing them is exactly how a flag nobody
+       * parsed survived in the ingest's own usage block.
+       *
+       * An ALLOWLIST, never `neq("type","cue")`: a denylist would silently enrol
+       * the next type anybody attaches, and technician_video exists precisely
+       * because its audience is not this one.
+       */
+      .in("type", GATING_CONTENT_TYPES),
     service
       .from("quiz_question")
       .select("id", { count: "exact", head: true })
@@ -415,6 +445,36 @@ export async function moduleRequirementsMet(
   const completedItems = Number(doneCount ?? 0);
   const itemsDone = completedItems >= ids.length;
 
+  /*
+   * ---- THE ASYMMETRY IS DELIBERATE, AND IT IS DEBT ------------------------
+   *
+   * THE FILM CLAUSE REFUSES ON AN EMPTY SET. THE QUIZ CLAUSE PASSES ON ONE.
+   *
+   * A module with no film has nothing to complete, so completing it would award a
+   * credential for content that does not exist — see the `ids.length === 0` early
+   * return above, which is load-bearing the moment cues stop counting.
+   *
+   * A module with no quiz has a lesson the advisor actually watched. The work that
+   * exists was done, and blocking them on an asset nobody authored punishes the
+   * advisor for our gap. So `quizPassed` stays null when no published question
+   * exists, and `met` treats null as satisfied.
+   *
+   * THE BLAST RADIUS IS WHY THIS IS NOT TIGHTENED TONIGHT. 250 of 257
+   * module-bearing modules have no published quiz. Making the quiz constitutive
+   * would make every currently completable module uncompletable — Walk Around,
+   * Menus, Overcoming Objections, Name Tag, Lasting Impressions, Phones and Tones —
+   * at once, and it would read like a correctness improvement while doing it.
+   *
+   * It IS debt: the settled rhythm is lesson plus quiz, and a module with no quiz
+   * is not a knowledge gate. 250 modules need questions first, and 485 unplaced
+   * questions are sitting in the bank. On the 2 October list, not tonight.
+   *
+   * The two halves also protect each other. A one-name allowlist is narrow enough
+   * to be wrong the first time somebody attaches a technician_video — and the
+   * empty-set refusal turns that from a silent pass into a visible block. An
+   * omission that blocks is a bug you find; an omission that completes is a
+   * credential you cannot take back.
+   */
   let quizPassed: boolean | null = null;
   if (Number(quizCount ?? 0) > 0) {
     const { count: passes } = await service

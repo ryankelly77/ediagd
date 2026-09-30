@@ -62,19 +62,29 @@ null)`), so these are live and invisible. That was accepted knowingly — publis
 and invisible beats sitting in a folder — but the shelf needs a category axis
 before those 15 reach anybody.
 
-## 4 · Two cue measurements, which gate the module collapse
+## 4 · ANSWERED 29 September — the two cue measurements
 
-0132 deliberately did **not** collapse Walk Around 7→3 or Overcoming Objections
-5→2, and it cannot until these are answered:
+Both questions from 0132 are now measured, and the answers are in `AGENTS.md` and
+0143 rather than here.
 
-- **Does `contentComplete` count cues, or only videos?** If cues count, repointing
-  ~19 cues into each surviving module means an advisor ticks nineteen cues to
-  finish one module — the model the video-is-the-curriculum ruling exists to end.
-- **Can the loop reach a cue by any path other than `module_id`?** If not,
-  archiving a module silently removes its cues from circulation.
+**Does `contentComplete` count cues?** It did. `moduleRequirementsMet` selected
+every published item in a module with no type filter, so Walk Around demanded
+eleven completions to close one module, three of them film. **0143 fixed it** — an
+allowlist of `advisor_video`, mirrored in `gating_content_types()` so the SQL view
+and the TypeScript cannot drift, with `npm run check:gating` asserting they agree.
 
-`module_completion_module_id_fkey` is `ON DELETE CASCADE` and five completion rows
-exist, so this is not a change to make on an assumption.
+**Can the loop reach a cue other than by `module_id`?** In code yes — three paths,
+by `op_code`, by `service_family`, and as a generic passage by `tier`. **In this
+data, no:** of the 197 cues in certification tracks, **195 have neither
+`service_family` nor `op_code`**, and library-wide **408 cues are reachable by
+`module_id` and nothing else**. So 0132's fear was right and **detaching a cue
+would strand it**. The escape route exists in the code and not in the data.
+
+**What still waits:** the module collapse itself (Walk Around 7→3, Overcoming
+Objections 5→2) is now unblocked by 0143 — cues no longer gate, so repointing them
+costs an advisor nothing. But `module_completion_module_id_fkey` is still
+`ON DELETE CASCADE` with rows behind it, so dissolving a module still deletes
+completions. **Repoint, never dissolve.**
 
 ## 5 · The canonical-versus-source confusion, now four instances
 
@@ -130,13 +140,95 @@ Bearing on this now: **Phones and Tones has 12 published films waiting** and
 - **Adopt-the-view migration** — several readers still build their own copy of
   "what belongs to family F" rather than asking the one view.
 
-## 9 · The five held reshoots
+## 9 · Make the quiz constitutive
+
+Today the predicate is deliberately asymmetric, and it is written into `lib/lms.ts`
+where the decision is made:
+
+> **The film clause refuses on an empty set. The quiz clause passes on one.** A
+> module with no film has nothing to complete. A module with no quiz has a lesson
+> that was watched.
+
+**Why it was not tightened on 29 September.** 250 of 257 module-bearing modules have
+no published quiz. Making the quiz constitutive would have made every currently
+completable module uncompletable at once — Walk Around, Menus, Overcoming
+Objections, Name Tag, Lasting Impressions, Phones and Tones — on launch morning, in
+front of sixty advisors, and it would have read like a correctness improvement.
+
+**Why it is debt.** The settled rhythm is lesson plus quiz, and the site sells
+knowledge gates rather than performance gates. **A module with no quiz is not a
+knowledge gate.** 250 modules need questions before the clause can tighten, and 485
+unplaced questions are sitting in the bank — which makes this a sequencing problem,
+not a correctness one.
+
+**The sequence:** route the 485 (they are pitch-deck questions keyed to op code and
+stage, see item 12), author or place questions for the craft modules, then tighten.
+
+## 10 · The 485 are pitch questions, not craft questions
+
+Measured 29 September. They are already grouped — **107 groups, average 4.5, and 80
+groups are exactly 5** — and the grouping is in `deck` and `film`, not in row order.
+`id` is a random UUID and `created_at` has four distinct values across 513 rows, so
+there is no insertion order to recover and none is needed.
+
+`film` holds a **stage** — On the Drive, MPI Selling, At the Kiosk, Set Up the MPI —
+and `deck` holds a service subject. **Their home is destination 4, op code plus
+stage**, the same routing the 118 pitch films already use. They were never waiting
+on craft modules.
+
+**9 of 33 decks match an op-code name exactly.** The rest split into ~13 op-code
+subjects under a different spelling (`A/C Odor Treatment`, `Wiper Blades`, `Brake
+Fluid Exchange`) and ~11 genuinely craft decks (`Four voices`, `Lines`, `Sing It`,
+`Vocabulary`, `The close`, `Wrap-Up`, `Pre-Write`, `The Big Ticket Visit`,
+`Overcoming Objections`, `Selling speech`, `Setup speech`). An alias per subject
+resolves the first group. Nothing is hand-mapped.
+
+Also: **87 of them use `MPI Selling`**, which the naming law forbids in favour of
+`After-MPI`.
+
+## 11 · Is Power of Positive Language a track at all?
+
+51 cues, **zero films in any state**, and its seven modules are named **Knowledge
+Notes 1–6** and **Closing Strategies** — cue containers, not lesson names. It was
+never structured to hold a film, which is the best explanation anybody has produced
+for why nothing Mitch delivered was ever for it.
+
+**So do not put six Positive Language films on a shoot list.** The prior question is
+whether it is a track, the skill library's first resident, or a cue theme that runs
+across every track. Ryan's, and a better question than when to shoot six films.
+
+It stays **active and visible** meanwhile — Master ladder, eleven months of runway.
+
+The two films that teach vocabulary — `Success Cycle, Part 2, Vocabulary That Sails`
+and `Part 3, More Vocabulary` — are slated Success Cycle, published, unattached, and
+**stay where the slate puts them** until Mitch says otherwise.
+
+## 12 · Two modules show completed_at with items_done false
+
+A narrow, honest inconsistency created by 0143 and left alone deliberately.
+
+User `78929620` completed two **cue-only** modules under the old rule — `Brake
+Fluid / Closing Strategies 6` and `The Walk-Around / 4. Raising a Problem Well` —
+and both keep their `module_completion` row, because a row earned is not deleted.
+Under the new predicate those modules have **no gating item**, so `items_done` is
+now false while `completed_at` remains set.
+
+Both statements are true and they describe different things: the module *was*
+completed, and the items that now gate it are not done. Conflating them would make
+`items_done` a lie.
+
+The one visible edge: `library/m/[module]/quiz/page.tsx` redirects when
+`!itemsDone`, so that user cannot reach the quiz for a module they already
+completed. It affects one internal account, not a pilot advisor, and no credential
+is lost — `craftComplete` reads `module_completion`, which is intact.
+
+## 13 · The five held reshoots
 
 `reports/five-reshoots-held.md`. All five are audibly fixed and all five drop
 teaching that exists nowhere else, including the nine-part speech series. Needs
 Mitch, not a migration.
 
-## 10 · Three Walk-Around spellings
+## 14 · Three Walk-Around spellings
 
 `The Four Minute Walk-Around`, `30 Second Walk-Around`, `2 Minute Walk-Around` —
 plus Mitch's list of 26 against 29 in the catalog. Never reconciled.

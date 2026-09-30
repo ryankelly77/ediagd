@@ -433,6 +433,46 @@ fourteen retires, so eleven of them have reasons that live only in migration
 comments — 0134 adds `retired_reason` and writes the sentence into the row rather
 than only into the commit that made it.
 
+## A slate names the shoot, not the curriculum
+
+**The series a film announces is where Mitch filmed it, not where it belongs.**
+Title matching will keep almost working, and almost is the dangerous part.
+
+Five separate near-misses in one week, every one a title that pointed at the wrong
+home:
+
+| the slate says | it belongs to | how it was caught |
+|---|---|---|
+| Selling Skills | Overcoming Objections | Mitch said so |
+| Get the Hell Out of Here | Setting up the MPI | the slates name the MPI setup |
+| Coverage is Key | Chemical Warranty | the identification pass |
+| Name Tag | CSI | Ryan's ruling — and the quiz bank named CSI parts with Name Tag titles |
+| Success Cycle, Vocabulary That Sails | Power of Positive Language? | the two films that teach vocabulary are slated Success Cycle |
+
+**And the same shape inside a single series.** Four Step Close parts 1–9 agree
+between the quiz bank and the films; from part 10 they diverge, because the
+workbook carries a lesson — *Fit the Close to the Customer* — that no film exists
+for. Joining on the part number would have attached those questions to a film
+about *After the Close*, and it would have looked right. Comparing the **subjects**
+caught it.
+
+CSI is the sharpest instance because it nearly went the other way. Twelve quiz
+parts, ten Name Tag films, the same two lesson names in both — and **only two of
+twelve actually match by content.** The quiz describes the customer visit; the
+films describe the literal name tag. A title match would have put customer-visit
+questions onto name-tag modules, all forty-one of them.
+
+**In practice:** a slate is evidence about which shoot a file came from. It is a
+*hypothesis* about the curriculum, and the test is the content — the transcript
+body, not the title, not the part number. When they disagree, the slate loses and
+**nobody reslates the film**: a film keeps the name Mitch gave it and the routing
+decision is recorded separately, because reslating to match a curriculum destroys
+the only record of what was actually shot.
+
+This is [join on what was observed](#join-on-what-was-observed-not-on-what-was-derived)
+applied to curriculum: the slate is observed, the series is derived, and the two
+are not the same key.
+
 ## Never identify a person by name
 
 **Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
