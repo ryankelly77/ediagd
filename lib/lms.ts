@@ -383,6 +383,59 @@ export type ModuleRequirements = {
  */
 export const GATING_CONTENT_TYPES = ["advisor_video"] as const;
 
+/**
+ * THE GATING-MODULE POPULATION, DEFINED ONCE.
+ *
+ * A module gates when it holds at least one PUBLISHED item of a
+ * gating_content_types() type. A cue-only module cannot complete —
+ * moduleRequirementsMet refuses an empty gating set (0143) — so any surface or
+ * rule that measures an advisor against "every module" is measuring them
+ * against a population that can never finish. Found on 30 September: the
+ * credential bar read "1 of 101" over a denominator holding 24 cue-only
+ * modules, and craftComplete() made six of the nine core tracks unearnable.
+ *
+ * Four things read this set and MUST agree: craftComplete() in
+ * lib/certification-server.ts, the credential bar, the core track tiles, and
+ * the track page (both via lib/certifications.ts). Adding a fifth reader is
+ * fine; adding a second definition is the defect this function closes.
+ *
+ * Takes whichever client the caller is entitled to: the advisor's own client
+ * on the pages (entitlement RLS decides what exists for them), the service
+ * role in the accrual (the credential needs the true answer).
+ */
+export async function gatingModuleIds(
+  client: Client,
+  moduleIds?: string[]
+): Promise<Set<string>> {
+  if (moduleIds && moduleIds.length === 0) return new Set();
+
+  const out = new Set<string>();
+  /* PostgREST puts `in` lists in the query string; 100 uuids per request is
+     the batch size the rest of the codebase settled on. No filter means the
+     whole catalog — one request, the content table holds ~3k rows. */
+  const BATCH = 100;
+  const batches = moduleIds
+    ? Array.from({ length: Math.ceil(moduleIds.length / BATCH) }, (_, i) =>
+        moduleIds.slice(i * BATCH, (i + 1) * BATCH)
+      )
+    : [null];
+
+  for (const batch of batches) {
+    let q = client
+      .from("content")
+      .select("module_id")
+      .in("type", GATING_CONTENT_TYPES)
+      .eq("status", "published")
+      .is("retired_at", null)
+      .not("module_id", "is", null)
+      .limit(1000);
+    if (batch) q = q.in("module_id", batch);
+    const { data } = await q;
+    for (const r of (data ?? []) as { module_id: string }[]) out.add(r.module_id);
+  }
+  return out;
+}
+
 export async function moduleRequirementsMet(
   service: Client,
   userId: string,

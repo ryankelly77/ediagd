@@ -100,10 +100,21 @@ advisor just watched. The card becomes a **focus-family progress card**:
 The loop guarantees a floor; the card lifts the ceiling. Both read and write **one
 consumption record**, so the loop never re-serves a film watched in the card.
 
-**No equivalent card on the craft side.** Service content is remediation and bingeing
-works. Craft is a curriculum — fifty-one cues in one sitting teaches nobody anything and
-would let an advisor speed-run to a credential over a weekend. Show craft progress on
-the certification page; offer no "continue" button.
+**No equivalent card on the craft side — superseded in part, 30 September 2026.**
+The original rule: service content is remediation and bingeing works; craft is a
+curriculum, and a "continue" button would let an advisor speed-run to a credential
+over a weekend.
+
+**Ryan's ruling, 30 September: the daily loop is the drip, and an advisor may work
+ahead through the library at any time.** The mechanics already allowed it — library
+completions write `content_progress`, the loop reads the same record and never
+re-serves an item, and a module still needs its film watched and its published quiz
+passed. **The quiz gate, not the drip, is what makes the credential mean something.**
+So the certification track pages link every module into the library, and that link
+is the acceleration; there is still no personalised "continue" card on `/advisor`
+for craft — the part of the original rule that survives is where craft progress is
+SHOWN (the certification pages), not whether an advisor may move faster than the
+morning serves them.
 
 ## The curriculum, and how long it takes
 

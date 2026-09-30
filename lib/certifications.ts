@@ -18,6 +18,8 @@ import {
   type CertificationHolding,
   type CertificationState,
 } from "@/lib/certification";
+import { pendingQuizzes } from "@/lib/loop";
+import { gatingModuleIds } from "@/lib/lms";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -203,6 +205,374 @@ export async function loadCertifications(
           currency: credentialCurrencyLine(cred.current_through as IsoDate, today),
         }
       : null,
+  };
+}
+
+/* ---------------------------------------------------------------------------
+   THE PAGE THAT SAYS WHERE YOU STAND — 30 September
+--------------------------------------------------------------------------- */
+
+/**
+ * A module row as the certifications surfaces see it, with the one distinction
+ * the wall was blind to: whether the module GATES. A module gates when it holds
+ * at least one published gating item (a film — gating_content_types()); a
+ * cue-only module is reinforcement, cannot complete under 0143's rule, and must
+ * never sit in a denominator an advisor is measured against.
+ */
+export type TrackModuleRow = {
+  moduleId: string;
+  name: string;
+  sortOrder: number;
+  courseRank: number;
+  gates: boolean;
+  totalItems: number;
+  completedItems: number;
+  state: "not_started" | "quiz_waiting" | "complete" | "reinforcement";
+  hasQuiz: boolean;
+  quizPassed: boolean;
+};
+
+export type CoreTrackTile = CertificationTile & {
+  /**
+   * "Next: quiz for 1. The Walk-Around Routine" / "Next: Part 2" /
+   * "Story to write" / "More lessons on the way". Null when the track is held
+   * (the earned line speaks) or not yet active ("Coming soon" speaks).
+   *
+   * WHICH module is next comes from the same walk the loop makes — course
+   * sort, then module sort — and WHETHER it is a quiz comes from
+   * pendingQuizzes() in lib/loop.ts. This function decides neither; it only
+   * reads the answers, so the morning and this page cannot disagree about
+   * what is next.
+   */
+  nextLine: string | null;
+  gatingModules: number;
+  gatingDone: number;
+};
+
+export type CertificationsOverview = CertificationsView & {
+  /** The nine, in certification.sort order — the order the loop walks. */
+  coreTracks: CoreTrackTile[];
+  masterActive: CoreTrackTile[];
+  masterSoon: CertificationTile[];
+  serviceActive: CertificationTile[];
+  serviceSoon: CertificationTile[];
+  /** The credential bar: completed GATING modules over gating modules across
+      the nine core tracks — the exact population craftComplete() requires
+      (gatingModuleIds in lib/lms.ts), so the bar and the credential cannot
+      disagree in either direction. */
+  coreModulesDone: number;
+  coreModulesTotal: number;
+};
+
+type ModuleProgressRow = {
+  module_id: string;
+  course_id: string;
+  module_name: string;
+  sort_order: number;
+  items_done: boolean;
+  has_quiz: boolean;
+  quiz_passed: boolean;
+  completed_at: string | null;
+  total_items: number;
+  completed_items: number;
+};
+
+/**
+ * The per-module facts every certification surface needs, fetched once:
+ * my_module_progress for the signed-in advisor, the course→certification map,
+ * and which modules hold a gating item. READ AS THE ADVISOR — the view is
+ * scoped to auth.uid() and the content read goes through entitlement RLS, so
+ * a rooftop that never bought the product shows a wall with nothing behind it
+ * rather than somebody else's progress.
+ */
+async function loadModuleFacts(client: Client) {
+  const [{ data: mp }, { data: ccRows }, gated] = await Promise.all([
+    client
+      .from("my_module_progress")
+      .select(
+        "module_id, course_id, module_name, sort_order, items_done, has_quiz, quiz_passed, completed_at, total_items, completed_items"
+      )
+      .limit(1000),
+    client.from("certification_course").select("certification_id, course_id, sort"),
+    /* THE ONE DEFINITION of which modules gate — the same set craftComplete()
+       requires — read through the advisor's entitlement. */
+    gatingModuleIds(client as never),
+  ]);
+  const byCourse = new Map<string, { certId: string; sort: number }[]>();
+  for (const cc of (ccRows ?? []) as {
+    certification_id: string;
+    course_id: string;
+    sort: number;
+  }[]) {
+    const list = byCourse.get(cc.course_id) ?? [];
+    list.push({ certId: cc.certification_id, sort: cc.sort });
+    byCourse.set(cc.course_id, list);
+  }
+
+  return {
+    moduleRows: (mp ?? []) as ModuleProgressRow[],
+    gated,
+    byCourse,
+  };
+}
+
+function toTrackModule(m: ModuleProgressRow, gates: boolean, courseRank: number): TrackModuleRow {
+  const state: TrackModuleRow["state"] = !gates
+    ? "reinforcement"
+    : m.completed_at
+      ? "complete"
+      : m.items_done && m.has_quiz && !m.quiz_passed
+        ? "quiz_waiting"
+        : "not_started";
+  return {
+    moduleId: m.module_id,
+    name: m.module_name,
+    sortOrder: Number(m.sort_order ?? 0),
+    courseRank,
+    gates,
+    totalItems: Number(m.total_items ?? 0),
+    completedItems: Number(m.completed_items ?? 0),
+    state,
+    hasQuiz: Boolean(m.has_quiz),
+    quizPassed: Boolean(m.quiz_passed),
+  };
+}
+
+/** A track's modules in the order the loop serves them. */
+function modulesForCert(
+  certId: string,
+  facts: Awaited<ReturnType<typeof loadModuleFacts>>
+): TrackModuleRow[] {
+  const out: TrackModuleRow[] = [];
+  for (const m of facts.moduleRows) {
+    const links = facts.byCourse.get(m.course_id) ?? [];
+    const link = links.find((l) => l.certId === certId);
+    if (!link) continue;
+    out.push(toTrackModule(m, facts.gated.has(m.module_id), link.sort));
+  }
+  return out.sort(
+    (a, b) =>
+      a.courseRank - b.courseRank ||
+      a.sortOrder - b.sortOrder ||
+      a.moduleId.localeCompare(b.moduleId)
+  );
+}
+
+/**
+ * Everything the rebuilt /certifications page renders. One call.
+ */
+export async function loadCertificationsOverview(
+  client: Client,
+  userId: string,
+  today: IsoDate
+): Promise<CertificationsOverview> {
+  const [view, facts, pending] = await Promise.all([
+    loadCertifications(client, userId, today),
+    loadModuleFacts(client),
+    pendingQuizzes(client as never),
+  ]);
+
+  const pendingByModule = new Set(pending.map((p) => p.moduleId));
+
+  /* One decorator for every craft tile, core and Master alike, so no row can
+     grow its own arithmetic. */
+  const decorate = (t: CertificationTile): CoreTrackTile => {
+    const modules = modulesForCert(t.id, facts);
+    const gating = modules.filter((m) => m.gates);
+    const gatingDone = gating.filter((m) => m.state === "complete").length;
+
+    let nextLine: string | null = null;
+    if (t.state === "unearned" && t.active) {
+      /* The loop's walk: the first gating module that is not complete. */
+      const nextModule = gating.find((m) => m.state !== "complete");
+      if (nextModule) {
+        nextLine = pendingByModule.has(nextModule.moduleId)
+          ? `Next: quiz for ${nextModule.name}`
+          : `Next: ${nextModule.name}`;
+      } else if (gating.length === 0) {
+        /* Power of Positive Language today: cues only. Not a failure. */
+        nextLine = "Lessons on the way";
+      } else if (t.storyRequired && !t.storySubmitted) {
+        nextLine = "Story to write";
+      } else {
+        /* Every filmed lesson done; what remains is content still landing
+           (cue-only modules, unfilmed lessons). Their queue, not the
+           advisor's. */
+        nextLine = "More lessons on the way";
+      }
+    }
+
+    return { ...t, nextLine, gatingModules: gating.length, gatingDone };
+  };
+
+  const coreTracks: CoreTrackTile[] = view.tiles
+    .filter((t) => t.isCore)
+    .sort((a, b) => a.sort - b.sort)
+    .map(decorate);
+
+  /* THE CREDENTIAL BAR COUNTS WHAT craftComplete() COUNTS: gating modules —
+     lessons — and nothing else. It used to sum every module and read
+     "1 of 101" over a denominator holding 24 cue-only modules that can never
+     complete (0143): a bar that could not fill, over six tracks that could
+     not be earned. One population, four readers: craftComplete(), this bar,
+     the tiles, the track page. */
+  const coreModulesDone = coreTracks.reduce((n, t) => n + t.gatingDone, 0);
+  const coreModulesTotal = coreTracks.reduce((n, t) => n + t.gatingModules, 0);
+
+  const master = view.tiles.filter((t) => t.isMasterTrack);
+  const service = view.tiles.filter((t) => t.kind === "service");
+
+  return {
+    ...view,
+    coreTracks,
+    masterActive: master
+      .filter((t) => t.active || t.state !== "unearned")
+      .map(decorate),
+    masterSoon: master.filter((t) => !t.active && t.state === "unearned"),
+    serviceActive: service.filter((t) => t.active || t.state !== "unearned"),
+    serviceSoon: service.filter((t) => !t.active && t.state === "unearned"),
+    coreModulesDone,
+    coreModulesTotal,
+  };
+}
+
+export type TrackDetail = {
+  id: string;
+  slug: string;
+  name: string;
+  kind: "craft" | "service";
+  glyphKey: string;
+  active: boolean;
+  isCore: boolean;
+  isMasterTrack: boolean;
+  state: CertificationState;
+  /** "Earned 2027-03-14", or null. */
+  earnedLine: string | null;
+  /** True when the track is not yet earnable — render the coming-soon body,
+      no modules, no progress, no links. */
+  comingSoon: boolean;
+  entryFilm: { contentId: string; title: string; watched: boolean } | null;
+  modules: TrackModuleRow[];
+  gatingDone: number;
+  gatingTotal: number;
+  storyRequired: boolean;
+  storySubmitted: boolean;
+};
+
+/**
+ * One track, for /certifications/[slug]: what completing it takes, in the
+ * order the loop will serve it.
+ *
+ * EVERY READ IS THE ADVISOR'S OWN CLIENT. This page states personal progress,
+ * and the RLS-filtered view is the only honest source — a service-role read
+ * here would happily render somebody a wall their rooftop never bought.
+ */
+export async function loadTrackDetail(
+  client: Client,
+  userId: string,
+  slug: string
+): Promise<TrackDetail | null> {
+  const { data: cert } = await client
+    .from("certification")
+    .select(
+      "id, slug, name, kind, glyph_key, active, is_core, is_master_track, entry_film_content_id"
+    )
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!cert) return null;
+
+  const { data: held } = await client
+    .from("advisor_certification")
+    .select("earned_at")
+    .eq("user_id", userId)
+    .eq("certification_id", cert.id)
+    .maybeSingle();
+
+  const earnedOn = ((held?.earned_at as string | undefined)?.slice(0, 10) ?? null) as
+    | IsoDate
+    | null;
+  const state = certificationState({ earnedOn });
+  const comingSoon = !cert.active && state === "unearned";
+
+  /* A track that is not yet earnable shows no progress and no module links —
+     nothing behind it is the advisor's to do, and a list of locked rows would
+     read as a backlog. */
+  if (comingSoon || cert.kind === "service") {
+    return {
+      id: cert.id,
+      slug: cert.slug,
+      name: cert.name,
+      kind: cert.kind,
+      glyphKey: cert.glyph_key,
+      active: cert.active,
+      isCore: cert.is_core,
+      isMasterTrack: cert.is_master_track,
+      state,
+      earnedLine: earnedLine({ earnedOn }),
+      comingSoon,
+      entryFilm: null,
+      modules: [],
+      gatingDone: 0,
+      gatingTotal: 0,
+      storyRequired: false,
+      storySubmitted: false,
+    };
+  }
+
+  const [facts, storyGate] = await Promise.all([
+    loadModuleFacts(client),
+    loadStoryGate(client as never, userId),
+  ]);
+  const modules = modulesForCert(cert.id as string, facts);
+  const gating = modules.filter((m) => m.gates);
+
+  /* The entry film, when Mitch has ruled one. Watched-ness is the advisor's
+     own content_progress row — the same record the loop reads. */
+  let entryFilm: TrackDetail["entryFilm"] = null;
+  if (cert.entry_film_content_id) {
+    const [{ data: film }, { data: seen }] = await Promise.all([
+      client
+        .from("content")
+        .select("id, title")
+        .eq("id", cert.entry_film_content_id)
+        .eq("status", "published")
+        .is("retired_at", null)
+        .maybeSingle(),
+      client
+        .from("content_progress")
+        .select("content_id")
+        .eq("user_id", userId)
+        .eq("content_id", cert.entry_film_content_id)
+        .not("completed_at", "is", null)
+        .maybeSingle(),
+    ]);
+    if (film) {
+      entryFilm = {
+        contentId: film.id as string,
+        title: (film.title as string) ?? "The entry film",
+        watched: Boolean(seen),
+      };
+    }
+  }
+
+  return {
+    id: cert.id,
+    slug: cert.slug,
+    name: cert.name,
+    kind: cert.kind,
+    glyphKey: cert.glyph_key,
+    active: cert.active,
+    isCore: cert.is_core,
+    isMasterTrack: cert.is_master_track,
+    state,
+    earnedLine: earnedLine({ earnedOn }),
+    comingSoon: false,
+    entryFilm,
+    modules,
+    gatingDone: gating.filter((m) => m.state === "complete").length,
+    gatingTotal: gating.length,
+    storyRequired: storyGate.storyRequired,
+    storySubmitted: storyGate.toldFor.has(cert.id as string),
   };
 }
 
