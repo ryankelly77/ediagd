@@ -43,6 +43,26 @@ List every file and classify:
 
 **Naming law**: `PREFIX — Title — Voice — vN.ext` with em dashes. Voice defaults to Mitch Hardt; version defaults to v1. PREFIX is an op code (e.g. EAF-001) or a collection alias (TECH, MINDSET, FND). FND is a mapping alias for foundational modules, **not** a catalog op code. Canonical stage names only: Pre-Write, On the Drive, At the Kiosk, MPI Setup, After-MPI, Objections — always "After-MPI", never "MPI Selling".
 
+**Openers and closers** (added 30 Sep 2026, for the track entry and exit films
+Mitch is delivering): two title forms, using the track's name as the catalog
+carries it —
+
+- `<Track> — Opener — Mitch Hardt — v1` — the film that opens a track. Its
+  destination is `certification.entry_film_content_id`, one per core track, set
+  by migration after Ryan publishes the film in admin; the loop already serves
+  it (lib/loop.ts RULING 2), no code change.
+- `<Track> — Closer — Mitch Hardt — v1` — the film that closes a track. A
+  closer is the **last module of its track**: one film, no quiz, `sort_order`
+  after every lesson and cue module, so the track's final morning is Mitch
+  closing it and `trackComplete()` needs nothing new. `Menu Wrap-Up, Part 1`
+  and `Part 2` as Menus modules 8 and 9 (0144) are the worked example.
+
+Which track an opener or closer belongs to is **Mitch's word, from the slate**.
+Where the slate names a track that does not exist by that name (the AGENTS.md
+"a slate names the shoot" table), the file is a **hold** — ask, never infer.
+The precedent for the opener form is `Dealer Upsell Menus and Interval Charts —
+Opener`, already set as Menus' entry film.
+
 ## Phase 2 — Identify unnamed clips
 
 For each unnamed clip: extract audio with ffmpeg, transcribe with local whisper. Evidence, strongest first:

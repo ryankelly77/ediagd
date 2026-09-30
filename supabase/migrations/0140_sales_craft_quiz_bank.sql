@@ -265,11 +265,32 @@ begin
 
   /* ---- ASSERT BOTH HALVES ---------------------------------------------- */
 
+  /*
+   * SCOPED TO THE DATABASE IT IS ON (repaired 30 Sep, found by the full local
+   * replay for 0144/0145). On production the 70 films exist and the join must
+   * find all 70. On a fresh local none of the films exist — they arrived
+   * through Mux, which no migration replays — so the correct count there is 0,
+   * and asserting 70 made the whole chain unreplayable from 0140 on. Same
+   * population statement 0142 makes with its "no films present" skip.
+   * Production already holds all 114 and takes the early return above, so this
+   * edit cannot re-run there.
+   */
   select count(*) into _linked from quiz_question
    where source_id like 'SCMQB:%' and content_id is not null;
-  if _linked <> 70 then
-    raise exception
-      '0140: % questions joined to a film, expected 70 (38 Lasting Impressions + 32 Four Step Close)', _linked;
+  if exists (select 1 from content
+              where title = 'Lasting Impressions, Part 1'
+                and type = 'advisor_video' and status = 'published'
+                and retired_at is null) then
+    if _linked <> 70 then
+      raise exception
+        '0140: % questions joined to a film, expected 70 (38 Lasting Impressions + 32 Four Step Close)', _linked;
+    end if;
+  else
+    if _linked <> 0 then
+      raise exception
+        '0140: % questions joined to a film on a database with no films', _linked;
+    end if;
+    raise notice '0140: films not present on this database — all 114 land with content_id null';
   end if;
 
   /*

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdminViewer } from "@/lib/access";
 import { loadAdvisorDay } from "@/lib/advisor-data";
 import { ackLabel, pickQuotesForDay, pickTechnicianVideo } from "@/lib/daily";
-import { assembleMorning } from "@/lib/loop";
+import { assembleMorning, pendingQuiz } from "@/lib/loop";
 import { previewKindFrom, previewMorning } from "@/lib/loop-preview";
 import { rooftopIsProvisioned } from "@/lib/entitlement";
 import { RooftopNotReady } from "@/components/daily/RooftopNotReady";
@@ -442,13 +442,24 @@ export default async function TodayPage({
   /* Which of the day's quote this advisor has already kept. Read through the
      user's client so the private-save policy in 0059 is what decides — the
      service role would step straight over it. */
-  const { data: savedRows } = morning.quote
-    ? await supabase
-        .from("saved_content")
-        .select("content_id")
-        .eq("user_id", user.id)
-        .eq("content_id", morning.quote.id)
-    : { data: [] as { content_id: string }[] };
+  const [{ data: savedRows }, quizWaiting] = await Promise.all([
+    morning.quote
+      ? supabase
+          .from("saved_content")
+          .select("content_id")
+          .eq("user_id", user.id)
+          .eq("content_id", morning.quote.id)
+      : Promise.resolve({ data: [] as { content_id: string }[] }),
+    /*
+     * THE QUIZ THAT IS WAITING — the completion screen names it and links to
+     * the library page that already grades it. Read as the ADVISOR, because
+     * my_module_progress is scoped to auth.uid() and the link must only ever
+     * be shown to the person whose lesson is actually finished. Hidden in
+     * preview: an admin walking the loop has no real module progress, and the
+     * walkthrough exists to show the ritual, not their library state.
+     */
+    isPreview ? Promise.resolve(null) : pendingQuiz(supabase),
+  ]);
 
   const savedIds = new Set((savedRows ?? []).map((r) => r.content_id as string));
 
@@ -534,6 +545,7 @@ export default async function TodayPage({
       /* RULING 6 — the close, not a slot. Named `closingQuote` rather than
          `quote` so nothing reads it as step one ever again. */
       closingQuote={closingQuote}
+      quizWaiting={quizWaiting}
       morningKind={morning.kind}
       mindset={morning.mindset}
       pitch={morning.pitch}

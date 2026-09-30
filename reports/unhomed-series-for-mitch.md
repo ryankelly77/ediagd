@@ -21,11 +21,23 @@ slate**, not inferred.
 
 ## The state of the credential right now
 
+**Corrected again, 30 September — the 28 September correction repeated the same
+class of error one column over.** The *videos* column below counts films
+**attached to modules**, not films that exist for the track. "Films attached"
+and "films that exist for this track" are two measurements with one name — the
+`duration_sec` lesson in AGENTS.md. **Success Cycle had twelve published,
+unattached films** (`Success Cycle, Part 1, Not a Rut Team` through `Part 12,
+Your song, Go Sing It`) on the day this table said it had none; "no video at
+all" was true of the modules and false of the library. 0144 attaches all
+twelve. Power of Positive Language's zero remains true by name — no film in any
+state is named for it — but see item 11 of `2-october-list.md` for the
+candidate curriculum already sitting in the quiz bank.
+
 **Corrected 28 September.** An earlier version of this table had a column headed
 *"films it can serve"* that was counting `item_count` — which counts **cues**. The
 numbers below separate them, and the picture is very different: Success Cycle and
-Power of Positive Language, previously shown as 55 and 51 films, have **no video
-at all**.
+Power of Positive Language, previously shown as 55 and 51 films, were shown with
+**no attached video**.
 
 | track | ladder | **videos** | cues | active |
 |---|---|---|---|---|
