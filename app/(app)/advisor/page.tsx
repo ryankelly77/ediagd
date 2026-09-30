@@ -11,7 +11,7 @@ import { ServiceList } from "@/components/advisor/ServiceList";
 import { PitchButton } from "@/components/advisor/PitchButton";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
 import { CUES_PER_SERVICE } from "@/lib/daily";
-import { loadFamilyContent, loadFocusFamilyCard } from "@/lib/service-family";
+import { loadFamilyContent, loadFocusFamilyCard, loadLightMode } from "@/lib/service-family";
 import { createServiceClient } from "@/lib/supabase/service";
 import { FocusFamilyCard } from "@/components/advisor/FocusFamilyCard";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
@@ -256,9 +256,12 @@ export default async function AdvisorPage() {
    * from the same consumption record the loop reads.
    */
   const familyService = createServiceClient();
-  const [familyContent, focusCard] = await Promise.all([
+  const [familyContent, focusCard, lightMode] = await Promise.all([
     loadFamilyContent(supabase, user.id, families.map((f) => f.family)),
     loadFocusFamilyCard(supabase, familyService, user.id),
+    /* The light track (0147): thin ROs, recorded, pitch off by design. Read
+       as the advisor — their own row, their own policy. */
+    loadLightMode(supabase, user.id),
   ]);
 
   /* The dialog's shape, unchanged for the cue side. */
@@ -403,6 +406,15 @@ export default async function AdvisorPage() {
           rate={pick && pick.family === focusCard.family ? pick.rate : null}
           storeAvg={pick && pick.family === focusCard.family ? pick.storeAvg : null}
         />
+      ) : lightMode ? (
+        /* THE LIGHT TRACK (0147). One line where the pitch family would be
+           named. Not a fault, not a number, not a setting — the pitch turns
+           itself on when the repair orders can carry one. */
+        <section className="mt-6 rounded-card border border-line bg-surface-card p-4">
+          <p className="text-sm leading-relaxed text-ink-soft">
+            Your coaching pitch starts when your repair orders come in.
+          </p>
+        </section>
       ) : (
         canCoach &&
         pick && (

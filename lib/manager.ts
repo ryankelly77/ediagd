@@ -38,6 +38,13 @@ export type AdvisorSummary = {
    * against one that no advisor in the company can currently earn.
    */
   credential?: "Certified" | "Master Certified" | null;
+  /**
+   * On the light track: repair-order data too thin to derive a pitch from
+   * (0147), so their morning is two slots BY DESIGN. Marked so a manager
+   * never reads a light morning as a broken account. Turns itself off on the
+   * first period that clears the floor.
+   */
+  light?: boolean;
 };
 
 export type AdvisorTrend = {
@@ -121,6 +128,8 @@ export function summarizeAdvisor(input: {
   laborPerRoByFamily?: Record<string, number>;
   /** Read-only, and absent for most advisors. See AdvisorSummary.credential. */
   credential?: "Certified" | "Master Certified" | null;
+  /** See AdvisorSummary.light. */
+  light?: boolean;
 }): AdvisorSummary {
   const families = buildServiceFamilies(
     input.attach,
@@ -142,6 +151,7 @@ export function summarizeAdvisor(input: {
       : 0,
     families,
     credential: input.credential ?? null,
+    light: input.light ?? false,
   };
 }
 
