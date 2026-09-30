@@ -23,8 +23,11 @@ import {
   addDays,
   isIslandTime,
   isWorkDay,
+  swellAsOf,
   type IsoDate,
   type IslandTime,
+  type StoreClosure,
+  type SwellState,
   type WorkSchedule,
 } from "@/lib/gamification/streak";
 import {
@@ -131,9 +134,15 @@ type RawRows = {
   island: Map<string, IslandTime[]>;
   /** Every range touching this calendar year — the budget's own read. */
   yearIsland: Map<string, IslandTime[]>;
-  swell: Map<string, AdvisorDetail["swell"]>;
+  /** The FULL stored state, because swellAsOf needs the grace columns too. */
+  swell: Map<string, SwellState>;
   /** game_settings.island_time_days_per_year, the same number the app enforces. */
   islandCap: number;
+  /** The rooftop's confirmed closures — F6's missing input. Empty when the
+      caller has no single rooftop to name. */
+  closures: StoreClosure[];
+  paddleOutCap: number;
+  paddleOutPerMonth: number;
 };
 
 const emptyRaw = (): RawRows => ({
@@ -144,6 +153,9 @@ const emptyRaw = (): RawRows => ({
   yearIsland: new Map(),
   swell: new Map(),
   islandCap: 15,
+  closures: [],
+  paddleOutCap: 0,
+  paddleOutPerMonth: 0,
 });
 
 /**
@@ -165,7 +177,16 @@ const emptyRaw = (): RawRows => ({
 export async function loadAdvisorDetails(
   client: Client,
   userIds: string[],
-  today: IsoDate
+  today: IsoDate,
+  /*
+   * F6. Without the rooftop there are no closures, and countMissedWorkDays
+   * counts a shut store as a missed day — so the quick fix would have told a
+   * manager a LIVE streak was dead, which is why the plan said do it properly
+   * or leave it raw. Both callers are single-rooftop pages and pass it; a
+   * future multi-rooftop caller that cannot name one gets the stored number's
+   * behaviour only for the closure half, never a wrong death.
+   */
+  rooftopId?: string | null
 ): Promise<Map<string, AdvisorDetail>> {
   const ids = [...new Set(userIds)];
   const out = new Map<string, AdvisorDetail>();
@@ -179,7 +200,7 @@ export async function loadAdvisorDetails(
   }
 
   const loaded = await Promise.all(
-    chunks.map((chunk) => loadChunk(client, chunk, from, today))
+    chunks.map((chunk) => loadChunk(client, chunk, from, today, rooftopId ?? null))
   );
 
   for (const raw of loaded) {
@@ -197,11 +218,12 @@ async function loadChunk(
   client: Client,
   ids: string[],
   from: IsoDate,
-  today: IsoDate
+  today: IsoDate,
+  rooftopId: string | null
 ): Promise<RawRows> {
   const raw = emptyRaw();
 
-  const [activity, completion, schedule, island, swell, yearIsland, settings] =
+  const [activity, completion, schedule, island, swell, yearIsland, settings, closures] =
     await Promise.all([
     client
       .from("daily_activity")
@@ -228,7 +250,9 @@ async function loadChunk(
       .order("start_date", { ascending: true }),
     client
       .from("swell")
-      .select("user_id, current_len, longest_len, last_completed_on")
+      .select(
+        "user_id, current_len, longest_len, last_completed_on, paddle_out_available, paddle_out_last_granted"
+      )
       .in("user_id", ids),
     /* The budget's own read. The window above is thirty days; a fortnight
        booked in January still spends this year's allowance, so the year is the
@@ -241,15 +265,35 @@ async function loadChunk(
       .lte("start_date", `${yearOf(today)}-12-31`),
     client
       .from("game_settings")
-      .select("island_time_days_per_year")
+      .select("island_time_days_per_year, paddle_out_cap, paddle_out_per_month")
       .limit(1)
       .maybeSingle(),
+    /* The rooftop's CONFIRMED closures — the same predicate
+       loadScheduleContext uses, the input whose absence made the quick F6 fix
+       dangerous. A shut store is not a missed day. */
+    rooftopId
+      ? client
+          .from("rooftop_closed_day")
+          .select("closed_on, label")
+          .eq("rooftop_id", rooftopId)
+          .eq("status", "confirmed")
+          .order("closed_on", { ascending: false })
+          .limit(500)
+      : Promise.resolve({ data: [] }),
   ]);
 
-  raw.islandCap = Number(
-    (settings?.data as { island_time_days_per_year?: number } | null)
-      ?.island_time_days_per_year ?? 15
-  );
+  const settingsRow = settings?.data as {
+    island_time_days_per_year?: number;
+    paddle_out_cap?: number;
+    paddle_out_per_month?: number;
+  } | null;
+  raw.islandCap = Number(settingsRow?.island_time_days_per_year ?? 15);
+  raw.paddleOutCap = Number(settingsRow?.paddle_out_cap ?? 0);
+  raw.paddleOutPerMonth = Number(settingsRow?.paddle_out_per_month ?? 0);
+  raw.closures = rows(closures).map((r) => ({
+    date: r.closed_on as IsoDate,
+    label: (r.label as string | null) ?? "Closed",
+  }));
 
   for (const r of rows(yearIsland)) {
     const list = raw.yearIsland.get(r.user_id as string) ?? [];
@@ -286,9 +330,11 @@ async function loadChunk(
 
   for (const r of rows(swell)) {
     raw.swell.set(r.user_id as string, {
-      current: Number(r.current_len ?? 0),
-      longest: Number(r.longest_len ?? 0),
+      currentLen: Number(r.current_len ?? 0),
+      longestLen: Number(r.longest_len ?? 0),
       lastCompletedOn: (r.last_completed_on as IsoDate | null) ?? null,
+      paddleOutAvailable: Number(r.paddle_out_available ?? 0),
+      paddleOutLastGranted: (r.paddle_out_last_granted as IsoDate | null) ?? null,
     });
   }
 
@@ -366,6 +412,57 @@ function compose(
     ),
     completedDays,
     loggedInDays,
-    swell: raw.swell.get(userId) ?? null,
+    swell: composeSwell(raw, userId, today, schedule),
+  };
+}
+
+/**
+ * F6, DONE PROPERLY. The stored current_len only moves when somebody
+ * COMPLETES a day, so between a lapse and the next completion it is a corpse
+ * — /admin/engagement and /admin/rooftop/[id] were the last two surfaces
+ * reading it raw, and a manager could be shown a Swell dead since last
+ * Wednesday. swellAsOf runs the same engine the writer runs, against a copy,
+ * WITH the full context: the advisor's schedule, their Island Time (the
+ * calendar-year read — any streak older than 1 January is beyond every grace
+ * there is), and the rooftop's confirmed closures. Without the closures a
+ * shut store counted as a missed day and the quick fix would have told a
+ * manager a LIVE streak was dead — the exact trade the plan refused.
+ *
+ * `longest` stays the stored number: a record is history and does not decay.
+ */
+function composeSwell(
+  raw: RawRows,
+  userId: string,
+  today: IsoDate,
+  schedule: WorkSchedule | null
+): AdvisorDetail["swell"] {
+  const state = raw.swell.get(userId);
+  if (!state) return null;
+
+  const asOf = swellAsOf(
+    state,
+    today,
+    {
+      paddleOutCap: raw.paddleOutCap,
+      paddleOutPerMonth: raw.paddleOutPerMonth,
+      sandDailyLoop: 0,
+      sandSwell7: 0,
+      sandSwell30: 0,
+      sandSwell90: 0,
+      sandSwell365: 0,
+      sandBadge: 0,
+      sandCertification: 0,
+    },
+    {
+      schedule,
+      islandTime: raw.yearIsland.get(userId) ?? [],
+      closures: raw.closures,
+    }
+  );
+
+  return {
+    current: asOf.current,
+    longest: state.longestLen,
+    lastCompletedOn: state.lastCompletedOn,
   };
 }

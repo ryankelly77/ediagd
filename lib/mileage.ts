@@ -23,7 +23,7 @@ import { renditionsFor, type VideoRenditions } from "@/lib/mux/playback";
  * That is not an omission to be tidied up later. A chart with a completion tick
  * on it is a fourth credential, and an advisor who has watched none of it is not
  * behind. The moment this file joins progress, somebody renders the join, and
- * then "0 of 51" sits on a reference shelf telling sixty advisors they are
+ * then "0 of 51" sits on a reference shelf telling every advisor they are
  * failing at a lookup table.
  *
  * So the loader cannot report progress even if a component asked, because the

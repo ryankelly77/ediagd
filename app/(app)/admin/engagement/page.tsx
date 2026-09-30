@@ -98,7 +98,14 @@ export default async function AdminPage({
       : null;
     const [details, lightUsers] = await Promise.all([
       today
-        ? loadAdvisorDetails(supabase, advisors.map((a) => a.userId), today)
+        ? /* F6: the single rooftop's closures ride along, so swellAsOf never
+             counts a shut store as a missed day. */
+          loadAdvisorDetails(
+            supabase,
+            advisors.map((a) => a.userId),
+            today,
+            advisors[0]?.rooftopId ?? null
+          )
         : Promise.resolve(new Map()),
       /* The light track (0147): the mark that says a two-slot morning is by
          design. The ADMIN'S client — their admin memberships put these

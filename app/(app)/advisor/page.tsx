@@ -111,15 +111,25 @@ export default async function AdvisorPage() {
    * The DMS roster knows the real name, so the screen says it when it differs.
    * The greeting stays personal: they are still the one logged in.
    */
+  /*
+   * F3 (0149). This used to read dms_advisor directly, and dms_advisor_read
+   * grants select to owner, admin and manager only — so the disclosure
+   * rendered for the two people who could already see the roster and failed
+   * SILENTLY for the only people it protects. The bare `data:` swallowed the
+   * RLS refusal as "no roster row".
+   *
+   * my_book_owner() is a definer function returning one name for the
+   * caller's own mapped op code and nothing else, so this now works for
+   * every role — and an ERROR here is an error, thrown rather than worn as
+   * an empty disclosure. A privacy safeguard that fails must fail loudly.
+   */
   let bookOwner: string | null = null;
   if (rooftopId) {
-    const { data: rosterRow } = await supabase
-      .from("dms_advisor")
-      .select("display_name")
-      .eq("rooftop_id", rooftopId)
-      .eq("advisor_op_id", opCodeId)
-      .maybeSingle();
-    const rosterName = formatRosterName(rosterRow?.display_name as string | null);
+    const { data: ownerName, error: ownerError } = await supabase.rpc("my_book_owner");
+    if (ownerError) {
+      throw new Error(`whose-book disclosure unavailable: ${ownerError.message}`);
+    }
+    const rosterName = formatRosterName((ownerName as string | null) ?? null);
     const mine = fullName?.trim().toLowerCase();
     if (rosterName && rosterName.toLowerCase() !== mine) bookOwner = rosterName;
   }
