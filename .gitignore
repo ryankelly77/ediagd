@@ -121,3 +121,6 @@ data/*.heic
 
 # Restored-dump workspace under reports/ — production data, never committed.
 reports/dumps/
+
+# Ryan's local prompt drafts — his working notes, never shipped.
+Claude outputs/

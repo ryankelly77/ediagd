@@ -620,6 +620,9 @@ export type PendingQuiz = {
   moduleId: string;
   moduleName: string;
   trackName: string;
+  /** Which core certification the quiz advances — the certifications page
+      matches on this rather than re-deriving the track. */
+  certificationId: string;
 };
 
 /**
@@ -653,6 +656,17 @@ export type PendingQuiz = {
  * recently earned the right to sit.
  */
 export async function pendingQuiz(client: Client): Promise<PendingQuiz | null> {
+  const all = await pendingQuizzes(client);
+  return all[0] ?? null;
+}
+
+/**
+ * EVERY pending quiz, in track order. pendingQuiz above is the first of these;
+ * the certifications page reads the whole list so each track tile can name its
+ * own waiting quiz. One predicate, one ordering — the page must not grow a
+ * second definition of "what is next".
+ */
+export async function pendingQuizzes(client: Client): Promise<PendingQuiz[]> {
   const { data: rows } = await client
     .from("my_module_progress")
     .select("module_id, course_id, module_name, sort_order, items_done, has_quiz, quiz_passed, completed_at")
@@ -668,7 +682,7 @@ export async function pendingQuiz(client: Client): Promise<PendingQuiz | null> {
     module_name: string;
     sort_order: number;
   }[];
-  if (candidates.length === 0) return null;
+  if (candidates.length === 0) return [];
 
   /* Track order, from the same tables pickItem walks. Core tracks only — the
      morning's link should never point outside the certification it advances. */
@@ -679,7 +693,7 @@ export async function pendingQuiz(client: Client): Promise<PendingQuiz | null> {
   const certs = new Map(
     ((certRows ?? []) as { id: string; name: string; sort: number }[]).map((c) => [c.id, c])
   );
-  const courseRank = new Map<string, { rank: number; track: string }>();
+  const courseRank = new Map<string, { rank: number; track: string; certId: string }>();
   for (const cc of (ccRows ?? []) as {
     certification_id: string;
     course_id: string;
@@ -690,28 +704,28 @@ export async function pendingQuiz(client: Client): Promise<PendingQuiz | null> {
     courseRank.set(cc.course_id, {
       rank: cert.sort * 1000 + cc.sort,
       track: cert.name,
+      certId: cert.id,
     });
   }
 
-  const ranked = candidates
+  return candidates
     .map((m) => ({ m, at: courseRank.get(m.course_id) }))
-    .filter((x): x is { m: (typeof candidates)[number]; at: { rank: number; track: string } } =>
-      Boolean(x.at)
+    .filter(
+      (x): x is { m: (typeof candidates)[number]; at: { rank: number; track: string; certId: string } } =>
+        Boolean(x.at)
     )
     .sort(
       (a, b) =>
         a.at.rank - b.at.rank ||
         a.m.sort_order - b.m.sort_order ||
         a.m.module_id.localeCompare(b.m.module_id)
-    );
-
-  const first = ranked[0];
-  if (!first) return null;
-  return {
-    moduleId: first.m.module_id,
-    moduleName: first.m.module_name,
-    trackName: first.at.track,
-  };
+    )
+    .map((x) => ({
+      moduleId: x.m.module_id,
+      moduleName: x.m.module_name,
+      trackName: x.at.track,
+      certificationId: x.at.certId,
+    }));
 }
 
 /* ---------------------------------------------------------------------------

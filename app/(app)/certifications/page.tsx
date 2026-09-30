@@ -1,25 +1,40 @@
 /* ============================================================================
-   EDIAGD — the certifications wall
+   EDIAGD — the certifications page says where you stand
 
-   The rung is stated in words, not only drawn. "5 of 8 core — 3 from EDIAGD
-   Certified" is the thing an advisor is actually playing for, and a progress
-   ring alone never says how far.
+   Rebuilt 30 September after Ryan reviewed it and could not tell which
+   credential he was working toward, how far along he was, or what was next.
+   Three faults, fixed in order:
 
-   INACTIVE TRACKS MUST NOT READ AS FAILURE. Four of the twelve craft tracks and
-   five of the eighteen service tracks have no content behind them, or too
-   little to clear the bar. That is Mitch's writing queue, not the advisor's
-   backlog, so those tiles take the badge wall's "Coming soon" treatment and are
-   grouped away from the ones in play — the same decision lib/badges.ts made
-   about future badges and for the same reason.
+     1  The tile led with items — "30 of 59" — and since 0143 a cue gates
+        nothing, so the number described the scenery, not the climb. Tiles now
+        lead with MODULES ("1 of 7 modules"), which is what the credential
+        actually counts.
+     2  Tiles went nowhere. Each core track now links to
+        /certifications/[slug] — what completing the track takes, in the order
+        the loop will serve it.
+     3  Nothing named the credential. The page now opens with the credential
+        the advisor is inside — EDIAGD Certified, a bar of modules complete
+        over modules total across the nine core tracks, and the sentence
+        "N of 9 core tracks complete."
+
+   INACTIVE TRACKS STILL NEVER READ AS FAILURE, and the old mixed "Coming soon"
+   bucket is split: Master tracks under Master (a different ladder, not absent
+   content), empty service families under Service. Clay never red; mobile
+   first; BRAND tokens only.
 ============================================================================ */
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { rooftopToday } from "@/lib/admin-advisor-detail";
-import { loadCertifications, type CertificationTile } from "@/lib/certifications";
+import {
+  loadCertificationsOverview,
+  type CertificationTile,
+  type CoreTrackTile,
+} from "@/lib/certifications";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
+import { ProgressBar } from "@/components/library/CoursePieces";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 export const metadata = { title: "Certifications" };
@@ -46,192 +61,265 @@ export default async function CertificationsPage() {
     ? await rooftopToday(supabase, membership.rooftop_id)
     : (new Date().toISOString().slice(0, 10) as IsoDate);
 
-  const view = await loadCertifications(supabase, user.id, today);
+  const view = await loadCertificationsOverview(supabase, user.id, today);
 
-  const inPlay = view.tiles.filter((t) => t.active || t.state !== "unearned");
-  const soon = view.tiles.filter((t) => !t.active && t.state === "unearned");
-
-  const craft = inPlay.filter((t) => t.kind === "craft");
-  const service = inPlay.filter((t) => t.kind === "service");
+  const barPct =
+    view.coreModulesTotal > 0
+      ? Math.round((view.coreModulesDone / view.coreModulesTotal) * 100)
+      : 0;
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
       <h1 className="ediagd-eyebrow">Your certifications</h1>
-      <p className="mt-1 text-2xl font-extrabold text-navy">{view.rungLine}</p>
-      {/* Why the headline's 8 and the Craft section's 4 differ. Both numbers
-          are right; without this the screen reads as contradicting itself. */}
-      {view.buildLine && (
-        <p className="mt-1 text-sm text-ink-soft">{view.buildLine}</p>
-      )}
 
-      {view.credential ? (
-        <Card className="mt-4 flex items-center gap-4">
+      {/* ---- The credential you are inside --------------------------------
+          One card, first, because it is the thing every tile below feeds.
+          The bar counts MODULES over the nine core tracks — the same
+          population the credential computation requires — never items. */}
+      <Card className="mt-3 p-4">
+        <div className="flex items-center gap-4">
           <SealMedallion
             glyphKey="credential_certified"
             name="EDIAGD Certified"
-            state="earned"
+            state={view.credential ? "earned" : "locked"}
             size={72}
           />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-base font-extrabold text-navy">EDIAGD Certified</p>
-            <p className="ediagd-numeral text-xs text-ink-soft">
-              {view.credential.certificateId}
+            <p className="mt-0.5 text-sm text-ink-soft">
+              {view.coreHeld} of {view.coreCount} core tracks complete
             </p>
-            <p className="mt-0.5 text-xs text-ink-soft">
-              {view.credential.currency}
-            </p>
+            {view.credential && (
+              <>
+                <p className="ediagd-numeral mt-0.5 text-xs text-ink-soft">
+                  {view.credential.certificateId}
+                </p>
+                <p className="text-xs text-ink-soft">{view.credential.currency}</p>
+              </>
+            )}
           </div>
-        </Card>
-      ) : null}
-
-      <Section title="Craft" tiles={craft} />
-      <Section title="Service" tiles={service} />
-
-      {soon.length > 0 && (
-        <section className="mt-8">
-          <div className="flex items-baseline justify-between gap-3 px-1">
-            <h2 className="ediagd-eyebrow">Coming soon</h2>
-            <span className="ediagd-numeral text-xs font-bold text-ink-soft">
-              {soon.length}
-            </span>
-          </div>
-          {/* Says whose queue this is. Without this line a wall of nine locked
-              seals reads as nine things the advisor has not got round to. */}
-          <p className="mt-1 px-1 text-xs text-ink-soft">
-            These tracks open as their coaching content lands. Nothing to do yet.
+        </div>
+        <div className="mt-3">
+          <ProgressBar pct={barPct} />
+          <p className="ediagd-numeral mt-1 text-xs text-ink-soft">
+            {view.coreModulesDone} of {view.coreModulesTotal} modules across the
+            nine tracks
           </p>
-          <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {soon.map((t) => (
+        </div>
+        {view.buildLine && (
+          <p className="mt-2 text-xs text-ink-soft">{view.buildLine}</p>
+        )}
+      </Card>
+
+      {/* One line for the tier above, while it is above. Master is defined and
+          unreachable in code (computeCredential says so); this page shows its
+          tracks below and claims nothing about the credential itself. */}
+      {!view.credential && (
+        <p className="mt-2 px-1 text-xs text-ink-soft">
+          Master Certification opens after EDIAGD Certified.
+        </p>
+      )}
+
+      {/* ---- The nine core tracks, in the order the loop walks them ------- */}
+      <section className="mt-8">
+        <div className="flex items-baseline justify-between gap-3 px-1">
+          <h2 className="ediagd-eyebrow">Core tracks</h2>
+          <span className="ediagd-numeral text-xs font-bold text-ink-soft">
+            {view.coreHeld} of {view.coreTracks.length}
+          </span>
+        </div>
+        <Card className="mt-3 px-4">
+          <ul className="divide-y divide-line">
+            {view.coreTracks.map((t) => (
               <li key={t.id}>
-                <Tile tile={t} />
+                <CoreTrackRow tile={t} />
               </li>
             ))}
           </ul>
+        </Card>
+      </section>
+
+      {/* ---- Master — a ladder above, never a backlog ---------------------- */}
+      {(view.masterActive.length > 0 || view.masterSoon.length > 0) && (
+        <section className="mt-8">
+          <h2 className="ediagd-eyebrow px-1">Master</h2>
+          <p className="mt-1 px-1 text-xs text-ink-soft">
+            The tier above EDIAGD Certified. Its tracks are listed here as they
+            open; the credential itself is defined later.
+          </p>
+          {view.masterActive.length > 0 && (
+            <Card className="mt-3 px-4">
+              <ul className="divide-y divide-line">
+                {view.masterActive.map((t) => (
+                  <li key={t.id}>
+                    <MasterTrackRow tile={t} />
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+          {view.masterSoon.length > 0 && (
+            <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {view.masterSoon.map((t) => (
+                <li key={t.id}>
+                  <SoonTile tile={t} note="Master track" />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {/* ---- The service ladder, clearly not the curriculum ---------------- */}
+      {(view.serviceActive.length > 0 || view.serviceSoon.length > 0) && (
+        <section className="mt-8">
+          <div className="flex items-baseline justify-between gap-3 px-1">
+            <h2 className="ediagd-eyebrow">Service ladder</h2>
+            <span className="ediagd-numeral text-xs font-bold text-ink-soft">
+              {view.serviceActive.filter((t) => t.state !== "unearned").length} of{" "}
+              {view.serviceActive.length}
+            </span>
+          </div>
+          <p className="mt-1 px-1 text-xs text-ink-soft">
+            Derived from your numbers — the morning pitch works these families,
+            biggest gap first.
+          </p>
+          <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {view.serviceActive.map((t) => (
+              <li key={t.id}>
+                <ServiceTile tile={t} />
+              </li>
+            ))}
+          </ul>
+          {view.serviceSoon.length > 0 && (
+            <>
+              <p className="mt-4 px-1 text-xs text-ink-soft">
+                These families open as their coaching content lands. Nothing to
+                do yet.
+              </p>
+              <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {view.serviceSoon.map((t) => (
+                  <li key={t.id}>
+                    <SoonTile tile={t} note="Opens with content" />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
       )}
     </main>
   );
 }
 
-function Section({ title, tiles }: { title: string; tiles: CertificationTile[] }) {
-  if (tiles.length === 0) return null;
-  const held = tiles.filter((t) => t.state !== "unearned").length;
+/**
+ * One core track: modules first, then what is next, and the whole row is the
+ * door to the track page. The next-line comes from the same predicates the
+ * loop uses (see loadCertificationsOverview) — this component only renders it.
+ */
+function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
+  const earned = tile.state !== "unearned";
+  const line = earned
+    ? tile.currency ?? "Earned"
+    : !tile.active
+      ? "Coming soon"
+      : `${tile.doneModules} of ${tile.totalModules} modules`;
 
   return (
-    <section className="mt-8">
-      <div className="flex items-baseline justify-between gap-3 px-1">
-        <h2 className="ediagd-eyebrow">{title}</h2>
-        <span className="ediagd-numeral text-xs font-bold text-ink-soft">
-          {held} of {tiles.length}
+    <Link
+      href={`/certifications/${encodeURIComponent(tile.slug)}`}
+      className="flex min-h-[3.5rem] items-center gap-3 py-3.5 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      <SealMedallion
+        glyphKey={tile.glyphKey}
+        name={tile.name}
+        state={earned ? "earned" : tile.active ? "locked" : "soon"}
+        size={48}
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-base font-bold text-navy">
+          {tile.name}
         </span>
-      </div>
-      <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {tiles.map((t) => (
-          <li key={t.id}>
-            <Tile tile={t} />
-          </li>
-        ))}
-      </ul>
-    </section>
+        <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
+          {line}
+        </span>
+        {tile.nextLine && (
+          <span className="mt-0.5 block text-xs font-bold text-ocean">
+            {tile.nextLine}
+          </span>
+        )}
+      </span>
+      <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
+        ›
+      </span>
+    </Link>
+  );
+}
+
+/** An active Master track: same row shape, marked as Master. */
+function MasterTrackRow({ tile }: { tile: CertificationTile }) {
+  const earned = tile.state !== "unearned";
+  return (
+    <Link
+      href={`/certifications/${encodeURIComponent(tile.slug)}`}
+      className="flex min-h-[3.5rem] items-center gap-3 py-3.5 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      <SealMedallion
+        glyphKey={tile.glyphKey}
+        name={tile.name}
+        state={earned ? "earned" : "locked"}
+        size={48}
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-base font-bold text-navy">
+          {tile.name}
+        </span>
+        <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
+          {earned
+            ? tile.currency ?? "Earned"
+            : `Master track · ${tile.doneModules} of ${tile.totalModules} modules`}
+        </span>
+      </span>
+      <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
+        ›
+      </span>
+    </Link>
   );
 }
 
 /**
- * One track.
- *
- * A LAPSED TRACK RENDERS EARNED. Design law 3 — the seal it earned stays the
- * seal it earned, and the currency is a line of copy beside it. Nothing here
- * dims or crosses out something somebody holds.
+ * A service certification. Unlinked: the service ladder is worked from the
+ * morning pitch and the family shelf, not from a curriculum page — a track
+ * page full of films the derivation reorders would claim an order the pitch
+ * does not keep.
  */
-function Tile({ tile }: { tile: CertificationTile }) {
+function ServiceTile({ tile }: { tile: CertificationTile }) {
   const earned = tile.state !== "unearned";
-  const state = earned ? "earned" : tile.active ? "locked" : "soon";
-
-  /*
-   * ---- RULING 7: WHAT IS LEFT, AND THE WAY TO DO IT ----------------------
-   *
-   * The failure this closes: a track at 100% of modules, incomplete, and
-   * nothing saying why. statusLine already NAMES the outstanding story; until
-   * the form existed that was as far as it could go, and "Your Good News
-   * Story" with no way to write one is a better dead end than "Finishing up"
-   * but a dead end all the same.
-   *
-   * Now it is a link. Same shape as describeOutstanding for a morning: what is
-   * left, and the way to do it, in one place.
-   */
-  const needsStory = !earned && tile.active && tile.storyRequired && !tile.storySubmitted;
-  const storyHref = `/certifications/${encodeURIComponent(tile.slug)}/story`;
-
-  const inner = (
-    <>
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card">
       <SealMedallion
         glyphKey={tile.glyphKey}
         name={tile.name}
-        state={state}
+        state={earned ? "earned" : "locked"}
         size={96}
       />
       <p className="text-sm font-bold leading-tight text-navy">{tile.name}</p>
-      <p
-        className={`text-xs leading-tight ${
-          needsStory ? "font-extrabold text-ocean underline underline-offset-2" : "text-ink-soft"
-        }`}
-      >
-        {statusLine(tile)}
+      <p className="text-xs leading-tight text-ink-soft">
+        {earned
+          ? tile.currency ?? "Earned"
+          : `${tile.doneItems} of ${tile.itemCount} items`}
       </p>
-    </>
-  );
-
-  if (needsStory) {
-    return (
-      <Link
-        href={storyHref}
-        className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-      >
-        {inner}
-      </Link>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card">
-      {inner}
     </div>
   );
 }
 
-/**
- * The one line under the seal.
- *
- * "Quiz remaining" exists because items and modules can disagree: every cue in
- * a course can be finished while its quiz is still unpassed, and a bar sitting
- * at 100% on a track that is not earned would be the screen arguing with
- * itself.
- */
-function statusLine(t: CertificationTile): string {
-  /* HELD IS THE END STATE. A track does not lapse, so there is no "renew"
-     branch here any more — the date shown is the day it was earned. The
-     credential is the thing that can go out of date, and it says so on its own
-     card above. */
-  if (t.state === "held") return t.currency ?? "Earned";
-  if (!t.active) return "Coming soon";
-
-  if (t.itemCount > 0 && t.doneItems >= t.itemCount) {
-    if (t.totalModules > 0 && t.doneModules < t.totalModules) return "Quiz remaining";
-
-    /*
-     * ---- 3e RULING 5: AN UNWRITTEN STORY MUST BE LOUD --------------------
-     *
-     * The failure this prevents: an advisor at 100% of modules with an
-     * incomplete track and no idea why. Months of work, one sentence short,
-     * and a line reading "Finishing up" — which is true, useless, and looks
-     * like the app is thinking rather than waiting for them.
-     *
-     * Named, not hinted, and it reads like describeOutstanding does every
-     * morning in dayGate.ts. The track should not invent a second voice for
-     * the same job.
-     */
-    if (t.storyRequired && !t.storySubmitted) return "Your Good News Story";
-    return "Finishing up";
-  }
-  return `${t.doneItems} of ${t.itemCount} items`;
+/** A not-yet-earnable track — somebody's writing queue, never a backlog. */
+function SoonTile({ tile, note }: { tile: CertificationTile; note: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-card bg-white p-3 text-center shadow-card">
+      <SealMedallion glyphKey={tile.glyphKey} name={tile.name} state="soon" size={96} />
+      <p className="text-sm font-bold leading-tight text-navy">{tile.name}</p>
+      <p className="text-xs leading-tight text-ink-soft">{note}</p>
+    </div>
+  );
 }

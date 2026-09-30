@@ -94,7 +94,8 @@
     "fixture:story": "rm -rf .tmp-shot2 && tsc -p scripts/tsconfig.storyshot.json && node .tmp-shot2/story-screenshot-fixture.js",
     "provision:advisor": "rm -rf .tmp-pa && tsc scripts/provision-advisor.ts --outDir .tmp-pa --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-pa/provision-advisor.js",
     "accept:reference": "rm -rf .tmp-ref && tsc -p scripts/tsconfig.reference.json && mkdir -p .tmp-ref/node_modules/server-only && echo \"module.exports={};\" > .tmp-ref/node_modules/server-only/index.js && ln -sfn .. .tmp-ref/node_modules/@ && node .tmp-ref/scripts/reference-leak-acceptance.js",
-    "accept:lock-basic": "rm -rf .tmp-lba && tsc -p scripts/tsconfig.lockbasic.json && mkdir -p .tmp-lba/node_modules/server-only && echo \"module.exports={};\" > .tmp-lba/node_modules/server-only/index.js && ln -sfn .. .tmp-lba/node_modules/@ && node .tmp-lba/scripts/lock-basic-acceptance.js",
+    "accept:certifications-page": "rm -rf .tmp-cpa && tsc -p scripts/tsconfig.certpage.json && mkdir -p .tmp-cpa/node_modules/server-only && echo \"module.exports={};\" > .tmp-cpa/node_modules/server-only/index.js && ln -sfn .. .tmp-cpa/node_modules/@ && node .tmp-cpa/scripts/certifications-page-acceptance.js",
+  "accept:lock-basic": "rm -rf .tmp-lba && tsc -p scripts/tsconfig.lockbasic.json && mkdir -p .tmp-lba/node_modules/server-only && echo \"module.exports={};\" > .tmp-lba/node_modules/server-only/index.js && ln -sfn .. .tmp-lba/node_modules/@ && node .tmp-lba/scripts/lock-basic-acceptance.js",
   "db:migrate": "bash scripts/db-migrate.sh",
     "check:gating": "rm -rf .tmp-cg && tsc scripts/check-gating-types.ts --outDir .tmp-cg --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-cg/check-gating-types.js"
   },
