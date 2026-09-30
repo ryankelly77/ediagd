@@ -433,6 +433,46 @@ fourteen retires, so eleven of them have reasons that live only in migration
 comments — 0134 adds `retired_reason` and writes the sentence into the row rather
 than only into the commit that made it.
 
+## A slate names the shoot, not the curriculum
+
+**The series a film announces is where Mitch filmed it, not where it belongs.**
+Title matching will keep almost working, and almost is the dangerous part.
+
+Five separate near-misses in one week, every one a title that pointed at the wrong
+home:
+
+| the slate says | it belongs to | how it was caught |
+|---|---|---|
+| Selling Skills | Overcoming Objections | Mitch said so |
+| Get the Hell Out of Here | Setting up the MPI | the slates name the MPI setup |
+| Coverage is Key | Chemical Warranty | the identification pass |
+| Name Tag | CSI | Ryan's ruling — and the quiz bank named CSI parts with Name Tag titles |
+| Success Cycle, Vocabulary That Sails | Power of Positive Language? | the two films that teach vocabulary are slated Success Cycle |
+
+**And the same shape inside a single series.** Four Step Close parts 1–9 agree
+between the quiz bank and the films; from part 10 they diverge, because the
+workbook carries a lesson — *Fit the Close to the Customer* — that no film exists
+for. Joining on the part number would have attached those questions to a film
+about *After the Close*, and it would have looked right. Comparing the **subjects**
+caught it.
+
+CSI is the sharpest instance because it nearly went the other way. Twelve quiz
+parts, ten Name Tag films, the same two lesson names in both — and **only two of
+twelve actually match by content.** The quiz describes the customer visit; the
+films describe the literal name tag. A title match would have put customer-visit
+questions onto name-tag modules, all forty-one of them.
+
+**In practice:** a slate is evidence about which shoot a file came from. It is a
+*hypothesis* about the curriculum, and the test is the content — the transcript
+body, not the title, not the part number. When they disagree, the slate loses and
+**nobody reslates the film**: a film keeps the name Mitch gave it and the routing
+decision is recorded separately, because reslating to match a curriculum destroys
+the only record of what was actually shot.
+
+This is [join on what was observed](#join-on-what-was-observed-not-on-what-was-derived)
+applied to curriculum: the slate is observed, the series is derived, and the two
+are not the same key.
+
 ## Never identify a person by name
 
 **Ids only** — in fixtures, in scripts, in production paths, everywhere. Names
@@ -485,6 +525,34 @@ which is this file's other standing rule wearing an infrastructure costume.
 *Written after the rule's wording stopped a deploy mid-phase. The instinct to
 stop was right; the ambiguity was the bug, so it is fixed here rather than
 answered once.*
+
+### A base branch is not safe to keep, and not safe to delete. Check it.
+
+**A branch is not safe to delete while anything is based on it** — that was the
+first half, learned when deleting a merged branch orphaned the PR stacked on top
+of it.
+
+**The second half is the opposite mistake, and it happened on #25 and #26.**
+Because the instruction was now "do not use `--delete-branch`", two stacked PRs
+were left pointing at the branch below them rather than at `main`. GitHub only
+re-targets a PR when its base branch is **deleted**, so keeping the branches meant
+the bases stayed stale.
+
+`gh pr merge 25` would have succeeded. It would have merged #25 into
+`attach-craft-films`, reported a clean merge, closed the PR — and **put nothing on
+`main`.** A green merge and an unshipped change, which is the same silent success
+that lost 0129 and 0130.
+
+> **Neither deleting nor keeping a base branch is safe by default. Check the base
+> before every merge.**
+
+**In practice:** `gh pr view <n> --json baseRefName` before each merge in a stack,
+and re-target with `gh pr edit <n> --base main` once the one below it lands. The
+check costs one command; the failure is invisible because everything reports
+success.
+
+This is the same defect as a summary that prints regardless of what happened — the
+merge tells you it merged, and does not tell you where.
 
 ## The Drop Zone ingest pipeline
 
