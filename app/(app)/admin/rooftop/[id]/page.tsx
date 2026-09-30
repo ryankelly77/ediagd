@@ -77,7 +77,9 @@ export default async function AdminRooftopPage({
   const details = await loadAdvisorDetails(
     supabase,
     advisors.map((a) => a.userId),
-    today
+    today,
+    /* F6: this page IS one rooftop, so its closures ride along. */
+    id
   );
 
   const rows: EngagementRow[] = advisors.map((a) => {

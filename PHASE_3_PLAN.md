@@ -159,6 +159,16 @@ from that colleague's weaknesses. See F3.
 
 ### F3 — The "whose book is this" disclosure is invisible to the role that needs it
 
+**CLOSED 30 September (0149, branch `beaumont-first`).** Option (2) was taken:
+`my_book_owner()`, a security definer function returning only the book-owner
+display name for the caller's own mapped `op_code_id` — never a wider
+`dms_advisor_read`, because the roster carries columns that are not the
+advisor's to browse. The page calls it with the swallowed error removed (a
+failure throws now), and the acceptance proves the name comes back for a
+mapped advisor, nothing for an unmapped account, and that the advisor still
+cannot read `dms_advisor` itself. The original finding stands below as the
+record of why.
+
 **Trigger:** before 1 October. **Owner:** Ryan.
 
 `app/(app)/advisor/page.tsx:114-125` exists precisely to stop somebody reading
@@ -248,6 +258,16 @@ Also worth carrying forward, and cheaper than a migration:
   the invoker-view shape is the better starting point.
 
 ### F6 — The last display surface still reading `current_len` raw
+
+**CLOSED 30 September (branch `beaumont-first`) — the proper fix, not the
+patch.** `loadAdvisorDetails` takes the rooftop, loads its confirmed closures
+per chunk alongside the full swell state and the paddle settings, and
+`swellAsOf` runs per advisor with the complete context (schedule, calendar-
+year Island Time, closures). Both callers — `/admin/engagement` and
+`/admin/rooftop/[id]` — pass their rooftop. Proven both ways: a streak whose
+gap is entirely store closures reads ALIVE, the same gap without them reads
+0 while the stored row still says 7. The original warning stands below as
+the record of why the quick version was refused.
 
 **Trigger:** before 1 October. **Owner:** Ryan. **Not a patch — a proper fix.**
 

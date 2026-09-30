@@ -635,7 +635,7 @@ export type PendingQuiz = {
  * TWO_LADDERS records Ryan's preference — the quiz in slot 3 on the day a
  * module closes — as not built. Building it is a change to the day stamp, the
  * day gate, the celebration's economy and the ritual's step machinery, none of
- * which should move the night before sixty advisors meet the loop. What ships
+ * which should move the night before a store meets the loop. What ships
  * tonight is the same DECISION exposed the smallest honest way: the completion
  * screen names the waiting quiz and links to the page that already knows how
  * to give, grade and complete it. When slot 3 learns to serve a quiz, it asks
