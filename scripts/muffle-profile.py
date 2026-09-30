@@ -40,6 +40,7 @@ the same lesson shot on the same rig — which is what a reshoot decision needs.
 Between two takes, lower is worse, and the gap is the answer.
 """
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -163,13 +164,51 @@ def mmss(t: float) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("videos", nargs="+")
+    ap.add_argument("videos", nargs="*")
     ap.add_argument("--model", default="small.en")
     ap.add_argument("--passages", action="store_true", help="list muffled in/out points")
+    ap.add_argument("--from-file", default="",
+                    help="read one path per line instead of listing them")
+    ap.add_argument("--out", default="",
+                    help="JSON to write/extend after EVERY film, so a 400-film run resumes")
     args = ap.parse_args()
 
+    videos = list(args.videos)
+    if args.from_file:
+        with open(args.from_file) as fh:
+            videos += [l.rstrip("\n") for l in fh if l.strip()]
+    if not videos:
+        print("  nothing to profile: pass paths or --from-file", file=sys.stderr)
+        return 1
+
+    """
+    RESUMABLE, BECAUSE A LIBRARY-WIDE RUN IS HOURS LONG.
+
+    Written after every single film rather than at the end. A crash at film 300 of
+    418 otherwise loses 300 Drive pulls, and the temptation then is to profile a
+    subset and report it as the library — which is the scoped-measurement rule this
+    very run exists to avoid.
+    """
+    done = {}
+    if args.out and os.path.exists(args.out):
+        try:
+            done = {r["file"]: r for r in json.load(open(args.out))["films"]}
+            print(f"  resuming: {len(done)} already profiled")
+        except Exception:
+            done = {}
+
+    def flush():
+        if not args.out:
+            return
+        with open(args.out, "w") as fh:
+            json.dump({"threshold_db": MUFFLED_DB, "smooth_sec": SMOOTH_SEC,
+                       "films": list(done.values())}, fh, indent=1)
+
     rows, failed = [], []
-    for v in args.videos:
+    for v in videos:
+        if os.path.basename(v) in done:
+            rows.append(done[os.path.basename(v)])
+            continue
         if not os.path.exists(v):
             print(f"  NOT FOUND  {v}", file=sys.stderr)
             failed.append(v)
@@ -179,6 +218,8 @@ def main() -> int:
             failed.append(v)
             continue
         rows.append(r)
+        done[r["file"]] = r
+        flush()
 
         if r["no_speech"]:
             print(f"  {r['file'][:52]:54} {r['seconds']:>6.1f}s   NO SPEECH DETECTED "
@@ -196,7 +237,7 @@ def main() -> int:
     THE SUMMARY AND THE EXIT CODE ARE DERIVED. A closing line that prints on the
     failure path unchanged is decoration, not a result.
     """
-    print(f"\n  profiled {len(rows)} of {len(args.videos)} requested"
+    print(f"\n  profiled {len(rows)} of {len(videos)} requested"
           + (f", {len(failed)} FAILED" if failed else ""))
     for v in failed:
         print(f"    FAILED  {v}", file=sys.stderr)

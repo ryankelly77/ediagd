@@ -486,6 +486,34 @@ which is this file's other standing rule wearing an infrastructure costume.
 stop was right; the ambiguity was the bug, so it is fixed here rather than
 answered once.*
 
+### A base branch is not safe to keep, and not safe to delete. Check it.
+
+**A branch is not safe to delete while anything is based on it** — that was the
+first half, learned when deleting a merged branch orphaned the PR stacked on top
+of it.
+
+**The second half is the opposite mistake, and it happened on #25 and #26.**
+Because the instruction was now "do not use `--delete-branch`", two stacked PRs
+were left pointing at the branch below them rather than at `main`. GitHub only
+re-targets a PR when its base branch is **deleted**, so keeping the branches meant
+the bases stayed stale.
+
+`gh pr merge 25` would have succeeded. It would have merged #25 into
+`attach-craft-films`, reported a clean merge, closed the PR — and **put nothing on
+`main`.** A green merge and an unshipped change, which is the same silent success
+that lost 0129 and 0130.
+
+> **Neither deleting nor keeping a base branch is safe by default. Check the base
+> before every merge.**
+
+**In practice:** `gh pr view <n> --json baseRefName` before each merge in a stack,
+and re-target with `gh pr edit <n> --base main` once the one below it lands. The
+check costs one command; the failure is invisible because everything reports
+success.
+
+This is the same defect as a summary that prints regardless of what happened — the
+merge tells you it merged, and does not tell you where.
+
 ## The Drop Zone ingest pipeline
 
 `INGEST.md` is the ingest procedure — the seven phases from Mitch's raw uploads to draft
