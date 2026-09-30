@@ -119,6 +119,7 @@ async function main() {
   await service.from("content_progress").delete().eq("user_id", advisorId);
   await service.from("advisor_certification").delete().eq("user_id", advisorId);
   await service.from("advisor_credential").delete().eq("user_id", advisorId);
+  await service.from("advisor_story").delete().eq("user_id", advisorId);
   console.log("  (setup) advisor craft state reset\n");
 
   const asAdvisor = await signedInAs(advisorId);
@@ -308,15 +309,66 @@ async function main() {
     for (const m of gatingMods) await completeLesson(m.id);
     console.log("  (setup) Walk Around lessons 2 and 3 completed through the real path\n");
 
-    const accrual = await accrueFromModule(
+    /* THE STORY LEG, PROVEN BOTH WAYS — Ryan's ruling, 30 September: the
+       grant goes through trackComplete(), which carries the story beside the
+       module rule. story_required stays ON. */
+    const { data: settings } = await service
+      .from("game_settings")
+      .select("story_required")
+      .limit(1)
+      .maybeSingle();
+    assert(settings?.story_required === true, "story_required is ON — the gate under test is live");
+
+    /* THE REFUSAL HALF: lessons done, no story — no grant, and the wall
+       NAMES the story as what is outstanding rather than going quiet. */
+    const refused = await accrueFromModule(
       service as never,
       advisorId,
       advisorRow.rooftop_id,
       gatingMods[1]!.id
     );
     assert(
-      accrual.earned.includes("craft-walk-around"),
-      `the accrual grants Walk Around with its four cue-only modules still open (earned: ${JSON.stringify(accrual.earned)})`
+      refused.earned.length === 0,
+      `lessons done, no story: the accrual grants nothing (earned: ${JSON.stringify(refused.earned)})`
+    );
+    {
+      const { data: rows } = await service
+        .from("advisor_certification")
+        .select("id")
+        .eq("user_id", advisorId);
+      assert((rows ?? []).length === 0, "lessons done, no story: no advisor_certification row exists");
+      const view = await loadCertificationsOverview(asAdvisor as never, advisorId, today);
+      const wa = view.coreTracks.find((t) => t.name === "Walk Around");
+      assert(
+        wa?.state === "unearned" && wa?.nextLine === "Story to write",
+        `the wall keeps naming the story as outstanding (got ${wa?.state}, "${wa?.nextLine}")`
+      );
+      const detail = await loadTrackDetail(asAdvisor as never, advisorId, wa!.slug);
+      assert(
+        detail?.storyRequired === true && detail?.storySubmitted === false,
+        "track page: the story leg is required and not yet met"
+      );
+    }
+
+    /* THE ACCEPTANCE HALF: story submitted — the grant lands, the seal
+       renders. The row is the advisor's own account; the acceptance writes
+       one sentence, ids only, no customer names. */
+    await service.from("advisor_story").insert({
+      user_id: advisorId,
+      rooftop_id: advisorRow.rooftop_id,
+      certification_id: waCert!.id as string,
+      body: "I started opening the hood with the customer standing next to me instead of after they left, and the questions changed.",
+      shared_to_team: false,
+    });
+    const granted = await accrueFromModule(
+      service as never,
+      advisorId,
+      advisorRow.rooftop_id,
+      gatingMods[1]!.id
+    );
+    assert(
+      granted.earned.includes("craft-walk-around"),
+      `story submitted: the accrual grants Walk Around (earned: ${JSON.stringify(granted.earned)})`
     );
 
     const { data: holding } = await service
@@ -330,12 +382,12 @@ async function main() {
     const wa = view.coreTracks.find((t) => t.name === "Walk Around");
     assert(
       wa?.state === "held" && view.coreHeld === 1,
-      `the wall now reads 1 of 9 core tracks, Walk Around held (got ${wa?.state}, ${view.coreHeld})`
+      `the wall now reads 1 of 9 core tracks, Walk Around held — the seal renders (got ${wa?.state}, ${view.coreHeld})`
     );
     const detail = await loadTrackDetail(asAdvisor as never, advisorId, wa!.slug);
     assert(
-      detail?.state === "held" && detail.gatingDone === 3 && detail.gatingTotal === 3,
-      `track page: earned, 3 of 3 lessons (got ${detail?.state}, ${detail?.gatingDone} of ${detail?.gatingTotal})`
+      detail?.state === "held" && detail.gatingDone === 3 && detail.gatingTotal === 3 && detail.storySubmitted === true,
+      `track page: earned, 3 of 3 lessons, story submitted (got ${detail?.state}, ${detail?.gatingDone} of ${detail?.gatingTotal})`
     );
   }
 

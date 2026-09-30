@@ -153,12 +153,33 @@ green; eslint and `tsc --noEmit` clean.
   Recorded here rather than fixed; one line in the October list.
 - `certificationProgress()` in lib/certification.ts — pure helper; its only
   callers pass what they choose, no live surface feeds it all-modules today.
-- **A separate finding, named not fixed:** TWO_LADDERS says the story leg
-  lives in `trackComplete()` beside the module rule — but nothing on the
-  accrual path calls `trackComplete()`; `accrueCraft` grants on
-  `craftComplete()` alone, so a track can be earned with no Good News Story
-  while `game_settings.story_required` is ON. Two documents disagreeing about
-  the same fact is the bug; this one is the doc and the engine. Ryan's call.
+- ~~**A separate finding, named not fixed:** the accrual path never calls
+  `trackComplete()`, so a track could be earned with no Good News Story.~~
+  **Ruled and fixed same day** (branch `story-gates-the-grant`): the story is
+  required, the doc was right, the engine moves. `accrueCraft` now grants
+  through `trackComplete()` — `craftModuleProgress()` supplies the gating
+  modules leg and returns the LIST, never the verdict; the verdict is
+  `trackComplete()`'s, where the story leg lives beside the module rule.
+  `loadStoryGate` remains the one read site of `story_required` (its own
+  contract), called with the service client because the credential needs the
+  true answer, and a failed read throws rather than grants. `story_required`
+  stays ON. Proven both ways in the acceptance — **28 passed, 0 failed**:
+
+  ```
+  ok  story_required is ON — the gate under test is live
+  ok  lessons done, no story: the accrual grants nothing (earned: [])
+  ok  lessons done, no story: no advisor_certification row exists
+  ok  the wall keeps naming the story as outstanding (unearned, "Story to write")
+  ok  track page: the story leg is required and not yet met
+  ok  story submitted: the accrual grants Walk Around
+  ok  exactly one advisor_certification row exists
+  ok  the wall now reads 1 of 9 core tracks, Walk Around held — the seal renders
+  ok  track page: earned, 3 of 3 lessons, story submitted
+  ```
+
+  The service-certification path is deliberately untouched: stories are a
+  craft-track leg — eight tracks, eight films, eight stories — and
+  `accrueService` has no story to consult.
 
 ## Notes for Ryan
 
