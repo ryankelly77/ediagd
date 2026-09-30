@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRoByAdvisor } from "@/lib/family-labor";
 import { loadCredentialPills } from "@/lib/certifications";
+import { loadLightUsers } from "@/lib/service-family";
 import { Card } from "@/components/brand/Card";
 import Link from "next/link";
 import { TeamRoster } from "@/components/manager/TeamRoster";
@@ -181,8 +182,13 @@ export default async function ManagerPage() {
     if (!row.op_code_id || !row.user_id) continue;
     userIdByOpCode.set(row.op_code_id as string, row.user_id as string);
   }
-  const credentialByUser = await loadCredentialPills(supabase, [
-    ...new Set(userIdByOpCode.values()),
+  const teamUserIds = [...new Set(userIdByOpCode.values())];
+  const [credentialByUser, lightUsers] = await Promise.all([
+    loadCredentialPills(supabase, teamUserIds),
+    /* The light track (0147): marked so a two-slot morning reads as designed,
+       never as a broken account. The MANAGER'S client — the managed_users()
+       arm of the focus-family policy is what decides these rows come back. */
+    loadLightUsers(supabase, teamUserIds),
   ]);
 
   const rosterByOpCode = new Map<string, string | null>();
@@ -219,6 +225,7 @@ export default async function ManagerPage() {
       familiesWithCues,
       laborPerRoByFamily: laborByAdvisor.get(opId),
       credential: credentialByUser.get(userIdByOpCode.get(opId) ?? "") ?? null,
+      light: lightUsers.has(userIdByOpCode.get(opId) ?? ""),
     });
   });
 

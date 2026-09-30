@@ -76,6 +76,18 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
                       {advisor.credential}
                     </span>
                   )}
+                  {/* THE LIGHT TRACK (0147). A quiet chip, not a warning: the
+                      two-slot morning is by design, and this is what stops a
+                      manager reading it as a broken account. Turns itself off
+                      on the first period that clears the floor. */}
+                  {advisor.light && (
+                    <span
+                      title="Light mornings — the coaching pitch starts when their repair orders come in."
+                      className="shrink-0 rounded-pill border border-line px-2 py-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-ink-soft"
+                    >
+                      Light
+                    </span>
+                  )}
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
                   <span>

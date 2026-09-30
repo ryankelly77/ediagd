@@ -32,6 +32,7 @@ import {
   type CertificationTile,
   type CoreTrackTile,
 } from "@/lib/certifications";
+import { loadLightMode } from "@/lib/service-family";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
 import { ProgressBar } from "@/components/library/CoursePieces";
@@ -61,7 +62,11 @@ export default async function CertificationsPage() {
     ? await rooftopToday(supabase, membership.rooftop_id)
     : (new Date().toISOString().slice(0, 10) as IsoDate);
 
-  const view = await loadCertificationsOverview(supabase, user.id, today);
+  const [view, lightMode] = await Promise.all([
+    loadCertificationsOverview(supabase, user.id, today),
+    /* The light track (0147) — read as the advisor, their own row. */
+    loadLightMode(supabase, user.id),
+  ]);
 
   const barPct =
     view.coreModulesTotal > 0
@@ -187,6 +192,14 @@ export default async function CertificationsPage() {
             Derived from your numbers — the morning pitch works these families,
             biggest gap first.
           </p>
+          {/* THE LIGHT TRACK (0147): where the pitch family would be named,
+              one line, never a number, never a fault. Cannot render beside a
+              derived family — the light row IS the one active row. */}
+          {lightMode && (
+            <p className="mt-1 px-1 text-xs font-bold text-ocean">
+              Your coaching pitch starts when your repair orders come in.
+            </p>
+          )}
           <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {view.serviceActive.map((t) => (
               <li key={t.id}>

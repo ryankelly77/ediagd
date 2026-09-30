@@ -11,6 +11,7 @@ import { EngagementHero } from "@/components/admin/EngagementHero";
 import { EngagementList, type EngagementRow } from "@/components/admin/EngagementList";
 import { RollupStamp } from "@/components/admin/RollupStamp";
 import { loadAdvisorDetails, rooftopToday } from "@/lib/admin-advisor-detail";
+import { loadLightUsers } from "@/lib/service-family";
 import {
   LIST_PAGE_STEP,
   loadAdvisors,
@@ -95,9 +96,15 @@ export default async function AdminPage({
     const today = advisors[0]
       ? await rooftopToday(supabase, advisors[0].rooftopId)
       : null;
-    const details = today
-      ? await loadAdvisorDetails(supabase, advisors.map((a) => a.userId), today)
-      : new Map();
+    const [details, lightUsers] = await Promise.all([
+      today
+        ? loadAdvisorDetails(supabase, advisors.map((a) => a.userId), today)
+        : Promise.resolve(new Map()),
+      /* The light track (0147): the mark that says a two-slot morning is by
+         design. The ADMIN'S client — their admin memberships put these
+         advisors inside managed_users(), which is the policy that decides. */
+      loadLightUsers(supabase, advisors.map((a) => a.userId)),
+    ]);
 
     for (const a of advisors) {
       const detail = details.get(a.userId);
@@ -106,7 +113,7 @@ export default async function AdminPage({
         name: a.advisorName,
         score: a.score,
         band: a.band,
-        detail: `${a.daysLoggedIn} of ${a.workingDays} days`,
+        detail: `${a.daysLoggedIn} of ${a.workingDays} days${lightUsers.has(a.userId) ? " · light" : ""}`,
         expand:
           detail && today ? (
             <AdvisorDetail

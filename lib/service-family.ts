@@ -295,6 +295,49 @@ export type FocusFamilyCard = {
  * what the loop's ordering agrees with — so "continue" and tomorrow's pitch are
  * the same film by construction rather than by two functions being careful.
  */
+/**
+ * Is this advisor on the light track — an active advisor_focus_family row
+ * with source = 'light' (0147: repair-order data too thin to derive a pitch
+ * from, recorded rather than a silent null)?
+ *
+ * READ AS THE VIEWER. The advisor's own client for their own screens (the
+ * self-read policy decides), a manager's or admin's client for rosters (the
+ * managed_users() arm decides). Never the service role on a display surface.
+ *
+ * By construction this can never be true alongside a derived family — one
+ * active row per advisor, and a light row IS the active row.
+ */
+export async function loadLightMode(client: Client, userId: string): Promise<boolean> {
+  const { data } = await client
+    .from("advisor_focus_family")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("source", "light")
+    .is("ended_on", null)
+    .limit(1);
+  return ((data ?? []) as unknown[]).length > 0;
+}
+
+/** The light members of a roster, one query. Same policy story as above. */
+export async function loadLightUsers(
+  client: Client,
+  userIds: string[]
+): Promise<Set<string>> {
+  const out = new Set<string>();
+  if (userIds.length === 0) return out;
+  const BATCH = 100;
+  for (let i = 0; i < userIds.length; i += BATCH) {
+    const { data } = await client
+      .from("advisor_focus_family")
+      .select("user_id")
+      .in("user_id", userIds.slice(i, i + BATCH))
+      .eq("source", "light")
+      .is("ended_on", null);
+    for (const r of (data ?? []) as { user_id: string }[]) out.add(r.user_id);
+  }
+  return out;
+}
+
 export async function loadFocusFamilyCard(
   client: Client,
   service: ServiceClient,
