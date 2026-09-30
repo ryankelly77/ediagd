@@ -101,8 +101,11 @@ export default async function CertificationsPage() {
         </div>
         <div className="mt-3">
           <ProgressBar pct={barPct} />
+          {/* Lessons — gating modules — the exact population craftComplete()
+              requires. Cue-only modules cannot complete (0143) and sit in no
+              denominator on any of these screens. */}
           <p className="ediagd-numeral mt-1 text-xs text-ink-soft">
-            {view.coreModulesDone} of {view.coreModulesTotal} modules across the
+            {view.coreModulesDone} of {view.coreModulesTotal} lessons across the
             nine tracks
           </p>
         </div>
@@ -219,11 +222,15 @@ export default async function CertificationsPage() {
  */
 function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
   const earned = tile.state !== "unearned";
+  /* Lessons — the same number craftComplete() and the track page count. A
+     track with no lessons yet says so instead of showing "0 of 0". */
   const line = earned
     ? tile.currency ?? "Earned"
     : !tile.active
       ? "Coming soon"
-      : `${tile.doneModules} of ${tile.totalModules} modules`;
+      : tile.gatingModules === 0
+        ? "No lessons yet"
+        : `${tile.gatingDone} of ${tile.gatingModules} lessons`;
 
   return (
     <Link
@@ -256,8 +263,8 @@ function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
   );
 }
 
-/** An active Master track: same row shape, marked as Master. */
-function MasterTrackRow({ tile }: { tile: CertificationTile }) {
+/** An active Master track: same row shape, same lesson numbers, marked as Master. */
+function MasterTrackRow({ tile }: { tile: CoreTrackTile }) {
   const earned = tile.state !== "unearned";
   return (
     <Link
@@ -277,7 +284,7 @@ function MasterTrackRow({ tile }: { tile: CertificationTile }) {
         <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
           {earned
             ? tile.currency ?? "Earned"
-            : `Master track · ${tile.doneModules} of ${tile.totalModules} modules`}
+            : `Master track · ${tile.gatingDone} of ${tile.gatingModules} lessons`}
         </span>
       </span>
       <span aria-hidden="true" className="text-lg leading-none text-ink-soft">

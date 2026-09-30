@@ -34,6 +34,7 @@ import {
   type CertificationHolding,
   type ModuleProgress,
 } from "@/lib/certification";
+import { gatingModuleIds } from "@/lib/lms";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -212,13 +213,22 @@ async function accrueCraft(
 }
 
 /**
- * Every module of every course the certification carries, complete.
+ * Every GATING module of every course the certification carries, complete.
  *
  * COMPLETION IS READ FROM module_completion, not recomputed. That table is what
  * the LMS writes when a module's requirements are met — every published item
  * done, and where a published quiz exists, that quiz passed. Re-deriving the
  * rule here would stand a second completion accounting beside a working one,
  * which is the exact thing phase 1's ruling 1 refused to build.
+ *
+ * GATING MODULES ONLY — gatingModuleIds() in lib/lms.ts, the one definition.
+ * Since 0143 a cue-only module can never earn a module_completion row
+ * (moduleRequirementsMet refuses an empty gating set), so requiring every
+ * module made six of the nine core tracks structurally unearnable — an
+ * advisor who finished every lesson and every quiz was refused by modules
+ * that hold nothing completable. Fixed 30 September; the credential bar, the
+ * tiles and the track page read the same population, so no surface can show
+ * full while this refuses or vice versa.
  */
 async function craftComplete(
   service: Client,
@@ -238,10 +248,15 @@ async function craftComplete(
     .select("id")
     .in("course_id", courseIds);
 
-  const moduleIds = ((mods ?? []) as { id: string }[]).map((m) => m.id);
-  /* A certification whose courses have no modules is not earned. certificationEarned
-     refuses an empty list for exactly this reason; the check is here too so the
-     query below is never a `.in()` against nothing. */
+  const allModuleIds = ((mods ?? []) as { id: string }[]).map((m) => m.id);
+  if (allModuleIds.length === 0) return false;
+
+  const gating = await gatingModuleIds(service as never, allModuleIds);
+  const moduleIds = allModuleIds.filter((id) => gating.has(id));
+  /* A certification with no GATING module is not earned — a track of cue-only
+     modules holds nothing completable, and certificationEarned refuses an
+     empty list for exactly this reason. Power of Positive Language sits here
+     today, which is correct: no lesson exists to have been done. */
   if (moduleIds.length === 0) return false;
 
   const { data: done } = await service

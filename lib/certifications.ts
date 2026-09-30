@@ -19,6 +19,7 @@ import {
   type CertificationState,
 } from "@/lib/certification";
 import { pendingQuizzes } from "@/lib/loop";
+import { gatingModuleIds } from "@/lib/lms";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -251,13 +252,14 @@ export type CoreTrackTile = CertificationTile & {
 export type CertificationsOverview = CertificationsView & {
   /** The nine, in certification.sort order — the order the loop walks. */
   coreTracks: CoreTrackTile[];
-  masterActive: CertificationTile[];
+  masterActive: CoreTrackTile[];
   masterSoon: CertificationTile[];
   serviceActive: CertificationTile[];
   serviceSoon: CertificationTile[];
-  /** The credential bar: module_completion over EVERY module on the nine core
-      tracks — the same population craftComplete() requires, so the bar can
-      never read full while the credential refuses. */
+  /** The credential bar: completed GATING modules over gating modules across
+      the nine core tracks — the exact population craftComplete() requires
+      (gatingModuleIds in lib/lms.ts), so the bar and the credential cannot
+      disagree in either direction. */
   coreModulesDone: number;
   coreModulesTotal: number;
 };
@@ -284,7 +286,7 @@ type ModuleProgressRow = {
  * rather than somebody else's progress.
  */
 async function loadModuleFacts(client: Client) {
-  const [{ data: mp }, { data: ccRows }, { data: gatingRows }] = await Promise.all([
+  const [{ data: mp }, { data: ccRows }, gated] = await Promise.all([
     client
       .from("my_module_progress")
       .select(
@@ -292,22 +294,10 @@ async function loadModuleFacts(client: Client) {
       )
       .limit(1000),
     client.from("certification_course").select("certification_id, course_id, sort"),
-    /* Which modules hold a film. The population is published advisor_video
-       rows — the same allowlist gating_content_types() names — read through
-       the advisor's entitlement. */
-    client
-      .from("content")
-      .select("module_id")
-      .eq("type", "advisor_video")
-      .eq("status", "published")
-      .is("retired_at", null)
-      .not("module_id", "is", null)
-      .limit(1000),
+    /* THE ONE DEFINITION of which modules gate — the same set craftComplete()
+       requires — read through the advisor's entitlement. */
+    gatingModuleIds(client as never),
   ]);
-
-  const gated = new Set(
-    ((gatingRows ?? []) as { module_id: string }[]).map((r) => r.module_id)
-  );
   const byCourse = new Map<string, { certId: string; sort: number }[]>();
   for (const cc of (ccRows ?? []) as {
     certification_id: string;
@@ -384,51 +374,50 @@ export async function loadCertificationsOverview(
 
   const pendingByModule = new Set(pending.map((p) => p.moduleId));
 
-  let coreModulesDone = 0;
-  let coreModulesTotal = 0;
+  /* One decorator for every craft tile, core and Master alike, so no row can
+     grow its own arithmetic. */
+  const decorate = (t: CertificationTile): CoreTrackTile => {
+    const modules = modulesForCert(t.id, facts);
+    const gating = modules.filter((m) => m.gates);
+    const gatingDone = gating.filter((m) => m.state === "complete").length;
+
+    let nextLine: string | null = null;
+    if (t.state === "unearned" && t.active) {
+      /* The loop's walk: the first gating module that is not complete. */
+      const nextModule = gating.find((m) => m.state !== "complete");
+      if (nextModule) {
+        nextLine = pendingByModule.has(nextModule.moduleId)
+          ? `Next: quiz for ${nextModule.name}`
+          : `Next: ${nextModule.name}`;
+      } else if (gating.length === 0) {
+        /* Power of Positive Language today: cues only. Not a failure. */
+        nextLine = "Lessons on the way";
+      } else if (t.storyRequired && !t.storySubmitted) {
+        nextLine = "Story to write";
+      } else {
+        /* Every filmed lesson done; what remains is content still landing
+           (cue-only modules, unfilmed lessons). Their queue, not the
+           advisor's. */
+        nextLine = "More lessons on the way";
+      }
+    }
+
+    return { ...t, nextLine, gatingModules: gating.length, gatingDone };
+  };
 
   const coreTracks: CoreTrackTile[] = view.tiles
     .filter((t) => t.isCore)
     .sort((a, b) => a.sort - b.sort)
-    .map((t) => {
-      const modules = modulesForCert(t.id, facts);
-      const gating = modules.filter((m) => m.gates);
-      const gatingDone = gating.filter((m) => m.state === "complete").length;
+    .map(decorate);
 
-      /* THE CREDENTIAL BAR COUNTS WHAT craftComplete() COUNTS: every module.
-         A narrower denominator would read full while the credential refuses,
-         which is the screen arguing with itself. */
-      coreModulesDone += t.doneModules;
-      coreModulesTotal += t.totalModules;
-
-      let nextLine: string | null = null;
-      if (t.state === "unearned" && t.active) {
-        /* The loop's walk: the first gating module that is not complete. */
-        const nextModule = gating.find((m) => m.state !== "complete");
-        if (nextModule) {
-          nextLine = pendingByModule.has(nextModule.moduleId)
-            ? `Next: quiz for ${nextModule.name}`
-            : `Next: ${nextModule.name}`;
-        } else if (gating.length === 0) {
-          /* Power of Positive Language today: cues only. Not a failure. */
-          nextLine = "Lessons on the way";
-        } else if (t.storyRequired && !t.storySubmitted) {
-          nextLine = "Story to write";
-        } else {
-          /* Every filmed lesson done; what remains is content still landing
-             (cue-only modules, unfilmed lessons). Their queue, not the
-             advisor's. */
-          nextLine = "More lessons on the way";
-        }
-      }
-
-      return {
-        ...t,
-        nextLine,
-        gatingModules: gating.length,
-        gatingDone,
-      };
-    });
+  /* THE CREDENTIAL BAR COUNTS WHAT craftComplete() COUNTS: gating modules —
+     lessons — and nothing else. It used to sum every module and read
+     "1 of 101" over a denominator holding 24 cue-only modules that can never
+     complete (0143): a bar that could not fill, over six tracks that could
+     not be earned. One population, four readers: craftComplete(), this bar,
+     the tiles, the track page. */
+  const coreModulesDone = coreTracks.reduce((n, t) => n + t.gatingDone, 0);
+  const coreModulesTotal = coreTracks.reduce((n, t) => n + t.gatingModules, 0);
 
   const master = view.tiles.filter((t) => t.isMasterTrack);
   const service = view.tiles.filter((t) => t.kind === "service");
@@ -436,7 +425,9 @@ export async function loadCertificationsOverview(
   return {
     ...view,
     coreTracks,
-    masterActive: master.filter((t) => t.active || t.state !== "unearned"),
+    masterActive: master
+      .filter((t) => t.active || t.state !== "unearned")
+      .map(decorate),
     masterSoon: master.filter((t) => !t.active && t.state === "unearned"),
     serviceActive: service.filter((t) => t.active || t.state !== "unearned"),
     serviceSoon: service.filter((t) => !t.active && t.state === "unearned"),

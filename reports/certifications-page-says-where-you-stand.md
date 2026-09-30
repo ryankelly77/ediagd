@@ -42,17 +42,44 @@ advisor at 58 of 59 items and 0 of 7 modules read as nearly finished while
 holding nothing. The new number is `done_modules of total_modules` from
 `my_certification_progress`, the same population `craftComplete()` requires.
 
-**Three bars, three named populations:**
+**One population, four readers (revised 30 September, Ryan's ruling).** The
+first version of this page matched the credential bar and tile to
+`craftComplete()`'s all-modules population — and that faithfully reproduced a
+defect: `craftComplete()` required a `module_completion` row for **every**
+module, and since 0143 a cue-only module can never earn one
+(`moduleRequirementsMet` refuses an empty gating set). Six of the nine core
+tracks were structurally unearnable and "1 of 101" was a bar that could not
+fill. The fix defines the gating-module population **once** —
+`gatingModuleIds()` in `lib/lms.ts`: modules holding at least one published
+item of a `gating_content_types()` type — and all four surfaces read it:
 
-| surface | numerator / denominator | why |
-|---|---|---|
-| credential card bar | module_completion / ALL modules on the nine core tracks (today: 101) | matches `craftComplete()` exactly — the bar can never read full while the credential refuses |
-| core tile line | done / total modules per track (e.g. "1 of 7") | the view's numbers, as the brief specifies |
-| track page bar | complete / GATING lessons (e.g. "1 of 3") | cue-only modules cannot complete under 0143 and are labeled "Reinforcement · doesn't gate the track" — they never sit in a denominator the advisor is measured against |
+| reader | reads |
+|---|---|
+| `craftComplete()` (the credential engine) | completion of every **gating** module; a track with zero gating modules stays unearnable |
+| credential card bar | Σ gating done / Σ gating, nine tracks — "3 of 77 lessons" |
+| core (and Master) tile line | "1 of 3 lessons" per track; "No lessons yet" instead of "0 of 0" |
+| track page bar | the same "1 of 3 lessons complete" |
 
-The tile's 7 and the track bar's 3 coexist on screen because the track page
-*lists* all seven and marks four as reinforcement — the two numbers describe
-the same page, labeled.
+Cue-only modules are still listed on the track page, labeled "Reinforcement ·
+doesn't gate the track", and sit in no denominator anywhere.
+
+**Earnable tracks, before → after** (measured on the prod-restore):
+
+| track | modules | gating | before | after |
+|---|---|---|---|---|
+| Walk Around | 7 | 3 | ✗ (4 cue-only blocked it) | ✓ |
+| Setting up the MPI | 10 | 9 | ✗ | ✓ |
+| Four Step Close | 12 | 10 | ✗ | ✓ |
+| Success Cycle | 19 | 12 | ✗ | ✓ |
+| Overcoming Objections | 15 | 12 | ✗ | ✓ |
+| Power of Positive Language | 7 | 0 | ✗ | ✗ — correctly: no lesson exists |
+| Lasting Impressions | 12 | 12 | ✓ | ✓ |
+| Name Tag | 10 | 10 | ✓ | ✓ |
+| Menus | 9 | 9 | ✓ | ✓ |
+
+**3 of 9 earnable before, 8 of 9 after.** The one that stays unearnable is the
+one that should: `certificationEarned` still refuses an empty set, so Power of
+Positive Language cannot certify anybody on content that does not exist.
 
 ## What was built
 
@@ -84,7 +111,13 @@ after EDIAGD Certified" and lists Master tracks with their own progress;
 
 `npm run accept:certifications-page` (new, committed) against the local
 prod-restore, as the real advisor-only account over PostgREST as
-`authenticated` — **17 passed, 0 failed**:
+`authenticated` — **23 passed, 0 failed**, including the ruling's acceptance:
+after Walk Around's three lessons complete through the real path
+(`gradeAttempt` + `completeModuleIfReady`), **`accrueFromModule` grants the
+track with its four cue-only modules still open** — the wall flips to "1 of 9
+core tracks", the seal goes gold, and the certification pays. Also asserted:
+the credential bar's denominator equals the sum of the tile numbers (77), and
+PoPL reads "No lessons yet", never "0 of 0". The earlier transcript:
 
 ```
 fresh: 0 of 9 core tracks · credential bar 0 · Walk Around 0 of 7 modules
@@ -106,6 +139,26 @@ covered under the registered `/certifications` (the `certifications` tree has
 been in WATCHED since the wall shipped, so the new route cannot be orphaned
 silently; the suite hard-fails on any tree it doesn't know). `next build`
 green; eslint and `tsc --noEmit` clean.
+
+## The class, swept
+
+"Who else measures an advisor against the all-modules population?" —
+
+- `craftComplete()` — fixed here, via the shared definition.
+- The credential bar, tiles, track page — fixed here, same definition.
+- **`my_course_progress` / the library course header** still says
+  "N of M modules" over all modules — the same class, on a surface this brief
+  did not name. It is a *content* listing rather than a credential claim, but
+  its completed-modules count can also never reach M on a cue-bearing course.
+  Recorded here rather than fixed; one line in the October list.
+- `certificationProgress()` in lib/certification.ts — pure helper; its only
+  callers pass what they choose, no live surface feeds it all-modules today.
+- **A separate finding, named not fixed:** TWO_LADDERS says the story leg
+  lives in `trackComplete()` beside the module rule — but nothing on the
+  accrual path calls `trackComplete()`; `accrueCraft` grants on
+  `craftComplete()` alone, so a track can be earned with no Good News Story
+  while `game_settings.story_required` is ON. Two documents disagreeing about
+  the same fact is the bug; this one is the doc and the engine. Ryan's call.
 
 ## Notes for Ryan
 
