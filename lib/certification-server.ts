@@ -28,13 +28,14 @@
 ============================================================================ */
 
 import {
-  certificationEarned,
   computeCredential,
   currentThrough,
+  trackComplete,
   type CertificationHolding,
   type ModuleProgress,
 } from "@/lib/certification";
 import { gatingModuleIds } from "@/lib/lms";
+import { loadStoryGate } from "@/lib/story";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -201,9 +202,33 @@ async function accrueCraft(
     .in("id", certIds)
     .eq("active", true);
 
+  /*
+   * ---- THE GRANT GOES THROUGH trackComplete(), NOT THE MODULES ALONE ------
+   *
+   * Ryan's ruling, 30 September: the Good News Story is required to finish a
+   * track, and TWO_LADDERS has said since 3e that the gate carrying it is
+   * trackComplete() — the legs are data, modules AND story. This path granted
+   * on the modules leg alone, so a certification could land with no story
+   * while story_required was ON: the engine disagreeing with the document,
+   * found by the certifications-page acceptance and fixed here rather than in
+   * the doc.
+   *
+   * loadStoryGate stays THE one read site for story_required (its own comment
+   * makes that a rule); this passes the service client because the credential
+   * needs the true answer, and a failed read THROWS rather than granting —
+   * the gate's default direction.
+   */
+  const storyGate = await loadStoryGate(service as never, userId);
+
   const earned: string[] = [];
   for (const cert of (certs ?? []) as { id: string; slug: string }[]) {
-    if (await craftComplete(service, userId, cert.id)) {
+    const modules = await craftModuleProgress(service, userId, cert.id);
+    const complete = trackComplete({
+      modules,
+      storyRequired: storyGate.storyRequired,
+      storySubmitted: storyGate.toldFor.has(cert.id),
+    });
+    if (complete) {
       if (await grantCertification(service, userId, cert.id, today)) {
         earned.push(cert.slug);
       }
@@ -213,7 +238,8 @@ async function accrueCraft(
 }
 
 /**
- * Every GATING module of every course the certification carries, complete.
+ * The GATING modules of every course the certification carries, with their
+ * completion state — the modules leg's input, for trackComplete() to judge.
  *
  * COMPLETION IS READ FROM module_completion, not recomputed. That table is what
  * the LMS writes when a module's requirements are met — every published item
@@ -228,20 +254,27 @@ async function accrueCraft(
  * advisor who finished every lesson and every quiz was refused by modules
  * that hold nothing completable. Fixed 30 September; the credential bar, the
  * tiles and the track page read the same population, so no surface can show
- * full while this refuses or vice versa.
+ * full while the gate refuses or vice versa.
+ *
+ * RETURNS THE LIST, NEVER THE VERDICT. The verdict is trackComplete()'s in
+ * lib/certification.ts, where the story leg lives beside the module rule —
+ * a boolean returned from here was how the story leg got skipped for three
+ * days. An EMPTY list is "nothing completable": certificationEarned refuses
+ * it, so a track of cue-only modules (Power of Positive Language today) can
+ * never certify anybody on content that does not exist.
  */
-async function craftComplete(
+async function craftModuleProgress(
   service: Client,
   userId: string,
   certificationId: string
-): Promise<boolean> {
+): Promise<ModuleProgress[]> {
   const { data: links } = await service
     .from("certification_course")
     .select("course_id")
     .eq("certification_id", certificationId);
 
   const courseIds = ((links ?? []) as { course_id: string }[]).map((l) => l.course_id);
-  if (courseIds.length === 0) return false;
+  if (courseIds.length === 0) return [];
 
   const { data: mods } = await service
     .from("module")
@@ -249,15 +282,11 @@ async function craftComplete(
     .in("course_id", courseIds);
 
   const allModuleIds = ((mods ?? []) as { id: string }[]).map((m) => m.id);
-  if (allModuleIds.length === 0) return false;
+  if (allModuleIds.length === 0) return [];
 
   const gating = await gatingModuleIds(service as never, allModuleIds);
   const moduleIds = allModuleIds.filter((id) => gating.has(id));
-  /* A certification with no GATING module is not earned — a track of cue-only
-     modules holds nothing completable, and certificationEarned refuses an
-     empty list for exactly this reason. Power of Positive Language sits here
-     today, which is correct: no lesson exists to have been done. */
-  if (moduleIds.length === 0) return false;
+  if (moduleIds.length === 0) return [];
 
   const { data: done } = await service
     .from("module_completion")
@@ -267,15 +296,13 @@ async function craftComplete(
 
   const doneIds = new Set(((done ?? []) as { module_id: string }[]).map((d) => d.module_id));
 
-  const progress: ModuleProgress[] = moduleIds.map((id) => ({
+  return moduleIds.map((id) => ({
     moduleId: id,
     /* module_completion existing IS "content done and quiz satisfied" — the LMS
        already applied both halves of its rule before writing the row. */
     contentComplete: doneIds.has(id),
     quizPassed: null,
   }));
-
-  return certificationEarned(progress);
 }
 
 /* ---------------------------------------------------------------------------
