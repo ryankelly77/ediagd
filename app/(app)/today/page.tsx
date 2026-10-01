@@ -15,6 +15,7 @@ import {
 } from "@/lib/work-schedule";
 import { mintDayStamp } from "@/lib/day-stamp";
 import { firstName } from "@/lib/advisor";
+import { rooftopGreeting } from "@/lib/brand";
 import {
   hasLiveToken,
   loadPushPref,
@@ -107,6 +108,7 @@ export default async function TodayPage({
       .maybeSingle();
     return (
       <RooftopNotReady
+        greeting={await rooftopGreeting(supabase, rooftopId)}
         greetingName={firstName(me?.full_name ?? user.email ?? "there")}
         rooftopName={(roof?.name as string | null) ?? null}
       />
@@ -141,6 +143,7 @@ export default async function TodayPage({
     const q = techQuotes.slot3 ?? techQuotes.slot2;
     return (
       <TechnicianDay
+        greeting={await rooftopGreeting(supabase, rooftopId)}
         greetingName={firstName(techUser.data?.full_name ?? user.email ?? "there")}
         quote={q ? { id: q.id, title: q.title, body: q.body, voice: q.voice } : null}
         video={techVideo}
@@ -540,6 +543,7 @@ export default async function TodayPage({
       currentStreak={currentStreak}
       milestoneText={milestone.text}
       today={today}
+      greeting={await rooftopGreeting(supabase, rooftopId)}
       greetingName={firstName(appUser?.full_name ?? user.email ?? "there")}
       ackLabel={ackLabel(today)}
       /* RULING 6 — the close, not a slot. Named `closingQuote` rather than

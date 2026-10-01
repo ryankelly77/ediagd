@@ -29,17 +29,19 @@
 import { TrackedVideo } from "@/components/video/TrackedVideo";
 import { VideoNotReady } from "@/components/video/MuxVideo";
 import { Card } from "@/components/brand/Card";
-import { BRAND } from "@/lib/brand";
 import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
 import type { LifestyleVideo } from "@/components/daily/DailyFlow";
 
 export function TechnicianDay({
+  greeting,
   greetingName,
   quote,
   video,
   videoThreshold,
 }: {
+  /** The store-clock greeting from the server; BRAND.greeting as fallback. */
+  greeting: string;
   greetingName: string;
   quote: { id: string; title: string | null; body: string | null; voice: string | null } | null;
   video: LifestyleVideo | null;
@@ -48,11 +50,11 @@ export function TechnicianDay({
   return (
     <PhoneScreen>
       <PhoneScreen.Body>
-        {/* BRAND.greeting, the same word the advisor's day opens with. The
+        {/* The same store-clock greeting the advisor's day opens with. The
             first version used ackLabel here, which is the CTA phrase ("Carry it
             with me") and read as a very strange hello. */}
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-          {BRAND.greeting}, {greetingName}
+          {greeting}, {greetingName}
         </p>
 
         {/* ---- The quote ---------------------------------------------------
