@@ -42,6 +42,70 @@ async function sessionUser() {
   return user;
 }
 
+/**
+ * Materialise the app_user row for a signed-in person who does not have one yet.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS LIVES IN THE APP PATH AND NOT A TRIGGER ON auth.users
+ * ---------------------------------------------------------------------------
+ * scripts/provision-advisor.ts records the posture this inherits: "the invite
+ * is sent from Supabase Auth, the person sets their own credential, and this
+ * only grants what that account may see. Minting users here would make this
+ * script the thing that decides who exists." The auth user already exists by the
+ * time we get here — they accepted the invite and signed in — so creating the
+ * app_user row is not deciding who exists; it is materialising the app-side
+ * mirror of an identity auth already admitted. That is why it is safe to do
+ * automatically where granting a membership, rooftop or op code is not: those
+ * decide WHOSE BOOK someone reads and stay Ryan's, through the scripts.
+ *
+ * A trigger on auth.users would fire for every identity regardless of role or
+ * whether they ever open the app, and auth.* is Supabase-owned schema outside
+ * the migration chain — the project has deliberately kept no triggers there.
+ * The name we want comes from user_metadata, which is cleanest to read from the
+ * authenticated session. So this runs exactly when a real person reaches the
+ * first write that needs the row, keyed on their own session. If the team later
+ * wants every auth user mirrored up front (e.g. admin-made accounts that never
+ * onboard), that is a separate decision, not this change.
+ *
+ * Idempotent: it checks first, and treats a concurrent duplicate insert as
+ * success, because the row existing is the whole goal.
+ */
+async function ensureAppUser(
+  service: ReturnType<typeof createServiceClient>,
+  user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> | null }
+): Promise<ScheduleResult> {
+  const { data: existing } = await service
+    .from("app_user")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (existing) return { ok: true, message: "app_user already present" };
+
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const fromMeta =
+    (typeof meta.full_name === "string" && meta.full_name.trim()) ||
+    (typeof meta.name === "string" && meta.name.trim()) ||
+    "";
+  const emailLocal = (user.email ?? "").split("@")[0]?.trim() ?? "";
+  const fullName = fromMeta || emailLocal || "New advisor";
+
+  const { error } = await service
+    .from("app_user")
+    .insert({ id: user.id, full_name: fullName });
+
+  // A second tab or a double-submit can insert between the check and here; a
+  // unique-violation (23505) means the row now exists, which is the goal.
+  if (error && (error as { code?: string }).code !== "23505") {
+    console.error("[schedule] app_user create failed", { userId: user.id, error });
+    return {
+      ok: false,
+      error:
+        "We couldn't finish setting up your account just yet. Try once more, and if it still won't go, let your manager know.",
+    };
+  }
+  return { ok: true, message: "app_user created" };
+}
+
 /** Today in the user's rooftop timezone, falling back to UTC. */
 async function todayFor(userId: string): Promise<IsoDate> {
   const service = createServiceClient();
@@ -73,6 +137,14 @@ export async function saveWorkSchedule(draft: ScheduleDraft): Promise<ScheduleRe
   if (problem) return { ok: false, error: problem };
 
   const service = createServiceClient();
+
+  // work_schedule_user_id_fkey points at app_user, and nothing in the product
+  // creates that row — so a freshly invited advisor who followed the handout
+  // (set password, sign in, pick days) reaches here before it exists. Create it
+  // now, before the write that would otherwise fail on the foreign key.
+  const ensured = await ensureAppUser(service, user);
+  if (!ensured.ok) return ensured;
+
   const { error } = await service.from("work_schedule").upsert(
     {
       user_id: user.id,
@@ -83,7 +155,16 @@ export async function saveWorkSchedule(draft: ScheduleDraft): Promise<ScheduleRe
     { onConflict: "user_id" }
   );
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // The raw Postgres error — constraint and table names — is for the log, not
+    // the lock screen. The advisor gets a sentence; the detail stays findable.
+    console.error("[schedule] work_schedule save failed", { userId: user.id, error });
+    return {
+      ok: false,
+      error:
+        "We couldn't save your week just yet. Try once more, and if it still won't go, let your manager know.",
+    };
+  }
 
   // Deliberately NOT revalidatePath("/", "layout"). That re-renders the route
   // the caller is standing on — and during onboarding that's /onboarding, whose
@@ -174,7 +255,13 @@ export async function addIslandTime(
     note: note?.trim() || null,
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[schedule] island_time insert failed", { userId: user.id, error });
+    return {
+      ok: false,
+      error: "We couldn't book that Island Time just yet. Try once more in a moment.",
+    };
+  }
 
   revalidatePath("/profile");
   revalidatePath("/streak");
@@ -196,7 +283,10 @@ export async function removeIslandTime(id: string): Promise<ScheduleResult> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (readError) return { ok: false, error: readError.message };
+  if (readError) {
+    console.error("[schedule] island_time read failed", { userId: user.id, error: readError });
+    return { ok: false, error: "We couldn't reach your Island Time just now. Try once more in a moment." };
+  }
   if (!row) return { ok: false, error: "That Island Time is already gone." };
 
   const today = await todayFor(user.id);
@@ -217,7 +307,10 @@ export async function removeIslandTime(id: string): Promise<ScheduleResult> {
     .eq("id", id)
     .eq("user_id", user.id);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error("[schedule] island_time delete failed", { userId: user.id, error });
+    return { ok: false, error: "We couldn't remove that just yet. Try once more in a moment." };
+  }
 
   revalidatePath("/profile");
   revalidatePath("/streak");
@@ -322,7 +415,10 @@ export async function claimWelcomePaddleOut(): Promise<WelcomeGiftResult> {
     },
     { onConflict: "user_id" }
   );
-  if (swellError) return { ok: false, error: swellError.message };
+  if (swellError) {
+    console.error("[schedule] welcome paddle-out grant failed", { userId: user.id, error: swellError });
+    return { ok: false, error: "We couldn't set up your welcome gift just yet." };
+  }
 
   await service.from("paddle_out_entry").insert({
     user_id: user.id,
