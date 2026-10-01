@@ -151,7 +151,7 @@ export default async function SandDollarsPage({
             href="/today"
             className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-gold p-3.5 font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
           >
-            Start today&apos;s three minutes
+            Start today&apos;s five minutes
           </Link>
         </Card>
       )}

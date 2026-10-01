@@ -269,7 +269,7 @@ function Screen2({ onNext }: { onNext: () => void }) {
         <div className="relative">
           <p className="ediagd-eyebrow">The whole thing</p>
           <h2 className="mt-2 text-4xl font-extrabold leading-tight text-white">
-            Three minutes.
+            Five minutes.
             <br />
             Every day.
           </h2>
@@ -325,11 +325,11 @@ function Screen3({ onNext }: { onNext: () => void }) {
         beats — but the Pick and its cue are ONE screen, and it never mentioned
         the two videos that follow. An advisor was told three and handed five.
 
-        The order and the wording below track DailyFlow's steps directly, using
-        the same eyebrows those screens print ("Today's focus", "The pitch",
-        "Today's three minutes"), so the words are already familiar when they
-        arrive. What is earned at the end is deliberately left out — that is the
-        next screen's whole subject.
+        The order and the wording below track DailyFlow's steps directly, in the
+        same shape those screens print (the time-of-day greeting, "The pitch",
+        and the track name over the item), so the words are already familiar when
+        they arrive. What is earned at the end is deliberately left out — that is
+        the next screen's whole subject.
 
         No count in the headline. The pitch step is skipped when nothing has been
         filmed for that service yet, so "four" would be wrong on exactly the
@@ -453,7 +453,7 @@ function ScreenCredential({ onNext }: { onNext: () => void }) {
 
         <ol className="space-y-3">
           <LoopStep n={1} title="Showing up">
-            Three minutes a day, on the days you work.
+            About five minutes a day, on the days you work.
           </LoopStep>
           <LoopStep n={2} title="Passing the checks">
             Short checks on what each module taught. You can take them again.

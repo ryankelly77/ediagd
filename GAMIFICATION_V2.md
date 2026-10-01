@@ -11,7 +11,7 @@ Status legend: **[ready]** fits what's built, low effort · **[later]** good, ne
 Today the daily loop is one cue. But 1,245 published cues exist. Let advisors keep going if they want to:
 
 - **The Swell (streak) still counts DAILY completion** — show up, do the loop, the day counts. Unchanged.
-- **Sand Dollars accrue per lesson** — an advisor on a roll can complete more cues in their weak service and earn more. The floor stays 3 minutes; the ceiling opens.
+- **Sand Dollars accrue per lesson** — an advisor on a roll can complete more cues in their weak service and earn more. The floor stays about five minutes; the ceiling opens.
 - Maps cleanly onto what exists: streak = `daily_completion`, points = `sand_dollar_entry`. This is Duolingo's "streak = you showed up, XP = how much you did" split.
 
 **The distinction to preserve:** more lessons earn more *points*, never more *streak*. A day is a day.

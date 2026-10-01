@@ -4,7 +4,7 @@
  * /today IS NOT HERE ANY MORE, AND THAT IS THE POINT
  * ---------------------------------------------------------------------------
  * It used to be, so AppHeader and TabBar both returned null over the whole
- * route. Right for the three-minute ritual, and wrong for the rest-day card
+ * route. Right for the five-minute ritual, and wrong for the rest-day card
  * that also lives at /today: that screen has no Continue, no step dots and no
  * close button, so with the chrome gone the only way off it was to take a rep
  * the app had just finished saying nobody owed. A destination with no exit.
