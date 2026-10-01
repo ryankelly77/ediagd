@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { BRAND } from "@/lib/brand";
 import { addDays, isoWeekday, type IsoDate } from "@/lib/gamification/streak";
 import { SCHEDULE_COLUMNS } from "@/lib/work-schedule";
+import { shapeVideo, type VideoRow } from "@/lib/daily";
 import { isAdminViewer } from "@/lib/access";
 
 /**
@@ -83,6 +85,42 @@ export default async function OnboardingPage({
     if (todayRaw) today = todayRaw as IsoDate;
   }
 
+  /*
+   * ---- MITCH'S WELCOME FILM ------------------------------------------------
+   *
+   * The one published onboarding_intro film, loaded with the SERVICE client on
+   * purpose. content_entitled_read gates content reads on an ACTIVE membership
+   * with the right product (0034), and a first-sign-in advisor has no membership
+   * yet — which is exactly the audience this screen exists for. The daily loop
+   * can read films through the user's own client because by then entitlement
+   * exists; onboarding runs before it does, so the user's client would return
+   * nothing and the film would be invisible to everyone it is for.
+   *
+   * shapeVideo signs the same renditions every other film gets, so renditions
+   * and signing work identically; it only READS (content_progress, the quote
+   * twin, the watch gate), so loading the welcome film writes no watch_gate or
+   * content_progress row. Newest wins if there are ever two. It is an addition,
+   * never a dependency: if nothing is found, welcomeVideo is null and screen one
+   * renders exactly as it did before.
+   */
+  const service = createServiceClient();
+  const { data: welcomeRow } = await service
+    .from("content")
+    .select(
+      "id, title, stage, collection, mux_playback_id, mux_playback_policy, vertical_playback_id, vertical_status, artifact_id"
+    )
+    .eq("type", "advisor_video")
+    .eq("placement", "onboarding_intro")
+    .eq("status", "published")
+    .is("retired_at", null)
+    .not("mux_playback_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const welcomeVideo = welcomeRow
+    ? await shapeVideo(service, welcomeRow as VideoRow, user.id, today)
+    : null;
+
   // The cap is shown on the welcome gift screen; read from settings, no magic
   // numbers on the screen itself.
   const { data: settings } = await supabase
@@ -104,6 +142,7 @@ export default async function OnboardingPage({
     <OnboardingFlow
       alreadyOnboarded={Boolean(existing)}
       preview={preview}
+      welcomeVideo={welcomeVideo}
       firstName={firstName}
       saturdays={saturdays}
       today={today}

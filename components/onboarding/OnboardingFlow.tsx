@@ -9,8 +9,10 @@ import { PhoneScreen } from "@/components/brand/PhoneScreen";
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { ScheduleForm } from "@/components/schedule/ScheduleForm";
 import { WelcomeGift } from "@/components/onboarding/WelcomeGift";
+import { TrackedVideo } from "@/components/video/TrackedVideo";
 import { BRAND } from "@/lib/brand";
 import { EMPTY_DRAFT } from "@/lib/work-schedule";
+import type { LifestyleVideoData } from "@/lib/daily";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /* ============================================================================
@@ -29,6 +31,7 @@ const TOTAL = 7;
 export function OnboardingFlow({
   alreadyOnboarded,
   preview = false,
+  welcomeVideo = null,
   firstName,
   saturdays,
   today,
@@ -41,6 +44,8 @@ export function OnboardingFlow({
   alreadyOnboarded: boolean;
   /** Admin walkthrough: never bounce, never save, end back at /admin. */
   preview?: boolean;
+  /** Mitch's welcome film for screen one. Null = screen one as it was before. */
+  welcomeVideo?: LifestyleVideoData | null;
   firstName: string | null;
   saturdays: IsoDate[];
   today: IsoDate;
@@ -109,6 +114,7 @@ export function OnboardingFlow({
               lead={taglineLead}
               word={taglineWord}
               tail={taglineTail}
+              welcomeVideo={welcomeVideo}
               onNext={next}
             />
           )}
@@ -170,16 +176,25 @@ function Narrative({
   children,
   onNext,
   cta,
+  media,
 }: {
   children: React.ReactNode;
   onNext: () => void;
   cta: string;
+  /**
+   * Interactive content shown ABOVE the tap-to-advance body — a video player,
+   * say. It sits outside the button on purpose: the body advances on tap, and a
+   * player nested in that button would both swallow its own controls (interactive
+   * content inside a <button> is invalid) and advance the screen when scrubbed.
+   */
+  media?: React.ReactNode;
 }) {
   return (
     <>
       {/* Top-pinned: the headline card sits just under the progress dots, and
           the body runs down from there — scrolling if it needs to. */}
       <PhoneScreen.Body>
+        {media}
         <button
           type="button"
           onClick={onNext}
@@ -210,16 +225,22 @@ function Screen1({
   lead,
   word,
   tail,
+  welcomeVideo,
   onNext,
 }: {
   firstName: string | null;
   lead: string;
   word: string;
   tail: string;
+  welcomeVideo: LifestyleVideoData | null;
   onNext: () => void;
 }) {
   return (
-    <Narrative onNext={onNext} cta="Show me">
+    <Narrative
+      onNext={onNext}
+      cta="Show me"
+      media={welcomeVideo ? <WelcomeFilm video={welcomeVideo} /> : null}
+    >
       <section className="ediagd-hero" data-intentional-bleed>
         <SunWaveMotif />
         <div className="relative">
@@ -256,6 +277,41 @@ function Screen1({
         </p>
       </div>
     </Narrative>
+  );
+}
+
+/**
+ * Mitch's welcome film, the first thing a new advisor meets.
+ *
+ * policy="none" is the whole point: no watch gate, no watch ticket, no
+ * watch_gate row and no content_progress write — a welcome is not a lesson, and
+ * an advisor who taps past it still picks their days and still gets a complete
+ * first morning. Controls stay on so they can scrub; autoplay is off, so a tap
+ * starts it, which is also what iOS needs before it will play sound.
+ *
+ * It renders through Narrative's `media` slot, OUTSIDE the tap-to-advance body,
+ * so playing or scrubbing the film never advances the screen and the CTA in the
+ * footer stays the one way forward.
+ */
+function WelcomeFilm({ video }: { video: LifestyleVideoData }) {
+  return (
+    <section className="mb-6">
+      <p className="ediagd-eyebrow">A word from Mitch</p>
+      <div className="mt-2 overflow-hidden rounded-card">
+        <TrackedVideo
+          policy="none"
+          contentId={video.contentId}
+          renditions={video.renditions}
+          title={video.title}
+          /* No "x% watched" read-out: this tracks nothing, and a percentage
+             would imply a progress bar an advisor has to fill. */
+          showProgress={false}
+        />
+      </div>
+      <p className="mt-2 text-sm font-bold leading-snug text-navy">
+        {video.title}
+      </p>
+    </section>
   );
 }
 
