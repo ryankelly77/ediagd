@@ -107,6 +107,7 @@ type MorningKind = "normal" | "two_slot" | "track_entry";
  */
 export function DailyFlow({
   alreadyCompleteOnLoad,
+  greeting,
   currentStreak,
   today,
   greetingName,
@@ -133,6 +134,10 @@ export function DailyFlow({
   quizWaiting = null,
 }: {
   alreadyCompleteOnLoad: boolean;
+  /** "Good morning" / "Good afternoon" / "Good evening" by the STORE'S clock,
+      computed on the server from rooftop_local_now. The brand word only when
+      the clock could not be read — see greetingForHour in lib/brand.ts. */
+  greeting: string;
   /**
    * Put the notification soft-ask on the "done for today" screen.
    *
@@ -465,6 +470,7 @@ export function DailyFlow({
       <RestDayCard
         kind={restDay.kind}
         closureLabel={restDay.label ?? null}
+        greeting={greeting}
         greetingName={greetingName}
         streak={currentStreak}
         nextWorkDayLabel={nextWorkDayLabel}
@@ -549,6 +555,7 @@ export function DailyFlow({
         */}
         {step === 1 && (
           <MindsetStep
+            greeting={greeting}
             greetingName={greetingName}
             video={mindset && { ...mindset, gate: mindsetGate }}
             threshold={videoThreshold}
@@ -694,6 +701,7 @@ export function DailyFlow({
 function RestDayCard({
   kind,
   closureLabel,
+  greeting,
   greetingName,
   streak,
   nextWorkDayLabel,
@@ -703,6 +711,8 @@ function RestDayCard({
   kind: "day_off" | "island_time" | "store_closed";
   /** The manager's words for the closure — "Labor Day". Only when closed. */
   closureLabel: string | null;
+  /** The store-clock greeting, threaded from the page. */
+  greeting: string;
   greetingName: string;
   streak: number;
   /** Their next scheduled day, in words. Never "Monday" by assumption. */
@@ -761,7 +771,7 @@ function RestDayCard({
       */}
       <div className="flex flex-1 flex-col justify-center py-6">
         <p className="mb-3 px-1 text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-          {BRAND.greeting}, {greetingName}
+          {greeting}, {greetingName}
         </p>
         {/*
           THE HERO, in the Streak screen's family — same navy card, same
@@ -913,10 +923,11 @@ export type LifestyleVideo = {
  * whole complaint.
  *
  * The greeting moved with it. It used to sit on the quote step, which no longer
- * exists as a step, and a morning ritual that opens without saying good morning
- * to anybody reads as a kiosk.
+ * exists as a step, and a ritual that opens without greeting anybody reads as a
+ * kiosk. The greeting follows the store's clock — greetingForHour, lib/brand.
  */
 function MindsetStep({
+  greeting,
   greetingName,
   video,
   threshold,
@@ -925,6 +936,10 @@ function MindsetStep({
   onGateMet,
   onNext,
 }: {
+  /** The store-clock greeting — this hardcoded the literal words "Good
+      morning" at every hour of the day, which is how Ryan met "Good morning"
+      in the evening. The word itself never appears here again. */
+  greeting: string;
   greetingName: string;
   video: LifestyleVideo | null;
   threshold: number;
@@ -947,7 +962,7 @@ function MindsetStep({
           was below the fold and on a long one it clipped. */}
       <PhoneScreen.Body>
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-        Good morning, {greetingName}
+        {greeting}, {greetingName}
       </p>
       <h1 className="mt-1 text-3xl font-extrabold text-navy">
         {video?.title ?? "Coming soon"}

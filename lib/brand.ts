@@ -94,7 +94,50 @@ export const BRAND = {
   name: "EDIAGD",
   app: "Eddie",
   tagline: "Every Day Is A Great Day", // single source of truth — GREAT overrides the book's GOOD; see BRAND.md
-  greeting: "Aloha", // welcome — login screen
+  greeting: "Aloha", // welcome — the login screen and onboarding, where no rooftop clock exists yet
   signoff: "Mahalo", // how every EDIAGD interaction closes
   contentColumnMax: 940,
 } as const;
+
+/**
+ * The greeting that follows the clock — THE STORE'S clock.
+ *
+ * "Aloha" stays on the login screen and onboarding, where nobody is signed in
+ * and no rooftop exists to ask the time of. Every signed-in, in-day greeting
+ * (/advisor, the daily loop, the technician's day, the not-ready screen) uses
+ * this, fed the ROOFTOP's hour — never the server's and never the phone's. A
+ * store in Hawaii at 8 a.m. must not be told good afternoon by a server in
+ * Virginia.
+ *
+ *   before 12   Good morning
+ *   12 to 16    Good afternoon
+ *   17 onward   Good evening
+ */
+export function greetingForHour(hour: number): string {
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23) return BRAND.greeting;
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type GreetingClient = { rpc: (fn: string, args?: Record<string, unknown>) => any };
+
+/**
+ * The rooftop's current greeting, from the same source rooftop_today() reads:
+ * `rooftop_local_now(_rooftop)` is `now() at time zone rooftop.timezone` in
+ * the DATABASE — one clock, one timezone column, no second opinion.
+ *
+ * Falls back to BRAND.greeting when the clock cannot be read: "Aloha" at the
+ * wrong hour is on-brand; "Good morning" at 9 p.m. is a wrong statement.
+ */
+export async function rooftopGreeting(
+  client: GreetingClient,
+  rooftopId: string | null | undefined
+): Promise<string> {
+  if (!rooftopId) return BRAND.greeting;
+  const { data, error } = await client.rpc("rooftop_local_now", { _rooftop: rooftopId });
+  if (error || typeof data !== "string" || data.length < 13) return BRAND.greeting;
+  const hour = Number(data.slice(11, 13));
+  return greetingForHour(hour);
+}

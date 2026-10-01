@@ -16,7 +16,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { FocusFamilyCard } from "@/components/advisor/FocusFamilyCard";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
-import { BRAND } from "@/lib/brand";
+import { BRAND, rooftopGreeting } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
   buildServiceFamilies,
@@ -315,16 +315,19 @@ export default async function AdvisorPage() {
       })
     : periodLabel;
 
+  /* The greeting follows the STORE'S clock — rooftop_local_now, the same
+     source rooftop_today reads. Never the server's hour, never the phone's.
+     rooftopGreeting falls back to BRAND.greeting when the clock is
+     unreadable, so this can never claim a time of day it did not measure. */
+  const greeting = await rooftopGreeting(supabase, rooftopId);
+
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       {/* ---- Page title (the app greeting lives in AppHeader) ----------- */}
       <header>
         <div className="min-w-0">
-          {/* BRAND.greeting, never the word itself — the login screen and this
-              screen have to say the same thing, and only one of them is a
-              place anybody would think to look when it changes. */}
           <h1 className="text-2xl font-extrabold leading-tight text-navy">
-            {firstName ? `${BRAND.greeting}, ${firstName}` : BRAND.greeting}
+            {firstName ? `${greeting}, ${firstName}` : greeting}
           </h1>
           <p className="mt-0.5 text-sm text-ink-soft">
             {bookOwner

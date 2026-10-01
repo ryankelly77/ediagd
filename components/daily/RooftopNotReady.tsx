@@ -31,9 +31,12 @@ import { SunWaveMotif } from "@/components/brand/SunWaveMotif";
    ============================================================================ */
 
 export function RooftopNotReady({
+  greeting,
   greetingName,
   rooftopName,
 }: {
+  /** The store-clock greeting from the server; BRAND.greeting as fallback. */
+  greeting: string;
   greetingName: string;
   /** Named so the message is about a place, not about them. */
   rooftopName: string | null;
@@ -41,7 +44,7 @@ export function RooftopNotReady({
   return (
     <main className="mx-auto w-full max-w-lg px-4 py-8">
       <p className="ediagd-eyebrow">
-        {BRAND.greeting}, {greetingName}
+        {greeting}, {greetingName}
       </p>
 
       <section className="ediagd-hero mt-4" data-intentional-bleed>
