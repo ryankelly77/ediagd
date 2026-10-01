@@ -65,7 +65,7 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
   daily_numbers: {
     kind: "daily_numbers",
     title: "Aloha — yesterday's numbers are in",
-    body: "Take three minutes and see where you landed.",
+    body: "Take five minutes and see where you landed.",
     deepLink: "/advisor",
     tokens: [],
     why:
@@ -116,7 +116,7 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
      * rather than urgency.
      */
     title: "Keep your Swell going!",
-    body: "It's just 3 minutes. Now is a good moment.",
+    body: "It's just 5 minutes. Now is a good moment.",
     deepLink: "/today?opened_via=streak_saver",
     tokens: [],
     why:
@@ -144,13 +144,13 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
      * "day 7 is about to break". Same fact, and the only version of it that
      * belongs in a product whose rule is celebrate up, never punish down.
      */
-    title: "Don't forget your 3 minutes at EDIAGD!",
+    title: "Don't forget your 5 minutes at EDIAGD!",
     body: "Keep that Swell going to {days_next} days!",
     deepLink: "/today?opened_via=streak_last_call",
     tokens: ["{days_next}"],
     why:
       "The last moment a reminder can still change the outcome. Same five " +
-      "conditions as the noon nudge — an advisor who did their three minutes " +
+      "conditions as the noon nudge — an advisor who did their five minutes " +
       "at lunch never sees this one.",
   },
 
