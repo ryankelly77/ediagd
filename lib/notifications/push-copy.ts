@@ -43,7 +43,9 @@ export type PushKind =
   | "personal_best"
   | "streak_keeper"
   | "streak_last_call"
-  | "manager_digest";
+  | "manager_digest"
+  | "return"
+  | "start";
 
 export type PushCopy = {
   kind: PushKind;
@@ -161,6 +163,53 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
     why:
       "One per week, to a coach. Coaches get team-shaped information; advisors " +
       "never do, because a team summary read by an advisor is a leaderboard.",
+  },
+
+  /*
+   * RE-ENGAGEMENT (0151/0152). A second reason to send, beside streak
+   * protection: an advisor with no streak — new, lapsed, or onboarding-stalled
+   * — is never selected by the streak logic and otherwise hears nothing.
+   * Delivery path shared; selection and cadence are the generator's.
+   */
+  return: {
+    kind: "return",
+    /*
+     * The lapsed advisor. Names what is WAITING, never the days missed —
+     * {family} is their locked pitch family, the same row the morning reads.
+     * The generator substitutes a family-less line ("Today's training is up
+     * today…") when there is no assignment, so the shape is safe either way.
+     * Cadence (next scheduled morning, then every second workday, then weekly,
+     * stop at 30 days) is in outbox_policy.cadence — the words do not change
+     * with the send number, because a reminder that escalates in tone is the
+     * red-flavoured thing this file forbids.
+     */
+    title: "Your Swell is here when you are",
+    body: "{family} is up today. About five minutes.",
+    deepLink: "/today?opened_via=return",
+    tokens: ["{family}"],
+    why:
+      "The one case streak protection cannot reach: an advisor who completed " +
+      "before, then lapsed. An invitation back, pointed at what is ready for " +
+      "them today, never at the streak they lost.",
+  },
+
+  start: {
+    kind: "start",
+    /*
+     * The first thing EDIAGD ever says to somebody who accepted the invite and
+     * never finished a morning. It says what the morning IS — not that they are
+     * behind, because there is nothing to be behind on yet. Two sends only
+     * (workday 1, then workday 3), then silence; the schedule is in
+     * outbox_policy.cadence.
+     */
+    title: "Welcome to EDIAGD",
+    body: "Your first morning is three minutes — a mindset video and one idea for the drive.",
+    deepLink: "/today?opened_via=start",
+    tokens: [],
+    why:
+      "The invite was accepted but no morning was ever finished — a case the " +
+      "streak logic, which needs a streak, can never see. Describes the ritual " +
+      "plainly; it is an introduction, not a nudge.",
   },
 };
 
