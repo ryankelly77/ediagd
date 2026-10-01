@@ -33,6 +33,31 @@ export async function nativePlatform(): Promise<"ios" | "android" | null> {
   }
 }
 
+/**
+ * What the shell is, and which build of it — for a feedback report that has to
+ * be actionable without a reply.
+ *
+ * Only the native shell knows its own version and build number (App.getInfo is a
+ * native binding), so this is the one piece of feedback context the server
+ * cannot derive on its own and the client has to hand up. In a browser it
+ * returns platform "web" and no version, which is the honest answer.
+ */
+export async function shellInfo(): Promise<{
+  platform: "ios" | "android" | "web";
+  version: string | null;
+  build: string | null;
+}> {
+  const platform = (await nativePlatform()) ?? "web";
+  if (platform === "web") return { platform, version: null, build: null };
+  try {
+    const { App } = await import("@capacitor/app");
+    const info = await App.getInfo();
+    return { platform, version: info.version ?? null, build: info.build ?? null };
+  } catch {
+    return { platform, version: null, build: null };
+  }
+}
+
 /* ---- Push ---------------------------------------------------------------- */
 
 type TokenSink = (token: string, platform: "ios" | "android") => Promise<void>;

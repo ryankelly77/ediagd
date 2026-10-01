@@ -138,6 +138,16 @@ export default async function MorePage() {
             <LinkRow {...section} />
           </li>
         ))}
+        {/* Certifications shipped in #29 — a real destination now, not a "soon".
+            It is on the tab bar too; the row gives it a home in the menu with a
+            line that says what it is. */}
+        <li>
+          <LinkRow
+            href="/certifications"
+            label="Certifications"
+            hint="Where you stand, track by track."
+          />
+        </li>
         <li>
           <LinkRow
             href="/swag"
@@ -203,6 +213,15 @@ export default async function MorePage() {
             hint="Name, password, schedule and reminders"
           />
         </li>
+        {/* The handout promises this: something not working, open More → Feedback.
+            ?from carries the route so the report says where they came from. */}
+        <li>
+          <LinkRow
+            href="/feedback?from=/more"
+            label="Feedback"
+            hint="Something not working? Tell us."
+          />
+        </li>
       </ul>
 
       {/* THE MANAGER'S TOOLS. Above the admin block and behind a different
@@ -256,14 +275,9 @@ export default async function MorePage() {
         </>
       )}
 
-      <h2 className="mt-6 px-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-soft">
-        Coming soon
-      </h2>
-      <ul className="mt-2 space-y-2">
-        <li>
-          <SoonRow label="Certifications" hint="Guided courses and Big Wave" />
-        </li>
-      </ul>
+      {/* Certifications shipped in #29 — it is a real destination now, not a
+          "soon". The Coming soon section is dropped with it, having nothing left
+          to hold. */}
 
       <form action={signOutAction} className="mt-6">
         <button
@@ -324,20 +338,6 @@ function LinkRow({
           ›
         </span>
       </Link>
-    </Card>
-  );
-}
-
-function SoonRow({ label, hint }: { label: string; hint: string }) {
-  return (
-    <Card className="flex items-center gap-3 p-4 opacity-70">
-      <span className="min-w-0 flex-1">
-        <span className="block text-base font-extrabold text-navy">{label}</span>
-        <span className="mt-0.5 block text-xs text-ink-soft">{hint}</span>
-      </span>
-      <span className="rounded-pill bg-line px-2 py-0.5 text-xs font-extrabold uppercase tracking-wide text-ink-soft">
-        Soon
-      </span>
     </Card>
   );
 }
