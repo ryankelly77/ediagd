@@ -98,6 +98,7 @@ const UNWATCHED_REASON: Record<string, string> = {
   badges: "linked from the celebration and from /profile.",
   notifications: "linked from /profile and from the soft-ask card.",
   saved: "linked from More.",
+  feedback: "linked from More (account group) and from any screen via ?from=.",
   group: "linked from More, for multi-rooftop owners.",
   "sand-dollars": "linked from the celebration and the economy strip.",
   swag: "linked from More and from /sand-dollars.",
