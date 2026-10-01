@@ -322,7 +322,7 @@ export default async function TodayPage({
    *
    * `current_len` only moves when somebody COMPLETES a day, so between a lapse
    * and the next completion it is a corpse. This page used to render it raw and
-   * tell a lapsed advisor "Day 7 holds today. Three minutes on Monday makes it
+   * tell a lapsed advisor "Day 7 holds today. Five minutes on Monday makes it
    * Day 8" — then reset them to Day 1 when they did it.
    *
    * swellAsOf runs the same applyDailyCompletion the writer runs, against a

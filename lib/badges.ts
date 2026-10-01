@@ -57,7 +57,7 @@ export const BADGE_FAMILIES: {
     label: "Consistency",
     blurb: "Showing up, day after day. These are live now.",
   },
-  { key: "learning", label: "Learning", blurb: "Going deeper than the daily three minutes." },
+  { key: "learning", label: "Learning", blurb: "Going deeper than the daily five minutes." },
   { key: "performance", label: "Performance", blurb: "Beating your own numbers." },
   { key: "team", label: "Team", blurb: "Lifting the whole crew." },
   { key: "mastery", label: "Mastery", blurb: "Becoming the one others learn from." },

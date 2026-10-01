@@ -427,7 +427,7 @@ export function DailyFlow({
    * ---- THE RITUAL IS IMMERSIVE, THE ROUTE IS NOT -------------------------
    *
    * /today used to sit in IMMERSIVE_ROUTES, which made AppHeader and TabBar
-   * return null across the whole URL. That is right for the three minutes and
+   * return null across the whole URL. That is right for the five minutes and
    * wrong for the rest-day card, which has no Continue, no step dots and no
    * close button — with the chrome gone, the only way off it was to take a rep
    * the app had just said nobody owed.
@@ -486,7 +486,7 @@ export function DailyFlow({
 
           THE CLOSE BUTTON EXISTS BECAUSE THE CHROME DOES NOT. /today is in
           IMMERSIVE_ROUTES, so AppHeader and TabBar both render null over it —
-          deliberate, and right for a three-minute ritual. But the shell launches
+          deliberate, and right for a five-minute ritual. But the shell launches
           at the bare domain, and app/page.tsx sends anyone who has not completed
           the day straight here, so this is the DEFAULT way into the native app.
           On iOS there is no back button and no browser chrome behind it, which
@@ -842,13 +842,13 @@ function RestDayCard({
             {days_next} days!". Two surfaces promising a different next number
             would be worse than either wording alone.
 
-            "Three minutes ON {label}" rather than "{label}'s three minutes",
+            "Five minutes ON {label}" rather than "{label}'s five minutes",
             because nextWorkDayLabel is sometimes "your next work day" rather
             than a weekday, and the possessive form of that is unreadable.
           */}
           {streak > 0 && (
             <p className="mt-6 rounded-card bg-white/10 px-4 py-3 text-sm font-bold text-white">
-              Day {streak} holds today. Three minutes{" "}
+              Day {streak} holds today. Five minutes{" "}
               {island ? "when you're back" : `on ${nextWorkDayLabel}`} makes it Day{" "}
               {streak + 1}.
             </p>
@@ -1874,7 +1874,7 @@ function CelebrationStep({
           -----------------------------------------------------------------------
           The door opens AFTER the morning, never before. /today is the ritual,
           and a shelf of fifty-one extra films sitting on it beforehand invites an
-          advisor to browse instead of doing the three minutes that actually move
+          advisor to browse instead of doing the five minutes that actually move
           the credential.
 
           A quiet bordered link rather than a second button — the gold above is

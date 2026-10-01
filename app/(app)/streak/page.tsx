@@ -151,13 +151,13 @@ export default async function StreakPage() {
             Start your Swell today
           </p>
           <p className="mt-2 text-sm leading-relaxed text-ice-dim">
-            Three minutes is all it takes. Tomorrow you&apos;ll be on day two.
+            About five minutes is all it takes. Tomorrow you&apos;ll be on day two.
           </p>
           <Link
             href="/today"
             className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-gold p-3.5 text-base font-extrabold text-navy transition hover:brightness-95"
           >
-            Start today&apos;s three minutes
+            Start today&apos;s five minutes
           </Link>
         </section>
       )}

@@ -49,7 +49,7 @@ Note: the wave is exclusive to this family. First Light uses the rising sun.
 
 ## Learning — courses & daily engagement family
 
-Gated on the advisor lesson library (the "do more than 3 minutes" system). These are the reward layer that makes the library sticky — you can't count "ten courses" until there's a place to complete them.
+Gated on the advisor lesson library (the "do more than the daily five minutes" system). These are the reward layer that makes the library sticky — you can't count "ten courses" until there's a place to complete them.
 
 | Badge | Asset key | Criteria | Tier | Motif | Status |
 |---|---|---|---|---|---|

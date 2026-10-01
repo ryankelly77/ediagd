@@ -517,8 +517,8 @@ export function applyDailyCompletion(
  * finish a rep.
  *
  * Every display surface used to read it raw, so the app told a lapsed advisor
- * "Day 7 holds today. Three minutes on Monday makes it Day 8" — and then reset
- * them to Day 1 the moment they did the three minutes. We told them something
+ * "Day 7 holds today. Five minutes on Monday makes it Day 8" — and then reset
+ * them to Day 1 the moment they did the five minutes. We told them something
  * false and then punished them for acting on it, on the one mechanic the whole
  * product is built around, at the exact moment they came back.
  *

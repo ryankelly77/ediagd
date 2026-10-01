@@ -336,7 +336,7 @@ export const NAV_EXEMPT: Readonly<Record<string, string>> = {
     "The mileage shelf — fourteen service-interval rungs of reference films. "
     + "Reached from the celebration screen AFTER the morning is complete, never "
     + "before: /today is the ritual, and fifty-one browsable films on it "
-    + "beforehand compete with the three minutes that move the credential. Also "
+    + "beforehand compete with the five minutes that move the credential. Also "
     + "reached from the Menus track. Reference material, so it completes nothing "
     + "and tracks nothing — see 0128 and lib/mileage.ts.",
   "/mileage/[rung]":
