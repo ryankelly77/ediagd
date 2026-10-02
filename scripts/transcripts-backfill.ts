@@ -72,7 +72,6 @@ type Film = {
   source_filename: string | null;
   mux_playback_id: string | null;
   mux_playback_policy: string | null;
-  asset_id: string | null;
   has_transcript: boolean;
 };
 
@@ -125,7 +124,7 @@ async function loadFilms(): Promise<Film[]> {
       .from("content")
       .select(
         "id, title, source_filename, mux_playback_id, mux_playback_policy, " +
-          "mux_upload(asset_id), content_transcript(content_id)"
+          "content_transcript(content_id)"
       )
       .eq("type", "advisor_video")
       .eq("status", "published")
@@ -134,9 +133,6 @@ async function loadFilms(): Promise<Film[]> {
     if (error) throw new Error(`content read: ${error.message}`);
     if (!data || data.length === 0) break;
     for (const r of data as unknown as Record<string, unknown>[]) {
-      const up = r.mux_upload as { asset_id: string | null }[] | { asset_id: string | null } | null;
-      const asset =
-        Array.isArray(up) ? up[0]?.asset_id ?? null : (up?.asset_id ?? null);
       const tx = r.content_transcript as unknown[] | unknown | null;
       films.push({
         id: r.id as string,
@@ -144,7 +140,6 @@ async function loadFilms(): Promise<Film[]> {
         source_filename: (r.source_filename as string | null) ?? null,
         mux_playback_id: (r.mux_playback_id as string | null) ?? null,
         mux_playback_policy: (r.mux_playback_policy as string | null) ?? null,
-        asset_id: asset,
         has_transcript: Array.isArray(tx) ? tx.length > 0 : Boolean(tx),
       });
     }
@@ -154,10 +149,32 @@ async function loadFilms(): Promise<Film[]> {
 }
 
 async function muxCaption(film: Film): Promise<boolean> {
-  if (!mux || !film.asset_id || !film.mux_playback_id) return false;
-  const asset = await mux.video.assets.retrieve(film.asset_id);
+  if (!mux || !film.mux_playback_id) return false;
+
+  /*
+   * Resolve the asset FROM the playback id the app actually streams, not from
+   * mux_upload.asset_id. A film that was reshot or re-uploaded has more than one
+   * mux_upload row, and content.mux_playback_id points at the CURRENT asset while
+   * an older mux_upload row points at a superseded one. Bridging through
+   * mux_upload read captions off a take the viewer never sees — and delivered a
+   * 404 at the live playback id for 167 films whose two assets had drifted. The
+   * playback id is the observed key; the upload row is a derived one.
+   */
+  let assetId: string | null = null;
+  try {
+    const pb = await mux.video.playbackIds.retrieve(film.mux_playback_id);
+    assetId = (pb.object?.id as string | undefined) ?? null;
+  } catch {
+    return false;
+  }
+  if (!assetId) return false;
+
+  const asset = await mux.video.assets.retrieve(assetId);
   const track = (asset.tracks ?? []).find(
-    (t) => t.type === "text" && t.status === "ready"
+    (t) =>
+      t.type === "text" &&
+      t.status === "ready" &&
+      (t.language_code === "en" || !t.language_code)
   );
   if (!track) return false;
 
@@ -221,7 +238,7 @@ async function main() {
   if (!mux) {
     console.log(`  Mux: not configured (MUX_* absent) — caption pass skipped.`);
   } else {
-    const remaining = todo.filter((f) => !f.has_transcript && f.asset_id);
+    const remaining = todo.filter((f) => !f.has_transcript && f.mux_playback_id);
     console.log(`  Mux caption pass over ${remaining.length} films…`);
     await pool(remaining, 8, async (film) => {
       try {
