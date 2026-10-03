@@ -1,43 +1,34 @@
 "use client";
 
 /* ============================================================================
-   EDIAGD — a module's cues as a card deck
+   EDIAGD — a module's film above its cue deck
 
-   ONE CARD FILLS THE VIEW, swipe to advance. The list this replaces was honest
-   but inert: eight cues stacked down a page read as homework. A deck reads as
-   something you move through, and the thing an advisor is actually doing —
-   taking one idea at a time onto the drive — is a card, not a row.
+   THE FILM IS NOT A CARD. The deck is a fixed-height, horizontally-snapping
+   reading frame — right for a cue, wrong for a player, which sizes itself by
+   width and aspect ratio and wants a height the card cannot give it (#44 put a
+   9:16 film in a 290px card and the controls fell below an inner scroll, inside
+   a horizontal scroller where a drag on the seek bar was a drag on the deck).
+   So the film comes out: its own block, full column width, natural height, the
+   page scrolls. The deck below holds the cues and nothing else.
+
+   ONE CARD FILLS THE VIEW, swipe to advance. A list of eight cues reads as
+   homework; a deck reads as something you move through, one idea at a time.
 
    NO CAROUSEL LIBRARY, AND NONE NEEDED. The whole mechanism is CSS scroll-snap
-   on a horizontally scrolling flex row. That buys native touch momentum, native
-   snapping, native accessibility of a scroll container, and correct behaviour
-   under rubber-banding on iOS — all of it tuned by the platform rather than
-   re-implemented in JS. Buttons and arrow keys call scrollTo() against the same
-   container, so there is ONE source of truth for position: the scroll offset.
-   A JS-transform carousel would have to own that state and then fight the
-   browser for it. Bundle cost here is zero.
+   on a horizontally scrolling flex row — native touch momentum, native snapping,
+   native accessibility, correct iOS rubber-banding. Buttons and arrow keys call
+   scrollTo() against the same container, so position has ONE source of truth:
+   the scroll offset.
 
-   COMPLETION LOGIC IS UNTOUCHED. This calls completeLibraryItem, the same
-   server action the old rows used. Payment, the daily cap, the pay-once unique
-   index, and module completion all still live in lib/library-actions.ts.
-   Nothing about what an item is worth is decided here — the deck only decides
-   what to show and when to move.
+   COMPLETION LOGIC IS UNTOUCHED. The film and the cues both complete through
+   completeLibraryItem (the same server action), credit-only, no watch_gate.
+   Payment, the daily cap, the pay-once unique index and module completion all
+   live in lib/library-actions.ts. The film is still counted: the terminal card
+   waits for it and module_completion needs it, even though it is not in the deck.
 
-   THREE KINDS OF CARD, one shell:
-     * cue     — title and body, "Mark done"
-     * video   — a real player; watching past the threshold completes it
-     * missing — a branded placeholder where a module's video hasn't landed yet
-
-   The placeholder OCCUPIES A REAL SLOT in the deck and in the "3 of 8" count,
-   so the deck's shape is what the module will actually look like once the video
-   arrives. It cannot be completed and never claims to be: a placeholder that
-   counted toward progress would be a lie about work nobody has done.
-
-   LONG BODIES SCROLL INSIDE THE CARD. The card is a fixed-height column: a
-   title block that does not move, a body that scrolls on its own, and the
-   action pinned beneath it. Some cues run past 900 characters; letting the card
-   grow would push "Mark done" off a phone screen, and shrinking the type to fit
-   would punish the longest — which is to say the most important — cues.
+   LONG CUE BODIES SCROLL INSIDE THE CARD. Each card is a fixed-height column: a
+   title that does not move, a body that scrolls, the action pinned beneath.
+   Letting a 900-character cue grow the card would push "Mark done" off a phone.
    ============================================================================ */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -90,7 +81,6 @@ const CONFIRM_MS = 650;
 
 export function CueDeck({
   moduleId,
-  moduleName,
   items,
   hasQuiz,
   quizPassed,
@@ -101,6 +91,14 @@ export function CueDeck({
 }: Props) {
   const router = useRouter();
   const scroller = useRef<HTMLDivElement | null>(null);
+  // The deck's wrapper, so finishing the film can scroll the deck into view.
+  const deckWrap = useRef<HTMLDivElement | null>(null);
+
+  // The film is NOT a card. It comes out of the deck and sits above it. There is
+  // at most one video/placeholder item; the page synthesizes a placeholder when a
+  // module has no film at all.
+  const film = items.find((i) => i.kind === "video" || i.kind === "video_placeholder") ?? null;
+  const cues = items.filter((i) => i.kind === "cue");
 
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState<Set<string>>(
@@ -110,10 +108,10 @@ export function CueDeck({
   const [justDone, setJustDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The terminal card is a real card in the deck, so the scroll maths counts it.
-  const cardCount = items.length + 1;
-  // A placeholder is not work. It is excluded from every count that means
-  // "how much is left", while still occupying a slot in the deck.
+  // The deck holds the cues plus the terminal card.
+  const cardCount = cues.length + 1;
+  // Completion still counts the film: a real film is completable (the terminal
+  // waits for it and module_completion needs it), a placeholder never is.
   const completable = items.filter((i) => i.kind !== "video_placeholder");
   const remaining = completable.filter((i) => !done.has(i.id)).length;
   const allDone = remaining === 0 && completable.length > 0;
@@ -125,8 +123,7 @@ export function CueDeck({
     ).matches;
   }, []);
 
-  // Mirrors `index` for the callbacks that fire later than they were created —
-  // see the completion timeout below, which must not act on a stale position.
+  // Mirrors `index` for the callbacks that fire later than they were created.
   const indexRef = useRef(0);
   useEffect(() => {
     indexRef.current = index;
@@ -139,10 +136,8 @@ export function CueDeck({
     const child = el.children[clamped] as HTMLElement | undefined;
     if (!child) return;
 
-    // Measured, not computed as clientWidth * i. Those agree today, and would
-    // stop agreeing the moment the deck gains padding, a gap, or a peek of the
-    // next card — the kind of change that looks purely visual and silently
-    // breaks every jump.
+    // Measured, not computed as clientWidth * i — those stop agreeing the moment
+    // the deck gains padding, a gap or a peek of the next card.
     const target =
       el.scrollLeft +
       child.getBoundingClientRect().left -
@@ -160,26 +155,24 @@ export function CueDeck({
     [scrollToIndex]
   );
 
-  // A quiz miss links to /library/m/<id>?cue=<contentId>. Landing is a jump,
-  // not a journey: animating the deep link would scroll past every card between
-  // here and there and read as the app losing its place.
+  // A quiz miss links to /library/m/<id>?cue=<contentId>. The index is among
+  // CUES now, which is also what the deck holds, so no translation is needed.
+  // Landing is a jump, not a journey: animating it would scroll past every card.
   const landed = useRef(false);
   useEffect(() => {
     if (landed.current || !initialCueId) return;
-    const i = items.findIndex((it) => it.id === initialCueId);
+    const i = cues.findIndex((it) => it.id === initialCueId);
     if (i < 0) return;
     landed.current = true;
     scrollToIndex(i, false);
-  }, [initialCueId, items, scrollToIndex]);
+  }, [initialCueId, cues, scrollToIndex]);
 
-  // Position comes FROM the scroll offset, so a finger-swipe, a button, and a
-  // key press all converge on the same number instead of three sources drifting.
+  // Position comes FROM the scroll offset, so a finger-swipe, a button and a key
+  // press all converge on the same number instead of three sources drifting.
   const onScroll = useCallback(() => {
     const el = scroller.current;
     if (!el || el.clientWidth === 0) return;
 
-    // Nearest card by measured distance, for the same reason scrollToIndex
-    // measures.
     const mid = el.getBoundingClientRect().left + el.clientWidth / 2;
     let nearest = 0;
     let best = Infinity;
@@ -205,27 +198,21 @@ export function CueDeck({
   };
 
   /**
-   * Finish an item and move along.
+   * Finish an item and run `after`.
    *
-   * `watchedPct` is only meaningful for a video — the server re-checks it
-   * against the threshold, so a client that lied would simply be refused.
+   * `watchedPct` is only meaningful for the film — the server re-checks it
+   * against the threshold, so a client that lied would simply be refused. `after`
+   * is where the cue advances the deck and the film scrolls the deck into view.
    */
   async function markDone(
     id: string,
-    cardIndex: number,
-    watchedPct?: number,
-    /**
-     * False for a video: it completes at the threshold, with up to a tenth of
-     * the runtime still to play, and sliding the card away mid-sentence would
-     * punish watching to the end. Videos advance from onEnded instead.
-     */
-    advance = true
+    opts: { watchedPct?: number; after?: () => void } = {}
   ) {
     if (pending || done.has(id)) return;
     setPending(id);
     setError(null);
 
-    const result = await completeLibraryItem(id, watchedPct);
+    const result = await completeLibraryItem(id, opts.watchedPct);
     setPending(null);
 
     if (!result.ok) {
@@ -236,99 +223,107 @@ export function CueDeck({
     setDone((prev) => new Set(prev).add(id));
     setJustDone(id);
 
-    // The confirmation beat, then the deck moves with them.
     window.setTimeout(() => {
       setJustDone(null);
-      if (!advance) {
-        router.refresh();
-        return;
-      }
-      // Only advance if they are STILL on the card they just finished. Tapping
-      // "Mark done" and immediately swiping ahead is ordinary behaviour, and
-      // yanking them back one card later would feel like the deck fighting
-      // them — the auto-advance is a convenience, not a claim on where they are.
-      if (indexRef.current === cardIndex) goTo(cardIndex + 1);
-      // Re-read the server so the quiz gate, the module completion and the
-      // Sand Dollar balance are true rather than guessed. Deferred to here so
-      // it never interrupts a card the advisor is still reading.
+      opts.after?.();
+      // Re-read the server so the quiz gate, the module completion and the Sand
+      // Dollar balance are true rather than guessed.
       router.refresh();
     }, CONFIRM_MS);
   }
 
+  const scrollDeckIntoView = useCallback(() => {
+    deckWrap.current?.scrollIntoView({
+      block: "start",
+      behavior: reducedMotion.current ? "auto" : "smooth",
+    });
+  }, []);
+
+  const filmIsReal = film?.kind === "video" && Boolean(film.renditions);
+
   return (
     <section
       aria-roledescription="carousel"
-      aria-label="Cards in this module"
+      aria-label="This lesson's film and cues"
       className="mt-3"
     >
-      <DeckProgress
-        index={index}
-        cardCount={cardCount}
-        items={items}
-        done={done}
-      />
-
-      {/* ---- The deck --------------------------------------------------- */}
-      <div
-        ref={scroller}
-        onScroll={onScroll}
-        onKeyDown={onKeyDown}
-        tabIndex={0}
-        className="ediagd-deck mt-3 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-      >
-        {items.map((item, i) => (
-          <DeckCard
-            key={item.id}
-            item={item}
-            n={i + 1}
-            of={items.length}
-            // Numbered among CUES, not among cards: with a video card at the
-            // front, counting cards would open the deck on "Cue 2".
-            cueNumber={
-              items.slice(0, i + 1).filter((x) => x.kind === "cue").length
-            }
-            moduleName={moduleName}
-            isDone={done.has(item.id)}
-            isPending={pending === item.id}
-            justDone={justDone === item.id}
-            videoThreshold={videoThreshold}
-            onMarkDone={(pct, advance) => markDone(item.id, i, pct, advance)}
-            onAdvance={() => goTo(i + 1)}
+      {/* ---- The film, above the deck, at its natural height ------------- */}
+      {film &&
+        (filmIsReal ? (
+          <FilmBlock
+            item={film}
+            isDone={done.has(film.id)}
+            threshold={videoThreshold}
+            onComplete={(pct) => markDone(film.id, { watchedPct: pct })}
+            onEnded={scrollDeckIntoView}
           />
+        ) : (
+          <FilmMissingBlock />
         ))}
 
-        <TerminalCard
-          moduleId={moduleId}
-          hasQuiz={hasQuiz}
-          quizPassed={quizPassed}
-          allDone={allDone}
-          remaining={remaining}
-          completedAt={completedAt}
-          nextStep={nextStep}
-        />
-      </div>
+      {/* ---- The deck of cues ------------------------------------------- */}
+      <div ref={deckWrap} className={film ? "mt-6" : undefined}>
+        <DeckProgress index={index} cues={cues} cardCount={cardCount} done={done} />
 
-      {/* ---- Controls ---------------------------------------------------- */}
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <DeckButton
-          label="Previous"
-          glyph="‹"
-          onClick={() => goTo(index - 1)}
-          disabled={index === 0}
-        />
-        <p aria-live="polite" className="ediagd-numeral text-xs text-ink-soft">
-          {index < items.length
-            ? `${index + 1} of ${items.length}`
-            : hasQuiz
-              ? "Quiz"
-              : "Finish"}
-        </p>
-        <DeckButton
-          label="Next"
-          glyph="›"
-          onClick={() => goTo(index + 1)}
-          disabled={index >= cardCount - 1}
-        />
+        <div
+          ref={scroller}
+          onScroll={onScroll}
+          onKeyDown={onKeyDown}
+          tabIndex={0}
+          className="ediagd-deck mt-3 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          {cues.map((cue, i) => (
+            <CueCardDeck
+              key={cue.id}
+              item={cue}
+              n={i + 1}
+              of={cues.length}
+              isDone={done.has(cue.id)}
+              isPending={pending === cue.id}
+              justDone={justDone === cue.id}
+              onMarkDone={() =>
+                markDone(cue.id, {
+                  after: () => {
+                    if (indexRef.current === i) goTo(i + 1);
+                  },
+                })
+              }
+            />
+          ))}
+
+          <TerminalCard
+            moduleId={moduleId}
+            hasQuiz={hasQuiz}
+            quizPassed={quizPassed}
+            allDone={allDone}
+            remaining={remaining}
+            completedAt={completedAt}
+            nextStep={nextStep}
+          />
+        </div>
+
+        {/* ---- Controls ------------------------------------------------- */}
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <DeckButton
+            label="Previous"
+            glyph="‹"
+            onClick={() => goTo(index - 1)}
+            disabled={index === 0}
+          />
+          <p aria-live="polite" className="ediagd-numeral text-xs text-ink-soft">
+            {index < cues.length
+              ? `${index + 1} of ${cues.length}`
+              : hasQuiz
+                ? "Quiz"
+                : "Finish"}
+          </p>
+          <DeckButton
+            label="Next"
+            glyph="›"
+            onClick={() => goTo(index + 1)}
+            disabled={index >= cardCount - 1}
+          />
+        </div>
       </div>
 
       {error && (
@@ -358,7 +353,7 @@ export function CueDeck({
           display: none;
         }
         /* A soft fade top and bottom that says "there is more below" without
-           spending a scrollbar on it. One rule for every card in the deck. */
+           spending a scrollbar on it. One rule for every cue in the deck. */
         .ediagd-cue-body {
           mask-image: linear-gradient(
             to bottom,
@@ -385,59 +380,201 @@ export function CueDeck({
   );
 }
 
+/* ---- The film block ------------------------------------------------------ */
+
+/**
+ * The lesson film, out of the deck and at its natural height.
+ *
+ * No fixed height, no inner overflow, no mask — the player sizes itself by the
+ * column width and its aspect ratio, and the page scrolls. credit-only is the
+ * LMS policy: controls stay, the watch records to content_progress, and NO
+ * watch_gate row is filed. Resumes from the advisor's furthest point; captions
+ * come from the asset's own text track.
+ *
+ * COMPLETION IS EARNED BY WATCHING, reported once — scrubbing backwards never
+ * un-earns it, and the server re-checks the number against the threshold. When
+ * the film ends with credit earned, the deck scrolls into view: that is what
+ * "the deck advances" means now.
+ */
+function FilmBlock({
+  item,
+  isDone,
+  threshold,
+  onComplete,
+  onEnded,
+}: {
+  item: DeckItem;
+  isDone: boolean;
+  threshold: number;
+  onComplete: (pct: number) => void;
+  onEnded: () => void;
+}) {
+  const [watched, setWatched] = useState(item.watchedPct ?? 0);
+  const furthest = useRef(item.watchedPct ?? 0);
+  const fired = useRef(isDone);
+
+  const mins =
+    item.durationSec && item.durationSec > 0
+      ? item.durationSec < 60
+        ? `${item.durationSec} sec`
+        : `${Math.round(item.durationSec / 60)} min`
+      : null;
+
+  const reach = (pct: number, isMet: boolean) => {
+    if (pct > furthest.current) {
+      furthest.current = pct;
+      setWatched(pct);
+    }
+    if (!fired.current && !isDone && (isMet || pct >= threshold)) {
+      fired.current = true;
+      onComplete(Math.max(pct, threshold));
+    }
+  };
+
+  const handleEnded = () => {
+    if (furthest.current >= threshold || isDone) onEnded();
+  };
+
+  const barPct = isDone ? 100 : watched;
+
+  return (
+    <section>
+      <div className="flex items-center gap-2">
+        <span className="ediagd-eyebrow">Video</span>
+        {mins && (
+          <span className="ediagd-numeral text-xs text-ink-soft">{mins}</span>
+        )}
+        {item.isSample && <SampleChip />}
+        {isDone && (
+          <span
+            className="ml-auto rounded-pill px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wide"
+            style={{
+              background:
+                "color-mix(in srgb, rgb(var(--ediagd-palm)) 16%, transparent)",
+              color: "rgb(var(--ediagd-palm))",
+            }}
+          >
+            Done
+          </span>
+        )}
+      </div>
+      <h3 className="mt-1 text-lg font-extrabold leading-snug text-navy">
+        {item.title}
+      </h3>
+
+      <div className="mt-3">
+        <TrackedVideo
+          policy="credit-only"
+          contentId={item.id}
+          renditions={item.renditions!}
+          title={item.title}
+          threshold={threshold}
+          initialWatchedPct={item.watchedPct}
+          initialPositionSec={item.positionSec}
+          onWatchChange={(s) => reach(s.pct, s.met)}
+          onPlaybackEnded={handleEnded}
+        />
+      </div>
+
+      {item.body && (
+        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy">
+          {item.body}
+        </p>
+      )}
+
+      {/* ONE progress line, the one that names the rule. Not a second bar from
+          the player. */}
+      <div className="mt-3">
+        <div className="flex items-baseline justify-between">
+          <span className="ediagd-numeral text-xs font-extrabold text-navy">
+            Watched {barPct}%
+          </span>
+          <span className="ediagd-numeral text-xs text-ink-soft">
+            counts at {threshold}%
+          </span>
+        </div>
+        <span className="mt-1.5 block h-1.5 w-full rounded-pill bg-line/60">
+          <span
+            aria-hidden="true"
+            className="block h-full rounded-pill transition-all"
+            style={{
+              width: `${Math.max(barPct > 0 ? 4 : 0, barPct)}%`,
+              background:
+                barPct >= threshold
+                  ? "rgb(var(--ediagd-palm))"
+                  : "rgb(var(--ediagd-teal))",
+            }}
+          />
+        </span>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * A module with no film yet. The InactivePlayer frame and one line, in the
+ * film's place above the deck — deliberately not a fake player, and not a card.
+ */
+function FilmMissingBlock() {
+  return (
+    <section>
+      <span className="ediagd-eyebrow">Video</span>
+      <div className="mt-3 flex flex-col items-center justify-center rounded-card border border-line bg-surface-card py-10 text-center">
+        <InactivePlayer />
+        <p className="mt-4 text-sm leading-relaxed text-ink-soft">
+          The film for this lesson is coming.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 /* ---- Progress ------------------------------------------------------------ */
 
 /**
- * "3 of 8" and a segment per card.
+ * "3 of 8" and a segment per cue, plus the terminal card's own segment.
  *
  * Segments rather than a single bar because the deck's LENGTH is the thing an
- * advisor wants before they start — a continuous bar at 37% doesn't say whether
- * two cards remain or twenty. Filled = finished, teal = where you are.
+ * advisor wants before they start. Filled = finished, teal = where you are. The
+ * film is tracked by its own Done chip above; this is the deck's own progress.
  */
 function DeckProgress({
   index,
+  cues,
   cardCount,
-  items,
   done,
 }: {
   index: number;
+  cues: DeckItem[];
   cardCount: number;
-  items: DeckItem[];
   done: Set<string>;
 }) {
-  const completable = items.filter((i) => i.kind !== "video_placeholder");
-  const completed = completable.filter((i) => done.has(i.id)).length;
+  const completed = cues.filter((i) => done.has(i.id)).length;
 
   return (
     <div className="px-1">
       <div className="flex items-baseline justify-between">
         <p className="ediagd-numeral text-sm font-extrabold text-navy">
-          {Math.min(index + 1, items.length)} of {items.length}
+          {cues.length === 0 ? "No cues" : `${Math.min(index + 1, cues.length)} of ${cues.length}`}
         </p>
         <p className="ediagd-numeral text-xs text-ink-soft">
-          {completed} of {completable.length} done
+          {completed} of {cues.length} done
         </p>
       </div>
 
       <div
         className="mt-1.5 flex gap-1"
         role="img"
-        aria-label={`${completed} of ${completable.length} finished`}
+        aria-label={`${completed} of ${cues.length} finished`}
       >
-        {items.map((item, i) => {
+        {cues.map((item, i) => {
           const isDone = done.has(item.id);
           const isHere = i === index;
-          // A placeholder never fills — there is nothing there to finish.
-          const background =
-            item.kind === "video_placeholder"
-              ? isHere
-                ? "rgb(var(--ediagd-teal) / 0.45)"
-                : "rgb(var(--ediagd-line) / 0.7)"
-              : isDone
-                ? "rgb(var(--ediagd-palm))"
-                : isHere
-                  ? "rgb(var(--ediagd-teal))"
-                  : "rgb(var(--ediagd-line) / 0.7)";
+          const background = isDone
+            ? "rgb(var(--ediagd-palm))"
+            : isHere
+              ? "rgb(var(--ediagd-teal))"
+              : "rgb(var(--ediagd-line) / 0.7)";
           return (
             <span
               key={item.id}
@@ -447,7 +584,7 @@ function DeckProgress({
           );
         })}
         {/* The terminal card gets its own segment — the deck is longer than the
-            item count, and a bar that ended one card early would read as a bug. */}
+            cue count, and a bar that ended one card early would read as a bug. */}
         <span
           className="h-1.5 w-4 rounded-pill transition-all"
           style={{
@@ -462,65 +599,37 @@ function DeckProgress({
   );
 }
 
-/* ---- One card ------------------------------------------------------------ */
+/* ---- One cue card -------------------------------------------------------- */
 
-function DeckCard({
+function CueCardDeck({
   item,
   n,
   of,
-  cueNumber,
-  moduleName,
   isDone,
   isPending,
   justDone,
-  videoThreshold,
   onMarkDone,
-  onAdvance,
 }: {
   item: DeckItem;
   n: number;
   of: number;
-  /** Position among the cues, ignoring video cards. */
-  cueNumber: number;
-  moduleName: string;
   isDone: boolean;
   isPending: boolean;
   justDone: boolean;
-  videoThreshold: number;
-  onMarkDone: (watchedPct?: number, advance?: boolean) => void;
-  /** Move to the next card — used when a video plays out. */
-  onAdvance: () => void;
+  onMarkDone: () => void;
 }) {
-  const isPlaceholder = item.kind === "video_placeholder";
-  const isVideo = item.kind === "video";
-  // Rounding up to "1 min" would tell an advisor a nine-second clip is sixty
-  // times longer than it is. Under a minute, say seconds.
-  const mins =
-    item.durationSec && item.durationSec > 0
-      ? item.durationSec < 60
-        ? `${item.durationSec} sec`
-        : `${Math.round(item.durationSec / 60)} min`
-      : null;
-
-  const eyebrow = isVideo || isPlaceholder ? "Video" : `Cue ${cueNumber}`;
-
   return (
     <article
-      aria-label={`${eyebrow}, card ${n} of ${of}: ${item.title}`}
+      aria-label={`Cue ${n} of ${of}: ${item.title}`}
       className="flex h-full w-full shrink-0 snap-center flex-col rounded-card border border-line bg-surface-card p-5 shadow-card"
     >
       {/* Title block — fixed, so the card never appears to jump while reading */}
       <header className="shrink-0">
         <div className="flex items-center gap-2">
-          <span className="ediagd-eyebrow">{eyebrow}</span>
+          <span className="ediagd-eyebrow">Cue {n}</span>
           {item.tier && (
             <span className="text-xs uppercase tracking-wide text-ink-soft">
               {item.tier}
-            </span>
-          )}
-          {mins && (
-            <span className="ediagd-numeral text-xs text-ink-soft">
-              {mins}
             </span>
           )}
           {item.isSample && <SampleChip />}
@@ -538,267 +647,42 @@ function DeckCard({
           )}
         </div>
         <h3 className="mt-2 text-lg font-extrabold leading-snug text-navy">
-          {isPlaceholder ? moduleName : item.title}
+          {item.title}
         </h3>
       </header>
 
-      {isPlaceholder ? (
-        <VideoPlaceholderBody />
-      ) : isVideo ? (
-        <VideoBody
-          item={item}
-          isDone={isDone}
-          isPending={isPending}
-          justDone={justDone}
-          threshold={videoThreshold}
-          onReachedThreshold={(pct) => onMarkDone(pct, false)}
-          onEnded={onAdvance}
-        />
-      ) : (
-        <>
-          {/* The body scrolls on its own — see the note at the top of the file */}
-          <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
-            <p className="whitespace-pre-line text-[15px] leading-relaxed text-navy">
-              {item.body}
-            </p>
-          </div>
+      {/* The body scrolls on its own — see the note at the top of the file */}
+      <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
+        <p className="whitespace-pre-line text-[15px] leading-relaxed text-navy">
+          {item.body}
+        </p>
+      </div>
 
-          <footer className="mt-4 shrink-0">
-            {isDone ? (
-              <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl border border-line text-sm font-extrabold text-ink-soft">
-                <Check /> Finished — swipe on
-              </p>
+      <footer className="mt-4 shrink-0">
+        {isDone ? (
+          <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl border border-line text-sm font-extrabold text-ink-soft">
+            <Check /> Finished — swipe on
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onMarkDone}
+            disabled={isPending}
+            className="flex min-h-[3rem] w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 text-sm font-extrabold text-navy transition hover:brightness-95 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            {justDone ? (
+              <>
+                <Check /> Got it
+              </>
+            ) : isPending ? (
+              "Saving…"
             ) : (
-              <button
-                type="button"
-                onClick={() => onMarkDone()}
-                disabled={isPending}
-                className="flex min-h-[3rem] w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 text-sm font-extrabold text-navy transition hover:brightness-95 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-              >
-                {justDone ? (
-                  <>
-                    <Check /> Got it
-                  </>
-                ) : isPending ? (
-                  "Saving…"
-                ) : (
-                  "Mark done"
-                )}
-              </button>
+              "Mark done"
             )}
-          </footer>
-        </>
-      )}
+          </button>
+        )}
+      </footer>
     </article>
-  );
-}
-
-/* ---- The video ----------------------------------------------------------- */
-
-/**
- * A real player, and an honest progress read-out.
- *
- * COMPLETION IS EARNED BY WATCHING. The furthest point reached is tracked and
- * the item completes once it passes game_settings.video_complete_pct. The
- * server re-checks that number against the same setting, so this is a
- * convenience for the advisor rather than the thing being trusted — a client
- * claiming 100% on a video it never played is refused in
- * completeLibraryItem.
- *
- * FURTHEST POINT, not current position: scrubbing backwards to re-watch
- * something must not undo credit that was already earned.
- */
-function VideoBody({
-  item,
-  isDone,
-  isPending,
-  justDone,
-  threshold,
-  onReachedThreshold,
-  onEnded,
-}: {
-  item: DeckItem;
-  isDone: boolean;
-  isPending: boolean;
-  justDone: boolean;
-  threshold: number;
-  onReachedThreshold: (pct: number) => void;
-  onEnded: () => void;
-}) {
-  const [watched, setWatched] = useState(item.watchedPct ?? 0);
-  const furthest = useRef(item.watchedPct ?? 0);
-  const fired = useRef(isDone);
-  const met = useRef(isDone);
-
-  // One place the bar and the one-shot completion are decided, shared by both
-  // players. Credit is earned by coverage (TrackedVideo reports `met`) or by
-  // furthest position (the legacy player), reported once; scrubbing backwards
-  // never un-earns it. onReachedThreshold is the SAME completion path the card
-  // used before — it marks content_progress.completed_at through completeLibraryItem.
-  const reach = (pct: number, isMet: boolean) => {
-    if (pct > furthest.current) {
-      furthest.current = pct;
-      setWatched(pct);
-    }
-    if (isMet) met.current = true;
-    if (!fired.current && !isDone && (isMet || pct >= threshold)) {
-      fired.current = true;
-      onReachedThreshold(Math.max(pct, threshold));
-    }
-  };
-
-  // Played out to the end: now the deck moves on, the same way finishing a cue
-  // moves it on. Only when the item was actually watched — a video scrubbed to
-  // the end without clearing the bar should not advance past work never done.
-  const handleEnded = () => {
-    if (met.current || furthest.current >= threshold || isDone) onEnded();
-  };
-
-  const onLegacyTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const v = e.currentTarget;
-    if (!v.duration || !Number.isFinite(v.duration)) return;
-    reach(Math.min(100, Math.round((v.currentTime / v.duration) * 100)), false);
-  };
-
-  const footer = (
-    <footer className="mt-4 shrink-0">
-      {isDone ? (
-        <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl border border-line text-sm font-extrabold text-ink-soft">
-          <Check /> Watched — swipe on
-        </p>
-      ) : justDone || isPending ? (
-        <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl bg-gold text-sm font-extrabold text-navy">
-          {isPending ? "Saving…" : <><Check /> Got it</>}
-        </p>
-      ) : (
-        <div className="min-h-[3rem]">
-          <div className="flex items-baseline justify-between">
-            <span className="ediagd-numeral text-xs font-extrabold text-navy">
-              Watched {watched}%
-            </span>
-            <span className="ediagd-numeral text-xs text-ink-soft">
-              counts at {threshold}%
-            </span>
-          </div>
-          <span className="mt-1.5 block h-1.5 w-full rounded-pill bg-line/60">
-            <span
-              aria-hidden="true"
-              className="block h-full rounded-pill transition-all"
-              style={{
-                width: `${Math.max(watched > 0 ? 4 : 0, watched)}%`,
-                background:
-                  watched >= threshold
-                    ? "rgb(var(--ediagd-palm))"
-                    : "rgb(var(--ediagd-teal))",
-              }}
-            />
-          </span>
-        </div>
-      )}
-    </footer>
-  );
-
-  // A real Mux film. Both cuts are signed and the player picks the 9:16 crop on a
-  // phone and the master on a desktop, exactly as the morning does. policy=
-  // "credit-only" — the LMS policy — so controls stay, the watch is recorded to
-  // content_progress, and NO watch_gate row is filed. Resumes from the advisor's
-  // furthest point; captions come from the asset's own text track.
-  if (item.renditions) {
-    return (
-      <>
-        <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
-          <TrackedVideo
-            policy="credit-only"
-            contentId={item.id}
-            renditions={item.renditions}
-            title={item.title}
-            threshold={threshold}
-            initialWatchedPct={item.watchedPct}
-            initialPositionSec={item.positionSec}
-            onWatchChange={(s) => reach(s.pct, s.met)}
-            onPlaybackEnded={handleEnded}
-          />
-          {item.body && (
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy">
-              {item.body}
-            </p>
-          )}
-        </div>
-        {footer}
-      </>
-    );
-  }
-
-  // Legacy pre-Mux URL — the one sample row still on video_url. Kept so it plays
-  // until it is retired; every real film takes the Mux branch above.
-  if (item.videoUrl) {
-    return (
-      <>
-        <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
-          <video
-            src={item.videoUrl}
-            controls
-            playsInline
-            preload="metadata"
-            onTimeUpdate={onLegacyTimeUpdate}
-            onEnded={handleEnded}
-            className="w-full rounded-card bg-navy"
-          />
-          {item.body && (
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy">
-              {item.body}
-            </p>
-          )}
-        </div>
-        {footer}
-      </>
-    );
-  }
-
-  // Neither a Mux asset nor a legacy URL: a genuine content gap, not a broken
-  // player. Say so.
-  return (
-    <>
-      <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
-        <InactivePlayer />
-        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-          This video hasn&apos;t been uploaded yet. It&apos;ll play here as
-          soon as it lands.
-        </p>
-      </div>
-      <footer className="mt-4 shrink-0">
-        <p className="flex min-h-[3rem] items-center justify-center rounded-xl border border-line text-xs text-ink-soft">
-          Nothing to mark yet
-        </p>
-      </footer>
-    </>
-  );
-}
-
-/**
- * No video row exists for this module at all.
- *
- * Deliberately NOT a fake player: no thumbnail, no scrubber, no progress bar.
- * A control that looks operable and does nothing is worse than an honest gap,
- * because the advisor concludes the app is broken rather than that the video
- * is coming.
- */
-function VideoPlaceholderBody() {
-  return (
-    <>
-      <div className="mt-3 flex min-h-0 flex-1 flex-col items-center justify-center text-center">
-        <InactivePlayer />
-        <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-          A video for this module is on the way. The cues are all here in the
-          meantime — swipe on.
-        </p>
-      </div>
-      <footer className="mt-4 shrink-0">
-        <p className="flex min-h-[3rem] items-center justify-center rounded-xl border border-line text-xs text-ink-soft">
-          Nothing to watch yet
-        </p>
-      </footer>
-    </>
   );
 }
 
@@ -841,8 +725,10 @@ function SampleChip() {
  *
  * Swiping past the final card into nothing reads as a broken page, so the last
  * card always says something: take the quiz, the quiz is waiting on the cues,
- * or the module is finished. Which one is decided by the same two facts the
- * page header uses, so the card and the gate can never disagree.
+ * or the module is finished. Which one is decided by the same facts the page
+ * header uses, so the card and the gate can never disagree. `remaining` and
+ * `allDone` still count the film, so a module whose film is unwatched still
+ * waits here even though the film is not in the deck.
  */
 function TerminalCard({
   moduleId,
@@ -897,14 +783,8 @@ function TerminalCard({
           </>
         ) : allDone ? (
           <>
-            {/*
-              "That's the lot" and "catch anyone out" are both British idiom.
-              The voice here is a Texas service drive, so the copy says the same
-              thing the way Mitch would: name the win, then make the quiz sound
-              like the last rep of the set rather than an exam.
-            */}
             <h3 className="mt-4 text-xl font-extrabold text-navy">
-              That&apos;s every cue
+              That&apos;s everything
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
               Nice work. A few questions on what you just read — unlimited
@@ -923,8 +803,9 @@ function TerminalCard({
               Quiz is waiting
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              {remaining} {remaining === 1 ? "card" : "cards"} still to finish.
-              Swipe back and the quiz opens once you&apos;ve been through them.
+              {remaining} {remaining === 1 ? "item" : "items"} still to finish —
+              the film and the cues. The quiz opens once you&apos;ve been through
+              them.
             </p>
           </>
         )
@@ -936,8 +817,6 @@ function TerminalCard({
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             Everything in this one is behind you.
           </p>
-          {/* Same rule as the passed-quiz screen: finishing hands you the next
-              thing rather than sending you back up to look for it. */}
           <Link
             href={nextStep.href}
             className="mt-5 inline-flex min-h-[3rem] items-center justify-center rounded-xl bg-gold px-5 text-center text-sm font-extrabold text-navy transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -948,9 +827,6 @@ function TerminalCard({
           </Link>
         </>
       ) : remaining === 0 ? (
-        // A module with nothing in it. The importer now refuses to create
-        // these, but one can still exist until it has been re-run — and
-        // "0 still to finish" is a nonsense sentence to end a deck on.
         <>
           <h3 className="mt-4 text-xl font-extrabold text-navy">
             Nothing here yet
@@ -973,7 +849,8 @@ function TerminalCard({
             {remaining} still to finish
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            Swipe back for the ones you haven&apos;t marked yet.
+            Swipe back for the cues you haven&apos;t marked, and watch the film
+            above if you haven&apos;t.
           </p>
         </>
       )}
