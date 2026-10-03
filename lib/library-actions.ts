@@ -116,37 +116,64 @@ export async function completeLibraryItem(
   if (!rooftopId) return { ok: false, error: "You're not on a rooftop yet." };
 
   // ---- 3. Claim it. The unique index decides who was first ----------------
+  //
+  // A credit-only player — the library deck and the service shelf — records
+  // furthest-reached through record_watch_progress WHILE the film plays, so a
+  // content_progress row usually ALREADY exists by the time we get here, carrying
+  // watched_pct but no completed_at. An INSERT alone would hit the unique index
+  // and read as "already finished", leaving completed_at null forever and the
+  // module uncompletable — which is exactly what a bare <video> never triggered,
+  // because it wrote no progress as it played. So the claim is "set completed_at
+  // if it is still null": insert first, and on conflict UPDATE with an
+  // `is null` filter, which is what makes the award pay exactly once under a race.
   const service = createServiceClient();
-  const { data: progress, error: progressError } = await service
+  const nowIso = new Date().toISOString();
+  const claimPct = isVideo ? Math.min(100, Math.round(Number(watchedPct ?? 100))) : 100;
+
+  const alreadyComplete = {
+    ok: true as const,
+    alreadyDone: true,
+    awarded: 0,
+    badges: [],
+    capped: false,
+    moduleCompleted: null,
+    certifications: [],
+    credential: null,
+  };
+
+  const { data: inserted, error: insertError } = await service
     .from("content_progress")
     .insert({
       user_id: user.id,
       rooftop_id: rooftopId,
       content_id: contentId,
-      watched_pct: isVideo ? Math.min(100, Math.round(Number(watchedPct ?? 100))) : 100,
-      completed_at: new Date().toISOString(),
+      watched_pct: claimPct,
+      completed_at: nowIso,
     })
     .select("id")
     .maybeSingle();
 
-  if (progressError) {
-    // 23505: already finished. Not an error — just nothing more to pay.
-    if (progressError.code === "23505") {
-      return {
-        ok: true,
-        alreadyDone: true,
-        awarded: 0,
-        badges: [],
-        capped: false,
-        moduleCompleted: null,
-        certifications: [],
-        credential: null,
-      };
-    }
-    return { ok: false, error: progressError.message };
-  }
+  let progressId = inserted?.id as string | undefined;
 
-  const progressId = progress?.id as string | undefined;
+  if (insertError) {
+    if (insertError.code !== "23505") {
+      return { ok: false, error: insertError.message };
+    }
+    // A progress row is already there (recorded while playing, or a prior
+    // completion). Complete it only if it has not been completed yet — the
+    // `is null` filter makes this atomic, so two finishers cannot both be paid.
+    const { data: finished } = await service
+      .from("content_progress")
+      .update({ completed_at: nowIso })
+      .eq("user_id", user.id)
+      .eq("content_id", contentId)
+      .is("completed_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (!finished) return alreadyComplete;
+    progressId = finished.id as string;
+  }
 
   // ---- 4. The daily ceiling ----------------------------------------------
   // Counted from the ledger rather than tracked in a column, so it cannot drift

@@ -18,6 +18,7 @@
    ============================================================================ */
 
 import { isVideoType, type ContentType } from "@/lib/content";
+import { renditionsFor, type VideoRenditions } from "@/lib/mux/playback";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Client = { from: (table: string) => any };
@@ -64,6 +65,17 @@ export type LessonItem = {
   durationSec: number | null;
   videoUrl: string | null;
   isVideo: boolean;
+  /**
+   * Both signed cuts, built the SAME way shapeVideo builds them for the daily
+   * loop, so the library player picks the 9:16 crop on a phone and the master on
+   * a desktop through pickRendition. Null when the row has no Mux asset — then the
+   * player falls back to the legacy videoUrl, and to the "not uploaded" state only
+   * when both are absent.
+   */
+  renditions: VideoRenditions | null;
+  /** Furthest point reached, so a half-watched lesson resumes. */
+  watchedPct: number;
+  positionSec: number | null;
   /** Provenance from the CMS. Carried so a demo sample can say that it is one. */
   source: string | null;
   position: number;
@@ -278,7 +290,9 @@ export async function loadModuleItems(
   const { data, count } = await client
     .from("content")
     .select(
-      "id, type, title, body, tier, duration_sec, video_url, module_order, created_at, source",
+      "id, type, title, body, tier, duration_sec, video_url, module_order, created_at, source, " +
+        // What renditionsFor needs to sign both cuts — the same fields shapeVideo reads.
+        "mux_playback_id, mux_playback_policy, vertical_playback_id, vertical_status",
       { count: "exact" }
     )
     .eq("module_id", moduleId)
@@ -294,36 +308,47 @@ export async function loadModuleItems(
   });
   const ids = rows.map((r) => r.id as string);
 
-  const { data: done } = ids.length
+  // One read for completion AND resume: furthest-reached and position, so a
+  // half-watched lesson picks up where it was left — the same two fields the
+  // morning seeds TrackedVideo with.
+  const { data: progress } = ids.length
     ? await client
         .from("content_progress")
-        .select("content_id")
+        .select("content_id, watched_pct, position_sec, completed_at")
         .in("content_id", ids)
-        .not("completed_at", "is", null)
     : { data: [] };
 
-  const completed = new Set(
-    ((done ?? []) as Record<string, unknown>[]).map((r) => r.content_id as string)
+  const progressBy = new Map(
+    ((progress ?? []) as Record<string, unknown>[]).map((r) => [r.content_id as string, r])
   );
 
   return {
     total: Number(count ?? rows.length),
-    items: rows.map((r, i) => {
-      const type = r.type as ContentType;
-      return {
-        id: r.id as string,
-        type,
-        title: (r.title as string) ?? "Untitled",
-        body: (r.body as string | null) ?? null,
-        tier: (r.tier as string | null) ?? null,
-        durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
-        videoUrl: (r.video_url as string | null) ?? null,
-        isVideo: isVideoType(type),
-        source: (r.source as string | null) ?? null,
-        position: i + 1,
-        completed: completed.has(r.id as string),
-      };
-    }),
+    // renditionsFor is a local HMAC (no DB, no network), so minting one per video
+    // row is cheap; it is awaited rather than mapped so the signing stays ordered.
+    items: await Promise.all(
+      rows.map(async (r, i) => {
+        const type = r.type as ContentType;
+        const pr = progressBy.get(r.id as string);
+        const renditions = isVideoType(type) ? await renditionsFor(r) : null;
+        return {
+          id: r.id as string,
+          type,
+          title: (r.title as string) ?? "Untitled",
+          body: (r.body as string | null) ?? null,
+          tier: (r.tier as string | null) ?? null,
+          durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
+          videoUrl: (r.video_url as string | null) ?? null,
+          isVideo: isVideoType(type),
+          renditions,
+          watchedPct: pr?.watched_pct == null ? 0 : Number(pr.watched_pct),
+          positionSec: pr?.position_sec == null ? null : Number(pr.position_sec),
+          source: (r.source as string | null) ?? null,
+          position: i + 1,
+          completed: pr?.completed_at != null,
+        };
+      })
+    ),
   };
 }
 
