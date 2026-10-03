@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BRAND } from "@/lib/brand";
+import { Wordmark } from "@/components/brand/Wordmark";
 import { PublicFilm } from "@/components/front-door/PublicFilm";
 
 /* ============================================================================
@@ -36,15 +36,14 @@ export function FrontDoor({ films }: { films: FrontDoorFilm[] }) {
   return (
     <main className="ediagd-app min-h-svh bg-cream">
       <div className="mx-auto max-w-app px-4 pb-16">
-        {/* ---- Hero / intro (copy + brand, no playable film) -------------- */}
+        {/* ---- Hero / intro (the logo + copy, no playable film) ----------- */}
         <section className="pt-10 text-center">
           <p className="ediagd-eyebrow">Welcome to</p>
-          <h1 className="mt-2 text-4xl font-extrabold leading-tight text-navy">
-            EDIAGD
-          </h1>
-          <p className="mt-1 text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-            {BRAND.tagline}
-          </p>
+          {/* The brand lockup — the mark, the EDIAGD wordmark and the tagline —
+              not set as text. Wordmark is the one source for all three. */}
+          <div className="mt-3 flex justify-center">
+            <Wordmark size={60} />
+          </div>
           <p className="mx-auto mt-5 max-w-md text-lg leading-relaxed text-ink">
             An about-five-minute coaching habit for service advisors — a mindset
             film, the selling skill for a real repair, and one lesson that builds
