@@ -11,9 +11,11 @@ import type { LibraryItem } from "@/lib/library";
    and why it isn't here yet. A blank page and a spinner both read as unfinished
    work; a fake player reads as a lie.
 
-   There is deliberately no video player anywhere in here. content.video_url is
-   null for every row until the ingestion pipeline writes one, and a play button
-   that does nothing is worse than no play button.
+   There is deliberately no video player in here — this is a browse LIST, and
+   playback happens in the module deck (CueDeck) and the service shelf, which sign
+   Mux renditions. The "not uploaded yet" badge therefore keys on whether a film
+   EXISTS (a Mux asset or a legacy URL), not on content.video_url, which is null
+   for every real film since 0057 — keying on it alone marked every film missing.
    ============================================================================ */
 
 /** "4 min" — duration is the one thing a video row can honestly show today. */
@@ -148,7 +150,7 @@ export function ItemRow({
           {vehicle && <span className="ediagd-numeral">{vehicle}</span>}
           {item.tier && <span className="uppercase tracking-wide">{item.tier}</span>}
           {mins && <span className="ediagd-numeral">{mins}</span>}
-          {item.isVideo && item.videoUrl == null && (
+          {item.isVideo && item.muxPlaybackId == null && item.videoUrl == null && (
             <span
               className="font-bold uppercase tracking-wide"
               style={{ color: "rgb(var(--ediagd-gold))" }}

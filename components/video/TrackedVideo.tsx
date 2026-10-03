@@ -71,6 +71,7 @@ export function TrackedVideo({
   onFirstPlay,
   initialMet = null,
   onGateMet,
+  onPlaybackEnded,
   ...player
 }: Omit<MuxVideoProps, "onEnded"> & {
   /**
@@ -103,6 +104,13 @@ export function TrackedVideo({
    * believes any of it.
    */
   onGateMet?: (state: WatchState) => void;
+  /**
+   * Fired when the film plays through to the end. Separate from the internal
+   * `onEnded` this component keeps for its final coverage reading — a caller that
+   * wants to advance a deck when a lesson finishes gets this, and nothing about
+   * the gate math changes.
+   */
+  onPlaybackEnded?: () => void;
   policy?: WatchPolicy;
   threshold?: number;
   onWatchChange?: (state: WatchState) => void;
@@ -294,10 +302,11 @@ export function TrackedVideo({
    */
   const handleEnded = useCallback(
     (event: Event) => {
+      onPlaybackEnded?.();
       if (policy === "none") return;
       handleTimeUpdate(event);
     },
-    [policy, handleTimeUpdate]
+    [policy, handleTimeUpdate, onPlaybackEnded]
   );
 
   const tracking = policy !== "none";

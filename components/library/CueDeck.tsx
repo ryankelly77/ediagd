@@ -44,7 +44,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { completeLibraryItem } from "@/lib/library-actions";
+import { TrackedVideo } from "@/components/video/TrackedVideo";
 import type { NextStep } from "@/lib/lms";
+import type { VideoRenditions } from "@/lib/mux/playback";
 
 export type DeckItemKind = "cue" | "video" | "video_placeholder";
 
@@ -56,7 +58,13 @@ export type DeckItem = {
   body: string | null;
   tier: string | null;
   durationSec: number | null;
+  /** Legacy pre-Mux URL. Fallback only when there is no Mux asset. */
   videoUrl: string | null;
+  /** Both signed Mux cuts; the player picks by viewport. Null when no asset. */
+  renditions: VideoRenditions | null;
+  /** Furthest point reached and last position, so a lesson resumes. */
+  watchedPct: number;
+  positionSec: number | null;
   /** Demo content borrowed from elsewhere; says so on the card. */
   isSample: boolean;
   completed: boolean;
@@ -617,105 +625,151 @@ function VideoBody({
   onReachedThreshold: (pct: number) => void;
   onEnded: () => void;
 }) {
-  const [watched, setWatched] = useState(0);
-  const furthest = useRef(0);
-  const fired = useRef(false);
+  const [watched, setWatched] = useState(item.watchedPct ?? 0);
+  const furthest = useRef(item.watchedPct ?? 0);
+  const fired = useRef(isDone);
+  const met = useRef(isDone);
 
-  // Played out to the end: now the deck moves on, the same way finishing a cue
-  // moves it on. Only when the item is actually finished — a video watched to
-  // the end without clearing the bar (it was scrubbed) should not advance past
-  // work that was never done.
-  const handleEnded = () => {
-    if (furthest.current >= threshold || isDone) onEnded();
-  };
-
-  const onTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const v = e.currentTarget;
-    if (!v.duration || !Number.isFinite(v.duration)) return;
-    const pct = Math.min(100, Math.round((v.currentTime / v.duration) * 100));
+  // One place the bar and the one-shot completion are decided, shared by both
+  // players. Credit is earned by coverage (TrackedVideo reports `met`) or by
+  // furthest position (the legacy player), reported once; scrubbing backwards
+  // never un-earns it. onReachedThreshold is the SAME completion path the card
+  // used before — it marks content_progress.completed_at through completeLibraryItem.
+  const reach = (pct: number, isMet: boolean) => {
     if (pct > furthest.current) {
       furthest.current = pct;
       setWatched(pct);
-      if (!fired.current && !isDone && pct >= threshold) {
-        fired.current = true;
-        onReachedThreshold(pct);
-      }
+    }
+    if (isMet) met.current = true;
+    if (!fired.current && !isDone && (isMet || pct >= threshold)) {
+      fired.current = true;
+      onReachedThreshold(Math.max(pct, threshold));
     }
   };
 
-  // A video row with no URL is a content gap, not a broken player. Say so.
-  if (!item.videoUrl) {
+  // Played out to the end: now the deck moves on, the same way finishing a cue
+  // moves it on. Only when the item was actually watched — a video scrubbed to
+  // the end without clearing the bar should not advance past work never done.
+  const handleEnded = () => {
+    if (met.current || furthest.current >= threshold || isDone) onEnded();
+  };
+
+  const onLegacyTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget;
+    if (!v.duration || !Number.isFinite(v.duration)) return;
+    reach(Math.min(100, Math.round((v.currentTime / v.duration) * 100)), false);
+  };
+
+  const footer = (
+    <footer className="mt-4 shrink-0">
+      {isDone ? (
+        <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl border border-line text-sm font-extrabold text-ink-soft">
+          <Check /> Watched — swipe on
+        </p>
+      ) : justDone || isPending ? (
+        <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl bg-gold text-sm font-extrabold text-navy">
+          {isPending ? "Saving…" : <><Check /> Got it</>}
+        </p>
+      ) : (
+        <div className="min-h-[3rem]">
+          <div className="flex items-baseline justify-between">
+            <span className="ediagd-numeral text-xs font-extrabold text-navy">
+              Watched {watched}%
+            </span>
+            <span className="ediagd-numeral text-xs text-ink-soft">
+              counts at {threshold}%
+            </span>
+          </div>
+          <span className="mt-1.5 block h-1.5 w-full rounded-pill bg-line/60">
+            <span
+              aria-hidden="true"
+              className="block h-full rounded-pill transition-all"
+              style={{
+                width: `${Math.max(watched > 0 ? 4 : 0, watched)}%`,
+                background:
+                  watched >= threshold
+                    ? "rgb(var(--ediagd-palm))"
+                    : "rgb(var(--ediagd-teal))",
+              }}
+            />
+          </span>
+        </div>
+      )}
+    </footer>
+  );
+
+  // A real Mux film. Both cuts are signed and the player picks the 9:16 crop on a
+  // phone and the master on a desktop, exactly as the morning does. policy=
+  // "credit-only" — the LMS policy — so controls stay, the watch is recorded to
+  // content_progress, and NO watch_gate row is filed. Resumes from the advisor's
+  // furthest point; captions come from the asset's own text track.
+  if (item.renditions) {
     return (
       <>
-        <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
-          <InactivePlayer />
-          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            This video hasn&apos;t been uploaded yet. It&apos;ll play here as
-            soon as it lands.
-          </p>
+        <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
+          <TrackedVideo
+            policy="credit-only"
+            contentId={item.id}
+            renditions={item.renditions}
+            title={item.title}
+            threshold={threshold}
+            initialWatchedPct={item.watchedPct}
+            initialPositionSec={item.positionSec}
+            onWatchChange={(s) => reach(s.pct, s.met)}
+            onPlaybackEnded={handleEnded}
+          />
+          {item.body && (
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy">
+              {item.body}
+            </p>
+          )}
         </div>
-        <footer className="mt-4 shrink-0">
-          <p className="flex min-h-[3rem] items-center justify-center rounded-xl border border-line text-xs text-ink-soft">
-            Nothing to mark yet
-          </p>
-        </footer>
+        {footer}
       </>
     );
   }
 
+  // Legacy pre-Mux URL — the one sample row still on video_url. Kept so it plays
+  // until it is retired; every real film takes the Mux branch above.
+  if (item.videoUrl) {
+    return (
+      <>
+        <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
+          <video
+            src={item.videoUrl}
+            controls
+            playsInline
+            preload="metadata"
+            onTimeUpdate={onLegacyTimeUpdate}
+            onEnded={handleEnded}
+            className="w-full rounded-card bg-navy"
+          />
+          {item.body && (
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy">
+              {item.body}
+            </p>
+          )}
+        </div>
+        {footer}
+      </>
+    );
+  }
+
+  // Neither a Mux asset nor a legacy URL: a genuine content gap, not a broken
+  // player. Say so.
   return (
     <>
-      <div className="ediagd-cue-body mt-3 min-h-0 flex-1 overflow-y-auto">
-        <video
-          src={item.videoUrl}
-          controls
-          playsInline
-          preload="metadata"
-          onTimeUpdate={onTimeUpdate}
-          onEnded={handleEnded}
-          className="w-full rounded-card bg-navy"
-        />
-        {item.body && (
-          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-navy">
-            {item.body}
-          </p>
-        )}
+      <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
+        <InactivePlayer />
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+          This video hasn&apos;t been uploaded yet. It&apos;ll play here as
+          soon as it lands.
+        </p>
       </div>
-
       <footer className="mt-4 shrink-0">
-        {isDone ? (
-          <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl border border-line text-sm font-extrabold text-ink-soft">
-            <Check /> Watched — swipe on
-          </p>
-        ) : justDone || isPending ? (
-          <p className="flex min-h-[3rem] items-center justify-center gap-2 rounded-xl bg-gold text-sm font-extrabold text-navy">
-            {isPending ? "Saving…" : <><Check /> Got it</>}
-          </p>
-        ) : (
-          <div className="min-h-[3rem]">
-            <div className="flex items-baseline justify-between">
-              <span className="ediagd-numeral text-xs font-extrabold text-navy">
-                Watched {watched}%
-              </span>
-              <span className="ediagd-numeral text-xs text-ink-soft">
-                counts at {threshold}%
-              </span>
-            </div>
-            <span className="mt-1.5 block h-1.5 w-full rounded-pill bg-line/60">
-              <span
-                aria-hidden="true"
-                className="block h-full rounded-pill transition-all"
-                style={{
-                  width: `${Math.max(watched > 0 ? 4 : 0, watched)}%`,
-                  background:
-                    watched >= threshold
-                      ? "rgb(var(--ediagd-palm))"
-                      : "rgb(var(--ediagd-teal))",
-                }}
-              />
-            </span>
-          </div>
-        )}
+        <p className="flex min-h-[3rem] items-center justify-center rounded-xl border border-line text-xs text-ink-soft">
+          Nothing to mark yet
+        </p>
       </footer>
     </>
   );

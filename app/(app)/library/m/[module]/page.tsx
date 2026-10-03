@@ -61,6 +61,9 @@ export default async function ModulePage({
     tier: it.tier,
     durationSec: it.durationSec,
     videoUrl: it.videoUrl,
+    renditions: it.renditions,
+    watchedPct: it.watchedPct,
+    positionSec: it.positionSec,
     // Provenance convention: the demo clip is tagged in content.source so the
     // card can admit it is borrowed rather than quietly passing as real
     // coaching footage.
@@ -90,6 +93,9 @@ export default async function ModulePage({
       tier: null,
       durationSec: null,
       videoUrl: null,
+      renditions: null,
+      watchedPct: 0,
+      positionSec: null,
       isSample: false,
       completed: false,
     });

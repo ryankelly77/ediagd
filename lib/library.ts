@@ -33,13 +33,20 @@ export type LibraryItem = {
   model: string | null;
   yearRange: string | null;
   durationSec: number | null;
-  /** Null until the ingestion pipeline writes one. Nothing plays yet. */
+  /** Legacy pre-Mux URL. Null for every real film since 0057. */
   videoUrl: string | null;
+  /**
+   * The Mux asset. This is what actually says a film exists now — video_url is
+   * null for all of them. The browse list keys its "not uploaded" badge on the
+   * absence of BOTH this and videoUrl, not on video_url alone, which is what made
+   * every uploaded film read as missing.
+   */
+  muxPlaybackId: string | null;
   isVideo: boolean;
 };
 
 const COLUMNS =
-  "id, type, title, body, service_family, tier, make, model, year_range, duration_sec, video_url";
+  "id, type, title, body, service_family, tier, make, model, year_range, duration_sec, video_url, mux_playback_id";
 
 function toItem(r: Record<string, unknown>): LibraryItem {
   const type = r.type as ContentType;
@@ -55,6 +62,7 @@ function toItem(r: Record<string, unknown>): LibraryItem {
     yearRange: (r.year_range as string | null) ?? null,
     durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
     videoUrl: (r.video_url as string | null) ?? null,
+    muxPlaybackId: (r.mux_playback_id as string | null) ?? null,
     isVideo: isVideoType(type),
   };
 }
