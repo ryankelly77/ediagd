@@ -1,5 +1,5 @@
 /* ===========================================================================
-   0157 — a still for every film, for the site's post engine
+   0156 — a still for every film, for the site's post engine
    ===========================================================================
 
    The blog corpus (0155) gives the site's post engine the text of the library —
@@ -7,51 +7,44 @@
    the film it is written from.
 
    ---------------------------------------------------------------------------
-   PRIVATE BUCKET, SIGNED URL IN THE VIEW — AND WHY IT IS BAKED, NOT PER-READ
+   PUBLIC BUCKET, PERMANENT URL — BECAUSE A BLOG FRAME IS PUBLIC ALREADY
    ---------------------------------------------------------------------------
-   The still frames live in a PRIVATE bucket (film-stills): a frame of a gated
-   coaching film should not be public with a guessable, non-expiring URL. But the
-   corpus is read by `blog_reader`, a SQL-only Postgres role that holds no storage
-   credential and so cannot mint a signed URL per read. A Postgres VIEW cannot
-   sign one either — signing is the storage API's job, not SQL's.
-
-   So the signed URL is BAKED by the backfill: scripts/stills-backfill.ts uploads
-   the still with the service role, signs a time-limited URL, and writes it into
-   content_still.still_url, which this view exposes. The URL expires; the script
-   is re-runnable and refreshes every one before it does (see STILL_URL_TTL_DAYS
-   there). Private at rest, time-limited in flight, and usable by a consumer with
-   no credentials — which is the whole point of the corpus.
+   The still frames live in a PUBLIC bucket (film-stills) and still_url is the
+   permanent public object URL. The blog bakes these URLs into static pages and
+   share cards, which cannot refresh a token, so the URL must not expire — and a
+   frame on a public blog page is public the moment it is published anyway. The
+   films themselves stay SIGNED and gated everywhere else; only a single frame per
+   film is exposed, which is the point of a preview.
    ========================================================================== */
 
--- ---- the private bucket ---------------------------------------------------
+-- ---- the public bucket ----------------------------------------------------
 insert into storage.buckets (id, name, public)
-  values ('film-stills', 'film-stills', false)
-  on conflict (id) do nothing;
+  values ('film-stills', 'film-stills', true)
+  on conflict (id) do update set public = true;
 
 -- No storage.objects policy is added: the backfill writes with the service role
--- (which bypasses storage RLS), and reads happen through the baked signed URL, so
--- no app role — advisor, anon or blog_reader — needs direct object access.
+-- (which bypasses storage RLS), and a public bucket serves reads without one.
 
 -- ---- the still, 1:1 with content ------------------------------------------
 create table if not exists content_still (
   content_id uuid primary key references content(id) on delete cascade,
   /** The object path in film-stills, e.g. '<content_id>.jpg'. */
   object_path text not null,
-  /** A signed URL to that object, refreshed by the backfill before it expires. */
+  /** The PERMANENT public URL of that object. */
   still_url text not null,
-  signed_until timestamptz not null,
   source text not null default 'mux_thumbnail',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 comment on table content_still is
-  'A still frame per film (Mux thumbnail), in the private film-stills bucket, with '
-  'a baked time-limited signed URL. Written by scripts/stills-backfill.ts (service '
-  'role); read by the blog_corpus_films view (definer). Re-run to refresh URLs.';
+  'A still frame per film (Mux thumbnail, a third of the way in) in the public '
+  'film-stills bucket, with its permanent public URL. Written by '
+  'scripts/stills-backfill.ts (service role); read by the blog_corpus_films view.';
 
 -- Locked by default: RLS on, no policy. Service role writes; the definer view
--- reads as owner. No app role touches it directly.
+-- reads as owner. No app role touches the table directly (the image itself is
+-- public in the bucket; the row that points to it is not).
 alter table content_still enable row level security;
 
 -- ---- blog_corpus_films gains still_url ------------------------------------
@@ -70,8 +63,7 @@ create or replace view blog_corpus_films as
          t.transcript,
          c.library_reason,
          -- Appended last: CREATE OR REPLACE VIEW can only ADD columns at the end,
-         -- so still_url follows 0155's final column rather than slotting beside
-         -- the transcript.
+         -- so still_url follows 0155's final column.
          st.still_url
     from content c
     left join module m              on m.id = c.module_id
@@ -86,6 +78,6 @@ create or replace view blog_corpus_films as
 
 comment on view blog_corpus_films is
   'Published, unretired advisor_video films, LEFT JOIN through module and course '
-  'to the certification for track/module names, plus the transcript and a baked '
-  'signed still_url. Parked films (library_reason set) are included. transcript '
-  'and still_url are null until backfilled.';
+  'to the certification for track/module names, plus the transcript and a public '
+  'still_url. Parked films (library_reason set) are included. transcript and '
+  'still_url are null until backfilled.';
