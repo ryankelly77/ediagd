@@ -92,7 +92,7 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
   {
     href: "/admin/front-door",
     label: "Front door",
-    hint: "The four films a signed-out visitor sees, and their captions.",
+    hint: "The two films a signed-out visitor sees, and their captions.",
   },
 
   {

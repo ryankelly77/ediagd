@@ -4,9 +4,9 @@ import { FrontDoor, type FrontDoorFilm } from "@/components/front-door/FrontDoor
 import type { IsoDate } from "@/lib/gamification/streak";
 
 /**
- * The root route. SIGNED OUT it renders the front door — a preview of a morning
- * for someone with no account (see components/front-door and 0156). SIGNED IN it
- * is a router: every path below ends in a redirect to the viewer's real home.
+ * The root route. SIGNED OUT it renders the front door — two films and the way
+ * in, for someone with no account (see components/front-door and 0158). SIGNED
+ * IN it is a router: every path below ends in a redirect to the viewer's home.
  *
  * It used to redirect a signed-out visitor straight to /login; the front door
  * replaces that bare door with something to look at first. "Sign in" on it still
@@ -20,21 +20,26 @@ export default async function Home() {
 
   // ---- Signed out: the front door --------------------------------------
   // Read with the caller's own (anon) client — front_door_film is granted to
-  // anon and is the ONLY content it can reach. Rows are curated and public.
+  // anon and is the ONLY content it can reach. Two curated rows, both public.
+  //
+  // No filter on public_playback_id: 0158 makes the column NOT NULL and the view
+  // only returns published, unretired films, so every row that arrives plays.
+  // The previous cut filtered here because a slot could be a still with a null
+  // id; that state no longer exists, so neither does the guard against it.
   if (!user) {
     const { data } = await supabase
       .from("front_door_film")
       .select("slot, title, duration_sec, public_playback_id, caption")
       .order("sort", { ascending: true });
-    const films: FrontDoorFilm[] = ((data ?? []) as Record<string, unknown>[])
-      .filter((r) => r.public_playback_id)
-      .map((r) => ({
+    const films: FrontDoorFilm[] = ((data ?? []) as Record<string, unknown>[]).map(
+      (r) => ({
         slot: r.slot as FrontDoorFilm["slot"],
         title: (r.title as string) ?? "",
         durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
         publicPlaybackId: r.public_playback_id as string,
         caption: (r.caption as string) ?? "",
-      }));
+      })
+    );
     return <FrontDoor films={films} />;
   }
 
