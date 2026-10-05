@@ -6,9 +6,16 @@
 > confirming where they belong turns four dead tracks live.** Nothing else
 > available this week moves the credential as far.
 
-**102 films are published and reachable by nobody**, against twelve videos
-reachable inside tracks. 29 belong to series with no
-track at all; 22 more match tracks that exist, are named for them, and are empty.
+**Mostly done, 4 October — the lede below is kept as written and corrected
+here, not rewritten.** It said *"102 films are published and reachable by
+nobody, against twelve videos reachable inside tracks."* After 0144, 0142 and
+0159 the measured figures are **97 films attached inside core and Master
+tracks, 38 still unattached** — 23 of them routed by a ruling that has not yet
+been applied, 15 deliberately unrouted. All nine core tracks are active. The
+remaining decisions are Chemical Warranty (12 Coverage is Key films), CSI
+(6 films against 12 quiz parts) and whether Power of Positive Language is a
+track at all; see the derived table below for the current numbers rather than
+these sentences.
 
 Naming is not routing. These are all named, published and live in the catalog —
 the only missing decision is which track each series belongs to, and that is
@@ -39,24 +46,63 @@ numbers below separate them, and the picture is very different: Success Cycle an
 Power of Positive Language, previously shown as 55 and 51 films, were shown with
 **no attached video**.
 
-| track | ladder | **videos** | cues | active |
-|---|---|---|---|---|
-| Menus | core | **7** | 0 | yes |
-| Walk Around | core | **3** | 56 | yes |
-| Overcoming Objections | core | **2** | 29 | yes |
-| Success Cycle | core | **0** | 55 | yes |
-| Power of Positive Language | core | **0** | 51 | yes |
-| Setting up the MPI | core | **0** | 2 | **no** |
-| Four Step Close | core | **0** | 2 | **no** |
-| CSI | core | **0** | 0 | **no** |
-| Lasting Impressions | core | **0** | 0 | **no** |
-| Chemical Warranty | Master | **0** | 2 | **no** |
-| Phones and Tones | Master | **0** | 0 | **no** |
-| A Day in the Life | Master | **0** | 0 | **no** |
+**Corrected 4 October, and this time the table is DERIVED rather than typed.**
+Two corrections in a row restated the same number by hand, which is how the
+error repeated one column over. `npm run report:hopper` now measures all three
+populations and `-- --write` writes the block below; **the numbers between the
+markers are not to be hand-edited.** The script also refuses — exit 1 — when it
+meets an unattached film whose series nobody has routed, because a film nobody
+has homed is the case the table exists to surface and a blank cell reads
+exactly like a zero.
 
-**Three tracks contain any video. Twelve videos across the whole credential.**
-Under the video-is-the-curriculum ruling that is the number that matters, and it
-is why routing these series is worth more than anything else available.
+The table below is measured on the production dump `pre-0159-20261004-2150`
+**with 0159 applied**, so it is the state after Ryan applies the migration.
+
+<!-- hopper:begin -->
+*Derived by `npm run report:hopper`. Do not hand-edit between these markers — the numbers are measured, and a hand-typed one is how the "Success Cycle has 0 videos" error happened twice.*
+
+| track | ladder | attached | unattached-matching | cues | entry film | active |
+|---|---|---|---|---|---|---|
+| Lasting Impressions | core | **13** | — | 0 | yes | yes |
+| Success Cycle | core | **13** | — | 55 | yes | yes |
+| Overcoming Objections | core | **12** | — | 29 | — | yes |
+| Four Step Close | core | **11** | — | 2 | yes | yes |
+| Name Tag | core | **11** | — | 0 | yes | yes |
+| Setting up the MPI | core | **10** | — | 2 | yes | yes |
+| Menus | core | **9** | 1 | 0 | yes | yes |
+| Walk Around | core | **6** | 8 | 56 | — | yes |
+| Power of Positive Language | core | **0** | — | 51 | — | yes |
+| Phones and Tones | Master | **12** | 2 | 0 | — | yes |
+| A Day in the Life | Master | **0** | — | 0 | — | **no** |
+| Chemical Warranty | Master | **0** | 12 | 2 | — | **no** |
+
+**Population — three measurements, and no single one of them is "what exists".** *attached* counts published, unretired `advisor_video` rows whose `module_id` is a module of one of the track's courses: **97** across these tracks. *unattached-matching* counts published films carrying no `module_id` whose **series** is routed to the track by a ruling in `scripts/hopper.ts`: **23**. *cues* counts published non-film items in those same modules: **197**. A track's **opener** is neither — it lives on `certification.entry_film_content_id` and its `module_id` is null by design, so it is reported in its own column and excluded from "unattached" rather than counted as homeless. A further **15** published Craft films are unattached and **deliberately unrouted**, listed below with the reason for each.
+
+**Unattached and routed** — a ruling exists; the attach has not happened:
+
+- **Chemical Warranty** (12): Coverage is Key — Closer; Coverage is Key — Opener; Coverage is Key, Part 1; Coverage is Key, Part 10; Coverage is Key, Part 2; Coverage is Key, Part 3; Coverage is Key, Part 4; Coverage is Key, Part 5; Coverage is Key, Part 6; Coverage is Key, Part 7; Coverage is Key, Part 8; Coverage is Key, Part 9
+- **Menus** (1): Menus — Closer
+- **Phones and Tones** (2): Phones and Tones — Closer; Phones and Tones — Opener
+- **Walk Around** (8): 30 Second Walk-Around, Part 1, Before You Go Outside; 30 Second Walk-Around, Part 3, Steps 1 and 2, Are You Here to See Anyone; 30 Second Walk-Around, Part 4, Step 3, Start It; 30 Second Walk-Around, Part 7, The Four Step Close; 30 Second Walk-Around, Part 8, Step 6 and 7, Miles, Shut It Off and Tires; 30 Second Walk-Around, Part 9, 42 seconds; Two Minute Walk-Around, Part 1, Pop the Hood; Two Minute Walk-Around, Part 2, 4 things under the hood
+
+**Unattached and unrouted** — looked at, and deliberately not homed:
+
+- **CSI** (6) — 6 films against 12 quiz parts; Master-track-or-skill-library is Ryan and Mitch's October ruling (ingest-30-september.md)
+- **Pre-Write** (1) — wired as a rung-2 stage fallback for the pitch lookup (mapping_alias), not a track lesson
+- **Sing It** (1) — candidate curriculum for Power of Positive Language; a deck name is a label and the ruling is Ryan's (2 October list, item 11)
+- **Strawberry Lemonade** (1) — no series and no track named for it; never routed
+- **The Big Ticket Visit** (4) — no track named for it; IMG_2249 names itself in sentence one and then teaches the pre-write packet (identify-videos ruling)
+- **Wrap-Up** (1) — candidate curriculum for Power of Positive Language; same ruling
+- **You Cannot Lose** (1) — a MINDSET quote film carrying collection=Craft; the attribution is unresolved ('unattributed') and it is a holds-list item, not a lesson
+
+<!-- hopper:end -->
+
+**What has changed since 28 September.** Three tracks contained any video and
+there were twelve videos across the whole credential. That was true of the
+modules and false of the library, which is the whole lesson of this file: 0144
+attached 43 films, 0159 adds five closers and three Walk-Around lessons, and
+the *unattached-matching* column now names what is still loose instead of
+leaving it invisible.
 
 ---
 
