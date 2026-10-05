@@ -587,3 +587,45 @@
 .ediagd-tab-pending {
   background: rgb(var(--ediagd-gold) / 0.5);
 }
+
+/* ---------------------------------------------------------------------------
+   A VERTICAL FILM MUST NOT RUN THE LENGTH OF A DESKTOP
+
+   PublicFilm used to carry `max-height: 70vh` as an inline style and it capped
+   nothing: measured on a 1440x900 desktop the player was 908 x 1614 CSS px, so
+   the cap it claimed was almost twice the viewport. mux-player puts the asset's
+   own `aspect-ratio` on the host, and with `width: 100%` the width wins — the
+   height is then derived, and a max-height on an aspect-ratio box does not pull
+   the width down with it. The comment described an intention; the box did
+   something else.
+
+   Driving it from the HEIGHT instead inverts that: set the height and let
+   `width: auto` derive the width through the same aspect-ratio, so the picture
+   keeps its shape, loses no content, and is centred in the column rather than
+   pinned left at a third of the width.
+
+   WHY THIS STARTS AT 640px AND A PHONE IS LEFT ALONE. On a phone the column IS
+   the film: a 9:16 clip at 408px wide is 725px tall, which is already past 70vh
+   on a 956px-tall viewport. Capping there would shrink the picture to ~376px
+   wide to buy back scroll on the one device where a full-width portrait film is
+   the right answer. The problem being solved is a tall film on a WIDE viewport,
+   so the fix is scoped to wide viewports and phone width is untouched.
+--------------------------------------------------------------------------- */
+.ediagd-public-film {
+  display: block;
+  margin-inline: auto;
+  /* Phone: the column IS the film. Deliberately full width, uncapped. */
+  width: 100%;
+}
+@media (min-width: 640px) {
+  .ediagd-public-film {
+    height: 70vh;
+    /* fit-content, NOT auto. `width: auto` on a block element means "fill the
+       container" — it measured 908 x 630, capping the height while leaving the
+       width pinned, so the box stopped matching the picture's shape. Shrink-to-
+       fit is what lets the host's aspect-ratio derive the width from the height
+       we just set. */
+    width: fit-content;
+    max-width: 100%;
+  }
+}
