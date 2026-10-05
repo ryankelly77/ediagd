@@ -6,6 +6,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ComingSoon } from "@/components/library/LibraryPieces";
 import { ProgressBar, ContinueCard } from "@/components/library/CoursePieces";
 import { loadCourses, loadContinuePoint } from "@/lib/lms";
+import { isAdminViewer } from "@/lib/access";
 
 /**
  * The library landing: tracks, then courses, with progress.
@@ -21,8 +22,19 @@ export default async function LibraryPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  /*
+   * ADMIN SEES EVERYTHING, an advisor sees tracks that have lessons.
+   *
+   * isAdminViewer is checked against THIS viewer rather than inferred, because
+   * two of the three accounts holding `admin` on production also hold
+   * `advisor` — so "an admin is not an advisor" would have been false for the
+   * people most likely to open this screen, and the gate would have decided
+   * something about a role it was never asked about.
+   */
+  const admin = await isAdminViewer(supabase, user.id);
+
   const [courses, resume] = await Promise.all([
-    loadCourses(supabase),
+    loadCourses(supabase, { includeHidden: admin }),
     loadContinuePoint(supabase),
   ]);
 
@@ -33,14 +45,17 @@ export default async function LibraryPage() {
       <AdminPageHeader
         back={{ href: "/more", label: "More" }}
         title="Lesson Library"
-        subtitle="Courses built from the cues, in the order they're taught."
+        subtitle="Every track, lesson by lesson."
       />
 
       {resume && <ContinueCard module={resume} />}
 
       {courses.length === 0 ? (
-        <ComingSoon title="The curriculum is being loaded">
-          <p>Courses appear here once the curriculum map is imported.</p>
+        <ComingSoon title="No tracks yet">
+          {/* Reworded with rule 1: the list can now be empty because every
+              track is still waiting on its films, which is a different thing
+              from the curriculum not having been imported. */}
+          <p>A track appears here as soon as one of its lessons has a film.</p>
         </ComingSoon>
       ) : (
         tracks.map((track) => (
@@ -64,15 +79,18 @@ export default async function LibraryPage() {
                           <span className="block text-base font-bold text-navy">
                             {c.name}
                           </span>
+                          {/* LESSONS, not modules — advisor-facing copy. The
+                              denominator is now the gating count (0160), so
+                              "0 of 9 lessons" is a number they can reach. */}
                           <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
                             {c.completedModules} of {c.totalModules}{" "}
-                            {c.totalModules === 1 ? "module" : "modules"}
+                            {c.totalModules === 1 ? "lesson" : "lessons"}
                           </span>
                           <ProgressBar pct={c.pct} />
                         </span>
-                        <span className="ediagd-numeral w-10 shrink-0 text-right text-sm font-extrabold text-navy">
-                          {c.pct}%
-                        </span>
+                        {/* The printed percentage is gone. The bar says the
+                            same thing and "0%" beside "0 of 9 lessons" was the
+                            figure that read as a broken screen. */}
                         <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
                           ›
                         </span>

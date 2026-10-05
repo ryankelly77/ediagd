@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CueDeck, type DeckItem } from "@/components/library/CueDeck";
+import { lessonCount } from "@/components/library/CoursePieces";
 import {
   loadCourseCrumb,
   loadModule,
@@ -114,7 +115,10 @@ export default async function ModulePage({
         }
         trail={course ? [{ href: "/library", label: "Lesson Library" }] : undefined}
         title={mod.name}
-        subtitle={`${mod.completedItems} of ${mod.totalItems} · ${mod.pct}%`}
+        /* Whole numbers, no printed percentage, and a cue-only module says what
+           it actually is. "0 of 8 · 0%" over eight cues that cannot move it is
+           the line this whole change started from. */
+        subtitle={lessonCount(mod)}
       />
 
       <CueDeck

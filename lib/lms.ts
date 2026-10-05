@@ -31,11 +31,16 @@ export type CourseProgress = {
   name: string;
   slug: string;
   sortOrder: number;
+  /** LESSONS — modules holding a gating item. Never every module (0160). */
   totalModules: number;
   completedModules: number;
   totalItems: number;
   completedItems: number;
   modulesNeedingNames: number;
+  /** Modules with any published content, so the course page knows what it can render. */
+  listableModules: number;
+  /** Derived in the view: does this course have at least one lesson? (0160) */
+  visible: boolean;
   lastActivity: string | null;
   pct: number;
 };
@@ -43,17 +48,33 @@ export type CourseProgress = {
 export type ModuleProgress = {
   moduleId: string;
   courseId: string;
+  /**
+   * The course's name — what advisor-facing copy calls the TRACK. Carried on
+   * the row so the Continue card can say where a lesson lives without a second
+   * query for one string.
+   */
+  courseName: string;
+  courseTrack: string;
   name: string;
   needsName: boolean;
   sortOrder: number;
+  /** GATING items only since 0160: the number an advisor can drive to done. */
   totalItems: number;
   completedItems: number;
+  /** Every published row, so a surface can tell "no lesson yet" from "nothing here". */
+  allItems: number;
+  cueItems: number;
   itemsDone: boolean;
   hasQuiz: boolean;
   quizPassed: boolean;
   completedAt: string | null;
   lastActivity: string | null;
   pct: number;
+  /**
+   * A module with cues and no film. It is listed — the cues are real material —
+   * but it cannot complete, so no surface may show it a denominator of 0.
+   */
+  isReinforcement: boolean;
 };
 
 export type LessonItem = {
@@ -99,6 +120,8 @@ function toCourse(r: Record<string, unknown>): CourseProgress {
     totalItems: total,
     completedItems: done,
     modulesNeedingNames: Number(r.modules_needing_names ?? 0),
+    listableModules: Number(r.listable_modules ?? 0),
+    visible: Boolean(r.visible),
     lastActivity: (r.last_activity as string | null) ?? null,
     pct: pct(done, total),
   };
@@ -107,36 +130,69 @@ function toCourse(r: Record<string, unknown>): CourseProgress {
 function toModule(r: Record<string, unknown>): ModuleProgress {
   const total = Number(r.total_items ?? 0);
   const done = Number(r.completed_items ?? 0);
+  const all = Number(r.all_items ?? 0);
   return {
     moduleId: r.module_id as string,
     courseId: r.course_id as string,
+    courseName: (r.course_name as string) ?? "",
+    courseTrack: (r.course_track as string) ?? "",
     name: (r.module_name as string) ?? "Module",
     needsName: r.name_status === "needs_name",
     sortOrder: Number(r.sort_order ?? 0),
     totalItems: total,
     completedItems: done,
+    allItems: all,
+    cueItems: Number(r.cue_items ?? 0),
     itemsDone: Boolean(r.items_done),
     hasQuiz: Boolean(r.has_quiz),
     quizPassed: Boolean(r.quiz_passed),
     completedAt: (r.completed_at as string | null) ?? null,
     lastActivity: (r.last_activity as string | null) ?? null,
     pct: pct(done, total),
+    isReinforcement: total === 0 && all > 0,
   };
 }
 
 const COURSE_COLS =
-  "course_id, track, name, slug, sort_order, total_modules, completed_modules, total_items, completed_items, modules_needing_names, last_activity";
+  "course_id, track, name, slug, sort_order, total_modules, completed_modules, total_items, completed_items, modules_needing_names, listable_modules, visible, last_activity";
 const MODULE_COLS =
-  "module_id, course_id, module_name, name_status, sort_order, total_items, completed_items, items_done, has_quiz, quiz_passed, completed_at, last_activity";
+  "module_id, course_id, course_name, course_track, module_name, name_status, sort_order, total_items, completed_items, all_items, cue_items, items_done, has_quiz, quiz_passed, completed_at, last_activity";
 
-/** Every course, with progress. One query. */
-export async function loadCourses(client: Client): Promise<CourseProgress[]> {
-  const { data } = await client
+/**
+ * Every course an advisor may be offered, with progress. One query.
+ *
+ * ---------------------------------------------------------------------------
+ * RULE 1, AND WHY IT IS A FILTER HERE RATHER THAN A STORED FLAG
+ * ---------------------------------------------------------------------------
+ * Ryan's ruling of 5 October: an advisor sees a course only if at least one of
+ * its modules holds a film. Before this, 35 of 45 courses had no film and all
+ * 45 were listed — sixteen Product Knowledge courses offering not one lesson.
+ *
+ * `visible` is DERIVED in my_course_progress (0160), not stored, so it cannot
+ * hold a stale answer: a film landing makes the course appear on the next read
+ * with no trigger and no backfill, and a course imported tomorrow with no film
+ * is hidden without anybody remembering to hide it. A `boolean default true`
+ * column would have shipped the opposite default — visible until somebody
+ * notices — which is the hole this closes.
+ *
+ * `includeHidden` IS THE ADMIN'S, AND IT IS EXPLICIT. Defaulting to showing
+ * everything and asking callers to opt into the filter would mean the next
+ * surface that forgets shows an advisor sixteen empty courses. The caller that
+ * wants the whole catalogue has to say so.
+ */
+export async function loadCourses(
+  client: Client,
+  opts: { includeHidden?: boolean } = {}
+): Promise<CourseProgress[]> {
+  let q = client
     .from("my_course_progress")
     .select(COURSE_COLS)
     .order("track", { ascending: true })
     .order("sort_order", { ascending: true });
 
+  if (!opts.includeHidden) q = q.eq("visible", true);
+
+  const { data } = await q;
   return ((data ?? []) as Record<string, unknown>[]).map(toCourse);
 }
 
@@ -204,13 +260,31 @@ export async function loadNextStep(
     kind: "library",
   };
 
+  /*
+   * READ THROUGH my_module_progress, NOT `module`.
+   *
+   * "Lessons open in order" has to mean the order the advisor SEES, and the
+   * library no longer lists an empty module. Walking the raw `module` table
+   * would hand them the next row in the table — which can be a module with
+   * nothing in it, so "next" would open a placeholder over an empty deck and
+   * the Next button would be the only way to reach a screen the list hides.
+   *
+   * Same filter as loadModules, deliberately: two surfaces disagreeing about
+   * what the next lesson is would be the same defect as two definitions of
+   * "module complete", which 0143 spent a migration collapsing into one.
+   */
   const { data: siblings } = await client
-    .from("module")
-    .select("id, name, sort_order")
+    .from("my_module_progress")
+    .select("module_id, module_name, sort_order, all_items")
     .eq("course_id", courseId)
+    .gt("all_items", 0)
     .order("sort_order", { ascending: true });
 
-  const mods = (siblings ?? []) as Record<string, unknown>[];
+  const mods = ((siblings ?? []) as Record<string, unknown>[]).map((m) => ({
+    id: m.module_id,
+    name: m.module_name,
+    sort_order: m.sort_order,
+  })) as Record<string, unknown>[];
   const here = mods.findIndex((m) => m.id === moduleId);
   const nextModule = here >= 0 ? mods[here + 1] : undefined;
 
@@ -222,14 +296,22 @@ export async function loadNextStep(
     };
   }
 
-  // Last module in the course — step up to the next course.
+  /* Last module in the course — step up to the next course THE ADVISOR CAN
+     SEE. Read through my_course_progress for the same reason the sibling walk
+     moved: handing them a course the library does not list is a dead end
+     reachable only from here. */
   const { data: allCourses } = await client
-    .from("course")
-    .select("id, name, slug")
+    .from("my_course_progress")
+    .select("course_id, name, slug, track, sort_order, visible")
+    .eq("visible", true)
     .order("track", { ascending: true })
     .order("sort_order", { ascending: true });
 
-  const courses = (allCourses ?? []) as Record<string, unknown>[];
+  const courses = ((allCourses ?? []) as Record<string, unknown>[]).map((c) => ({
+    id: c.course_id,
+    name: c.name,
+    slug: c.slug,
+  })) as Record<string, unknown>[];
   const at = courses.findIndex((c) => c.id === courseId);
   const nextCourse = at >= 0 ? courses[at + 1] : undefined;
 
@@ -244,17 +326,33 @@ export async function loadNextStep(
   return LIBRARY;
 }
 
-/** One course's modules, in taught order. One query. */
+/**
+ * One course's modules, in taught order. One query.
+ *
+ * EMPTY MODULES ARE NOT LISTED (Ryan's ruling, 5 October). `all_items > 0` is
+ * the test, NOT `total_items > 0`: a cue-only module holds real material and is
+ * listed as reinforcement, while a module holding nothing at all is a row an
+ * advisor can tap into and find a placeholder and an empty deck. 33 modules
+ * were in that state.
+ *
+ * The distinction is why 0160 added `all_items` instead of letting a surface
+ * infer "empty" from the gating count — inferring it would have hidden the 83
+ * cues sitting in cue-only modules inside film-bearing courses.
+ */
 export async function loadModules(
   client: Client,
-  courseId: string
+  courseId: string,
+  opts: { includeEmpty?: boolean } = {}
 ): Promise<ModuleProgress[]> {
-  const { data } = await client
+  let q = client
     .from("my_module_progress")
     .select(MODULE_COLS)
     .eq("course_id", courseId)
     .order("sort_order", { ascending: true });
 
+  if (!opts.includeEmpty) q = q.gt("all_items", 0);
+
+  const { data } = await q;
   return ((data ?? []) as Record<string, unknown>[]).map(toModule);
 }
 
@@ -365,6 +463,15 @@ export async function loadContinuePoint(
     .from("my_module_progress")
     .select(MODULE_COLS)
     .is("completed_at", null)
+    /*
+     * ONLY A MODULE THAT CAN BE FINISHED. The card says "Pick up where you left
+     * off" and its button says Continue, so pointing it at a cue-only module —
+     * which cannot complete, by 0143's gate — would be an invitation to a dead
+     * end, and pointing it at an empty one would open a placeholder over an
+     * empty deck. `total_items > 0` is the gating count, so this is the same
+     * population the credential measures.
+     */
+    .gt("total_items", 0)
     .order("last_activity", { ascending: false, nullsFirst: false })
     .order("sort_order", { ascending: true })
     .limit(1);

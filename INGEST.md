@@ -61,6 +61,36 @@ Two of the three already guarded it; the backfill did not, and took the whole
 run down on a missing file including its own Mux caption pass, which needs no
 local file at all. Same question, answered in two places out of three.
 
+## The re-runnable backfills
+
+Each of these reads an external system and makes a column describe it. They are
+**safe to run at any time** and are the right answer whenever a column and the
+thing it names have drifted. A backfill is a promise; a re-runnable sync is a
+property, so none of these is a one-off.
+
+| command | makes this describe that |
+|---|---|
+| `npm run transcripts:backfill` | `content_transcript` ← Mux captions / local whisper |
+| `npm run stills:backfill` | `content` stills ← Mux thumbnails |
+| `npm run sync:mux-titles` | Mux asset titles ← `content.title` |
+| `npm run captions:sync` | `content.captions_ready` ← Mux text tracks |
+
+**`captions:sync` (added 5 October 2026)** exists because `captions_ready` was
+written in exactly one place — the `asset.ready` webhook — and never refreshed.
+Mux generates subtitles *after* the asset is ready, so the column recorded "did
+this asset have captions the instant it finished transcoding" while its name
+claimed "does this film have captions". On production it said **42 of 447**
+published films were captioned; Mux held a ready English track for **447 of
+447**. Run with `--dry-run` first; it reports before and after counts read back
+from the column rather than what it intended to write, and it syncs **both**
+directions so a deleted track is recorded too.
+
+Nothing in the daily loop, no screen and no notification keys on
+`captions_ready`. Two things do read it, and neither breaks when it changes:
+`family_pitch_supply.fully_captioned` (0123, 0125) is a `bool_and` over it, and
+`scripts/focus-family-acceptance.ts` selects that column without asserting on
+it.
+
 **Consequence worth knowing before the next run:** the store currently holds
 `IMG_2161`–`IMG_2512` only, 168 files. The 30 September batch (`IMG_3204`–`3235`
 and the Walk-Around clips) is **not in it** — that is what the reset destroyed.

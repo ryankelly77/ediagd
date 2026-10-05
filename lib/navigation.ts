@@ -269,7 +269,13 @@ export const MEMBER_SECTIONS: readonly MemberSection[] = [
   {
     href: "/library",
     label: "Lesson Library",
-    hint: "Coaching cues and pitch videos, by service.",
+    /*
+     * REWORDED 5 October. The old hint — "Coaching cues and pitch videos, by
+     * service" — described listServiceBuckets/loadServiceContent, a shelf that
+     * has never had a screen: both functions are in lib/library.ts with zero
+     * callers. This row opens the track list, and now says so.
+     */
+    hint: "Every track, lesson by lesson.",
     requiresRole: null,
   },
   {
