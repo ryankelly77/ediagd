@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { ProgressBar } from "@/components/library/CoursePieces";
+import { ProgressBar, lessonCount } from "@/components/library/CoursePieces";
 import { loadCourseBySlug, loadModules } from "@/lib/lms";
 
 /** One course: its modules in taught order, with a clear next. Two queries. */
@@ -22,15 +22,21 @@ export default async function CoursePage({
   const course = await loadCourseBySlug(supabase, slug);
   if (!course) notFound();
 
+  /* Empty modules are not listed (Ryan's ruling); loadModules filters them.
+     "Next up" is the next LESSON — a cue-only module is reinforcement and
+     cannot complete, so marking it as next would stall the track on a row
+     nobody can finish. */
   const modules = await loadModules(supabase, course.courseId);
-  const next = modules.find((m) => !m.completedAt);
+  const next = modules.find((m) => !m.completedAt && !m.isReinforcement);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       <AdminPageHeader
         back={{ href: "/library", label: "Lesson Library" }}
         title={course.name}
-        subtitle={`${course.track} · ${course.completedModules} of ${course.totalModules} modules`}
+        subtitle={`${course.track} · ${course.completedModules} of ${course.totalModules} ${
+          course.totalModules === 1 ? "lesson" : "lessons"
+        }`}
       />
 
       <div className="mt-3 px-1">
@@ -65,11 +71,14 @@ export default async function CoursePage({
                     {m.name}
                   </span>
                   <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
-                    {m.completedItems} of {m.totalItems}
+                    {lessonCount(m)}
                     {m.hasQuiz && (m.quizPassed ? " · quiz passed" : " · quiz to take")}
                     {next?.moduleId === m.moduleId && " · next up"}
                   </span>
-                  {!m.completedAt && <ProgressBar pct={m.pct} />}
+                  {/* No bar on a reinforcement row: there is no proportion to
+                      show when nothing in it gates, and a 0%-wide rule reads
+                      as a lesson somebody has failed to start. */}
+                  {!m.completedAt && !m.isReinforcement && <ProgressBar pct={m.pct} />}
                 </span>
 
                 <span aria-hidden="true" className="text-lg leading-none text-ink-soft">

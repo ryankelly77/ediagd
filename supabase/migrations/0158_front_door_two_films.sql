@@ -60,15 +60,37 @@ delete from front_door_slot where slot not in ('mindset', 'item');
    exactly two public ids, 64s on asset dmlC02… and 212s on asset iRiRLW…, and
    content.duration_sec for these two rows is 64 and 212. Two systems, same
    quantity, reconciled — rather than a title match. */
-insert into front_door_slot (slot, content_id, public_playback_id, caption, sort) values
-  ('mindset',
-   'ee3148e1-5659-4f57-9ad8-f1b73e7c18aa',  -- The One Thing You Can Control…
-   'XWT1R1T6nP00hwQbRsfibS7KPQ6wt3iGrTler7KsCjjw',
-   'Every morning opens with a mindset. Here is one.', 1),
-  ('item',
-   '42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05',  -- The Four Minute Walk-Around, Part 1
-   '5Qn021M01ITgHm023WIq00ccx8dRwSQFAyrKrG7eXX00EO3U',
-   'And a lesson it builds toward. This one is the Four Minute Walk-Around, lesson one of track one.', 2)
+/* ---------------------------------------------------------------------------
+   AMENDED 5 OCTOBER 2026 — the same existence guard 0157 now carries.
+
+   Ryan's ruling named 0157. THE SAME DEFECT WAS HERE, one migration later, and
+   fixing only the instance named would have moved the failure from 0157 to
+   0158 and left the chain exactly as unreplayable — which is this codebase's
+   own rule that a defect you find is a class, not an instance.
+
+   The question the bug is an answer to: WHICH MIGRATIONS INSERT A HARDCODED
+   content_id THROUGH A FOREIGN KEY WITH NO GUARD? Swept across all 160
+   migrations: exactly two, 0157 and 0158, both of them front_door_slot. Both
+   are guarded now, and the sweep is the evidence the class is closed rather
+   than the instance.
+
+   No-op on production, where both films exist. On a fresh local it inserts
+   nothing, and section 8's assertions take the skip path instead of failing on
+   an empty shop window.
+   --------------------------------------------------------------------------- */
+insert into front_door_slot (slot, content_id, public_playback_id, caption, sort)
+select v.slot, v.content_id::uuid, v.public_playback_id, v.caption, v.sort
+  from (values
+    ('mindset',
+     'ee3148e1-5659-4f57-9ad8-f1b73e7c18aa',  -- The One Thing You Can Control…
+     'XWT1R1T6nP00hwQbRsfibS7KPQ6wt3iGrTler7KsCjjw',
+     'Every morning opens with a mindset. Here is one.', 1),
+    ('item',
+     '42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05',  -- The Four Minute Walk-Around, Part 1
+     '5Qn021M01ITgHm023WIq00ccx8dRwSQFAyrKrG7eXX00EO3U',
+     'And a lesson it builds toward. This one is the Four Minute Walk-Around, lesson one of track one.', 2)
+  ) as v(slot, content_id, public_playback_id, caption, sort)
+ where exists (select 1 from content c where c.id = v.content_id::uuid)
 on conflict (slot) do update
   set content_id = excluded.content_id,
       public_playback_id = excluded.public_playback_id,
@@ -143,6 +165,24 @@ declare
   n_expected int;
   v_rows int;
 begin
+  /* THE SKIP PATH, added 5 Oct 2026 with the insert guard above. A database
+     holding neither film is a fresh local, not a broken front door — and the
+     assertions below are about the PAIRING, which cannot be tested where
+     neither half exists. Everything structural in this migration (the slot
+     constraint, NOT NULL, RLS, the grants) has already run and is not skipped.
+
+     Stated as "neither film present" rather than "no slots", so a database that
+     has one of the two still fails loudly instead of skipping. */
+  if not exists (
+    select 1 from content
+     where id in ('ee3148e1-5659-4f57-9ad8-f1b73e7c18aa',
+                  '42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05')
+  ) then
+    raise notice
+      '0158: neither front-door film exists on this database — pairing assertions skipped; constraint, NOT NULL, RLS and grants all applied';
+    return;
+  end if;
+
   select count(*) into n_slots from front_door_slot;
   if n_slots <> 2 then
     raise exception '0158: front_door_slot holds % rows, expected exactly 2', n_slots;

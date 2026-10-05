@@ -648,12 +648,35 @@ async function run() {
     const advD = await makeAdvisor("walk");
     const asD = await signedInAs(advD);
 
+    /*
+     * KEYED ON THE FILM, NOT ON THE MODULE'S NAME.
+     *
+     * This read `mods.find(m => m.name === "4. Raising a Problem Well")` and
+     * broke on 0160, which renames and resorts the Walk-Around modules into the
+     * routine's own order — Part 2 now sits in "5. Four Goals, Two Words". The
+     * suite was asserting a LABEL, and the label was a curriculum decision that
+     * was always going to move.
+     *
+     * The film is the thing this section is actually about, so the module is
+     * now DERIVED from which module holds it and its name is reported rather
+     * than required. That makes the assertion survive the next renaming and
+     * still fail if the film becomes unattached.
+     */
+    const PART2 = "30 Second Walk-Around, Part 2, Four Goals, Two Words";
     const mods = await modulesOf(walk.id);
+    const { data: part2Row } = await sb
+      .from("content")
+      .select("module_id")
+      .eq("title", PART2)
+      .eq("type", "advisor_video")
+      .eq("status", "published")
+      .is("retired_at", null)
+      .maybeSingle();
     const m4 = need(
-      mods.find((m) => m.name === "4. Raising a Problem Well"),
-      "Walk Around module 4"
+      mods.find((m) => m.id === part2Row?.module_id),
+      `the Walk-Around module holding "${PART2}"`
     );
-    /* Modules 1-3 finished; module 4 untouched. */
+    /* Everything taught before it finished; its own module untouched. */
     const before = mods.filter((m) => m.sort_order < m4.sort_order);
     const beforeItems = await itemsOf(before.map((m) => m.id));
     for (const it of beforeItems) {
@@ -664,16 +687,18 @@ async function run() {
       { user_id: advD, certification_id: walk.id, rooftop_id: rooftopId },
       { onConflict: "user_id,certification_id", ignoreDuplicates: true }
     );
-    console.log(`        (setup) ${beforeItems.length} items on modules 1-3 consumed`);
+    console.log(
+      `        (setup) ${beforeItems.length} items on the ${before.length} module(s) before "${m4.name}" consumed`
+    );
 
     const served = await pickItem(asD as never, sb as never, advD, TODAY);
     ok(
       `the loop serves 30 Second Part 2 (got "${served.item?.title ?? "none"}")`,
-      served.item?.title === "30 Second Walk-Around, Part 2, Four Goals, Two Words"
+      served.item?.title === PART2
     );
     ok(
-      `in module 4 (got "${served.item?.moduleName ?? "none"}")`,
-      served.item?.moduleName === "4. Raising a Problem Well"
+      `in the module that holds it, "${m4.name}" (got "${served.item?.moduleName ?? "none"}")`,
+      served.item?.moduleName === m4.name
     );
     ok("served as a FILM, not a cue", served.item?.format === "video");
 
@@ -702,18 +727,33 @@ async function run() {
 
     const { data: prog } = await asD
       .from("my_module_progress")
-      .select("items_done, total_items, completed_items")
+      .select("items_done, total_items, completed_items, all_items, cue_items")
       .eq("module_id", m4.id)
       .maybeSingle();
     ok(
       `items_done is true on the film alone (${(prog as any)?.completed_items} of ${
         (prog as any)?.total_items
-      } items done, ${cues.length} cues unwatched)`,
+      } gating items done, ${cues.length} cues unwatched)`,
       (prog as any)?.items_done === true
     );
+    /*
+     * REWRITTEN FOR 0160. This asserted
+     *   completed_items < total_items
+     * which held only because total_items counted the cues — the very thing
+     * Ryan's ruling 6 removed. Under 0160 the gating counts are 1 of 1 and that
+     * assertion would read "the film did not complete the module", which is
+     * false and is the opposite of what this section proves.
+     *
+     * The intent was never about the arithmetic: it is that the module gates on
+     * the FILM while real cue material sits unwatched. So it is now stated
+     * against the columns that still mean that — all_items counts everything,
+     * total_items counts only what gates, and the gap between them is the cues.
+     */
     ok(
-      "and the module is NOT fully consumed — a cue never gates",
-      Number((prog as any)?.completed_items) < Number((prog as any)?.total_items)
+      `the gating count excludes the cues (${(prog as any)?.total_items} gating of ` +
+        `${(prog as any)?.all_items} published, ${(prog as any)?.cue_items} of them cues)`,
+      Number((prog as any)?.cue_items) > 0 &&
+        Number((prog as any)?.total_items) < Number((prog as any)?.all_items)
     );
 
     /*
@@ -753,14 +793,33 @@ async function run() {
       wrote?.moduleId === m4.id
     );
 
-    /* Walk Around still cannot be COMPLETED, because module 7 has no film and
-       therefore no gating item. Stated here so the limit is measured rather
-       than discovered later. */
-    const m7 = need(mods.find((m) => m.name === "7. The Handback"), "module 7");
-    const m7items = await itemsOf([m7.id]);
+    /* Walk Around still cannot be COMPLETED, because The Handback has no film
+       and therefore no gating item. Stated here so the limit is measured rather
+       than discovered later.
+
+       FOUND BY ITS LACK OF A FILM, not by its number: 0159 called it module 7
+       and 0160 moves it to 13 as the routine takes its order. The property this
+       section is about — a filmless module in an otherwise filmed track — is
+       what identifies it, and keying on that is also what makes the assertion
+       fail correctly on the day Mitch's film lands and nothing else is left
+       unfilmed. */
+    const allWalkItems = await itemsOf(mods.map((m) => m.id));
+    const filmless = mods.filter(
+      (m) => !allWalkItems.some((i) => i.module_id === m.id && i.type === "advisor_video")
+    );
+    const handback = need(
+      filmless.find((m) => /handback/i.test(m.name)),
+      "the filmless Walk-Around module (The Handback)"
+    );
+    const hbItems = await itemsOf([handback.id]);
     ok(
-      `module 7 still holds no film, so it can never gate-complete (${m7items.length} cues, 0 films)`,
-      m7items.every((i) => i.type !== "advisor_video")
+      `"${handback.name}" still holds no film, so it can never gate-complete ` +
+        `(${hbItems.length} cues, 0 films)`,
+      hbItems.every((i) => i.type !== "advisor_video")
+    );
+    ok(
+      "and it is the ONLY filmless module left in the track",
+      filmless.length === 1
     );
   }
 
