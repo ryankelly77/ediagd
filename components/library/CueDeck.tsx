@@ -35,7 +35,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { completeLibraryItem } from "@/lib/library-actions";
-import { TrackedVideo } from "@/components/video/TrackedVideo";
+import { TrackedVideo, WatchGateLine } from "@/components/video/TrackedVideo";
 import type { NextStep } from "@/lib/lms";
 import type { VideoRenditions } from "@/lib/mux/playback";
 
@@ -68,8 +68,12 @@ type Props = {
   hasQuiz: boolean;
   quizPassed: boolean;
   completedAt: string | null;
-  /** game_settings.video_complete_pct — the bar a video has to clear. */
-  videoThreshold: number;
+  /*
+   * NO videoThreshold. The bar is gateThreshold(duration_sec), computed inside
+   * TrackedVideo per video and re-checked by completeLibraryItem against the
+   * same function. Threading game_settings.video_complete_pct down to here is
+   * what gave the deck a second, looser definition of "watched".
+   */
   /** Where finishing this module sends them — the next lesson, usually. */
   nextStep: NextStep;
   /** Deep link from a failed quiz question: open the deck on this cue. */
@@ -85,7 +89,6 @@ export function CueDeck({
   hasQuiz,
   quizPassed,
   completedAt,
-  videoThreshold,
   nextStep,
   initialCueId,
 }: Props) {
@@ -253,7 +256,6 @@ export function CueDeck({
           <FilmBlock
             item={film}
             isDone={done.has(film.id)}
-            threshold={videoThreshold}
             onComplete={(pct) => markDone(film.id, { watchedPct: pct })}
             onEnded={scrollDeckIntoView}
           />
@@ -399,17 +401,16 @@ export function CueDeck({
 function FilmBlock({
   item,
   isDone,
-  threshold,
   onComplete,
   onEnded,
 }: {
   item: DeckItem;
   isDone: boolean;
-  threshold: number;
   onComplete: (pct: number) => void;
   onEnded: () => void;
 }) {
   const [watched, setWatched] = useState(item.watchedPct ?? 0);
+  const [met, setMet] = useState(isDone);
   const furthest = useRef(item.watchedPct ?? 0);
   const fired = useRef(isDone);
 
@@ -420,22 +421,43 @@ function FilmBlock({
         : `${Math.round(item.durationSec / 60)} min`
       : null;
 
+  /*
+   * CREDIT COMES FROM `met`, AND FROM NOWHERE ELSE.
+   *
+   * This fired on `isMet || pct >= threshold`, where threshold was
+   * game_settings.video_complete_pct — a flat 90. TrackedVideo computes `met`
+   * from `Math.max(given, gateThreshold(duration))`, so the two disagreed by
+   * design and the OR took the looser: on a 221-second lesson the card awarded
+   * credit at 90%, twenty-two seconds before the end, while the player still
+   * read "not met". Two definitions of watched in one function, and the one
+   * that decided was the one nobody intended.
+   *
+   * `met` is now the only trigger. One rule, computed in one place, for the
+   * card, the server re-check and the morning alike.
+   */
   const reach = (pct: number, isMet: boolean) => {
     if (pct > furthest.current) {
       furthest.current = pct;
       setWatched(pct);
     }
-    if (!fired.current && !isDone && (isMet || pct >= threshold)) {
+    if (isMet) setMet(true);
+    if (!fired.current && !isDone && isMet) {
       fired.current = true;
-      onComplete(Math.max(pct, threshold));
+      /* The measured number, not a number raised to clear a bar. `onComplete`
+         previously sent max(pct, threshold) — manufacturing a percentage the
+         viewer had not reached so the server's own weaker check would pass. */
+      onComplete(pct);
     }
   };
 
+  /* The deck advances when credit is EARNED, not when a percentage is passed —
+     the same question `reach` now asks. */
   const handleEnded = () => {
-    if (furthest.current >= threshold || isDone) onEnded();
+    if (fired.current || isDone) onEnded();
   };
 
   const barPct = isDone ? 100 : watched;
+  const isMetNow = isDone || met;
 
   return (
     <section>
@@ -468,7 +490,10 @@ function FilmBlock({
           contentId={item.id}
           renditions={item.renditions!}
           title={item.title}
-          threshold={threshold}
+          /* NO THRESHOLD PASSED. Undefined means "decide per video", so
+             TrackedVideo uses gateThreshold(duration) alone — the one rule.
+             Passing game_settings.video_complete_pct here is what let a flat 90
+             into a decision that is about seconds, not share. */
           initialWatchedPct={item.watchedPct}
           initialPositionSec={item.positionSec}
           onWatchChange={(s) => reach(s.pct, s.met)}
@@ -482,30 +507,34 @@ function FilmBlock({
         </p>
       )}
 
-      {/* ONE progress line, the one that names the rule. Not a second bar from
-          the player. */}
+      {/*
+        THE MORNING'S LINE, AND NO NUMBERS AT ALL.
+
+        This printed "Watched {barPct}%" beside "counts at {threshold}%" — a raw
+        float against a bar neither the player nor the server uses any more. Two
+        numbers, both of them wrong: the first showed 94.999999 for a finished
+        film, the second named 90 when credit needed ~99.
+
+        A percentage is a promise the viewer can check, and this one did not add
+        up: it would sit at "Watched 91%" with the film plainly still playing
+        and nothing happening, or reach 100% having already gone palm. So both
+        numbers go and the line says only the thing that is true — teal while
+        working, palm and the single word "Watched" once credit is earned.
+
+        WatchGateLine is imported from the morning rather than reimplemented. A
+        second copy is how the library and the loop came to disagree about what
+        "watched" meant in the first place.
+      */}
       <div className="mt-3">
-        <div className="flex items-baseline justify-between">
-          <span className="ediagd-numeral text-xs font-extrabold text-navy">
-            Watched {barPct}%
-          </span>
-          <span className="ediagd-numeral text-xs text-ink-soft">
-            counts at {threshold}%
-          </span>
-        </div>
-        <span className="mt-1.5 block h-1.5 w-full rounded-pill bg-line/60">
+        <WatchGateLine pct={barPct} met={isMetNow} />
+        {isMetNow && (
           <span
-            aria-hidden="true"
-            className="block h-full rounded-pill transition-all"
-            style={{
-              width: `${Math.max(barPct > 0 ? 4 : 0, barPct)}%`,
-              background:
-                barPct >= threshold
-                  ? "rgb(var(--ediagd-palm))"
-                  : "rgb(var(--ediagd-teal))",
-            }}
-          />
-        </span>
+            className="mt-1.5 block text-xs font-extrabold"
+            style={{ color: "rgb(var(--ediagd-palm))" }}
+          >
+            Watched
+          </span>
+        )}
       </div>
     </section>
   );

@@ -43,16 +43,20 @@ export default async function ModulePage({
   const mod = await loadModule(supabase, moduleId);
   if (!mod) notFound();
 
-  const [{ items }, { data: settings }, course, nextStep] = await Promise.all([
+  /*
+   * game_settings IS NO LONGER READ HERE.
+   *
+   * It was fetched for video_complete_pct, to tell the deck what "watched"
+   * meant. The deck no longer needs telling: gateThreshold(duration_sec) is
+   * computed per video inside TrackedVideo and re-checked by
+   * completeLibraryItem against the same function. One fewer query, and one
+   * fewer definition of the rule.
+   */
+  const [{ items }, course, nextStep] = await Promise.all([
     loadModuleItems(supabase, moduleId, 100),
-    // Readable by any signed-in user (0011), so the caller's own client will do
-    // — the threshold is a displayed rule, not a secret.
-    supabase.from("game_settings").select("video_complete_pct").limit(1).maybeSingle(),
     loadCourseCrumb(supabase, mod.courseId),
     loadNextStep(supabase, moduleId, mod.courseId),
   ]);
-
-  const videoThreshold = Number(settings?.video_complete_pct ?? 90);
 
   const cards: DeckItem[] = items.map((it) => ({
     id: it.id,
@@ -128,7 +132,6 @@ export default async function ModulePage({
         hasQuiz={mod.hasQuiz}
         quizPassed={mod.quizPassed}
         completedAt={mod.completedAt}
-        videoThreshold={videoThreshold}
         nextStep={nextStep}
         initialCueId={cue ?? null}
       />

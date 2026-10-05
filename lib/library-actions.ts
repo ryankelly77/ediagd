@@ -31,6 +31,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { completeModuleIfReady } from "@/lib/lms";
 import { accrueFromCompletion } from "@/lib/certification-server";
+import { gateThreshold, isWatched } from "@/lib/watch-coverage";
 
 export type CompleteResult =
   | {
@@ -56,9 +57,12 @@ const FIFTY = 50;
 /**
  * Mark a cue or video finished, and pay for it once, ever.
  *
- * `watchedPct` is only meaningful for videos: a video counts as done at
- * game_settings.video_complete_pct or above. Cues have no progress to measure
- * and complete outright.
+ * `watchedPct` is only meaningful for videos: a video counts as done once it
+ * clears `gateThreshold(duration_sec)` — a 95% floor or a two-second tail,
+ * whichever is stricter — which is the SAME rule the player applies and the
+ * same one the morning uses. NOT `game_settings.video_complete_pct`, which
+ * nothing reads for credit any more. Cues have no progress to measure and
+ * complete outright.
  */
 export async function completeLibraryItem(
   contentId: string,
@@ -75,7 +79,7 @@ export async function completeLibraryItem(
   // or content their rooftop hasn't bought, simply isn't here.
   const { data: item } = await supabase
     .from("content")
-    .select("id, type, service_family")
+    .select("id, type, service_family, duration_sec")
     .eq("id", contentId)
     .maybeSingle();
 
@@ -84,21 +88,40 @@ export async function completeLibraryItem(
   const settingsClient = createServiceClient();
   const { data: settings } = await settingsClient
     .from("game_settings")
-    .select("sand_lesson, video_complete_pct, sand_lesson_daily_cap, sand_module")
+    .select("sand_lesson, sand_lesson_daily_cap, sand_module")
     .limit(1)
     .maybeSingle();
 
   const amount = Number(settings?.sand_lesson ?? 1);
-  const threshold = Number(settings?.video_complete_pct ?? 90);
   const dailyCap = Number(settings?.sand_lesson_daily_cap ?? 30);
   const moduleBonus = Number(settings?.sand_module ?? 15);
 
   // ---- 2. Videos only count once they've actually been watched ------------
+  /*
+   * ONE WATCHED RULE, AND IT IS PER-VIDEO.
+   *
+   * This read `game_settings.video_complete_pct` — a flat 90 — while the player
+   * and the morning had already moved to gateThreshold(), which expresses the
+   * tail in SECONDS and converts it to this video's own percentage. Two
+   * definitions of "watched" with nothing comparing them: 90% of a 221-second
+   * lesson is twenty-two seconds short of the end, so the server would have
+   * accepted credit while Mitch was still talking, and the client would not
+   * have offered it. The looser one was the one doing the deciding.
+   *
+   * gateThreshold is the STRICTER of a 95% floor and a two-second tail, so a
+   * long film needs ~99% and a short clip still needs 95. isWatched rounds to
+   * two decimals before comparing, because floating-point summation of
+   * TimeRanges produces 94.999999 for a film plainly finished.
+   *
+   * The client reports and the server verifies — unchanged. What changed is
+   * that both now verify against the same number.
+   */
   const isVideo = item.type !== "cue";
   if (isVideo) {
     const pct = Number(watchedPct ?? 0);
-    if (!Number.isFinite(pct) || pct < threshold) {
-      return { ok: false, error: `Not finished yet — ${threshold}% is the bar.` };
+    const bar = gateThreshold(item.duration_sec as number | null);
+    if (!Number.isFinite(pct) || !isWatched(pct, bar)) {
+      return { ok: false, error: "Not finished yet — watch to the end." };
     }
   }
 
