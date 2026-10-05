@@ -30,6 +30,43 @@ Verify DROP_ZONE and PUBLISHED exist; repo on main and clean; ffmpeg present; th
 
 **faster-whisper** runs from `.venv-whisper` in the repo (gitignored, not installed system-wide). If it is missing, build it before Phase 2 — and keep it out of any commit.
 
+### Where the transcripts live
+
+`reports/dropzone-transcripts.json` — the path is unchanged, but the file is
+**untracked** (gitignored since 0159's PR) and that is deliberate.
+
+It used to be tracked, so a `git reset` mid-run on 30 September **reverted it**
+and threw away a batch that had just been transcribed — a full re-transcription,
+whisper over thirty-odd films, for a git operation that had nothing to do with
+them. A tracked working file is one a reset is entitled to discard. An untracked
+one survives every git command there is, which is exactly the property this file
+needs.
+
+**It is a cache, not the record.** The durable home for a transcript is
+`content_transcript` in the database (0155) — 447 rows, written by
+`npm run transcripts:backfill`, read by the blog corpus and the caption work.
+This file only has to outlive the run that produced it, and after the run the
+transcripts should be pushed into the database so the next reader does not
+depend on one laptop.
+
+Three scripts read it — `identify-videos.ts`, `slate-plan.ts` and
+`transcripts-backfill.ts` — and **all three now treat its absence as ordinary**,
+printing the rebuild command instead of a stack trace:
+
+```
+python3 scripts/transcribe-dropzone.py --dir="<Drop Zone>" --out=reports/dropzone-transcripts.json
+```
+
+Two of the three already guarded it; the backfill did not, and took the whole
+run down on a missing file including its own Mux caption pass, which needs no
+local file at all. Same question, answered in two places out of three.
+
+**Consequence worth knowing before the next run:** the store currently holds
+`IMG_2161`–`IMG_2512` only, 168 files. The 30 September batch (`IMG_3204`–`3235`
+and the Walk-Around clips) is **not in it** — that is what the reset destroyed.
+Those transcripts survive only in `content_transcript`, where the Mux caption
+pass put them, which is the argument for the database being the record.
+
 The **live DB is the only authority** for op codes, stages, aliases, and quotes — never the files in data/, which are stale snapshots. If the Drop Zone is empty, say so and stop.
 
 ## Phase 1 — Inventory

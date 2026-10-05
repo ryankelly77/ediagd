@@ -124,3 +124,25 @@ reports/dumps/
 
 # Ryan's local prompt drafts — his working notes, never shipped.
 Claude outputs/
+
+# ---- the Drop Zone transcript store ---------------------------------------
+# UNTRACKED ON PURPOSE, AND THE REASON IS WORTH KEEPING.
+#
+# reports/dropzone-transcripts.json was tracked. A `git reset` mid-run during
+# the 30 September ingest therefore REVERTED it, discarding the batch that had
+# just been transcribed and costing a full re-transcription — whisper over
+# thirty-odd films. A tracked working file is one a reset is allowed to throw
+# away; an untracked one survives every git operation there is.
+#
+# It is a CACHE, not a record. The durable home for a transcript is
+# content_transcript in the database (0155), which holds 447 rows and is what
+# the blog corpus and the caption backfill read. This file only has to outlive
+# the run that produced it.
+#
+# The PATH IS UNCHANGED so every reader keeps working with no edit:
+# scripts/identify-videos.ts, scripts/slate-plan.ts and
+# scripts/transcripts-backfill.ts all read `reports/dropzone-transcripts.json`
+# and all three now handle its absence with a message naming the rebuild
+# command rather than a stack trace. See INGEST.md, "Where the transcripts
+# live".
+reports/dropzone-transcripts.json

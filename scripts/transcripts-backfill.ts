@@ -31,7 +31,7 @@
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
 import Mux from "@mux/mux-node";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const SB_URL = process.env.SB_URL;
@@ -205,11 +205,34 @@ async function main() {
   );
 
   // ---- 1. Whisper, matched on source_filename (asserted) ------------------
-  const json = JSON.parse(
-    readFileSync(resolve("reports/dropzone-transcripts.json"), "utf8")
-  ) as { files: { file: string; transcript?: string }[] };
+  /*
+   * THE STORE IS A CACHE AND IS NOW UNTRACKED, SO ITS ABSENCE IS NORMAL.
+   *
+   * It used to be read with a bare readFileSync, which threw an ENOENT stack
+   * trace and took the whole backfill down — including the Mux caption pass
+   * below, which needs no local file at all. Being tracked is what made the
+   * absence feel impossible; untracking it (see .gitignore) makes it an
+   * ordinary state, and the Mux pass is the durable source anyway.
+   *
+   * identify-videos.ts and slate-plan.ts already guarded this path; this was
+   * the third reader and the only one that did not. Same question, answered in
+   * two places out of three.
+   */
+  const STORE = "reports/dropzone-transcripts.json";
   const whisper = new Map<string, string>();
-  for (const f of json.files) if (f.transcript) whisper.set(f.file, f.transcript);
+  if (existsSync(resolve(STORE))) {
+    const json = JSON.parse(readFileSync(resolve(STORE), "utf8")) as {
+      files: { file: string; transcript?: string }[];
+    };
+    for (const f of json.files) if (f.transcript) whisper.set(f.file, f.transcript);
+  } else {
+    console.log(
+      `  ${STORE} not present — skipping the Whisper pass.\n` +
+        `    It is an untracked per-run cache; rebuild it with\n` +
+        `      python3 scripts/transcribe-dropzone.py --dir="<Drop Zone>" --out=${STORE}\n` +
+        `    The Mux caption pass below does not need it.`
+    );
+  }
 
   let filledWhisper = 0;
   for (const film of todo) {
