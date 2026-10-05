@@ -140,10 +140,34 @@ export const GAME_SETTING_FIELDS: GameSettingField[] = [
     min: 0,
     max: 100_000,
   },
+  /*
+   * ---- NOTHING READS THIS FOR CREDIT ANY MORE (5 October 2026) -------------
+   *
+   * It was the bar: the library deck fired credit at `pct >= video_complete_pct`
+   * and completeLibraryItem re-checked against the same number. Both now use
+   * `gateThreshold(duration_sec)` from lib/watch-coverage.ts — a 95% floor or a
+   * two-second tail, whichever is stricter — because a flat share behaves
+   * completely differently at different lengths: 90% of a 221-second lesson is
+   * twenty-two seconds early, 90% of a 30-second clip is three.
+   *
+   * It is left in place rather than dropped because `TrackedVideo` still takes
+   * `Math.max(thresholdGiven ?? 0, gateThreshold(duration))`, so a value ABOVE
+   * the computed bar would still raise it. At its default of 90 it can only
+   * ever lose that comparison, which is why the honest statement is "nothing
+   * reads it for credit" rather than "nothing reads it".
+   *
+   * The label and hint said it decided whether a video pays. That is no longer
+   * true, and a setting whose description outlives its effect is worse than a
+   * stale comment — it tells an admin they are in control of something they are
+   * not. So it says what it actually does now.
+   *
+   * There is no `comment on column` for this: it would need a migration, and
+   * the change is a code fact, not a schema one.
+   */
   {
     key: "video_complete_pct",
-    label: "How much of a video counts as watched",
-    hint: "Percent. Below this a video isn't finished and pays nothing.",
+    label: "Minimum share of a video that counts as watched",
+    hint: "Percent, and a FLOOR only — credit is decided per video by a two-second tail (95% minimum), so at 90 this setting has no effect. Raise it above ~99 to make the bar stricter than the tail.",
     group: "rewards",
     min: 1,
     max: 100,
