@@ -24,18 +24,17 @@ export default async function Home() {
   if (!user) {
     const { data } = await supabase
       .from("front_door_film")
-      .select("slot, title, collection, op_code, stage, duration_sec, body, public_playback_id")
+      .select("slot, title, duration_sec, public_playback_id, caption")
       .order("sort", { ascending: true });
-    const films: FrontDoorFilm[] = ((data ?? []) as Record<string, unknown>[]).map((r) => ({
-      slot: r.slot as FrontDoorFilm["slot"],
-      title: (r.title as string) ?? "",
-      collection: (r.collection as string | null) ?? null,
-      opCode: (r.op_code as string | null) ?? null,
-      stage: (r.stage as string | null) ?? null,
-      durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
-      body: (r.body as string | null) ?? null,
-      publicPlaybackId: (r.public_playback_id as string | null) ?? null,
-    }));
+    const films: FrontDoorFilm[] = ((data ?? []) as Record<string, unknown>[])
+      .filter((r) => r.public_playback_id)
+      .map((r) => ({
+        slot: r.slot as FrontDoorFilm["slot"],
+        title: (r.title as string) ?? "",
+        durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
+        publicPlaybackId: r.public_playback_id as string,
+        caption: (r.caption as string) ?? "",
+      }));
     return <FrontDoor films={films} />;
   }
 
