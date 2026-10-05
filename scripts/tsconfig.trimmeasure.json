@@ -1,0 +1,19 @@
+{
+  "//": "Standalone build for trim-measure-scenarios.ts. It imports the REAL propose, screen and parseCues out of trim-measure.ts — a paraphrase of the threshold logic would prove nothing about what the plan Ryan reads actually proposes.",
+  "//import": "This is also what proves trim-measure.ts is side-effect-free on import: if the credential check or either client were still at module scope, this build would run them.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-tms",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./trim-measure-scenarios.ts", "./trim-measure.ts"]
+}
