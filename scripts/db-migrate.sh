@@ -33,11 +33,14 @@
 # PROVING THE GATE
 # ---------------------------------------------------------------------------
 #   ./scripts/db-migrate.sh --verify-only <file>
+#   ./scripts/db-migrate.sh --guard-only
 #
-# runs step 2 alone, against any file, and touches nothing. It calls the SAME
-# function the real path calls — so a refusal demonstrated there is a refusal
+# run step 2 and step 0a alone and touch nothing. Each calls the SAME function
+# the real path calls — so a refusal demonstrated there is a refusal
 # demonstrated in the migration, not in a copy of it. A gate that has never
-# refused is a comment.
+# refused is a comment; a gate that has never ACCEPTED is worse, because a
+# refusal wears the costume of care. --guard-only exists so step 0a's
+# acceptance can be observed without migrating production to see it.
 # =============================================================================
 set -euo pipefail
 
@@ -120,6 +123,50 @@ verify_dump() {
   return 0
 }
 
+# ---------------------------------------------------------------------------
+# STEP 0a, AS A FUNCTION, FOR THE SAME REASON verify_dump IS ONE
+# ---------------------------------------------------------------------------
+# A gate must be proven to ACCEPT a known-good input as well as refuse a bad
+# one, or "it refused" is the only evidence and that is compatible with the gate
+# being broken. The acceptance half is the one that gets skipped — and here it
+# was impossible to run at all, because the only path that reached it went on to
+# dump and push production. A gate whose success case can only be observed by
+# migrating the live database has no acceptance test.
+#
+# So the guard is a function, --guard-only calls it and exits, and both halves
+# are demonstrable against the real thing rather than a copy of it.
+assert_current_main() {
+  # One remedy, printed for every refusal this gate makes. The caller does not
+  # need to know WHICH of the three conditions failed — the fix is the same
+  # line in all three cases, and a longer message invites negotiating with it.
+  local remedy='git checkout main && git pull'
+
+  [[ "$(git rev-parse --abbrev-ref HEAD)" == "main" ]] || fail "$remedy"
+
+  # origin/main must be re-read. A stale remote-tracking ref makes "not behind"
+  # true by default, which is the silent-pass shape this project keeps paying
+  # for: the check would be holding its opinion from whenever somebody last
+  # fetched. FETCH_HEAD is used below rather than refs/remotes/origin/main for
+  # the same reason — it is what this fetch just observed.
+  git fetch --quiet origin main 2>/dev/null || fail "$remedy"
+
+  # Behind means origin/main holds commits this checkout does not. Counting the
+  # other direction (ahead) is deliberately NOT a refusal: an unpushed local
+  # commit on main is a different problem, and this gate answers one question.
+  (( $(git rev-list --count HEAD..FETCH_HEAD) == 0 )) || fail "$remedy"
+
+  say "on main, up to date with origin/main"
+  return 0
+}
+
+# ---- --guard-only: step 0a alone, touching nothing --------------------------
+if [[ "${1:-}" == "--guard-only" ]]; then
+  printf '\n  GUARD ONLY — the database is not touched\n'
+  assert_current_main
+  printf '\n  checkout accepted.\n\n'
+  exit 0
+fi
+
 # ---- --verify-only: step 2 alone, against any file, touching nothing --------
 if [[ "${1:-}" == "--verify-only" ]]; then
   [[ -n "${2:-}" ]] || { echo "usage: $0 --verify-only <file>" >&2; exit 2; }
@@ -170,11 +217,33 @@ say "pg_dump $(pg_dump --version | awk '{print $3}')  ->  server major ${SERVER_
 #
 #   tracked      not a new file nobody has added
 #   committed    no uncommitted edits, so the applied text is the recorded text
-#   routed       on main already, or on a branch with an OPEN pull request
+#   routed       ON main, AND main not behind origin/main
 #
 # "Routed" is the one that catches what happened. Committed-and-pushed was true
 # and insufficient: the branch was a dead end.
-printf '\n  0. every pending migration has a path into main\n'
+#
+# ---------------------------------------------------------------------------
+# 0a: THE CHECKOUT ITSELF — the standing rule, enforced here rather than asked
+# ---------------------------------------------------------------------------
+# Routing used to accept "on a branch with an OPEN pull request". That let a
+# migration be applied to production BEFORE the PR carrying it was merged, so
+# the live schema could lead main by however long the review took — and if the
+# PR was then changed or closed, lead it permanently.
+#
+# The rule is now the stricter one: every PR branches from current main, an
+# applied migration is never edited, and its change is the next number. All
+# three hold only if production is migrated FROM main, with main up to date.
+# So the gate is the checkout, and this is where it is enforced; a rule that
+# lives only in a document is a rule somebody has to remember.
+#
+# This SUPERSEDES the open-PR path rather than sitting alongside it. Being on
+# main and not behind origin/main already proves a pending migration's file is
+# on main — it is in the tree you are standing in — so the gh lookup that used
+# to live below is not a second opinion, it is a weaker version of this one.
+printf '\n  0. the checkout is main, and main is current\n'
+assert_current_main
+
+printf '\n  0b. every pending migration is tracked and committed\n'
 
 LEDGER=$(PGPASSWORD="$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)" \
   psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc \
@@ -193,7 +262,6 @@ if (( ${#PENDING[@]} == 0 )); then
 fi
 say "${#PENDING[@]} pending: $(printf '%s ' "${PENDING[@]##*/}")"
 
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
 for f in "${PENDING[@]}"; do
   git ls-files --error-unmatch "$f" >/dev/null 2>&1 \
     || fail "$f is not tracked by git. Applying a migration whose file is not in
@@ -204,22 +272,11 @@ for f in "${PENDING[@]}"; do
              the text that is recorded. Commit it first."
 done
 
-if [[ "$BRANCH" == "main" ]]; then
-  say "on main — pending migrations are already routed"
-else
-  command -v gh >/dev/null \
-    || fail "not on main and gh is unavailable, so whether these migrations can
-             reach main cannot be established. Refusing rather than guessing."
-  OPEN=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length' 2>/dev/null || echo "")
-  [[ -n "$OPEN" ]] \
-    || fail "could not ask GitHub whether '$BRANCH' has an open pull request."
-  if [[ "$OPEN" == "0" ]]; then
-    fail "branch '$BRANCH' has NO open pull request, so these migrations have no
-             path into main. This is exactly how 0129 and 0130 were lost: pushed
-             to a branch whose PR had already merged. Open a PR first."
-  fi
-  say "branch '$BRANCH' has $OPEN open PR(s) — routed"
-fi
+# Routing needs no further test: step 0 established that this checkout IS main
+# and is not behind origin/main, so a tracked, committed pending migration is on
+# main by construction. The open-PR lookup that used to live here was the weaker
+# half of that question and is gone rather than left to agree by coincidence.
+say "on main — pending migrations are routed by construction"
 
 # ---- STEP 1: the dump ------------------------------------------------------
 mkdir -p "$BACKUP_DIR"
