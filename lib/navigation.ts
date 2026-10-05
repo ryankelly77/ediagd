@@ -89,6 +89,11 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     label: "Coaching Content",
     hint: "Cues, quotes and videos. Tap a type to open it.",
   },
+  {
+    href: "/admin/front-door",
+    label: "Front door",
+    hint: "The four films a signed-out visitor sees, and their captions.",
+  },
 
   {
     href: "/admin/settings",
