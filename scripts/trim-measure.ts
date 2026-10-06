@@ -714,7 +714,32 @@ async function wordBatch(
 
     if (row.flagHead && !headFailed) {
       if (w.alohaAt == null) {
-        row.notes.push("no-greeting");
+        /*
+         * ---- A RULING NEEDS BOTH PASSES TO AGREE THE WORD IS NOT THERE -----
+         *
+         * The word pass finding no "Aloha" means either the film never says it
+         * — a ruling for Ryan — or the window did not get read properly. The
+         * captions decide which, because they are an independent reading of the
+         * same film: if pass one located a greeting and pass two did not, the
+         * film demonstrably has one and the measurement is what failed.
+         *
+         * This is not hypothetical. "CSI — CSI Is Not a Score, Part 1" came
+         * back from a FULL-LENGTH head pull that whisper heard as silence — it
+         * transcribed sixteen dots — so the length check could not see it and
+         * the zero-words check did not fire either. It was reported as
+         * no-greeting; re-measured, its Aloha is at 12.14s and it wants a
+         * 11.84s head cut. Across the run this mislabelled 2 of 5 no-greeting
+         * films and 3 of 7 no-signoff films: five rulings Ryan would have been
+         * asked to make about films nobody had successfully measured.
+         */
+        if (row.captionHead != null) {
+          row.notes.push(`head-unmeasured(captions put an Aloha at ${row.captionHead.toFixed(2)}s)`);
+          row.error = [row.error, "head: captions located a greeting the word pass did not"]
+            .filter(Boolean)
+            .join("; ");
+        } else {
+          row.notes.push("no-greeting");
+        }
       } else if (w.alohaAt > MAX_HEAD) {
         row.notes.push(`aloha-too-late-${w.alohaAt.toFixed(1)}s`);
       } else {
@@ -725,7 +750,19 @@ async function wordBatch(
     }
     if (row.flagTail && !tailFailed) {
       if (w.mahaloEnd == null) {
-        row.notes.push("no-signoff");
+        /* The same gate at the other end — see the note on the head. A
+           sign-off the captions heard and the word pass did not is a failed
+           window, not a film without a sign-off. */
+        if (row.captionMahaloEnd != null) {
+          row.notes.push(
+            `tail-unmeasured(captions put a Mahalo ending at ${row.captionMahaloEnd.toFixed(2)}s)`
+          );
+          row.error = [row.error, "tail: captions located a sign-off the word pass did not"]
+            .filter(Boolean)
+            .join("; ");
+        } else {
+          row.notes.push("no-signoff");
+        }
       } else {
         /* ---- RECONCILE THE TWO ROUTES ---------------------------------
            Pass one read a caption track; pass two read audio pulled at an
