@@ -49,5 +49,609 @@
   },
   "expectedDuration": 115.3,
   "durationOk": true
+ },
+ "VScSfFtFY7lThsO5GinRDjrCf9SvM00K8Wjk9ykLTdxo": {
+  "contentId": "019ed8cd-116a-4ccb-af93-c36cac46ca33",
+  "title": "Four Step Close, Part 8",
+  "newAssetId": "00x4CnMOoFzVrtzClDd6L7S81Zy3024eDMpeg023Oa01Dpk",
+  "trimStart": 13.26,
+  "trimEnd": 106.7,
+  "oldDuration": 112.938333,
+  "newDuration": 93,
+  "cutAt": "2026-10-06T04:07:34.857Z",
+  "durationOk": true,
+  "expectedDuration": 93.44,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "fNlOw3LEX1qrXIup7zCEv1009561MBMImGUz0219BHnmY": {
+  "contentId": "02812647-59a7-473a-b2c1-20b29b2764fb",
+  "title": "Name Tag \u2014 Closer",
+  "newAssetId": "3bREjXUmoSdlHnx2vYXv4XJnaW3s4cnEhevSfQotjzw",
+  "trimStart": 11.18,
+  "trimEnd": 81.48,
+  "oldDuration": 86.542667,
+  "newDuration": 70,
+  "cutAt": "2026-10-06T04:09:52.226Z",
+  "durationOk": true,
+  "expectedDuration": 70.3,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "bzVf6RLKkqiH02Y6XYqZjhQTFcbVIAFICfaDx1K3x00P00": {
+  "contentId": "0298ebf1-89dc-40a5-9399-277b17693cec",
+  "title": "Piggyback",
+  "newAssetId": "uctYJRVODz900DmBnFTVze4hkfKaFN4PrPh5Y1a9IwYA",
+  "trimStart": null,
+  "trimEnd": 178.72,
+  "oldDuration": 181.056667,
+  "newDuration": 179,
+  "cutAt": "2026-10-06T04:14:46.336Z",
+  "durationOk": true,
+  "expectedDuration": 178.72,
+  "verified": {
+   "head": null,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "SWWVElAQ9WWsvv02yOH8daYWbj02iI029f6k6UslqZuxXs": {
+  "contentId": "057afb81-0b1e-44d8-9d26-be5299990c28",
+  "title": "55,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "8RM4Hq0274rrRQD9zh501IqW2OuIwbyNwy6xATdMQm5D4",
+  "trimStart": 15.46,
+  "trimEnd": null,
+  "oldDuration": 110.503333,
+  "newDuration": 95,
+  "cutAt": "2026-10-06T04:17:21.106Z",
+  "durationOk": true,
+  "expectedDuration": 95.04,
+  "verified": {
+   "head": 0,
+   "tail": 0.583,
+   "ok": true
+  }
+ },
+ "S3OmWCq01sA1wZj6Y009wnJquGaWvo2cG58NCkm3gNgt4": {
+  "contentId": "075f3e2d-cfc3-454f-8aae-51397666e3e8",
+  "title": "40,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "gXDunlafkkv1C6KFODJqWKC7MqNCWhfOlNnM8iXtkhQ",
+  "trimStart": 17.16,
+  "trimEnd": 149.63,
+  "oldDuration": 155.371667,
+  "newDuration": 132,
+  "cutAt": "2026-10-06T04:20:47.700Z",
+  "durationOk": true,
+  "expectedDuration": 132.47,
+  "verified": {
+   "head": 0.68,
+   "tail": 0.11,
+   "ok": true
+  }
+ },
+ "ngfSycWeZE929d6oGBoGopiXwBal02L8po01O9sSwgJgY": {
+  "contentId": "0791e6ee-cbfe-45db-8119-c9c904c4699a",
+  "title": "After-MPI",
+  "newAssetId": "on8osBlGuZsfnlNxCopRYrjPiwQfVH0202ZtXN5oCZYLU",
+  "trimStart": 10.36,
+  "trimEnd": 130.69,
+  "oldDuration": 135.871667,
+  "newDuration": 120,
+  "cutAt": "2026-10-06T04:24:04.812Z",
+  "durationOk": true,
+  "expectedDuration": 120.33,
+  "verified": {
+   "head": 0,
+   "tail": 0.21,
+   "ok": true
+  }
+ },
+ "zMhw2yW01LgN1vdrlyTrfz8iKGVi7iwWZ01k6bcMxVpBA": {
+  "contentId": "086aa66d-f437-4c98-b2d0-0e09ce94ee54",
+  "title": "Success Cycle, Part 8, Anticipate the No",
+  "newAssetId": "X3iskD00CEb00Qc9SgKZ6eoOEfPzWuqWikpH00mJFriARk",
+  "trimStart": 12.86,
+  "trimEnd": 136.35,
+  "oldDuration": 140.009333,
+  "newDuration": 123,
+  "cutAt": "2026-10-06T04:27:04.501Z",
+  "durationOk": true,
+  "expectedDuration": 123.49,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "g2K1th02b3NtlQbCg015yVW2iB5rfX01i01T01AfMS8fB1lY": {
+  "contentId": "09c724f6-0671-4f26-bad4-07bde027a268",
+  "title": "Coverage is Key, Part 10",
+  "newAssetId": "etS766n16Ydf5RCNAcLXQBar00PBqkSU01iIcEORPawaA",
+  "trimStart": 11.56,
+  "trimEnd": 159,
+  "oldDuration": 163.84,
+  "newDuration": 147,
+  "cutAt": "2026-10-06T04:31:02.656Z",
+  "durationOk": true,
+  "expectedDuration": 147.44,
+  "verified": {
+   "head": null,
+   "tail": 0.64,
+   "ok": null
+  }
+ },
+ "baP007quHDBtQaAt99V02iM02ltV7f3OU01IaV5wRQZ4irw": {
+  "contentId": "0b68e878-2113-4d74-ab96-5af80d3b544c",
+  "title": "45,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "MtQgaqwCxptELhuKLhW4EeSl2XaOQAClXn00NBezW46Y",
+  "trimStart": 17.54,
+  "trimEnd": 199.63,
+  "oldDuration": 205.34,
+  "newDuration": 182,
+  "cutAt": "2026-10-06T04:36:19.930Z",
+  "durationOk": true,
+  "expectedDuration": 182.09,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "rPbaAucUBoi701kCkJXL100IAgKN7rWFtgaRcxVN21u300": {
+  "contentId": "0c737a9a-bf64-4b60-956f-d592de40b50d",
+  "title": "Diesel, Part 1",
+  "newAssetId": "47keAbrvYOozri009p2cUw2ggub01qw01Vl00Q401200wP01xQ",
+  "trimStart": 13.98,
+  "trimEnd": 110.89,
+  "oldDuration": 115.103333,
+  "newDuration": 97,
+  "cutAt": "2026-10-06T04:39:27.771Z",
+  "durationOk": true,
+  "expectedDuration": 96.91,
+  "verified": {
+   "head": null,
+   "tail": 0,
+   "ok": null
+  }
+ },
+ "wWwVZyUYEX7UUlR00lFRN01ZrL4sRgPQy9Lr01QPp029Vmc": {
+  "contentId": "0c899546-f629-402a-9076-0f638849d335",
+  "title": "Get the Hell Out of Here, Part 6",
+  "newAssetId": "XCEhDQsyVqlWXXXLCEUUAgWWaotxMG7UVeOSgVGEmWw",
+  "trimStart": 13.2,
+  "trimEnd": 101.67,
+  "oldDuration": 105.376,
+  "newDuration": 88,
+  "cutAt": "2026-10-06T04:41:52.246Z",
+  "durationOk": true,
+  "expectedDuration": 88.47,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "02uN2768BTalewDhK022t6Yflbktr026jMrzMRARopy8og": {
+  "contentId": "0d948097-d330-42a2-8e02-3d6ce0fc0faf",
+  "title": "CSI \u2014 The 2222 Follow-Up, Part 5",
+  "newAssetId": "HqeFpNeMqmK2oOikRf9Sfoz1INE3SE2aZL01QZf00BqNI",
+  "trimStart": 12.46,
+  "trimEnd": 117.81,
+  "oldDuration": 122.576,
+  "newDuration": 105,
+  "cutAt": "2026-10-06T04:45:05.387Z",
+  "durationOk": true,
+  "expectedDuration": 105.35,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "iY02XVE02SzhSjZlYH1nPZqulGfpUzpNMDLORE5UUn3Lc": {
+  "contentId": "0e320f86-8f41-4339-bd39-6509dff58488",
+  "title": "25,000 Mile Dealer Upsell Menu, Part 5",
+  "newAssetId": "tET6U00PJPtK00u7N00rQCBTjfbcqVxuQtc5a02vVH226Nw",
+  "trimStart": 14.34,
+  "trimEnd": 121.76,
+  "oldDuration": 128.103333,
+  "newDuration": 107,
+  "cutAt": "2026-10-06T04:48:16.160Z",
+  "durationOk": true,
+  "expectedDuration": 107.42,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "rZUiaXHHX00Ku2i4HzFRuexoz02JmHCdD01XCFmG8s9HaI": {
+  "contentId": "0e52ecf5-1d70-4faa-9222-af5bf3ea4491",
+  "title": "Everybody, Anybody, Somebody and Nobody",
+  "newAssetId": "WgJp1ywMbGE1ztLJ8SRb8OHBpzoaz37lhhF6TkDqEgc",
+  "trimStart": null,
+  "trimEnd": 40.3,
+  "oldDuration": 41.545,
+  "newDuration": 40,
+  "cutAt": "2026-10-06T04:49:49.449Z",
+  "durationOk": true,
+  "expectedDuration": 40.3,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "sTgobwuoCHMkDxkPMakASMOMrsEBhTsZBFFszQwIoKY": {
+  "contentId": "0f218884-1e78-48c2-9c85-9447de14f0d6",
+  "title": "The OE Approach \u2014 Severe Conditions",
+  "newAssetId": "SNRfIhRv01FroPzxOqkzVDOeBJmVUiG7UmRGv2qHpvYU",
+  "trimStart": null,
+  "trimEnd": 202.86,
+  "oldDuration": 203.906,
+  "newDuration": 203,
+  "cutAt": "2026-10-06T04:54:19.940Z",
+  "durationOk": true,
+  "expectedDuration": 202.86,
+  "verified": {
+   "head": 0,
+   "tail": 0.65,
+   "ok": true
+  }
+ },
+ "wWnL7McDggYEidO3rCKSD6aWr8xuDXQyVMVGrZvk6Rc": {
+  "contentId": "10254adf-a214-4066-b55c-f2bc6303bdb3",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "doYeg00lnRIKCcFR9ErTEebJjzzI75eMxfmSASEu7mZs",
+  "trimStart": 14.9,
+  "trimEnd": 125.52,
+  "oldDuration": 130.405,
+  "newDuration": 111,
+  "cutAt": "2026-10-06T04:57:20.709Z",
+  "durationOk": true,
+  "expectedDuration": 110.62,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "49P01RgKr7YgmZEZIKd6AI3SsW01h6iOhQXaykn017JpDs": {
+  "contentId": "123cfea7-62e6-467e-836f-27c7f0bc3e66",
+  "title": "Success Cycle, Part 12, Your song, Go Sing It",
+  "newAssetId": "A01DVlf00IkFOJHnMnyzfFDC8SIOLv9R1BpM6N7WT9KD4",
+  "trimStart": 11.12,
+  "trimEnd": 225.92,
+  "oldDuration": 229.308333,
+  "newDuration": 215,
+  "cutAt": "2026-10-06T05:03:25.632Z",
+  "durationOk": true,
+  "expectedDuration": 214.8,
+  "verified": {
+   "head": 0.12,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "Gm9wBsbBGszFj2zqaHOQrm593jNQWP2hJQm6j4M01bzw": {
+  "contentId": "142ef72e-7ca4-4eee-943b-328b594546cb",
+  "title": "Lasting Impressions, Part 2",
+  "newAssetId": "64mkSUFrmw60168y7aI3m9agobp4OP8SPdl6ycB4w015g",
+  "trimStart": 9.94,
+  "trimEnd": null,
+  "oldDuration": 119.938333,
+  "newDuration": 110,
+  "cutAt": "2026-10-06T05:06:37.083Z",
+  "durationOk": true,
+  "expectedDuration": 110,
+  "verified": {
+   "head": 1.18,
+   "tail": 1.658,
+   "ok": false
+  }
+ },
+ "eePGtkraaLd6wcRBaOD00bL32pkVsqr83qKk6CMqYsEg": {
+  "contentId": "14de6c76-1336-4e4f-ae73-8549c686696a",
+  "title": "Phones and Tones, Part 6",
+  "newAssetId": "NhpaV9cTa01eF02Z5YDSMGsDkbUzfSgM2bRl2MVVYrFgw",
+  "trimStart": 9.86,
+  "trimEnd": 102.83,
+  "oldDuration": 108.371667,
+  "newDuration": 93,
+  "cutAt": "2026-10-06T05:09:10.138Z",
+  "durationOk": true,
+  "expectedDuration": 92.97,
+  "verified": {
+   "head": 0,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "wWJOrhBg6tTqC2hl86OpeaBI02lGPmX3OghdJmezqlKY": {
+  "contentId": "14f20d45-178a-4cbc-9761-bb8a1d26f4f0",
+  "title": "The OE Stagger \u2014 The Order and Why",
+  "newAssetId": "IgmNG30094XMS22x6Q026jib2LX3Z02ftursIXrP02pLg01k",
+  "trimStart": null,
+  "trimEnd": 253.54,
+  "oldDuration": 254.471667,
+  "newDuration": 254,
+  "cutAt": "2026-10-06T05:14:44.090Z",
+  "durationOk": true,
+  "expectedDuration": 253.54,
+  "verified": {
+   "head": 0,
+   "tail": 1.01,
+   "ok": true
+  }
+ },
+ "7DCV8Tage3YlgASnYDytzf5cUSluKPfLu3Ol3yh01irU": {
+  "contentId": "15b3e307-9a19-4c28-bf61-913965a81fce",
+  "title": "Four Step Close, Part 4",
+  "newAssetId": "rKvBe6YRId7heMNBDAJTqLsdta7N9UKqObC5EBm6spU",
+  "trimStart": 12.7,
+  "trimEnd": null,
+  "oldDuration": 79.968333,
+  "newDuration": 67,
+  "cutAt": "2026-10-06T05:17:00.329Z",
+  "durationOk": true,
+  "expectedDuration": 67.27,
+  "verified": {
+   "head": 0,
+   "tail": 5.528,
+   "ok": true
+  }
+ },
+ "7XhyKShIJXkAM1kguCodiK5ee49SvZMhNdp01IIeyaok": {
+  "contentId": "1813e3ee-c193-4a9e-b24b-5f9383555abc",
+  "title": "Four Step Close, Part 10",
+  "newAssetId": "XwKupFGt7pQa9imW01fXGbFG01zPaJd9UeRtyZuT5hd3o",
+  "trimStart": 9.94,
+  "trimEnd": 135.95,
+  "oldDuration": 140.405,
+  "newDuration": 126,
+  "cutAt": "2026-10-06T05:20:31.612Z",
+  "durationOk": true,
+  "expectedDuration": 126.01,
+  "verified": {
+   "head": 0.2,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "ZIcLT58AwhmwQSbjCp3fEdM7SrTLwDvfAOAvNY8GEMc": {
+  "contentId": "189c2537-25aa-44a4-a751-112c78bfc3fc",
+  "title": "30,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "o9SSyIneYxG901m3Hzd1MeYWnLd3CkLpgg6hunzFPKk8",
+  "trimStart": 14.88,
+  "trimEnd": 124.36,
+  "oldDuration": 129.538333,
+  "newDuration": 109,
+  "cutAt": "2026-10-06T05:23:21.331Z",
+  "durationOk": true,
+  "expectedDuration": 109.48,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "XQ00bE300EAxDvw5zsb7qead2Zx4eLvL7ZgRsVMN02401hk": {
+  "contentId": "1a634b9a-40e8-4875-a4ab-4c622f94e096",
+  "title": "Diesel, Part 3",
+  "newAssetId": "qgItMvBivWst4tZoNvFw02qOnN22IiKyNMEUJTtsRtlU",
+  "trimStart": 16.18,
+  "trimEnd": 191.16,
+  "oldDuration": 195.44,
+  "newDuration": 175,
+  "cutAt": "2026-10-06T05:27:37.865Z",
+  "durationOk": true,
+  "expectedDuration": 174.98,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "xAr8LGPqKeLYDR02lVYnVPQwFhoicyWnO02UmSxQ00no8M": {
+  "contentId": "1a902c3f-459e-420c-90ff-fc84a1851007",
+  "title": "Success Cycle \u2014 Opener",
+  "newAssetId": "RlvIdM01Hnwwwu4HziTnAj36yXT7pDkgJYmol5rovIk00",
+  "trimStart": null,
+  "trimEnd": 130.86,
+  "oldDuration": 135.742667,
+  "newDuration": 131,
+  "cutAt": "2026-10-06T05:30:54.702Z",
+  "durationOk": true,
+  "expectedDuration": 130.86,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "mpGLAd4VhR7AMqZuk7Bqwt02aAuu2Hu02G00FWkhV400Ku8": {
+  "contentId": "1abbfde9-ee7f-4583-a1a8-3d2d124f04e5",
+  "title": "Selling Skills, Part 1",
+  "newAssetId": "nkRg8WUMPsQrLMzfP6m734HH7knMmVLYE39T18h00NzY",
+  "trimStart": 9.62,
+  "trimEnd": null,
+  "oldDuration": 111.336667,
+  "newDuration": 102,
+  "cutAt": "2026-10-06T05:33:40.565Z",
+  "durationOk": true,
+  "expectedDuration": 101.72,
+  "verified": {
+   "head": 0.38,
+   "tail": 0.057,
+   "ok": true
+  }
+ },
+ "jy9dP7llo7XdWalPA41Uf02y2H01plaQFQCfLLDkZvXUo": {
+  "contentId": "1abdc502-6184-4633-b1c1-933973f2dec8",
+  "title": "80,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "TIFeCgCCUSNC00ZsSD6Gvt7kDrK5d8bp3hBo3fbnxIPI",
+  "trimStart": 16,
+  "trimEnd": 145.84,
+  "oldDuration": 151.67,
+  "newDuration": 130,
+  "cutAt": "2026-10-06T05:36:53.568Z",
+  "durationOk": true,
+  "expectedDuration": 129.84,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "roJLeODuBC5KMbCyEp9gWt9zii2mGPBSMmOubsmmKhY": {
+  "contentId": "1af6db6a-bb30-4657-adb1-c3d92104ca85",
+  "title": "10,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "gjRbtfHwvE49X5Q8mbUSJlDtNJ2j7fZY2pbCOiwR5Us",
+  "trimStart": 17.62,
+  "trimEnd": 158.84,
+  "oldDuration": 164.006667,
+  "newDuration": 141,
+  "cutAt": "2026-10-06T05:40:32.464Z",
+  "durationOk": true,
+  "expectedDuration": 141.22,
+  "verified": {
+   "head": 0.26,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "fVZ0101402raErXueslLCfv5bRiaxaq4v7xQZpYy57UEQg": {
+  "contentId": "1b8eae3a-dec9-451c-9aae-d76d7dedb719",
+  "title": "Phones and Tones, Part 1",
+  "newAssetId": "xuGN8G1HL7MmOUQWPsg2zHXArM6RwJL8Sr5ahPx2Gj00",
+  "trimStart": 11.16,
+  "trimEnd": 100.23,
+  "oldDuration": 105.005,
+  "newDuration": 89,
+  "cutAt": "2026-10-06T05:42:59.109Z",
+  "durationOk": true,
+  "expectedDuration": 89.07,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "bKqYOwj3FUTCyBvgfYD2MRifb01lzVNEDPiL2zSSoNps": {
+  "contentId": "1e3b8e57-2fde-4af0-8f49-253572d8adf3",
+  "title": "Seasonal Menus, Part 4",
+  "newAssetId": "KtomBTV5OM2OGwQ2J4YIKRvpgJ3l2fALYbrrqdwSZyQ",
+  "trimStart": 15.92,
+  "trimEnd": null,
+  "oldDuration": 193.606667,
+  "newDuration": 178,
+  "cutAt": "2026-10-06T05:47:36.588Z",
+  "durationOk": true,
+  "expectedDuration": 177.69,
+  "verified": {
+   "head": 0,
+   "tail": -0.793,
+   "ok": true
+  }
+ },
+ "pApmqgwRBO017FSY4YzMRBRuK8O4ST6aT00GFziJB5DIk": {
+  "contentId": "1fecaeec-2747-409d-a574-948e87b6e615",
+  "title": "Name Tag, Part 9",
+  "newAssetId": "JPo4PDvttQ00Jwh801Y6USAO7LsjiGisDapRtZ9002zM1k",
+  "trimStart": 13.94,
+  "trimEnd": null,
+  "oldDuration": 164.773333,
+  "newDuration": 151,
+  "cutAt": "2026-10-06T05:51:25.268Z",
+  "durationOk": true,
+  "expectedDuration": 150.83,
+  "verified": {
+   "head": 0,
+   "tail": 0.493,
+   "ok": true
+  }
+ },
+ "wFeBE8x1MMduL02pX7j022xdaTe43ndR4ZFEG4VxZ7w7c": {
+  "contentId": "1fed4f71-760e-4116-bf66-6e1b7cfadf51",
+  "title": "CSI \u2014 Upon Arrival, Part 3",
+  "newAssetId": "xScS4RXlIuieuOdn9SHKkgCx9x5XNW3i9P02sDkPuvx4",
+  "trimStart": 11.46,
+  "trimEnd": 139.88,
+  "oldDuration": 145.076,
+  "newDuration": 128,
+  "cutAt": "2026-10-06T05:54:34.744Z",
+  "durationOk": true,
+  "expectedDuration": 128.42,
+  "verified": {
+   "head": null,
+   "tail": 0.48,
+   "ok": null
+  }
+ },
+ "xLcKr01hnZMjQmY6LJ4dn02bD12bSxn2gw9QD6N5cd84g": {
+  "contentId": "20544db4-8eab-4085-9a82-b550ea9d5002",
+  "title": "Four Step Close, Part 9",
+  "newAssetId": "l01aEmdCQQxKqL61hTsdTgkB1q8uyQ01jnbX8wNAny2Bs",
+  "trimStart": 12.4,
+  "trimEnd": 90.26,
+  "oldDuration": 94.77,
+  "newDuration": 78,
+  "cutAt": "2026-10-06T05:56:48.137Z",
+  "durationOk": true,
+  "expectedDuration": 77.86,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "K41WeQYQ9CsAdjlJtyFDeAWukxAmH79zvIRrGVtdhho": {
+  "contentId": "22bd773e-a2e7-47ea-9b9b-abaf4f54022e",
+  "title": "Phones and Tones, Part 12",
+  "newAssetId": "gazDgzNdYent7Qo8ZwTgQtpr0202lyofuwJrE3lcBDVEM",
+  "trimStart": 10.34,
+  "trimEnd": 101.31,
+  "oldDuration": 105.905,
+  "newDuration": 91,
+  "cutAt": "2026-10-06T05:59:18.168Z",
+  "durationOk": true,
+  "expectedDuration": 90.97,
+  "verified": {
+   "head": 0.6,
+   "tail": 0.63,
+   "ok": true
+  }
+ },
+ "iOCNZE3ivt601856kYvW202ZauhTbfZ55vU2mo2RVm1Jk": {
+  "contentId": "00e27eee-6a01-4c3b-a04e-630b6ae42a81",
+  "title": "Lasting Impressions, Part 7",
+  "newAssetId": "9PJOC8j8JiTmr797bm5lMz9P7fWKYnKGG7xVMrMe73k",
+  "trimStart": null,
+  "trimEnd": 141.11,
+  "oldDuration": 147.038333,
+  "newDuration": 141,
+  "cutAt": "2026-10-06T15:35:04.323483Z",
+  "expectedDuration": 141.11,
+  "durationOk": true,
+  "backfilled": "reconstructed from the content row after a run was interrupted between the swap and the ledger write. Evidence: archived_asset_id equals the asset the plan measured, and duration_sec matches the asked-for length. INGEST.md: a trim applied outside the ledger-writing path must be backfilled so the next blanket run cannot re-cut it."
+ },
+ "1Kpfz6F8hF4k2LszxnPG7C7aBm02900DV1ZmrjB9HR01Gk": {
+  "contentId": "248b1fd4-b0a9-4e52-9655-cd5e05c3ef86",
+  "title": "30 Second Walk-Around, Part 9, 42 seconds",
+  "newAssetId": "h9Ce215bBF7OHwLVLtGwxlEIyAlwKMGDFBPIFbXAf01s",
+  "trimStart": 12.18,
+  "trimEnd": 116.01,
+  "oldDuration": 121.438333,
+  "newDuration": 104,
+  "cutAt": "2026-10-06T15:35:04.323483Z",
+  "expectedDuration": 103.83,
+  "durationOk": true,
+  "backfilled": "reconstructed from the content row after a run was interrupted between the swap and the ledger write. Evidence: archived_asset_id equals the asset the plan measured, and duration_sec matches the asked-for length. INGEST.md: a trim applied outside the ledger-writing path must be backfilled so the next blanket run cannot re-cut it."
  }
 }

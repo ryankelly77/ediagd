@@ -75,19 +75,80 @@ type Film = {
   has_transcript: boolean;
 };
 
-/** Strip a WebVTT file down to spoken text: no header, no timings, no cue ids,
- *  and no line repeated back-to-back (rolling captions duplicate heavily). */
+/**
+ * Nobody speaks this fast. Past it, the cue's text is not a transcription of
+ * its interval.
+ *
+ * Fast conversational speech runs about 15–20 characters a second and an
+ * auctioneer does not reach 40. This is set far above any real delivery so it
+ * can only catch the degenerate case.
+ */
+const MAX_CHARS_PER_SECOND = 40;
+
+/**
+ * Strip a WebVTT file down to spoken text: no header, no timings, no cue ids,
+ * no line repeated back-to-back (rolling captions duplicate heavily) — and no
+ * cue whose text cannot fit in the time the cue occupies.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THE LAST ONE, AND WHY IT ONLY APPEARED AFTER THE TRIM PASS
+ * ---------------------------------------------------------------------------
+ * A head trim lands a beat BEFORE "Aloha" on purpose — 0.3s, so the "A" is not
+ * clipped, which is the one failure a viewer notices instantly. That beat is
+ * the tail of the slate's last syllable, and it is enough for Mux's caption
+ * model to latch onto and expand into the whole sentence it expects. Measured
+ * on "Get the Hell Out of Here, Part 1" after its cut:
+ *
+ *     00:00:00.000 --> 00:00:00.100
+ *     Multipoint inspection set up part one, the easiest sell you'll ever make.
+ *
+ * Seventy-three characters in a tenth of a second — 730 a second. On screen it
+ * is a one-frame flash and nearly harmless. Here it is not: this function drops
+ * the timings, so that sentence joins the stored transcript as though it were
+ * spoken, and content_transcript is what the blog corpus reads. The film does
+ * not contain it.
+ *
+ * The rule is on the RATE rather than on "the first cue", because the defect is
+ * "this text cannot have been said in this interval" and that is true wherever
+ * it occurs. Keying it to position would close the case and leave the class.
+ */
 function vttToText(vtt: string): string {
+  const lines = vtt.split(/\r?\n/);
   const out: string[] = [];
-  for (const raw of vtt.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
-    if (line === "WEBVTT" || line.startsWith("NOTE")) continue;
-    if (line.includes("-->")) continue;
-    if (/^\d+$/.test(line)) continue; // cue number
-    const clean = line.replace(/<[^>]+>/g, ""); // inline tags
-    if (out.length && out[out.length - 1] === clean) continue;
-    out.push(clean);
+  let dropped = 0;
+
+  const seconds = (s: string): number => {
+    const p = s.trim().split(":").map(Number);
+    if (p.some((n) => !Number.isFinite(n))) return NaN;
+    if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+    if (p.length === 2) return p[0] * 60 + p[1];
+    return NaN;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^\s*([\d:.]+)\s*-->\s*([\d:.]+)/);
+    if (!m) continue;
+    const start = seconds(m[1]);
+    const end = seconds(m[2]);
+    const text: string[] = [];
+    for (let j = i + 1; j < lines.length && lines[j].trim() !== ""; j++) {
+      if (lines[j].includes("-->")) break;
+      const clean = lines[j].trim().replace(/<[^>]+>/g, "");
+      if (clean) text.push(clean);
+    }
+    const body = text.join(" ").trim();
+    if (!body) continue;
+
+    const dur = end - start;
+    if (Number.isFinite(dur) && dur > 0 && body.length / dur > MAX_CHARS_PER_SECOND) {
+      dropped++;
+      continue;
+    }
+    if (out.length && out[out.length - 1] === body) continue;
+    out.push(body);
+  }
+  if (dropped) {
+    console.log(`      dropped ${dropped} cue(s) whose text cannot fit their interval`);
   }
   return out.join(" ").replace(/\s+/g, " ").trim();
 }
@@ -261,7 +322,25 @@ async function main() {
   if (!mux) {
     console.log(`  Mux: not configured (MUX_* absent) — caption pass skipped.`);
   } else {
-    const remaining = todo.filter((f) => !f.has_transcript && f.mux_playback_id);
+    /*
+     * ---- --force HAS TO REACH THIS PASS, AND IT DID NOT ---------------------
+     *
+     * `todo` above already honours FORCE. This line then re-applied the very
+     * condition FORCE exists to override, so the Mux caption pass could never
+     * re-read a film that already had a transcript — which is every published
+     * film. `--force` widened the set and this narrowed it straight back.
+     *
+     * The run reported "filled this run: 0 … published films with a transcript
+     * now: 447", which reads as success and means nothing was re-read.
+     *
+     * Found when the trim pass needed it: cutting a film replaces its asset and
+     * Mux generates fresh captions, so the stored transcript still carried the
+     * spoken slate — "Get the hell out of here speech. Multi-Point Inspection
+     * setup part one." — after that audio had been cut out of the film. The
+     * text is what the blog corpus and the caption work read, so a transcript
+     * describing a take nobody is served is exactly the stale-label problem.
+     */
+    const remaining = todo.filter((f) => (FORCE || !f.has_transcript) && f.mux_playback_id);
     console.log(`  Mux caption pass over ${remaining.length} films…`);
     await pool(remaining, 8, async (film) => {
       try {
