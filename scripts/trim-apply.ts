@@ -135,8 +135,52 @@ type LedgerEntry = {
   oldDuration: number | null;
   newDuration: number | null;
   cutAt: string;
-  verified?: { head: number | null; tail: number | null; ok: boolean; note?: string };
+  /** Did the asset come back the length the cut asked for? Always available,
+   *  and the thing that actually proves the cut landed where instructed. */
+  durationOk?: boolean;
+  expectedDuration?: number;
+  verified?: {
+    head: number | null;
+    tail: number | null;
+    /** true = measured and inside the ceiling. false = measured and OUTSIDE it.
+     *  null = the new captions could not locate the word, which is not a
+     *  failure of the cut — see the note on verdict(). */
+    ok: boolean | null;
+    note?: string;
+  };
 };
+
+/*
+ * ---- "COULD NOT MEASURE" IS NOT "THE CUT FAILED" --------------------------
+ *
+ * The first build failed any film whose new captions did not yield a head
+ * position. `Coverage is Key, Part 6` tripped it on the first run: the cut
+ * landed exactly as instructed — 130.47s to 115s, which is the 10.34s head and
+ * the 4.83s tail to the frame — and the fresh auto-captions simply did not
+ * transcribe the word "Aloha" in a cue. Reporting that as a failed cut is the
+ * same conflation trim-measure.ts already had to fix at both ends, where it
+ * mislabelled five of twelve rulings.
+ *
+ * So there are two checks now, and the duration one is the load-bearing one:
+ *
+ *   DURATION  — did the asset come back the length the cut asked for? This is
+ *               derived from what happened, needs nothing to be transcribed,
+ *               and is available for every film. A mismatch is a real failure.
+ *   CAPTIONS  — is the dead air actually gone, measured on the result? When the
+ *               word is found, this confirms it. When it is not, the row is
+ *               UNVERIFIED and says so; it is not evidence either way.
+ */
+function verdict(
+  v: LedgerEntry["verified"],
+  wantedStart: number | null,
+  wantedEnd: number | null
+): "ok" | "outside" | "unverified" {
+  if (!v) return "unverified";
+  const headKnown = wantedStart == null || v.head != null;
+  const tailKnown = wantedEnd == null || v.tail != null;
+  if (!headKnown || !tailKnown) return "unverified";
+  return v.ok ? "ok" : "outside";
+}
 
 function requireEnv() {
   const missing = [
@@ -332,6 +376,8 @@ async function main() {
     console.log(`\n  ──────── [${i + 1}/${candidates.length}] ${r.title}`);
     console.log(`           start=${r.proposedStart ?? "—"}  end=${r.proposedEnd ?? "—"}  was ${r.assetDuration}s`);
 
+    let entryDurationOk: boolean | undefined;
+    let entryExpected: number | undefined;
     try {
       /* The plan measured one asset. If the row points at a different one now,
          these offsets describe a film that is no longer there. */
@@ -392,22 +438,52 @@ async function main() {
       console.log(`           ledger written: ${cur.mux_asset_id.slice(0, 12)}… -> ${a.mux_asset_id.slice(0, 12)}…`);
 
       /* ---- did the cut actually achieve what the plan promised? ---------- */
+      /* ---- the load-bearing check: did it come back the right length? ---- */
+      const wantedStart = r.proposedStart ?? 0;
+      const wantedEnd = r.proposedEnd ?? r.assetDuration ?? 0;
+      const expected = Math.max(0, wantedEnd - wantedStart);
+      const got = a.duration_sec ?? 0;
+      /* duration_sec is a ROUNDED integer and `expected` is float seconds, so a
+         second of slack is the rounding, not tolerance for a bad cut. */
+      const durationOk = Math.abs(got - expected) <= 1.0;
+      entryDurationOk = durationOk;
+      entryExpected = Number(expected.toFixed(2));
+      console.log(
+        `           duration ${r.assetDuration}s -> ${got}s (asked for ${expected.toFixed(2)}s) ` +
+          `${durationOk ? "OK" : "*** MISMATCH ***"}`
+      );
+
       let verified: LedgerEntry["verified"] = undefined;
       const pos = await captionPositions(a.mux_playback_id!);
       if (!pos.note) {
+        const headKnown = r.proposedStart == null || pos.head != null;
+        const tailKnown = r.proposedEnd == null || pos.tail != null;
         const headOk = r.proposedStart == null || (pos.head != null && pos.head < HEAD_CEILING);
         const tailOk = r.proposedEnd == null || (pos.tail != null && pos.tail < TAIL_CEILING);
-        verified = { head: pos.head, tail: pos.tail, ok: headOk && tailOk };
+        verified = {
+          head: pos.head,
+          tail: pos.tail,
+          ok: headKnown && tailKnown ? headOk && tailOk : null,
+        };
       }
+      entry.durationOk = entryDurationOk;
+      entry.expectedDuration = entryExpected;
+      writeFileSync(LEDGER, `${JSON.stringify(ledger, null, 1)}\n`);
+
       if (!verified) {
         pendingCaptions.push({ id: r.id, title: r.title });
         console.log(`           captions still generating — swept at the end`);
       } else {
         entry.verified = verified;
         writeFileSync(LEDGER, `${JSON.stringify(ledger, null, 1)}\n`);
+        const vd = verdict(verified, r.proposedStart, r.proposedEnd);
         console.log(
-          `           verified head=${verified.head ?? "—"} tail=${verified.tail ?? "—"} ` +
-            `${verified.ok ? "OK" : "*** OUTSIDE THE CEILING — reported, not retried ***"}`
+          `           captions head=${verified.head ?? "—"} tail=${verified.tail ?? "—"} ` +
+            (vd === "ok"
+              ? "OK"
+              : vd === "outside"
+                ? "*** OUTSIDE THE CEILING — reported, not retried ***"
+                : "(word not in the new captions — unverified, not a failure)")
         );
       }
       done.push(entry);
@@ -434,9 +510,16 @@ async function main() {
       const entry = Object.values(ledger).find((e) => e.contentId === p.id);
       if (!entry) continue;
       const row = candidates.find((c) => c.id === p.id)!;
+      const headKnown = row.proposedStart == null || pos.head != null;
+      const tailKnown = row.proposedEnd == null || pos.tail != null;
       const headOk = row.proposedStart == null || (pos.head != null && pos.head < HEAD_CEILING);
       const tailOk = row.proposedEnd == null || (pos.tail != null && pos.tail < TAIL_CEILING);
-      entry.verified = { head: pos.head, tail: pos.tail, ok: headOk && tailOk, note: pos.note };
+      entry.verified = {
+        head: pos.head,
+        tail: pos.tail,
+        ok: headKnown && tailKnown ? headOk && tailOk : null,
+        note: pos.note,
+      };
       writeFileSync(LEDGER, `${JSON.stringify(ledger, null, 1)}\n`);
       console.log(`    ${p.title}: head=${pos.head ?? "—"} tail=${pos.tail ?? "—"} ${pos.note ?? ""}`);
     }
@@ -445,20 +528,26 @@ async function main() {
   const after = await witnessCounts();
 
   /* ---- the report, computed from what happened --------------------------- */
-  const verifiedOk = done.filter((d) => d.verified?.ok).length;
-  const verifiedBad = done.filter((d) => d.verified && !d.verified.ok);
-  const unverified = done.filter((d) => !d.verified || d.verified.note);
+  const vd = (d: LedgerEntry) => verdict(d.verified, d.trimStart, d.trimEnd);
+  const verifiedOk = done.filter((d) => vd(d) === "ok").length;
+  const verifiedBad = done.filter((d) => vd(d) === "outside");
+  const unverified = done.filter((d) => vd(d) === "unverified");
+  /* The check that does not depend on anything being transcribed. */
+  const durationBad = done.filter((d) => d.durationOk === false);
+  const durationOkCount = done.filter((d) => d.durationOk === true).length;
   const cutSeconds = done.reduce(
     (t, d) => t + Math.max(0, (d.oldDuration ?? 0) - (d.newDuration ?? d.oldDuration ?? 0)), 0
   );
 
   console.log(`\n  ${"═".repeat(70)}`);
-  console.log(`  cut           ${done.length}`);
-  console.log(`  failed        ${failed.length}`);
-  console.log(`  verified OK   ${verifiedOk}`);
-  console.log(`  outside the ceiling  ${verifiedBad.length}`);
-  console.log(`  not verified  ${unverified.length}`);
-  console.log(`  removed       ${(cutSeconds / 60).toFixed(1)} minutes`);
+  console.log(`  cut                      ${done.length}`);
+  console.log(`  failed                   ${failed.length}`);
+  console.log(`  came back the right length  ${durationOkCount}`);
+  console.log(`  LENGTH MISMATCH          ${durationBad.length}`);
+  console.log(`  captions confirm clean   ${verifiedOk}`);
+  console.log(`  captions OUTSIDE ceiling ${verifiedBad.length}`);
+  console.log(`  captions unverified      ${unverified.length}   (word not transcribed; not a failure)`);
+  console.log(`  removed                  ${(cutSeconds / 60).toFixed(1)} minutes`);
   console.log(`  ${"═".repeat(70)}`);
   console.log(`  before: ${Object.entries(before).map(([k, v]) => `${k}=${v}`).join("  ")}`);
   console.log(`  after:  ${Object.entries(after).map(([k, v]) => `${k}=${v}`).join("  ")}`);
@@ -469,11 +558,24 @@ async function main() {
     console.log(`  no progress row counts moved.`);
   }
 
+  if (durationBad.length) {
+    console.log(`\n  *** LENGTH MISMATCH — these did not come back what the cut asked for:`);
+    for (const d of durationBad) {
+      console.log(`    ${d.title}: asked ${d.expectedDuration}s, got ${d.newDuration}s (was ${d.oldDuration}s)`);
+    }
+  }
   if (verifiedBad.length) {
     console.log(`\n  OUTSIDE THE CEILING — reported, not retried:`);
     for (const d of verifiedBad) {
       console.log(`    ${d.title}: head=${d.verified!.head ?? "—"} tail=${d.verified!.tail ?? "—"}`);
     }
+  }
+  if (unverified.length) {
+    console.log(`\n  UNVERIFIED from captions (the length check passed; the word was not transcribed):`);
+    for (const d of unverified.slice(0, 15)) {
+      console.log(`    ${d.title}: head=${d.verified?.head ?? "—"} tail=${d.verified?.tail ?? "—"} ${d.verified?.note ?? ""}`);
+    }
+    if (unverified.length > 15) console.log(`    … and ${unverified.length - 15} more`);
   }
   if (failed.length) {
     console.log(`\n  FAILED:`);
@@ -487,7 +589,9 @@ async function main() {
       `\n  and confirm the vertical cron clears every cut film back to vertical_status='ready'.\n`
   );
 
-  if (failed.length || verifiedBad.length || moved.length) process.exit(1);
+  /* The exit code is a function of what went wrong, and "the new captions did
+     not happen to transcribe a word" is not one of those things. */
+  if (failed.length || verifiedBad.length || durationBad.length || moved.length) process.exit(1);
 }
 
 if (require.main === module) {

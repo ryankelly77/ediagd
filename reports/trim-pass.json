@@ -1,0 +1,53 @@
+{
+ "lyXfNK02Td02WUnGOcQEfVQxk7vxSDTEL345EiSeBhqAs": {
+  "contentId": "c61fb5c9-f8f4-4355-baf7-c20be394ac19",
+  "title": "Get the Hell Out of Here, Part 1",
+  "newAssetId": "VzzrAMgS9BHPLk4tS7aevA1Ne01mx02wTWwYh5r3LkTrI",
+  "trimStart": 17.1,
+  "trimEnd": 96.83,
+  "oldDuration": 100.576,
+  "newDuration": 80,
+  "cutAt": "2026-10-06T03:34:25.412Z",
+  "verified": {
+   "head": 0.1,
+   "tail": 0.63,
+   "ok": true
+  },
+  "expectedDuration": 79.73,
+  "durationOk": true
+ },
+ "KFbNNPLIRwZ33Cr1yFECM4rfNwgjhjZlexaPm3wjQCk": {
+  "contentId": "00633e44-964a-4a19-a349-71e5a72405a4",
+  "title": "On the Drive",
+  "newAssetId": "B5es4HbfIlOF1k5A00syjfEntAGhCNm02TVylBRiHNAnM",
+  "trimStart": 8.7,
+  "trimEnd": 151.07,
+  "oldDuration": 155.442667,
+  "newDuration": 142,
+  "cutAt": "2026-10-06T03:49:54.506Z",
+  "verified": {
+   "head": 0.06,
+   "tail": 0.53,
+   "ok": true
+  },
+  "expectedDuration": 142.37,
+  "durationOk": true
+ },
+ "k4sXI47So3i00MoMmeE01w6G19gfniUOtODX688snlgME": {
+  "contentId": "007a0a13-8e80-40cd-b7aa-f448b42f075c",
+  "title": "Coverage is Key, Part 6",
+  "newAssetId": "ttQdpE4CmIAU77GkKgGo3Sva01QrUlsfa2N2GBwVXM4o",
+  "trimStart": 10.34,
+  "trimEnd": 125.64,
+  "oldDuration": 130.47,
+  "newDuration": 115,
+  "cutAt": "2026-10-06T03:53:01.427Z",
+  "verified": {
+   "head": null,
+   "tail": 0.6,
+   "ok": null
+  },
+  "expectedDuration": 115.3,
+  "durationOk": true
+ }
+}
