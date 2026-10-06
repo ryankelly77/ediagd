@@ -1,0 +1,2182 @@
+{
+ "order": [
+  "66bfaa74-9941-403d-924c-0f93c80d9e72",
+  "2649e577-c010-4044-add6-25f4c30943bd",
+  "2b05500d-4be0-474c-9879-90d7cd7ce9ec",
+  "4a7b6ae9-df0e-4563-8d5d-6c259d0aede8",
+  "2ad57e81-3a91-4256-8b35-afecd79c880d",
+  "b24b51a7-43eb-4400-8664-a601f9059500",
+  "ca77cdaf-0605-4c16-acc4-455153d48feb",
+  "edbdfa6c-7b83-4c27-a2b9-83bdce165c00",
+  "f02792f9-31a4-4cb9-af8d-6978e0a61b0d",
+  "5bde49a4-de45-42b1-ab7f-135679465b7d",
+  "74f7fb33-6cf9-49d4-a9c4-7678841c6e4c",
+  "bfce4b81-4c82-4c7a-905c-da3e6db72b4e",
+  "c4054a35-4c82-46a2-9f86-d40995973a37",
+  "faa74440-38d8-4bf9-9c3c-2c5ce2e76438",
+  "508e939e-ed11-4c8d-8321-3b8f1bbde208",
+  "56b90a62-eb24-46dc-bc5c-0b238fd342b4",
+  "6b67c002-acb3-4906-840f-cd8888609164",
+  "b8248253-c45d-4202-9876-429ceaede341",
+  "ca5dc36a-442a-4726-be11-c5a06834e6af",
+  "d8fe0772-213c-47b2-acbb-48882abdea8e",
+  "fb999538-62cd-48c6-b2c9-0ec5d13b2e61",
+  "5284d110-b99a-45c2-b272-6f420e9b534e",
+  "70bc8232-c1e7-4234-aff9-e71df0738aaa",
+  "7935a5c5-c341-4fa4-80a9-e2f565a38a28",
+  "8f6c5a6d-5ee1-4612-9946-816652a82d57",
+  "ffcb8cb7-7b48-4db9-8335-d63ab01fbd1f",
+  "2ce1ee9f-20af-4dbc-88ad-be51fe2ed353",
+  "e4d40ca9-0587-48f6-ba40-95a55251ce0c",
+  "dcd371b8-01c2-428e-a39b-acc929d97726",
+  "d2f9dc9a-5ae7-443d-86d8-be3ddf61b1d8",
+  "801aa254-a12f-4448-9d15-a07ac9e486e1",
+  "99eb848e-ad9a-4376-83b8-78dcd7e70d74",
+  "2f480703-8697-417c-8f0b-98750a99f3e2",
+  "b822e731-6522-4f55-930b-722ad575b965",
+  "be77a25e-fb59-4ba4-a8a0-f08c42d188fb",
+  "6ac8ff68-b979-43f3-8a72-e32c0feb0e89",
+  "704a5728-23e1-444d-b724-7b8888e54e77",
+  "a5b0f57b-55a7-4d18-b06f-6c569b72d5f0",
+  "72788ac6-48ff-4da8-a599-17624bf8358f",
+  "7574149a-5477-4959-adbf-e34a09c02479",
+  "2d1b4feb-c002-4aa9-8b10-c01a2cfb992e",
+  "f9f0edc7-cf89-4c06-83cd-07e3d7081d51",
+  "76dfe519-6c42-4eee-a1d3-e5122a6aae9c",
+  "fe74e7f0-ae86-40c4-9550-fe3cbd0435e7",
+  "4fe0f497-9572-408f-a7ee-445770e5f7fa",
+  "ee8551f3-c0af-4345-8dc1-5c2e7d092a65",
+  "b3d690cd-f9d1-4a5d-be33-c234d2c74fce",
+  "964a07d4-40f1-43ce-8015-8215757fd0f7",
+  "8b48d7b3-1816-4061-ae60-8a5d250ce5c3",
+  "44cfa330-24ab-4338-9667-705a35a27306",
+  "2c186b71-cb1f-48d2-af63-54894486f81f",
+  "c9526267-b08f-4a4e-803b-a364a5d4bc78",
+  "8b17978e-bef3-4cf3-a42e-a397230bb990",
+  "fec78df5-1a2d-4956-a1d6-3543193fe3fc",
+  "6700b936-9943-4d70-96b7-0d1ed655abf1",
+  "6c9f2411-0da6-4638-b356-1bfffda60134",
+  "c51a6e82-2577-4c92-bd5b-8c64433b145c",
+  "df013ac8-3aea-48c5-8c74-7c0fb22ff525",
+  "ed2ecea0-660e-4a35-9813-31e9e21e5079",
+  "2f779f00-5020-4a1c-ae91-de01a46203e2",
+  "9d1370c9-3e0b-46cc-af02-41b49399e6f2",
+  "6326b8df-7e33-43f9-bbb0-3da11f1dca20",
+  "e4cdf07c-58e0-4820-b3fd-6435caddd181",
+  "3a1a6e00-b92c-42a6-a598-c25930cf0824",
+  "b60ace0d-5ffc-43ee-ba22-67bade9619f6",
+  "88d65da7-964e-43db-8115-49896ad2a06f",
+  "39fa3064-71e1-40e0-845c-843a956d5345",
+  "416c1690-88c7-4fcf-aca2-39cdbea47326",
+  "e54c1885-c71c-4613-af09-924b2fc2394b",
+  "663f1788-cc6e-4e93-9de9-6437270d63f1",
+  "a610fd66-0260-496e-bb1b-ca3ad36bbba5",
+  "2a458ec9-6f0c-4d77-ac95-3be768576347",
+  "4167cc0c-ae2a-4916-bc36-03b1b34038c0",
+  "2b3bf742-525a-497e-b9e1-1613b1e5c2ad",
+  "8aa3f97d-d941-416c-954c-f851cc8efb77",
+  "7e15c899-dbec-4702-9973-82d5f528d12a",
+  "a728335b-b488-476a-9f19-58e83197265c",
+  "454e441a-d442-4d3b-9165-5597d6d385f9",
+  "b7f57bba-614d-48cf-9be4-ef4c29c6ac9f",
+  "a343869b-98cb-4376-91dc-371d7c9e7b21",
+  "51e395fd-0e36-46bc-a1f3-6f2ee7f07867",
+  "d83fe9d5-f79a-4972-8c4a-55bbf11b3c86",
+  "dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3",
+  "2feff211-2775-49ce-8021-0e6e1670a7bd",
+  "cf75eeef-6a96-46cd-806b-042e944703a5",
+  "eefd9f40-a9e1-45fb-9743-3734a14b6df6",
+  "58f8ee90-f4dc-4594-ad02-5018eef1da38",
+  "a3560d82-2b7f-42ee-b717-6ff8cb880138",
+  "6bce6f3c-84b4-4427-9342-f481697ef4bb",
+  "73149ac1-3064-4fd9-86f0-2a098035a4ff",
+  "d78c051e-f3ef-4397-bf26-3bdff9ffd2ca",
+  "3e12212a-02b0-4f41-9b47-9cab52bb58ed",
+  "2c1248e3-e06f-4344-9c30-4869b9b7dcb9",
+  "949ad465-baf2-4043-a8a9-f9d241fa2c9e",
+  "64b35132-41ff-42e3-96a7-6a1f7975e2e3",
+  "64b81c6c-8b20-4999-b17d-c2b75a177578",
+  "8abe28de-8bf1-490e-8d53-8a26dab908f3",
+  "7ef36c38-802b-4254-bd55-039eea3da4eb",
+  "aa5ec8bb-26f2-4018-9df0-32c0887ba392",
+  "db0f13a0-2671-4582-b5a6-0b45233ff349",
+  "9dff627a-9fb2-4e4c-a96c-10d2ae9b44a9",
+  "7c6095bf-d8d8-40e8-920b-40bac2e141e8",
+  "bd6628e4-f5cb-4df7-a9df-32ee7355164a",
+  "b1ec44f5-de6b-473c-8895-df9533bcd400",
+  "80d8f415-5456-4139-bc7d-2c13037dec3f",
+  "633fb98a-2df7-48fa-97cb-4617e538070e",
+  "28a76251-df96-482e-8159-233cb79bfc45",
+  "799b05d7-f8c8-4972-b0ab-2c6028ad9813",
+  "82e3496c-2c91-4451-b16f-2b1659f875a6",
+  "ee1e7814-8762-40f5-b967-4c6557bc4f6f",
+  "9c901936-b900-4cd7-9ba2-a56c2f97daad",
+  "386c63f5-23e5-4507-9570-f71f5f920ad4",
+  "9becc01b-737f-4f44-b672-5da41dc2a7d9",
+  "3223a2a3-9434-40f8-9972-e8a9fd13dde6",
+  "d1d5a00b-3102-4e94-ae8c-fc63abe97198",
+  "e5d1de92-01c1-4d36-9949-aac66309735f",
+  "8170b494-6529-479b-8d62-e8b2c21d8f74",
+  "578d541d-292a-4e4b-9b2a-8a06c5051c97",
+  "eb8c53a1-38aa-49c7-b6c7-09e8b02ed485",
+  "6f720ea2-c2f4-409e-857c-08c1976784d5",
+  "84f0d456-5971-4318-91b5-7d498831b278",
+  "63456d6d-1807-4bac-90ce-489cab8d15eb",
+  "bbca03ce-7f84-42f9-ade0-78f041641f49",
+  "9fdfcb29-3d37-47bc-8562-5bd8ee85cb2f",
+  "c2de2af9-d723-4a5f-b71b-1271be753fc9",
+  "6d43e011-387f-498d-946c-c62b1c44cc9f",
+  "fa55abfe-1309-4be7-a282-3fa484144dc0",
+  "da1adb1a-40f2-464f-87d5-a111069c2359",
+  "30ba8555-3be7-4bee-bd00-11700b81562b",
+  "e7bf8633-e7e8-470e-843b-db04560de84c",
+  "ab70fed9-b840-4df8-af45-d956f6e7360e",
+  "4a84c86c-def1-4692-bc5e-5864f69a58fc",
+  "7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e",
+  "321bff34-33b1-4361-b355-36cf10801d8e",
+  "6a53c1f3-cc3d-4eed-9ed1-21725417e4df",
+  "3280e37a-22b0-4feb-96e3-707200553d0c",
+  "7f3f25d1-429d-4ea0-979d-7b0674c1ab13",
+  "af408777-698d-4448-bd5e-4c61c1b25801",
+  "97117cd8-80d0-4025-a92a-8d1cbd978015",
+  "656843e9-6e42-4942-b9a7-44276d16d39b",
+  "3790edc4-71e4-4ee2-8b4e-405c07e69fa5",
+  "f1156a28-a9c9-4932-88d0-5ad96e8b7fc4",
+  "dbaa8209-4991-420d-8e7a-f13a3e908e54",
+  "a676439e-0c22-4c62-bcd9-6153bf93425c",
+  "35b9d042-3b65-4193-8426-6c0e5b9cb0ec",
+  "9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e",
+  "cfdb1aba-242b-4fd3-a931-be0d31105282",
+  "fabd44aa-ee49-44b6-b016-10baad50b0db",
+  "87595a92-7009-4994-ac6d-bfae100b84c3",
+  "d2248d9c-9c84-4817-94d3-1ede9d2a12d6",
+  "396c64d9-5a6b-4b8e-a311-04c3253c15a9",
+  "2a52f994-74a7-4ab5-9595-c584500662d2",
+  "354b725e-07cf-43a9-8b25-0f339bdfb2d9",
+  "fecc71e1-ce3b-414b-9317-d9d9c354c40b",
+  "f4222417-e03a-49c7-90e7-c8d16d72d45e",
+  "b497f293-eedb-4d07-9095-669cf5722b14",
+  "80d6d72e-1d59-46d8-b412-3466b2781037",
+  "28061ce2-d886-4a44-9c02-83130361cf08",
+  "c7726af7-ea0c-4671-a0ec-41fc394e2e8d",
+  "ec00d373-9622-45b7-a0d1-59536f40bbc6",
+  "a417f0ac-d63c-490f-94ce-0623e494acbd",
+  "beb63665-496b-4f5e-bfc3-c494dc8d9508",
+  "c4c4e3dd-6fdc-405c-9a9e-b64e0e117572",
+  "56697a80-7320-4765-b9ba-c8f8d04fe6c7",
+  "d220095f-5660-47fa-9bd8-6976b11a7e15",
+  "9605ce68-c52b-4baf-91e4-12eab3878116",
+  "27557eb4-833b-470d-bb7b-6f57832257d7",
+  "eef634f1-3a07-4826-8d0f-f398bdfeb5b5",
+  "db297b0f-8a16-4984-a5b8-80c9379b285a",
+  "5637821a-5061-4840-9ace-ac449ea5b49c",
+  "d3b6be3f-90f2-4d1e-b21f-6725b16921f9",
+  "97e0e1d6-7df1-4664-8356-b2e43e71a576",
+  "5e08224b-3aeb-4d22-bfb2-acdbc537667e",
+  "ad3bd915-9e95-4b58-b6bb-5fa234fe91ab",
+  "bfe2d90b-487c-4347-b8cc-f43d188df825",
+  "f7ca4fac-2f1c-4154-81e5-cc82edbe9655",
+  "69be19f1-afde-4349-9ba8-c5eed6f60b39",
+  "53e3fa52-1c1d-42a0-a1c4-6ea64e905279",
+  "8d736820-45c1-4cc2-b434-d98dbc47368a",
+  "cc56bdc0-b4ae-411f-9bdc-1d4948b976fb",
+  "722c3843-8d87-4949-9a15-17d921fa224c",
+  "80163645-2849-4751-ba42-e3774019b9b2",
+  "effafbce-02e5-45cc-bcd8-f66d6559328c",
+  "61532700-a504-4805-9e14-17fd4fa24897",
+  "34bab295-c069-481f-bb26-55a6f97e97f6",
+  "56389e51-2ed0-43f2-803f-642df29918bc",
+  "dc55f1e2-2bdd-418f-bb9b-4a2ae4583666",
+  "dd4efdc7-0a06-45aa-bec4-70bc3f61d1b0",
+  "ee3849c1-9708-4ee7-b20e-8879f5a4606b",
+  "f7303616-faee-4836-be6e-eae8c2433da6",
+  "4842968c-7be9-4f76-864e-3a6dd8d8f8a4",
+  "9a4190b3-16cb-47bb-adfc-1e062b1d5028",
+  "ff3809d2-0e10-41ba-91cb-67649b82bef8",
+  "6d91a34b-ff94-4188-ae32-da332b1c6c66",
+  "f0d826fa-784c-4559-81ea-55b6c213ad10",
+  "eac42e00-5aa1-4368-8dc5-fef14ca95b70",
+  "2cfa11d2-d475-421d-b701-07a8eeb2f89a",
+  "4a5cf641-c4ec-41ac-ba0b-fbac1c4d2f48",
+  "c6bedfd2-252f-4623-a00b-40f347760de4",
+  "4ce42240-90c7-4318-9766-a69a00b002d3",
+  "683053cb-980e-4386-b007-bd5c3d1e362f",
+  "adf42b80-2f57-4181-961b-ed15ebf30fa7",
+  "9c8e186d-bce4-4a1b-a12e-c606b72aebce",
+  "e1183510-e514-41aa-af42-ce905b80762c",
+  "821c0a1d-e963-4be7-b619-e076cc456cd7",
+  "ba4ba1ba-df5a-4476-9e50-4d7f73108c14",
+  "67820488-3f84-4413-bd6c-adf03bf5b8ba",
+  "a33ed276-05e9-4b2a-9102-65bd81ec7b50",
+  "64d900ad-cc81-4d18-9df5-03faf4adcb7a",
+  "327d0d15-49f7-42fc-a683-305519b84044",
+  "c561b924-5d78-43fe-af79-89381567cdb2",
+  "8aede114-1de5-4000-89b6-f10b59eec638"
+ ],
+ "groups": [
+  {
+   "name": "1. Welcome from Mitch (onboarding_intro)",
+   "ids": [
+    "66bfaa74-9941-403d-924c-0f93c80d9e72"
+   ],
+   "films": [
+    {
+     "id": "66bfaa74-9941-403d-924c-0f93c80d9e72",
+     "title": "Welcome from Mitch",
+     "collection": "Onboarding",
+     "placement": "onboarding_intro",
+     "start": null,
+     "end": 127.75
+    }
+   ]
+  },
+  {
+   "name": "2. Item slot, days 1-6: 30 Second Walk-Around Parts 1-3",
+   "ids": [
+    "2649e577-c010-4044-add6-25f4c30943bd",
+    "2b05500d-4be0-474c-9879-90d7cd7ce9ec",
+    "4a7b6ae9-df0e-4563-8d5d-6c259d0aede8"
+   ],
+   "films": [
+    {
+     "id": "2649e577-c010-4044-add6-25f4c30943bd",
+     "title": "30 Second Walk-Around, Part 1, Before You Go Outside",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.8,
+     "end": 216.72
+    },
+    {
+     "id": "2b05500d-4be0-474c-9879-90d7cd7ce9ec",
+     "title": "30 Second Walk-Around, Part 2, Four Goals, Two Words",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 141.64
+    },
+    {
+     "id": "4a7b6ae9-df0e-4563-8d5d-6c259d0aede8",
+     "title": "30 Second Walk-Around, Part 3, Steps 1 and 2, Are You Here to See Anyone",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 14.32,
+     "end": null
+    }
+   ]
+  },
+  {
+   "name": "3. Pitch slot: every daily_pitch film",
+   "ids": [
+    "2ad57e81-3a91-4256-8b35-afecd79c880d",
+    "b24b51a7-43eb-4400-8664-a601f9059500",
+    "ca77cdaf-0605-4c16-acc4-455153d48feb",
+    "edbdfa6c-7b83-4c27-a2b9-83bdce165c00",
+    "f02792f9-31a4-4cb9-af8d-6978e0a61b0d",
+    "5bde49a4-de45-42b1-ab7f-135679465b7d",
+    "74f7fb33-6cf9-49d4-a9c4-7678841c6e4c",
+    "bfce4b81-4c82-4c7a-905c-da3e6db72b4e",
+    "c4054a35-4c82-46a2-9f86-d40995973a37",
+    "faa74440-38d8-4bf9-9c3c-2c5ce2e76438",
+    "508e939e-ed11-4c8d-8321-3b8f1bbde208",
+    "56b90a62-eb24-46dc-bc5c-0b238fd342b4",
+    "6b67c002-acb3-4906-840f-cd8888609164",
+    "b8248253-c45d-4202-9876-429ceaede341",
+    "ca5dc36a-442a-4726-be11-c5a06834e6af",
+    "d8fe0772-213c-47b2-acbb-48882abdea8e",
+    "fb999538-62cd-48c6-b2c9-0ec5d13b2e61",
+    "5284d110-b99a-45c2-b272-6f420e9b534e",
+    "70bc8232-c1e7-4234-aff9-e71df0738aaa",
+    "7935a5c5-c341-4fa4-80a9-e2f565a38a28",
+    "8f6c5a6d-5ee1-4612-9946-816652a82d57",
+    "ffcb8cb7-7b48-4db9-8335-d63ab01fbd1f",
+    "2ce1ee9f-20af-4dbc-88ad-be51fe2ed353"
+   ],
+   "films": [
+    {
+     "id": "2ad57e81-3a91-4256-8b35-afecd79c880d",
+     "title": "A Quote on Every Vehicle",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 92.86
+    },
+    {
+     "id": "b24b51a7-43eb-4400-8664-a601f9059500",
+     "title": "After-MPI",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 152.07
+    },
+    {
+     "id": "ca77cdaf-0605-4c16-acc4-455153d48feb",
+     "title": "After-MPI",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 10.38,
+     "end": 149.36
+    },
+    {
+     "id": "edbdfa6c-7b83-4c27-a2b9-83bdce165c00",
+     "title": "After-MPI",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 11.3,
+     "end": 162.43
+    },
+    {
+     "id": "f02792f9-31a4-4cb9-af8d-6978e0a61b0d",
+     "title": "After-MPI",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 98.66
+    },
+    {
+     "id": "5bde49a4-de45-42b1-ab7f-135679465b7d",
+     "title": "At the Kiosk",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 1.08,
+     "end": null
+    },
+    {
+     "id": "74f7fb33-6cf9-49d4-a9c4-7678841c6e4c",
+     "title": "At the Kiosk",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 167.98
+    },
+    {
+     "id": "bfce4b81-4c82-4c7a-905c-da3e6db72b4e",
+     "title": "At the Kiosk",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 8.66,
+     "end": 154.57
+    },
+    {
+     "id": "c4054a35-4c82-46a2-9f86-d40995973a37",
+     "title": "At the Kiosk",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 158.72
+    },
+    {
+     "id": "faa74440-38d8-4bf9-9c3c-2c5ce2e76438",
+     "title": "At the Kiosk",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 82.71
+    },
+    {
+     "id": "508e939e-ed11-4c8d-8321-3b8f1bbde208",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 96.97
+    },
+    {
+     "id": "56b90a62-eb24-46dc-bc5c-0b238fd342b4",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 12,
+     "end": 99.38
+    },
+    {
+     "id": "6b67c002-acb3-4906-840f-cd8888609164",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 9.18,
+     "end": 76.11
+    },
+    {
+     "id": "b8248253-c45d-4202-9876-429ceaede341",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 5.32,
+     "end": null
+    },
+    {
+     "id": "ca5dc36a-442a-4726-be11-c5a06834e6af",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 149.39
+    },
+    {
+     "id": "d8fe0772-213c-47b2-acbb-48882abdea8e",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 10.88,
+     "end": 90.26
+    },
+    {
+     "id": "fb999538-62cd-48c6-b2c9-0ec5d13b2e61",
+     "title": "MPI Setup",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 93.34
+    },
+    {
+     "id": "5284d110-b99a-45c2-b272-6f420e9b534e",
+     "title": "Objections",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": null,
+     "end": 220.67
+    },
+    {
+     "id": "70bc8232-c1e7-4234-aff9-e71df0738aaa",
+     "title": "Objections",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 9.38,
+     "end": 187.36
+    },
+    {
+     "id": "7935a5c5-c341-4fa4-80a9-e2f565a38a28",
+     "title": "On the Drive",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 9.34,
+     "end": 173.71
+    },
+    {
+     "id": "8f6c5a6d-5ee1-4612-9946-816652a82d57",
+     "title": "On the Drive, Part 1",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 8.84,
+     "end": 131.91
+    },
+    {
+     "id": "ffcb8cb7-7b48-4db9-8335-d63ab01fbd1f",
+     "title": "On the Drive, Part 2",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 8.2,
+     "end": 105.16
+    },
+    {
+     "id": "2ce1ee9f-20af-4dbc-88ad-be51fe2ed353",
+     "title": "Pre-Write",
+     "collection": "Pitches by Op Code",
+     "placement": "daily_pitch",
+     "start": 10.9,
+     "end": 103.18
+    }
+   ]
+  },
+  {
+   "name": "4. Mindset slot: every Mindset film",
+   "ids": [
+    "e4d40ca9-0587-48f6-ba40-95a55251ce0c",
+    "dcd371b8-01c2-428e-a39b-acc929d97726",
+    "d2f9dc9a-5ae7-443d-86d8-be3ddf61b1d8",
+    "801aa254-a12f-4448-9d15-a07ac9e486e1",
+    "99eb848e-ad9a-4376-83b8-78dcd7e70d74",
+    "2f480703-8697-417c-8f0b-98750a99f3e2",
+    "b822e731-6522-4f55-930b-722ad575b965",
+    "be77a25e-fb59-4ba4-a8a0-f08c42d188fb",
+    "6ac8ff68-b979-43f3-8a72-e32c0feb0e89",
+    "704a5728-23e1-444d-b724-7b8888e54e77"
+   ],
+   "films": [
+    {
+     "id": "e4d40ca9-0587-48f6-ba40-95a55251ce0c",
+     "title": "20 Years to Build a Reputation",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 26.11
+    },
+    {
+     "id": "dcd371b8-01c2-428e-a39b-acc929d97726",
+     "title": "All for One and One for All Versus Every Man for Himself",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": 7.68,
+     "end": 92.41
+    },
+    {
+     "id": "d2f9dc9a-5ae7-443d-86d8-be3ddf61b1d8",
+     "title": "Did I Get Better Today?",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 40.69
+    },
+    {
+     "id": "801aa254-a12f-4448-9d15-a07ac9e486e1",
+     "title": "Never Lose Money",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 26.09
+    },
+    {
+     "id": "99eb848e-ad9a-4376-83b8-78dcd7e70d74",
+     "title": "Success Is a Choice",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 106.11
+    },
+    {
+     "id": "2f480703-8697-417c-8f0b-98750a99f3e2",
+     "title": "The Man in the Glass",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 75.63
+    },
+    {
+     "id": "b822e731-6522-4f55-930b-722ad575b965",
+     "title": "The Most Dangerous Person",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 107.46
+    },
+    {
+     "id": "be77a25e-fb59-4ba4-a8a0-f08c42d188fb",
+     "title": "Tomorrow Me vs. Today Me",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 83.92
+    },
+    {
+     "id": "6ac8ff68-b979-43f3-8a72-e32c0feb0e89",
+     "title": "Wall Street",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 59.16
+    },
+    {
+     "id": "704a5728-23e1-444d-b724-7b8888e54e77",
+     "title": "Your Toughest Opponent Is Staring at You",
+     "collection": "Mindset",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 30.42
+    }
+   ]
+  },
+  {
+   "name": "4b. Tail-only from the earlier-trimmed set (Ryan's fallback)",
+   "ids": [
+    "a5b0f57b-55a7-4d18-b06f-6c569b72d5f0",
+    "72788ac6-48ff-4da8-a599-17624bf8358f",
+    "7574149a-5477-4959-adbf-e34a09c02479"
+   ],
+   "films": [
+    {
+     "id": "a5b0f57b-55a7-4d18-b06f-6c569b72d5f0",
+     "title": "Dealer Upsell Menus and Interval Charts \u2014 Opener",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 156.82
+    },
+    {
+     "id": "72788ac6-48ff-4da8-a599-17624bf8358f",
+     "title": "The OE Approach \u2014 Lifetime Fluid",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 152.67
+    },
+    {
+     "id": "7574149a-5477-4959-adbf-e34a09c02479",
+     "title": "The OE Approach \u2014 The Maintenance Menu",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 167.35
+    }
+   ]
+  },
+  {
+   "name": "5a. Rest of the item slot: remaining Walk-Around films",
+   "ids": [
+    "2d1b4feb-c002-4aa9-8b10-c01a2cfb992e",
+    "f9f0edc7-cf89-4c06-83cd-07e3d7081d51",
+    "76dfe519-6c42-4eee-a1d3-e5122a6aae9c",
+    "fe74e7f0-ae86-40c4-9550-fe3cbd0435e7",
+    "4fe0f497-9572-408f-a7ee-445770e5f7fa",
+    "ee8551f3-c0af-4345-8dc1-5c2e7d092a65",
+    "b3d690cd-f9d1-4a5d-be33-c234d2c74fce"
+   ],
+   "films": [
+    {
+     "id": "2d1b4feb-c002-4aa9-8b10-c01a2cfb992e",
+     "title": "30 Second Walk-Around, Part 4, Step 3, Start It",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.56,
+     "end": 151.95
+    },
+    {
+     "id": "f9f0edc7-cf89-4c06-83cd-07e3d7081d51",
+     "title": "30 Second Walk-Around, Part 5, Step 4, Wheels to the Left",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.6,
+     "end": 136.78
+    },
+    {
+     "id": "76dfe519-6c42-4eee-a1d3-e5122a6aae9c",
+     "title": "30 Second Walk-Around, Part 6, Step 5, Washer Fluid",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.4,
+     "end": 120.7
+    },
+    {
+     "id": "fe74e7f0-ae86-40c4-9550-fe3cbd0435e7",
+     "title": "30 Second Walk-Around, Part 7, The Four Step Close",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.66,
+     "end": 123.24
+    },
+    {
+     "id": "4fe0f497-9572-408f-a7ee-445770e5f7fa",
+     "title": "30 Second Walk-Around, Part 8, Step 6 and 7, Miles, Shut It Off and Tires",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.68,
+     "end": 163.24
+    },
+    {
+     "id": "ee8551f3-c0af-4345-8dc1-5c2e7d092a65",
+     "title": "Two Minute Walk-Around, Part 1, Pop the Hood",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 150.69
+    },
+    {
+     "id": "b3d690cd-f9d1-4a5d-be33-c234d2c74fce",
+     "title": "Two Minute Walk-Around, Part 2, 4 things under the hood",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 181.05
+    }
+   ]
+  },
+  {
+   "name": "5b. Other daily_craft (curriculum beyond the Walk-Arounds)",
+   "ids": [
+    "964a07d4-40f1-43ce-8015-8215757fd0f7",
+    "8b48d7b3-1816-4061-ae60-8a5d250ce5c3",
+    "44cfa330-24ab-4338-9667-705a35a27306",
+    "2c186b71-cb1f-48d2-af63-54894486f81f",
+    "c9526267-b08f-4a4e-803b-a364a5d4bc78",
+    "8b17978e-bef3-4cf3-a42e-a397230bb990",
+    "fec78df5-1a2d-4956-a1d6-3543193fe3fc",
+    "6700b936-9943-4d70-96b7-0d1ed655abf1",
+    "6c9f2411-0da6-4638-b356-1bfffda60134",
+    "c51a6e82-2577-4c92-bd5b-8c64433b145c",
+    "df013ac8-3aea-48c5-8c74-7c0fb22ff525",
+    "ed2ecea0-660e-4a35-9813-31e9e21e5079",
+    "2f779f00-5020-4a1c-ae91-de01a46203e2",
+    "9d1370c9-3e0b-46cc-af02-41b49399e6f2",
+    "6326b8df-7e33-43f9-bbb0-3da11f1dca20",
+    "e4cdf07c-58e0-4820-b3fd-6435caddd181",
+    "3a1a6e00-b92c-42a6-a598-c25930cf0824",
+    "b60ace0d-5ffc-43ee-ba22-67bade9619f6",
+    "88d65da7-964e-43db-8115-49896ad2a06f",
+    "39fa3064-71e1-40e0-845c-843a956d5345",
+    "416c1690-88c7-4fcf-aca2-39cdbea47326",
+    "e54c1885-c71c-4613-af09-924b2fc2394b",
+    "663f1788-cc6e-4e93-9de9-6437270d63f1",
+    "a610fd66-0260-496e-bb1b-ca3ad36bbba5",
+    "2a458ec9-6f0c-4d77-ac95-3be768576347",
+    "4167cc0c-ae2a-4916-bc36-03b1b34038c0",
+    "2b3bf742-525a-497e-b9e1-1613b1e5c2ad",
+    "8aa3f97d-d941-416c-954c-f851cc8efb77",
+    "7e15c899-dbec-4702-9973-82d5f528d12a",
+    "a728335b-b488-476a-9f19-58e83197265c",
+    "454e441a-d442-4d3b-9165-5597d6d385f9",
+    "b7f57bba-614d-48cf-9be4-ef4c29c6ac9f",
+    "a343869b-98cb-4376-91dc-371d7c9e7b21",
+    "51e395fd-0e36-46bc-a1f3-6f2ee7f07867",
+    "d83fe9d5-f79a-4972-8c4a-55bbf11b3c86",
+    "dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3",
+    "2feff211-2775-49ce-8021-0e6e1670a7bd",
+    "cf75eeef-6a96-46cd-806b-042e944703a5",
+    "eefd9f40-a9e1-45fb-9743-3734a14b6df6",
+    "58f8ee90-f4dc-4594-ad02-5018eef1da38",
+    "a3560d82-2b7f-42ee-b717-6ff8cb880138",
+    "6bce6f3c-84b4-4427-9342-f481697ef4bb",
+    "73149ac1-3064-4fd9-86f0-2a098035a4ff",
+    "d78c051e-f3ef-4397-bf26-3bdff9ffd2ca",
+    "3e12212a-02b0-4f41-9b47-9cab52bb58ed",
+    "2c1248e3-e06f-4344-9c30-4869b9b7dcb9",
+    "949ad465-baf2-4043-a8a9-f9d241fa2c9e",
+    "64b35132-41ff-42e3-96a7-6a1f7975e2e3",
+    "64b81c6c-8b20-4999-b17d-c2b75a177578",
+    "8abe28de-8bf1-490e-8d53-8a26dab908f3",
+    "7ef36c38-802b-4254-bd55-039eea3da4eb",
+    "aa5ec8bb-26f2-4018-9df0-32c0887ba392",
+    "db0f13a0-2671-4582-b5a6-0b45233ff349",
+    "9dff627a-9fb2-4e4c-a96c-10d2ae9b44a9",
+    "7c6095bf-d8d8-40e8-920b-40bac2e141e8",
+    "bd6628e4-f5cb-4df7-a9df-32ee7355164a",
+    "b1ec44f5-de6b-473c-8895-df9533bcd400",
+    "80d8f415-5456-4139-bc7d-2c13037dec3f",
+    "633fb98a-2df7-48fa-97cb-4617e538070e",
+    "28a76251-df96-482e-8159-233cb79bfc45",
+    "799b05d7-f8c8-4972-b0ab-2c6028ad9813",
+    "82e3496c-2c91-4451-b16f-2b1659f875a6",
+    "ee1e7814-8762-40f5-b967-4c6557bc4f6f",
+    "9c901936-b900-4cd7-9ba2-a56c2f97daad",
+    "386c63f5-23e5-4507-9570-f71f5f920ad4",
+    "9becc01b-737f-4f44-b672-5da41dc2a7d9",
+    "3223a2a3-9434-40f8-9972-e8a9fd13dde6",
+    "d1d5a00b-3102-4e94-ae8c-fc63abe97198",
+    "e5d1de92-01c1-4d36-9949-aac66309735f",
+    "8170b494-6529-479b-8d62-e8b2c21d8f74",
+    "578d541d-292a-4e4b-9b2a-8a06c5051c97",
+    "eb8c53a1-38aa-49c7-b6c7-09e8b02ed485",
+    "6f720ea2-c2f4-409e-857c-08c1976784d5",
+    "84f0d456-5971-4318-91b5-7d498831b278",
+    "63456d6d-1807-4bac-90ce-489cab8d15eb",
+    "bbca03ce-7f84-42f9-ade0-78f041641f49",
+    "9fdfcb29-3d37-47bc-8562-5bd8ee85cb2f"
+   ],
+   "films": [
+    {
+     "id": "964a07d4-40f1-43ce-8015-8215757fd0f7",
+     "title": "Coverage is Key \u2014 Closer",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.42,
+     "end": 72.79
+    },
+    {
+     "id": "8b48d7b3-1816-4061-ae60-8a5d250ce5c3",
+     "title": "Coverage is Key \u2014 Opener",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.18,
+     "end": 89.77
+    },
+    {
+     "id": "44cfa330-24ab-4338-9667-705a35a27306",
+     "title": "Coverage is Key, Part 1",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.46,
+     "end": 95.61
+    },
+    {
+     "id": "2c186b71-cb1f-48d2-af63-54894486f81f",
+     "title": "Coverage is Key, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.38,
+     "end": 126.26
+    },
+    {
+     "id": "c9526267-b08f-4a4e-803b-a364a5d4bc78",
+     "title": "Coverage is Key, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.96,
+     "end": 96.99
+    },
+    {
+     "id": "8b17978e-bef3-4cf3-a42e-a397230bb990",
+     "title": "Coverage is Key, Part 4",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.82,
+     "end": 122.33
+    },
+    {
+     "id": "fec78df5-1a2d-4956-a1d6-3543193fe3fc",
+     "title": "Coverage is Key, Part 5",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.48,
+     "end": 119.88
+    },
+    {
+     "id": "6700b936-9943-4d70-96b7-0d1ed655abf1",
+     "title": "Coverage is Key, Part 7",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 14.64,
+     "end": 103.42
+    },
+    {
+     "id": "6c9f2411-0da6-4638-b356-1bfffda60134",
+     "title": "Coverage is Key, Part 8",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 139.85
+    },
+    {
+     "id": "c51a6e82-2577-4c92-bd5b-8c64433b145c",
+     "title": "Coverage is Key, Part 9",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.58,
+     "end": 97.04
+    },
+    {
+     "id": "df013ac8-3aea-48c5-8c74-7c0fb22ff525",
+     "title": "Four Step Close \u2014 Closer",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 64.8
+    },
+    {
+     "id": "ed2ecea0-660e-4a35-9813-31e9e21e5079",
+     "title": "Four Step Close, Part 1",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.5,
+     "end": 76.66
+    },
+    {
+     "id": "2f779f00-5020-4a1c-ae91-de01a46203e2",
+     "title": "Four Step Close, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.14,
+     "end": 71.03
+    },
+    {
+     "id": "9d1370c9-3e0b-46cc-af02-41b49399e6f2",
+     "title": "Four Step Close, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.6,
+     "end": 90.91
+    },
+    {
+     "id": "6326b8df-7e33-43f9-bbb0-3da11f1dca20",
+     "title": "Four Step Close, Part 5",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.74,
+     "end": null
+    },
+    {
+     "id": "e4cdf07c-58e0-4820-b3fd-6435caddd181",
+     "title": "Four Step Close, Part 6",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.44,
+     "end": 86.57
+    },
+    {
+     "id": "3a1a6e00-b92c-42a6-a598-c25930cf0824",
+     "title": "Four Step Close, Part 7",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 99.42
+    },
+    {
+     "id": "b60ace0d-5ffc-43ee-ba22-67bade9619f6",
+     "title": "Get the Hell Out of Here, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.04,
+     "end": 81.9
+    },
+    {
+     "id": "88d65da7-964e-43db-8115-49896ad2a06f",
+     "title": "Get the Hell Out of Here, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 14.3,
+     "end": 120.5
+    },
+    {
+     "id": "39fa3064-71e1-40e0-845c-843a956d5345",
+     "title": "Get the Hell Out of Here, Part 4",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.72,
+     "end": 96.8
+    },
+    {
+     "id": "416c1690-88c7-4fcf-aca2-39cdbea47326",
+     "title": "Get the Hell Out of Here, Part 5",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 14.06,
+     "end": 122.94
+    },
+    {
+     "id": "e54c1885-c71c-4613-af09-924b2fc2394b",
+     "title": "Get the Hell Out of Here, Part 7",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.6,
+     "end": 162.89
+    },
+    {
+     "id": "663f1788-cc6e-4e93-9de9-6437270d63f1",
+     "title": "Get the Hell Out of Here, Part 8",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.48,
+     "end": 106.76
+    },
+    {
+     "id": "a610fd66-0260-496e-bb1b-ca3ad36bbba5",
+     "title": "Get the Hell Out of Here, Part 9",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.64,
+     "end": 99.92
+    },
+    {
+     "id": "2a458ec9-6f0c-4d77-ac95-3be768576347",
+     "title": "Lasting Impressions \u2014 Closer",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.88,
+     "end": 81.48
+    },
+    {
+     "id": "4167cc0c-ae2a-4916-bc36-03b1b34038c0",
+     "title": "Lasting Impressions, Part 1",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 123.6
+    },
+    {
+     "id": "2b3bf742-525a-497e-b9e1-1613b1e5c2ad",
+     "title": "Lasting Impressions, Part 10",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.48,
+     "end": 105.09
+    },
+    {
+     "id": "8aa3f97d-d941-416c-954c-f851cc8efb77",
+     "title": "Lasting Impressions, Part 11",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.78,
+     "end": 135.66
+    },
+    {
+     "id": "7e15c899-dbec-4702-9973-82d5f528d12a",
+     "title": "Lasting Impressions, Part 12",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.06,
+     "end": 114.17
+    },
+    {
+     "id": "a728335b-b488-476a-9f19-58e83197265c",
+     "title": "Lasting Impressions, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 13.36,
+     "end": 113.35
+    },
+    {
+     "id": "454e441a-d442-4d3b-9165-5597d6d385f9",
+     "title": "Lasting Impressions, Part 4",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.18,
+     "end": 78.34
+    },
+    {
+     "id": "b7f57bba-614d-48cf-9be4-ef4c29c6ac9f",
+     "title": "Lasting Impressions, Part 5",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.58,
+     "end": null
+    },
+    {
+     "id": "a343869b-98cb-4376-91dc-371d7c9e7b21",
+     "title": "Lasting Impressions, Part 6",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 106.66
+    },
+    {
+     "id": "51e395fd-0e36-46bc-a1f3-6f2ee7f07867",
+     "title": "Lasting Impressions, Part 8",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 15.24,
+     "end": 112.03
+    },
+    {
+     "id": "d83fe9d5-f79a-4972-8c4a-55bbf11b3c86",
+     "title": "Lasting Impressions, Part 9",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.18,
+     "end": 116.12
+    },
+    {
+     "id": "dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3",
+     "title": "Menu Wrap-Up, Part 1",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.42,
+     "end": 155.43
+    },
+    {
+     "id": "2feff211-2775-49ce-8021-0e6e1670a7bd",
+     "title": "Menu Wrap-Up, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 205.81
+    },
+    {
+     "id": "cf75eeef-6a96-46cd-806b-042e944703a5",
+     "title": "Menus \u2014 Closer",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 71.77
+    },
+    {
+     "id": "eefd9f40-a9e1-45fb-9743-3734a14b6df6",
+     "title": "Name Tag, Part 1",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.34,
+     "end": 164.29
+    },
+    {
+     "id": "58f8ee90-f4dc-4594-ad02-5018eef1da38",
+     "title": "Name Tag, Part 10",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.48,
+     "end": 153.44
+    },
+    {
+     "id": "a3560d82-2b7f-42ee-b717-6ff8cb880138",
+     "title": "Name Tag, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.38,
+     "end": 113.92
+    },
+    {
+     "id": "6bce6f3c-84b4-4427-9342-f481697ef4bb",
+     "title": "Name Tag, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.08,
+     "end": 117.62
+    },
+    {
+     "id": "73149ac1-3064-4fd9-86f0-2a098035a4ff",
+     "title": "Name Tag, Part 4",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.98,
+     "end": 123.98
+    },
+    {
+     "id": "d78c051e-f3ef-4397-bf26-3bdff9ffd2ca",
+     "title": "Name Tag, Part 5",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.54,
+     "end": 187.45
+    },
+    {
+     "id": "3e12212a-02b0-4f41-9b47-9cab52bb58ed",
+     "title": "Name Tag, Part 6",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 15.54,
+     "end": null
+    },
+    {
+     "id": "2c1248e3-e06f-4344-9c30-4869b9b7dcb9",
+     "title": "Name Tag, Part 7",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.5,
+     "end": 172.28
+    },
+    {
+     "id": "949ad465-baf2-4043-a8a9-f9d241fa2c9e",
+     "title": "Name Tag, Part 8",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.16,
+     "end": 128.88
+    },
+    {
+     "id": "64b35132-41ff-42e3-96a7-6a1f7975e2e3",
+     "title": "Phones and Tones, Part 10",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.36,
+     "end": 129.74
+    },
+    {
+     "id": "64b81c6c-8b20-4999-b17d-c2b75a177578",
+     "title": "Phones and Tones, Part 11",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.72,
+     "end": 97.23
+    },
+    {
+     "id": "8abe28de-8bf1-490e-8d53-8a26dab908f3",
+     "title": "Phones and Tones, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.72,
+     "end": 85.38
+    },
+    {
+     "id": "7ef36c38-802b-4254-bd55-039eea3da4eb",
+     "title": "Phones and Tones, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.48,
+     "end": 79.23
+    },
+    {
+     "id": "aa5ec8bb-26f2-4018-9df0-32c0887ba392",
+     "title": "Phones and Tones, Part 4",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.26,
+     "end": 88.95
+    },
+    {
+     "id": "db0f13a0-2671-4582-b5a6-0b45233ff349",
+     "title": "Phones and Tones, Part 5",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.82,
+     "end": 88.78
+    },
+    {
+     "id": "9dff627a-9fb2-4e4c-a96c-10d2ae9b44a9",
+     "title": "Phones and Tones, Part 7",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 9.64,
+     "end": 99.22
+    },
+    {
+     "id": "7c6095bf-d8d8-40e8-920b-40bac2e141e8",
+     "title": "Phones and Tones, Part 8",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.26,
+     "end": 82.17
+    },
+    {
+     "id": "bd6628e4-f5cb-4df7-a9df-32ee7355164a",
+     "title": "Phones and Tones, Part 9",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.66,
+     "end": 153.51
+    },
+    {
+     "id": "b1ec44f5-de6b-473c-8895-df9533bcd400",
+     "title": "Selling Skills, Part 10",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 96.4
+    },
+    {
+     "id": "80d8f415-5456-4139-bc7d-2c13037dec3f",
+     "title": "Selling Skills, Part 2",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.92,
+     "end": 87.26
+    },
+    {
+     "id": "633fb98a-2df7-48fa-97cb-4617e538070e",
+     "title": "Selling Skills, Part 3",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 100.44
+    },
+    {
+     "id": "28a76251-df96-482e-8159-233cb79bfc45",
+     "title": "Selling Skills, Part 4",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 9.34,
+     "end": 73.14
+    },
+    {
+     "id": "799b05d7-f8c8-4972-b0ab-2c6028ad9813",
+     "title": "Selling Skills, Part 6",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.24,
+     "end": 113.15
+    },
+    {
+     "id": "82e3496c-2c91-4451-b16f-2b1659f875a6",
+     "title": "Selling Skills, Part 7",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.44,
+     "end": 105
+    },
+    {
+     "id": "ee1e7814-8762-40f5-b967-4c6557bc4f6f",
+     "title": "Selling Skills, Part 8",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.7,
+     "end": 72.22
+    },
+    {
+     "id": "9c901936-b900-4cd7-9ba2-a56c2f97daad",
+     "title": "Selling Skills, Part 9",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.2,
+     "end": 91.32
+    },
+    {
+     "id": "386c63f5-23e5-4507-9570-f71f5f920ad4",
+     "title": "Selling Skills, The Steer Objection",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.98,
+     "end": 99.9
+    },
+    {
+     "id": "9becc01b-737f-4f44-b672-5da41dc2a7d9",
+     "title": "Setting up the MPI \u2014 Closer",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.24,
+     "end": 80.42
+    },
+    {
+     "id": "3223a2a3-9434-40f8-9972-e8a9fd13dde6",
+     "title": "Success Cycle \u2014 Closer",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 9.82,
+     "end": 80.63
+    },
+    {
+     "id": "d1d5a00b-3102-4e94-ae8c-fc63abe97198",
+     "title": "Success Cycle, Part 1, Not a Rut Team",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 9.08,
+     "end": 100.65
+    },
+    {
+     "id": "e5d1de92-01c1-4d36-9949-aac66309735f",
+     "title": "Success Cycle, Part 10, Anatomy of the Speech",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": null,
+     "end": 217.53
+    },
+    {
+     "id": "8170b494-6529-479b-8d62-e8b2c21d8f74",
+     "title": "Success Cycle, Part 11, The Repair Call",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 9.96,
+     "end": 205.05
+    },
+    {
+     "id": "578d541d-292a-4e4b-9b2a-8a06c5051c97",
+     "title": "Success Cycle, Part 2, Vocabulary That Sails",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.64,
+     "end": 191.61
+    },
+    {
+     "id": "eb8c53a1-38aa-49c7-b6c7-09e8b02ed485",
+     "title": "Success Cycle, Part 3, More Vocabulary",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.66,
+     "end": 251.75
+    },
+    {
+     "id": "6f720ea2-c2f4-409e-857c-08c1976784d5",
+     "title": "Success Cycle, Part 4, Green Yellow Red",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 9.88,
+     "end": 147.41
+    },
+    {
+     "id": "84f0d456-5971-4318-91b5-7d498831b278",
+     "title": "Success Cycle, Part 5, The 6 Stages",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.5,
+     "end": 195.69
+    },
+    {
+     "id": "63456d6d-1807-4bac-90ce-489cab8d15eb",
+     "title": "Success Cycle, Part 6, More Staging",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 12.5,
+     "end": 168.81
+    },
+    {
+     "id": "bbca03ce-7f84-42f9-ade0-78f041641f49",
+     "title": "Success Cycle, Part 7, Features and Benefits",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 11.04,
+     "end": 192.65
+    },
+    {
+     "id": "9fdfcb29-3d37-47bc-8562-5bd8ee85cb2f",
+     "title": "Success Cycle, Part 9, More on Overcoming Objections",
+     "collection": "Craft",
+     "placement": "daily_craft",
+     "start": 10.88,
+     "end": 191.11
+    }
+   ]
+  },
+  {
+   "name": "5c. Menu and the mileage shelf (reference) \u2014 nothing in the loop reaches these",
+   "ids": [
+    "c2de2af9-d723-4a5f-b71b-1271be753fc9",
+    "6d43e011-387f-498d-946c-c62b1c44cc9f",
+    "fa55abfe-1309-4be7-a282-3fa484144dc0",
+    "da1adb1a-40f2-464f-87d5-a111069c2359",
+    "30ba8555-3be7-4bee-bd00-11700b81562b",
+    "e7bf8633-e7e8-470e-843b-db04560de84c",
+    "ab70fed9-b840-4df8-af45-d956f6e7360e",
+    "4a84c86c-def1-4692-bc5e-5864f69a58fc",
+    "7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e",
+    "321bff34-33b1-4361-b355-36cf10801d8e",
+    "6a53c1f3-cc3d-4eed-9ed1-21725417e4df",
+    "3280e37a-22b0-4feb-96e3-707200553d0c",
+    "7f3f25d1-429d-4ea0-979d-7b0674c1ab13",
+    "af408777-698d-4448-bd5e-4c61c1b25801",
+    "97117cd8-80d0-4025-a92a-8d1cbd978015",
+    "656843e9-6e42-4942-b9a7-44276d16d39b",
+    "3790edc4-71e4-4ee2-8b4e-405c07e69fa5",
+    "f1156a28-a9c9-4932-88d0-5ad96e8b7fc4",
+    "dbaa8209-4991-420d-8e7a-f13a3e908e54",
+    "a676439e-0c22-4c62-bcd9-6153bf93425c",
+    "35b9d042-3b65-4193-8426-6c0e5b9cb0ec",
+    "9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e",
+    "cfdb1aba-242b-4fd3-a931-be0d31105282",
+    "fabd44aa-ee49-44b6-b016-10baad50b0db",
+    "87595a92-7009-4994-ac6d-bfae100b84c3",
+    "d2248d9c-9c84-4817-94d3-1ede9d2a12d6",
+    "396c64d9-5a6b-4b8e-a311-04c3253c15a9",
+    "2a52f994-74a7-4ab5-9595-c584500662d2",
+    "354b725e-07cf-43a9-8b25-0f339bdfb2d9",
+    "fecc71e1-ce3b-414b-9317-d9d9c354c40b",
+    "f4222417-e03a-49c7-90e7-c8d16d72d45e",
+    "b497f293-eedb-4d07-9095-669cf5722b14",
+    "80d6d72e-1d59-46d8-b412-3466b2781037",
+    "28061ce2-d886-4a44-9c02-83130361cf08",
+    "c7726af7-ea0c-4671-a0ec-41fc394e2e8d",
+    "ec00d373-9622-45b7-a0d1-59536f40bbc6",
+    "a417f0ac-d63c-490f-94ce-0623e494acbd",
+    "beb63665-496b-4f5e-bfc3-c494dc8d9508",
+    "c4c4e3dd-6fdc-405c-9a9e-b64e0e117572",
+    "56697a80-7320-4765-b9ba-c8f8d04fe6c7",
+    "d220095f-5660-47fa-9bd8-6976b11a7e15",
+    "9605ce68-c52b-4baf-91e4-12eab3878116",
+    "27557eb4-833b-470d-bb7b-6f57832257d7",
+    "eef634f1-3a07-4826-8d0f-f398bdfeb5b5",
+    "db297b0f-8a16-4984-a5b8-80c9379b285a",
+    "5637821a-5061-4840-9ace-ac449ea5b49c",
+    "d3b6be3f-90f2-4d1e-b21f-6725b16921f9",
+    "97e0e1d6-7df1-4664-8356-b2e43e71a576",
+    "5e08224b-3aeb-4d22-bfb2-acdbc537667e",
+    "ad3bd915-9e95-4b58-b6bb-5fa234fe91ab",
+    "bfe2d90b-487c-4347-b8cc-f43d188df825",
+    "f7ca4fac-2f1c-4154-81e5-cc82edbe9655",
+    "69be19f1-afde-4349-9ba8-c5eed6f60b39",
+    "53e3fa52-1c1d-42a0-a1c4-6ea64e905279",
+    "8d736820-45c1-4cc2-b434-d98dbc47368a",
+    "cc56bdc0-b4ae-411f-9bdc-1d4948b976fb",
+    "722c3843-8d87-4949-9a15-17d921fa224c",
+    "80163645-2849-4751-ba42-e3774019b9b2",
+    "effafbce-02e5-45cc-bcd8-f66d6559328c",
+    "61532700-a504-4805-9e14-17fd4fa24897",
+    "34bab295-c069-481f-bb26-55a6f97e97f6",
+    "56389e51-2ed0-43f2-803f-642df29918bc",
+    "dc55f1e2-2bdd-418f-bb9b-4a2ae4583666",
+    "dd4efdc7-0a06-45aa-bec4-70bc3f61d1b0",
+    "ee3849c1-9708-4ee7-b20e-8879f5a4606b",
+    "f7303616-faee-4836-be6e-eae8c2433da6",
+    "4842968c-7be9-4f76-864e-3a6dd8d8f8a4",
+    "9a4190b3-16cb-47bb-adfc-1e062b1d5028",
+    "ff3809d2-0e10-41ba-91cb-67649b82bef8",
+    "6d91a34b-ff94-4188-ae32-da332b1c6c66",
+    "f0d826fa-784c-4559-81ea-55b6c213ad10",
+    "eac42e00-5aa1-4368-8dc5-fef14ca95b70",
+    "2cfa11d2-d475-421d-b701-07a8eeb2f89a",
+    "4a5cf641-c4ec-41ac-ba0b-fbac1c4d2f48",
+    "c6bedfd2-252f-4623-a00b-40f347760de4",
+    "4ce42240-90c7-4318-9766-a69a00b002d3",
+    "683053cb-980e-4386-b007-bd5c3d1e362f",
+    "adf42b80-2f57-4181-961b-ed15ebf30fa7",
+    "9c8e186d-bce4-4a1b-a12e-c606b72aebce",
+    "e1183510-e514-41aa-af42-ce905b80762c",
+    "821c0a1d-e963-4be7-b619-e076cc456cd7",
+    "ba4ba1ba-df5a-4476-9e50-4d7f73108c14",
+    "67820488-3f84-4413-bd6c-adf03bf5b8ba",
+    "a33ed276-05e9-4b2a-9102-65bd81ec7b50",
+    "64d900ad-cc81-4d18-9df5-03faf4adcb7a",
+    "327d0d15-49f7-42fc-a683-305519b84044",
+    "c561b924-5d78-43fe-af79-89381567cdb2",
+    "8aede114-1de5-4000-89b6-f10b59eec638"
+   ],
+   "films": [
+    {
+     "id": "c2de2af9-d723-4a5f-b71b-1271be753fc9",
+     "title": "10,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.08,
+     "end": 80.01
+    },
+    {
+     "id": "6d43e011-387f-498d-946c-c62b1c44cc9f",
+     "title": "10,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.04,
+     "end": 121.86
+    },
+    {
+     "id": "fa55abfe-1309-4be7-a282-3fa484144dc0",
+     "title": "100,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.54,
+     "end": 171
+    },
+    {
+     "id": "da1adb1a-40f2-464f-87d5-a111069c2359",
+     "title": "100,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.54,
+     "end": 182.43
+    },
+    {
+     "id": "30ba8555-3be7-4bee-bd00-11700b81562b",
+     "title": "100,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.5,
+     "end": 190.08
+    },
+    {
+     "id": "e7bf8633-e7e8-470e-843b-db04560de84c",
+     "title": "100,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.74,
+     "end": 178.76
+    },
+    {
+     "id": "ab70fed9-b840-4df8-af45-d956f6e7360e",
+     "title": "105,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.94,
+     "end": 68.57
+    },
+    {
+     "id": "4a84c86c-def1-4692-bc5e-5864f69a58fc",
+     "title": "105,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.4,
+     "end": 89.39
+    },
+    {
+     "id": "7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e",
+     "title": "110,000 Mile Dealer Upsell Menu",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.74,
+     "end": 193.4
+    },
+    {
+     "id": "321bff34-33b1-4361-b355-36cf10801d8e",
+     "title": "120,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.38,
+     "end": 132.54
+    },
+    {
+     "id": "6a53c1f3-cc3d-4eed-9ed1-21725417e4df",
+     "title": "120,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.12,
+     "end": 152.95
+    },
+    {
+     "id": "3280e37a-22b0-4feb-96e3-707200553d0c",
+     "title": "120,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.82,
+     "end": 105.43
+    },
+    {
+     "id": "7f3f25d1-429d-4ea0-979d-7b0674c1ab13",
+     "title": "120,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.78,
+     "end": 179.06
+    },
+    {
+     "id": "af408777-698d-4448-bd5e-4c61c1b25801",
+     "title": "15,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 20.22,
+     "end": 151.3
+    },
+    {
+     "id": "97117cd8-80d0-4025-a92a-8d1cbd978015",
+     "title": "15,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.48,
+     "end": 141.39
+    },
+    {
+     "id": "656843e9-6e42-4942-b9a7-44276d16d39b",
+     "title": "15,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.48,
+     "end": 172.83
+    },
+    {
+     "id": "3790edc4-71e4-4ee2-8b4e-405c07e69fa5",
+     "title": "15,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.92,
+     "end": null
+    },
+    {
+     "id": "f1156a28-a9c9-4932-88d0-5ad96e8b7fc4",
+     "title": "15,000 Mile Dealer Upsell Menu, Part 5",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.46,
+     "end": 157.39
+    },
+    {
+     "id": "dbaa8209-4991-420d-8e7a-f13a3e908e54",
+     "title": "150,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.66,
+     "end": 152.97
+    },
+    {
+     "id": "a676439e-0c22-4c62-bcd9-6153bf93425c",
+     "title": "150,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 19.08,
+     "end": 159.2
+    },
+    {
+     "id": "35b9d042-3b65-4193-8426-6c0e5b9cb0ec",
+     "title": "150,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.88,
+     "end": 183.25
+    },
+    {
+     "id": "9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e",
+     "title": "150,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.36,
+     "end": 213.28
+    },
+    {
+     "id": "cfdb1aba-242b-4fd3-a931-be0d31105282",
+     "title": "20,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.34,
+     "end": 207.9
+    },
+    {
+     "id": "fabd44aa-ee49-44b6-b016-10baad50b0db",
+     "title": "20,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.38,
+     "end": 103.72
+    },
+    {
+     "id": "87595a92-7009-4994-ac6d-bfae100b84c3",
+     "title": "20,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.96,
+     "end": 157.53
+    },
+    {
+     "id": "d2248d9c-9c84-4817-94d3-1ede9d2a12d6",
+     "title": "20,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.58,
+     "end": 90.2
+    },
+    {
+     "id": "396c64d9-5a6b-4b8e-a311-04c3253c15a9",
+     "title": "25,000 Mile Dealer Upsell Menu (2749)",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.1,
+     "end": 160.12
+    },
+    {
+     "id": "2a52f994-74a7-4ab5-9595-c584500662d2",
+     "title": "25,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 13.14,
+     "end": 152.1
+    },
+    {
+     "id": "354b725e-07cf-43a9-8b25-0f339bdfb2d9",
+     "title": "25,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.68,
+     "end": 112.19
+    },
+    {
+     "id": "fecc71e1-ce3b-414b-9317-d9d9c354c40b",
+     "title": "25,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.98,
+     "end": 148.99
+    },
+    {
+     "id": "f4222417-e03a-49c7-90e7-c8d16d72d45e",
+     "title": "30,000 Mile Dealer Upsell Menu (2760)",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.76,
+     "end": 152.5
+    },
+    {
+     "id": "b497f293-eedb-4d07-9095-669cf5722b14",
+     "title": "30,000 Mile Dealer Upsell Menu (2769)",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.08,
+     "end": 261.42
+    },
+    {
+     "id": "80d6d72e-1d59-46d8-b412-3466b2781037",
+     "title": "30,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.34,
+     "end": 154.07
+    },
+    {
+     "id": "28061ce2-d886-4a44-9c02-83130361cf08",
+     "title": "30,000 Mile Dealer Upsell Menu, Part 5",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.68,
+     "end": 128.05
+    },
+    {
+     "id": "c7726af7-ea0c-4671-a0ec-41fc394e2e8d",
+     "title": "35,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.76,
+     "end": 110.02
+    },
+    {
+     "id": "ec00d373-9622-45b7-a0d1-59536f40bbc6",
+     "title": "35,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.28,
+     "end": 192.03
+    },
+    {
+     "id": "a417f0ac-d63c-490f-94ce-0623e494acbd",
+     "title": "35,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.82,
+     "end": 139.46
+    },
+    {
+     "id": "beb63665-496b-4f5e-bfc3-c494dc8d9508",
+     "title": "40,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.48,
+     "end": 154.27
+    },
+    {
+     "id": "c4c4e3dd-6fdc-405c-9a9e-b64e0e117572",
+     "title": "40,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.3,
+     "end": null
+    },
+    {
+     "id": "56697a80-7320-4765-b9ba-c8f8d04fe6c7",
+     "title": "45,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.04,
+     "end": 96.02
+    },
+    {
+     "id": "d220095f-5660-47fa-9bd8-6976b11a7e15",
+     "title": "45,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.72,
+     "end": 202.26
+    },
+    {
+     "id": "9605ce68-c52b-4baf-91e4-12eab3878116",
+     "title": "45,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.58,
+     "end": 226.5
+    },
+    {
+     "id": "27557eb4-833b-470d-bb7b-6f57832257d7",
+     "title": "5,000/7,500 Mile Dealer Upsell Menu (2714)",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.08,
+     "end": 138.96
+    },
+    {
+     "id": "eef634f1-3a07-4826-8d0f-f398bdfeb5b5",
+     "title": "5,000/7,500 Mile Dealer Upsell Menu (2716)",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.6,
+     "end": null
+    },
+    {
+     "id": "db297b0f-8a16-4984-a5b8-80c9379b285a",
+     "title": "50,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.66,
+     "end": 163.28
+    },
+    {
+     "id": "5637821a-5061-4840-9ace-ac449ea5b49c",
+     "title": "50,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.68,
+     "end": 123.33
+    },
+    {
+     "id": "d3b6be3f-90f2-4d1e-b21f-6725b16921f9",
+     "title": "50,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.9,
+     "end": 97.5
+    },
+    {
+     "id": "97e0e1d6-7df1-4664-8356-b2e43e71a576",
+     "title": "50,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.48,
+     "end": 58.27
+    },
+    {
+     "id": "5e08224b-3aeb-4d22-bfb2-acdbc537667e",
+     "title": "55,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.9,
+     "end": 206.95
+    },
+    {
+     "id": "ad3bd915-9e95-4b58-b6bb-5fa234fe91ab",
+     "title": "55,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.26,
+     "end": null
+    },
+    {
+     "id": "bfe2d90b-487c-4347-b8cc-f43d188df825",
+     "title": "60,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.28,
+     "end": 200.47
+    },
+    {
+     "id": "f7ca4fac-2f1c-4154-81e5-cc82edbe9655",
+     "title": "60,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.16,
+     "end": 180.16
+    },
+    {
+     "id": "69be19f1-afde-4349-9ba8-c5eed6f60b39",
+     "title": "60,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 13.5,
+     "end": 110.58
+    },
+    {
+     "id": "53e3fa52-1c1d-42a0-a1c4-6ea64e905279",
+     "title": "60,000 Mile Dealer Upsell Menu, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.72,
+     "end": 183.5
+    },
+    {
+     "id": "8d736820-45c1-4cc2-b434-d98dbc47368a",
+     "title": "65,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.62,
+     "end": 159.58
+    },
+    {
+     "id": "cc56bdc0-b4ae-411f-9bdc-1d4948b976fb",
+     "title": "65,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.24,
+     "end": 178.73
+    },
+    {
+     "id": "722c3843-8d87-4949-9a15-17d921fa224c",
+     "title": "70,000 Mile Dealer Upsell Menu, Part 2 (2822)",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.12,
+     "end": 155.1
+    },
+    {
+     "id": "80163645-2849-4751-ba42-e3774019b9b2",
+     "title": "75,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.78,
+     "end": 187.3
+    },
+    {
+     "id": "effafbce-02e5-45cc-bcd8-f66d6559328c",
+     "title": "75,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.48,
+     "end": 126.75
+    },
+    {
+     "id": "61532700-a504-4805-9e14-17fd4fa24897",
+     "title": "75,000 Mile Dealer Upsell Menu, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.68,
+     "end": 120.76
+    },
+    {
+     "id": "34bab295-c069-481f-bb26-55a6f97e97f6",
+     "title": "80,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.32,
+     "end": 135.23
+    },
+    {
+     "id": "56389e51-2ed0-43f2-803f-642df29918bc",
+     "title": "85,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.04,
+     "end": 236.5
+    },
+    {
+     "id": "dc55f1e2-2bdd-418f-bb9b-4a2ae4583666",
+     "title": "90,000 Mile Dealer Upsell Menu",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 21.2,
+     "end": 193.32
+    },
+    {
+     "id": "dd4efdc7-0a06-45aa-bec4-70bc3f61d1b0",
+     "title": "90,000 Mile Dealer Upsell Menu, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.88,
+     "end": 141.34
+    },
+    {
+     "id": "ee3849c1-9708-4ee7-b20e-8879f5a4606b",
+     "title": "90,000 Mile Dealer Upsell Menu, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 18.78,
+     "end": null
+    },
+    {
+     "id": "f7303616-faee-4836-be6e-eae8c2433da6",
+     "title": "95,000 Mile Dealer Upsell Menu",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 16.24,
+     "end": 131.41
+    },
+    {
+     "id": "4842968c-7be9-4f76-864e-3a6dd8d8f8a4",
+     "title": "CSI \u2014 CSI Is Not a Score, Part 1",
+     "collection": "Craft",
+     "placement": "reference",
+     "start": 11.82,
+     "end": 118.87
+    },
+    {
+     "id": "9a4190b3-16cb-47bb-adfc-1e062b1d5028",
+     "title": "CSI \u2014 Prior to Arrival, Part 2",
+     "collection": "Craft",
+     "placement": "reference",
+     "start": 11,
+     "end": null
+    },
+    {
+     "id": "ff3809d2-0e10-41ba-91cb-67649b82bef8",
+     "title": "CSI \u2014 The 2 Week and 2 Month Follow-Ups, Part 6",
+     "collection": "Craft",
+     "placement": "reference",
+     "start": 11.98,
+     "end": 122.07
+    },
+    {
+     "id": "6d91a34b-ff94-4188-ae32-da332b1c6c66",
+     "title": "CSI \u2014 Upon Departure, Part 4",
+     "collection": "Craft",
+     "placement": "reference",
+     "start": null,
+     "end": 104.36
+    },
+    {
+     "id": "f0d826fa-784c-4559-81ea-55b6c213ad10",
+     "title": "Diesel, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 13.48,
+     "end": 159.25
+    },
+    {
+     "id": "eac42e00-5aa1-4368-8dc5-fef14ca95b70",
+     "title": "Diesel, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.7,
+     "end": null
+    },
+    {
+     "id": "2cfa11d2-d475-421d-b701-07a8eeb2f89a",
+     "title": "Diesel, Part 5",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 13.58,
+     "end": null
+    },
+    {
+     "id": "4a5cf641-c4ec-41ac-ba0b-fbac1c4d2f48",
+     "title": "Diesel, Part 6",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 13.2,
+     "end": null
+    },
+    {
+     "id": "c6bedfd2-252f-4623-a00b-40f347760de4",
+     "title": "EV Series, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.18,
+     "end": 191.93
+    },
+    {
+     "id": "4ce42240-90c7-4318-9766-a69a00b002d3",
+     "title": "EV Series, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.2,
+     "end": 217.46
+    },
+    {
+     "id": "683053cb-980e-4386-b007-bd5c3d1e362f",
+     "title": "EV Series, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.22,
+     "end": 240.83
+    },
+    {
+     "id": "adf42b80-2f57-4181-961b-ed15ebf30fa7",
+     "title": "EV Series, Part 4",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 17.86,
+     "end": 255.23
+    },
+    {
+     "id": "9c8e186d-bce4-4a1b-a12e-c606b72aebce",
+     "title": "Four Step Close \u2014 Opener",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 89.68
+    },
+    {
+     "id": "e1183510-e514-41aa-af42-ce905b80762c",
+     "title": "Lasting Impressions \u2014 Opener",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 66.72
+    },
+    {
+     "id": "821c0a1d-e963-4be7-b619-e076cc456cd7",
+     "title": "Name Tag \u2014 Opener",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": 10.26,
+     "end": 86.03
+    },
+    {
+     "id": "ba4ba1ba-df5a-4476-9e50-4d7f73108c14",
+     "title": "Phones and Tones \u2014 Closer",
+     "collection": "Craft",
+     "placement": "reference",
+     "start": 10.44,
+     "end": 64.57
+    },
+    {
+     "id": "67820488-3f84-4413-bd6c-adf03bf5b8ba",
+     "title": "Phones and Tones \u2014 Opener",
+     "collection": "Craft",
+     "placement": "reference",
+     "start": null,
+     "end": 63.75
+    },
+    {
+     "id": "a33ed276-05e9-4b2a-9102-65bd81ec7b50",
+     "title": "Seasonal Menus, Part 1",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.54,
+     "end": 172.71
+    },
+    {
+     "id": "64d900ad-cc81-4d18-9df5-03faf4adcb7a",
+     "title": "Seasonal Menus, Part 2",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 13.6,
+     "end": 160.15
+    },
+    {
+     "id": "327d0d15-49f7-42fc-a683-305519b84044",
+     "title": "Seasonal Menus, Part 3",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 14.48,
+     "end": 154.55
+    },
+    {
+     "id": "c561b924-5d78-43fe-af79-89381567cdb2",
+     "title": "Seasonal Menus, Part 5",
+     "collection": "Menu",
+     "placement": "reference",
+     "start": 15.12,
+     "end": 225.01
+    },
+    {
+     "id": "8aede114-1de5-4000-89b6-f10b59eec638",
+     "title": "Setting up the MPI \u2014 Opener",
+     "collection": "Craft",
+     "placement": "daily_lifestyle",
+     "start": null,
+     "end": 47.86
+    }
+   ]
+  }
+ ]
+}

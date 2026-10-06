@@ -69,7 +69,7 @@
  },
  "fNlOw3LEX1qrXIup7zCEv1009561MBMImGUz0219BHnmY": {
   "contentId": "02812647-59a7-473a-b2c1-20b29b2764fb",
-  "title": "Name Tag \u2014 Closer",
+  "title": "Name Tag — Closer",
   "newAssetId": "3bREjXUmoSdlHnx2vYXv4XJnaW3s4cnEhevSfQotjzw",
   "trimStart": 11.18,
   "trimEnd": 81.48,
@@ -239,7 +239,7 @@
  },
  "02uN2768BTalewDhK022t6Yflbktr026jMrzMRARopy8og": {
   "contentId": "0d948097-d330-42a2-8e02-3d6ce0fc0faf",
-  "title": "CSI \u2014 The 2222 Follow-Up, Part 5",
+  "title": "CSI — The 2222 Follow-Up, Part 5",
   "newAssetId": "HqeFpNeMqmK2oOikRf9Sfoz1INE3SE2aZL01QZf00BqNI",
   "trimStart": 12.46,
   "trimEnd": 117.81,
@@ -290,7 +290,7 @@
  },
  "sTgobwuoCHMkDxkPMakASMOMrsEBhTsZBFFszQwIoKY": {
   "contentId": "0f218884-1e78-48c2-9c85-9447de14f0d6",
-  "title": "The OE Approach \u2014 Severe Conditions",
+  "title": "The OE Approach — Severe Conditions",
   "newAssetId": "SNRfIhRv01FroPzxOqkzVDOeBJmVUiG7UmRGv2qHpvYU",
   "trimStart": null,
   "trimEnd": 202.86,
@@ -375,7 +375,7 @@
  },
  "wWJOrhBg6tTqC2hl86OpeaBI02lGPmX3OghdJmezqlKY": {
   "contentId": "14f20d45-178a-4cbc-9761-bb8a1d26f4f0",
-  "title": "The OE Stagger \u2014 The Order and Why",
+  "title": "The OE Stagger — The Order and Why",
   "newAssetId": "IgmNG30094XMS22x6Q026jib2LX3Z02ftursIXrP02pLg01k",
   "trimStart": null,
   "trimEnd": 253.54,
@@ -460,7 +460,7 @@
  },
  "xAr8LGPqKeLYDR02lVYnVPQwFhoicyWnO02UmSxQ00no8M": {
   "contentId": "1a902c3f-459e-420c-90ff-fc84a1851007",
-  "title": "Success Cycle \u2014 Opener",
+  "title": "Success Cycle — Opener",
   "newAssetId": "RlvIdM01Hnwwwu4HziTnAj36yXT7pDkgJYmol5rovIk00",
   "trimStart": null,
   "trimEnd": 130.86,
@@ -579,7 +579,7 @@
  },
  "wFeBE8x1MMduL02pX7j022xdaTe43ndR4ZFEG4VxZ7w7c": {
   "contentId": "1fed4f71-760e-4116-bf66-6e1b7cfadf51",
-  "title": "CSI \u2014 Upon Arrival, Part 3",
+  "title": "CSI — Upon Arrival, Part 3",
   "newAssetId": "xScS4RXlIuieuOdn9SHKkgCx9x5XNW3i9P02sDkPuvx4",
   "trimStart": 11.46,
   "trimEnd": 139.88,
@@ -653,5 +653,269 @@
   "expectedDuration": 103.83,
   "durationOk": true,
   "backfilled": "reconstructed from the content row after a run was interrupted between the swap and the ledger write. Evidence: archived_asset_id equals the asset the plan measured, and duration_sec matches the asked-for length. INGEST.md: a trim applied outside the ledger-writing path must be backfilled so the next blanket run cannot re-cut it."
+ },
+ "ktp014H6E8fr14Az15J2kd1qQ6ZyXTplOxrTLlpcYAv8": {
+  "contentId": "251e9444-5ed3-448d-b71e-d8297efa22eb",
+  "title": "10,000 Mile Dealer Upsell Menu",
+  "newAssetId": "FOlb02nxXVenHIi02j826dBAPyQODmrmyKIpxwr00etsMc",
+  "trimStart": 16.88,
+  "trimEnd": 123,
+  "oldDuration": 129.536667,
+  "newDuration": 106,
+  "cutAt": "2026-10-06T16:19:17.588383Z",
+  "expectedDuration": 106.12,
+  "durationOk": true,
+  "backfilled": "reconstructed from the content row after the run was stopped between the swap and the ledger write; archived_asset_id equals the asset the plan measured and duration_sec matches the asked-for length"
+ },
+ "6wpJz01c8mdXia8zno4SsEf00LSXsdZ1xnGZcQpb9xNyI": {
+  "contentId": "66bfaa74-9941-403d-924c-0f93c80d9e72",
+  "title": "Welcome from Mitch",
+  "newAssetId": "u78oZvBISyQ5kJ9PpmuxNTBc002sHregbTAXN3H6hNWM",
+  "trimStart": null,
+  "trimEnd": 127.75,
+  "oldDuration": 134.005,
+  "newDuration": 128,
+  "cutAt": "2026-10-06T16:39:32.733Z",
+  "durationOk": true,
+  "expectedDuration": 127.75,
+  "verified": {
+   "head": 0,
+   "tail": 0.51,
+   "ok": true
+  }
+ },
+ "2fze7VzwzdqG53PYCi5Ba4ZvERhVIRBuc00yc01VCWTLk": {
+  "contentId": "2649e577-c010-4044-add6-25f4c30943bd",
+  "title": "30 Second Walk-Around, Part 1, Before You Go Outside",
+  "newAssetId": "G3uFeJnOx6tpwWQNUw01b5eJW3c7geG00t9R9BJql01tBY",
+  "trimStart": 11.8,
+  "trimEnd": 216.72,
+  "oldDuration": 220.54,
+  "newDuration": 205,
+  "cutAt": "2026-10-06T16:45:27.058Z",
+  "durationOk": true,
+  "expectedDuration": 204.92,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "G9cLkq6XFjJNe01qKZrx5A46RVPE02UJNUfVEDP02vj3tA": {
+  "contentId": "2b05500d-4be0-474c-9879-90d7cd7ce9ec",
+  "title": "30 Second Walk-Around, Part 2, Four Goals, Two Words",
+  "newAssetId": "38GJxS2oZ02nBURXhon7WtuZQRoXTnkSx1yUkylzWeSk",
+  "trimStart": null,
+  "trimEnd": 141.64,
+  "oldDuration": 145.671667,
+  "newDuration": 142,
+  "cutAt": "2026-10-06T16:49:49.163Z",
+  "durationOk": true,
+  "expectedDuration": 141.64,
+  "verified": {
+   "head": 0,
+   "tail": 0.84,
+   "ok": true
+  }
+ },
+ "lo8Tn276101ZA9YhZO9sHqIOHxlHwShN8OMBnXzYFZNQ": {
+  "contentId": "4a7b6ae9-df0e-4563-8d5d-6c259d0aede8",
+  "title": "30 Second Walk-Around, Part 3, Steps 1 and 2, Are You Here to See Anyone",
+  "newAssetId": "b2DC55sdro8FK2v00Tb9HvKSyK00z00wn4D7j5ueiKn701E",
+  "trimStart": 14.32,
+  "trimEnd": null,
+  "oldDuration": 137.171667,
+  "newDuration": 123,
+  "cutAt": "2026-10-06T16:53:18.741Z",
+  "durationOk": true,
+  "expectedDuration": 122.85,
+  "verified": {
+   "head": 0,
+   "tail": 4.852,
+   "ok": true
+  }
+ },
+ "00cYzWhT01ngZvQpsWOh93k9TiXPNyhSZ4jQHy3nKl5nY": {
+  "contentId": "2ad57e81-3a91-4256-8b35-afecd79c880d",
+  "title": "A Quote on Every Vehicle",
+  "newAssetId": "bwpzYirg5r9lIazZRKoiT9GGs1cjWcIaq18DOzVo005c",
+  "trimStart": null,
+  "trimEnd": 92.86,
+  "oldDuration": 97.309333,
+  "newDuration": 93,
+  "cutAt": "2026-10-06T16:56:04.261Z",
+  "durationOk": true,
+  "expectedDuration": 92.86,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "8zO8JJSlPd023LSB5I3Iz4CHRcd006Ruf2a7xQ00FhKLeo": {
+  "contentId": "2ce1ee9f-20af-4dbc-88ad-be51fe2ed353",
+  "title": "Pre-Write",
+  "newAssetId": "zfFlItVYgP9Qm900ihzziyN8jFPp7agUUPNqy3QIQjU4",
+  "trimStart": 10.9,
+  "trimEnd": 103.18,
+  "oldDuration": 107.242667,
+  "newDuration": 92,
+  "cutAt": "2026-10-06T16:58:48.638Z",
+  "durationOk": true,
+  "expectedDuration": 92.28,
+  "verified": {
+   "head": 0.3,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "3YpM001ATMxDgl7hrIB49v3SVVZcvGWzUC4300qE3Z00ZI": {
+  "contentId": "508e939e-ed11-4c8d-8321-3b8f1bbde208",
+  "title": "MPI Setup",
+  "newAssetId": "C93BcbyeloJlqXORaShXb1EKkAP01UtaFTZpBhq5cPBg",
+  "trimStart": null,
+  "trimEnd": 96.97,
+  "oldDuration": 101.105,
+  "newDuration": 97,
+  "cutAt": "2026-10-06T17:01:39.554Z",
+  "durationOk": true,
+  "expectedDuration": 96.97,
+  "verified": {
+   "head": null,
+   "tail": 0.51,
+   "ok": true
+  }
+ },
+ "inixWb6zWGT7jrRhSYzpDrAbXP6NAhdilRNBzDSe003M": {
+  "contentId": "5284d110-b99a-45c2-b272-6f420e9b534e",
+  "title": "Objections",
+  "newAssetId": "uoeq93xtRpVFrFGlIVp5Aw6CZqPU01mfCUPGAMKuBM18",
+  "trimStart": null,
+  "trimEnd": 220.67,
+  "oldDuration": 224.809333,
+  "newDuration": 221,
+  "cutAt": "2026-10-06T17:06:53.698Z",
+  "durationOk": true,
+  "expectedDuration": 220.67,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "W01NenGfrcDRQH1ItOVaiM802K6TsnClyrB1SBA302TyMw": {
+  "contentId": "56b90a62-eb24-46dc-bc5c-0b238fd342b4",
+  "title": "MPI Setup",
+  "newAssetId": "4lIw7OADbJoskWA8SAbWH8sbwMdlqCqVTgTEJQWm5Dg",
+  "trimStart": 12,
+  "trimEnd": 99.38,
+  "oldDuration": 103.403333,
+  "newDuration": 87,
+  "cutAt": "2026-10-06T17:09:27.215Z",
+  "durationOk": true,
+  "expectedDuration": 87.38,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "CVnDcz4x35QBDkIVh00oUSGoQYxgGsN28SX012RmILaUU": {
+  "contentId": "5bde49a4-de45-42b1-ab7f-135679465b7d",
+  "title": "At the Kiosk",
+  "newAssetId": "avHcwH1i0201vLKnilmUJFIZOQSLie662JogVfvlNxC6M",
+  "trimStart": 1.08,
+  "trimEnd": null,
+  "oldDuration": 209.606667,
+  "newDuration": 209,
+  "cutAt": "2026-10-06T17:14:20.645Z",
+  "durationOk": true,
+  "expectedDuration": 208.53,
+  "verified": {
+   "head": null,
+   "tail": 0.607,
+   "ok": null
+  }
+ },
+ "qI7yC7yIm8601wLjL5vpkMmKQJYowbegTvXW01mQyPAkA": {
+  "contentId": "6b67c002-acb3-4906-840f-cd8888609164",
+  "title": "MPI Setup",
+  "newAssetId": "e65ZhlULsdxdvyLMmLDEcMmcG5Qa7jcNvcMTYtcFkHE",
+  "trimStart": 9.18,
+  "trimEnd": 76.11,
+  "oldDuration": 81.276,
+  "newDuration": 67,
+  "cutAt": "2026-10-06T17:16:20.927Z",
+  "durationOk": true,
+  "expectedDuration": 66.93,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "as8Ysvv14ay57F429ClyYo01DiMZHVkZ5xFZy00Sn24WY": {
+  "contentId": "70bc8232-c1e7-4234-aff9-e71df0738aaa",
+  "title": "Objections",
+  "newAssetId": "4M5WQi8L9STky8dVJaDUxQ00302DtRPCaJcy7k7DGixk4",
+  "trimStart": 9.38,
+  "trimEnd": 187.36,
+  "oldDuration": 191.742667,
+  "newDuration": 178,
+  "cutAt": "2026-10-06T17:20:50.328Z",
+  "durationOk": true,
+  "expectedDuration": 177.98,
+  "verified": {
+   "head": 0,
+   "tail": 0.52,
+   "ok": true
+  }
+ },
+ "wweRh0186NaKyizkWGBEx5VU51mzp01zKohQXgGsD7CIk": {
+  "contentId": "74f7fb33-6cf9-49d4-a9c4-7678841c6e4c",
+  "title": "At the Kiosk",
+  "newAssetId": "I4FoDi02nSQalG1vl9atQ201gjJlOpVhdK1TzgDebef88",
+  "trimStart": null,
+  "trimEnd": 167.98,
+  "oldDuration": 169.183333,
+  "newDuration": 168,
+  "cutAt": "2026-10-06T17:24:53.685Z",
+  "durationOk": true,
+  "expectedDuration": 167.98,
+  "verified": {
+   "head": 0.55,
+   "tail": 0.63,
+   "ok": true
+  }
+ },
+ "8oa002DpSiOJn00YIKGxP02RnsjcM1P7h02n3L8k00u02XUnE": {
+  "contentId": "7935a5c5-c341-4fa4-80a9-e2f565a38a28",
+  "title": "On the Drive",
+  "newAssetId": "eTPd01TZa003IeO02Z02TMFx1rrhk7zSjA3vVXPkb00uffEM",
+  "trimStart": 9.34,
+  "trimEnd": 173.71,
+  "oldDuration": 178.905,
+  "newDuration": 164,
+  "cutAt": "2026-10-06T17:29:07.068Z",
+  "durationOk": true,
+  "expectedDuration": 164.37,
+  "verified": {
+   "head": 0.4,
+   "tail": 0.19,
+   "ok": true
+  }
+ },
+ "IEPQoALWikBqsFpRkwvEScx2EAFUOoJfXxrdxJfNIy8": {
+  "contentId": "8f6c5a6d-5ee1-4612-9946-816652a82d57",
+  "title": "On the Drive, Part 1",
+  "newAssetId": "thbcSPFLi9rJhPo9ooYr7gBqkZtBezZZUaPEaoNfqQA",
+  "trimStart": 8.84,
+  "trimEnd": 131.91,
+  "oldDuration": 137.171667,
+  "newDuration": 123,
+  "cutAt": "2026-10-06T18:11:47.236Z",
+  "expectedDuration": 123.07,
+  "durationOk": true,
+  "backfilled": "reconstructed by trim:reconcile after a run was interrupted between the swap and the ledger write. Both witnesses held: archived_asset_id equals the asset the plan measured, and duration_sec matches the length the cut asked for."
  }
 }
