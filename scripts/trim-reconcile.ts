@@ -75,11 +75,12 @@ async function main() {
   const ledgered = new Set(Object.values(ledger).map((v) => v.contentId as string));
 
   const live = new Map<string, { id: string; title: string; mux_asset_id: string | null;
-    duration_sec: number | null; archived_asset_id: string | null }>();
+    duration_sec: number | null; archived_asset_id: string | null;
+    vertical_status: string | null }>();
   for (let page = 0; ; page++) {
     const { data, error } = await sb
       .from("content")
-      .select("id, title, mux_asset_id, duration_sec, archived_asset_id")
+      .select("id, title, mux_asset_id, duration_sec, archived_asset_id, vertical_status")
       .eq("type", "advisor_video").eq("status", "published").is("retired_at", null)
       .order("id").range(page * 1000, page * 1000 + 999);
     if (error) throw new Error(error.message);
@@ -155,10 +156,36 @@ async function main() {
   } else if (!APPLY && ok.length) {
     console.log(`\n  --apply to write them.`);
   }
+  /*
+   * ---- A RECOVERED CUT ALSO MISSED ITS VERTICAL ---------------------------
+   *
+   * replace:video runs clip -> swap -> derive:vertical IN THAT ORDER, so a run
+   * killed after the swap leaves the row cut AND its 9:16 rendition stale. The
+   * first version of this script restored the ledger and stopped there, which
+   * left two invite-gate films serving a letterboxed master to phones —
+   * survivable, because pickRendition handles it, and still a degraded film
+   * nobody would have gone looking for.
+   *
+   * So the ledger is not the only thing an interrupted run leaves behind, and
+   * reporting half the damage is the kind of partial truth this whole pass
+   * keeps running into. Checked over every ledgered film, not just the ones
+   * backfilled in this run.
+   */
+  const stale = Object.values(ledger)
+    .map((v) => live.get(v.contentId as string))
+    .filter((r) => r && r.vertical_status !== "ready");
+  if (stale.length) {
+    console.log(`\n  STALE VERTICAL on ${stale.length} cut film(s) — phones get the master letterboxed:`);
+    for (const r of stale) console.log(`    npm run derive:vertical -- --id=${r!.id}   # ${r!.title}`);
+  } else {
+    console.log(`\n  every ledgered film has a ready vertical.`);
+  }
+
   console.log("");
-  /* A one-witness row is a thing a person has to look at, and the exit code
-     says so rather than a line that prints either way. */
-  if (refused.length) process.exit(1);
+  /* A one-witness row, or a cut film without its vertical, is a thing a person
+     has to look at, and the exit code says so rather than a line that prints
+     either way. */
+  if (refused.length || stale.length) process.exit(1);
 }
 
 if (require.main === module) {

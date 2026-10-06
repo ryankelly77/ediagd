@@ -917,5 +917,1871 @@
   "expectedDuration": 123.07,
   "durationOk": true,
   "backfilled": "reconstructed by trim:reconcile after a run was interrupted between the swap and the ledger write. Both witnesses held: archived_asset_id equals the asset the plan measured, and duration_sec matches the length the cut asked for."
+ },
+ "nGPdwATgDVe2NaCSCadFLr6Hlhnj4WdY4900HkFNCLTA": {
+  "contentId": "b24b51a7-43eb-4400-8664-a601f9059500",
+  "title": "After-MPI",
+  "newAssetId": "gKvkPsjXRmjXS4JCktOInWrlWgpGbaJM3mul4wAQKTw",
+  "trimStart": null,
+  "trimEnd": 152.07,
+  "oldDuration": 153.303333,
+  "newDuration": 152,
+  "cutAt": "2026-10-06T18:21:08.355Z",
+  "durationOk": true,
+  "expectedDuration": 152.07,
+  "verified": {
+   "head": 0,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "9pslB02EhkkdDhlHzLPmxqzdVqYwplbEKCXagUg0270202g": {
+  "contentId": "b8248253-c45d-4202-9876-429ceaede341",
+  "title": "MPI Setup",
+  "newAssetId": "dPE2mUD5WfEXZjypP5yVh7Wfh9dYBGGoWg2jHc005iz00",
+  "trimStart": 5.32,
+  "trimEnd": null,
+  "oldDuration": 79.801667,
+  "newDuration": 74,
+  "cutAt": "2026-10-06T18:23:41.789Z",
+  "durationOk": true,
+  "expectedDuration": 74.48,
+  "verified": {
+   "head": 0,
+   "tail": 0.802,
+   "ok": true
+  }
+ },
+ "SAMTbDn9qSTYktkoKWmo8PZIrerRQedFhlVHA4APHPM": {
+  "contentId": "bfce4b81-4c82-4c7a-905c-da3e6db72b4e",
+  "title": "At the Kiosk",
+  "newAssetId": "2jH2P89PrWIHi01hllgeT4L6zbvwzPgqm37dLAKD1yvc",
+  "trimStart": 8.66,
+  "trimEnd": 154.57,
+  "oldDuration": 158.47,
+  "newDuration": 146,
+  "cutAt": "2026-10-06T18:27:39.386Z",
+  "durationOk": true,
+  "expectedDuration": 145.91,
+  "verified": {
+   "head": 0,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "mgbiIBnfVZVO0101VEh9eSHuNlXLRFJbj6800wHWvyWIyI": {
+  "contentId": "c4054a35-4c82-46a2-9f86-d40995973a37",
+  "title": "At the Kiosk",
+  "newAssetId": "ac02kIHb9XleTPaBkDVCp40001iKaMpUUY00vl4LGCw2T7c",
+  "trimStart": null,
+  "trimEnd": 158.72,
+  "oldDuration": 163.342667,
+  "newDuration": 159,
+  "cutAt": "2026-10-06T18:31:36.533Z",
+  "durationOk": true,
+  "expectedDuration": 158.72,
+  "verified": {
+   "head": 0,
+   "tail": 0.72,
+   "ok": true
+  }
+ },
+ "31h2RuqxIr6hYk201kiQ02Td46Kn00q4ouEx028m5rXzbCM": {
+  "contentId": "ca5dc36a-442a-4726-be11-c5a06834e6af",
+  "title": "MPI Setup",
+  "newAssetId": "i0101vYNK00FqlVC5B201kUhp94y86ScB8Z2B1cxkjkKtr00",
+  "trimStart": null,
+  "trimEnd": 149.39,
+  "oldDuration": 150.366,
+  "newDuration": 149,
+  "cutAt": "2026-10-06T18:35:42.126Z",
+  "durationOk": true,
+  "expectedDuration": 149.39,
+  "verified": {
+   "head": 0.27,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "R3bTRV8lJ9ODqsP34wPYph6N3btpkkOb2jeFEvyGnZU": {
+  "contentId": "ca77cdaf-0605-4c16-acc4-455153d48feb",
+  "title": "After-MPI",
+  "newAssetId": "aq31RFUoyg4qTBGsTYFF96k00SoXJgOxqNNHLPzvUxZs",
+  "trimStart": 10.38,
+  "trimEnd": 149.36,
+  "oldDuration": 154.005,
+  "newDuration": 139,
+  "cutAt": "2026-10-06T18:39:27.710Z",
+  "durationOk": true,
+  "expectedDuration": 138.98,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "GDeLeI9V00B00Xl8qn003uuw16gK3iujEnslFRCOdhm2GM": {
+  "contentId": "d8fe0772-213c-47b2-acbb-48882abdea8e",
+  "title": "MPI Setup",
+  "newAssetId": "X5gH102Azu91bpnDMGvPn641kdBLUGswsI7gsg1OLEXA",
+  "trimStart": 10.88,
+  "trimEnd": 90.26,
+  "oldDuration": 96.505,
+  "newDuration": 79,
+  "cutAt": "2026-10-06T18:42:02.621Z",
+  "durationOk": true,
+  "expectedDuration": 79.38,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "OyMdkYs02isYgpelVsejz6u3Z4WMaTuxCn4hQ77vD6J8": {
+  "contentId": "edbdfa6c-7b83-4c27-a2b9-83bdce165c00",
+  "title": "After-MPI",
+  "newAssetId": "00e02ShXJUWKJkMMh01MvZtS5IXHOFFkM5uINnQPt5xgnU",
+  "trimStart": 11.3,
+  "trimEnd": 162.43,
+  "oldDuration": 166.376,
+  "newDuration": 151,
+  "cutAt": "2026-10-06T18:45:47.757Z",
+  "durationOk": true,
+  "expectedDuration": 151.13,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "c5ZZihF2VpLfkzQFIhHQ1aqHvcJFSd5hUmsCF9fKjpo": {
+  "contentId": "f02792f9-31a4-4cb9-af8d-6978e0a61b0d",
+  "title": "After-MPI",
+  "newAssetId": "aNjQdEYMv22W00v02ADEF7fmJUQJxtno186udTbTqWvMM",
+  "trimStart": null,
+  "trimEnd": 98.66,
+  "oldDuration": 103.276,
+  "newDuration": 99,
+  "cutAt": "2026-10-06T18:48:27.212Z",
+  "durationOk": true,
+  "expectedDuration": 98.66,
+  "verified": {
+   "head": 0,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "Uk7wSIjnw5sm5kTQBmCkfWh8UQjwwn9S7ygPLLvn006g": {
+  "contentId": "faa74440-38d8-4bf9-9c3c-2c5ce2e76438",
+  "title": "At the Kiosk",
+  "newAssetId": "RsmP5yn02k73dMqYfMkHBmyr5kRekzJLime5XuWo8KSA",
+  "trimStart": null,
+  "trimEnd": 82.71,
+  "oldDuration": 87.903333,
+  "newDuration": 83,
+  "cutAt": "2026-10-06T18:50:49.106Z",
+  "durationOk": true,
+  "expectedDuration": 82.71,
+  "verified": {
+   "head": 0,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "6jZy01qCzKAH02GHtoQRiswmnew01plHSYna00NmHrf1yUo": {
+  "contentId": "fb999538-62cd-48c6-b2c9-0ec5d13b2e61",
+  "title": "MPI Setup",
+  "newAssetId": "wIBjD72rf8LNqtOxg005R4fclQrIu6giIO3PTUo3c4yY",
+  "trimStart": null,
+  "trimEnd": 93.34,
+  "oldDuration": 97.075,
+  "newDuration": 93,
+  "cutAt": "2026-10-06T18:53:59.480Z",
+  "durationOk": true,
+  "expectedDuration": 93.34,
+  "verified": {
+   "head": 0,
+   "tail": 0.39,
+   "ok": true
+  }
+ },
+ "eSWxcL4J97tq001Z9H1b2DAdlxddD7Tp3rMhNzlCMHBs": {
+  "contentId": "ffcb8cb7-7b48-4db9-8335-d63ab01fbd1f",
+  "title": "On the Drive, Part 2",
+  "newAssetId": "bcyyLvwcZk3g2cRBv3YV01INPCAD00NkEm6BksNcqna9U",
+  "trimStart": 8.2,
+  "trimEnd": 105.16,
+  "oldDuration": 108.976,
+  "newDuration": 97,
+  "cutAt": "2026-10-06T18:56:26.373Z",
+  "durationOk": true,
+  "expectedDuration": 96.96,
+  "verified": {
+   "head": 0.1,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "VjCuDl5MsxFON00g8Daehe02gsBLT01kT8901E4RN8VsD2s": {
+  "contentId": "2f480703-8697-417c-8f0b-98750a99f3e2",
+  "title": "The Man in the Glass",
+  "newAssetId": "RWyiIrGVVKtwejFGEaFwtmvSSaCvYOlYVcqWq4AKkSM",
+  "trimStart": null,
+  "trimEnd": 75.63,
+  "oldDuration": 78.953333,
+  "newDuration": 76,
+  "cutAt": "2026-10-06T19:00:26.604Z",
+  "durationOk": true,
+  "expectedDuration": 75.63,
+  "verified": {
+   "head": 0,
+   "tail": 0.79,
+   "ok": true
+  }
+ },
+ "01cyvj42xSQDr00xpbwLcf758q02XwhtoQcE3UYReBESEE": {
+  "contentId": "6ac8ff68-b979-43f3-8a72-e32c0feb0e89",
+  "title": "Wall Street",
+  "newAssetId": "mxIG6Nc00qGjkhzTBTgp802y00AKyenSKlG01VZtKVVARwg",
+  "trimStart": null,
+  "trimEnd": 59.16,
+  "oldDuration": 60.686667,
+  "newDuration": 59,
+  "cutAt": "2026-10-06T19:02:15.641Z",
+  "expectedDuration": 59.16,
+  "durationOk": true,
+  "backfilled": "reconstructed by trim:reconcile after a run was interrupted between the swap and the ledger write. Both witnesses held: archived_asset_id equals the asset the plan measured, and duration_sec matches the length the cut asked for."
+ },
+ "qHpz011wzXLWNmY9ZZEaHVKRQkM3900P72WNLNbKCtK7s": {
+  "contentId": "704a5728-23e1-444d-b724-7b8888e54e77",
+  "title": "Your Toughest Opponent Is Staring at You",
+  "newAssetId": "lzlrhyO5iBUJqebTSj5C3jtmXTnaTNALk023gVq6lrzA",
+  "trimStart": null,
+  "trimEnd": 30.42,
+  "oldDuration": 31.340000000000003,
+  "newDuration": 30,
+  "cutAt": "2026-10-06T19:04:50.553Z",
+  "durationOk": true,
+  "expectedDuration": 30.42,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "MPHW8SykWVYTzKMOhc5exL026dXnHLOf9jJ00kwkAgy01c": {
+  "contentId": "801aa254-a12f-4448-9d15-a07ac9e486e1",
+  "title": "Never Lose Money",
+  "newAssetId": "z92ZXbWj400mu414101P3uV3Bw8GaUXhRrkhKd7eaTRx00",
+  "trimStart": null,
+  "trimEnd": 26.09,
+  "oldDuration": 27.086,
+  "newDuration": 26,
+  "cutAt": "2026-10-06T19:06:03.036Z",
+  "durationOk": true,
+  "expectedDuration": 26.09,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "py9QAVsmLjoxnftzK02V2WofZM3A23j9EejQVpxIFIE8": {
+  "contentId": "99eb848e-ad9a-4376-83b8-78dcd7e70d74",
+  "title": "Success Is a Choice",
+  "newAssetId": "TDdAIENTNPPbv2Lwwr01wA44mJX7VpSAHNKVSQAiYqDA",
+  "trimStart": null,
+  "trimEnd": 106.11,
+  "oldDuration": 110.376,
+  "newDuration": 106,
+  "cutAt": "2026-10-06T19:08:47.847Z",
+  "durationOk": true,
+  "expectedDuration": 106.11,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "00WbEBL8QEUA2lemCSQCkkkoYYAdb1QlpsQkvqfbSunc": {
+  "contentId": "b822e731-6522-4f55-930b-722ad575b965",
+  "title": "The Most Dangerous Person",
+  "newAssetId": "301UM5symVs6gNC028RhnNMiRmFDVzfKyu1QaZTK1hwV8",
+  "trimStart": null,
+  "trimEnd": 107.46,
+  "oldDuration": 108.561667,
+  "newDuration": 107,
+  "cutAt": "2026-10-06T19:12:26.312Z",
+  "durationOk": true,
+  "expectedDuration": 107.46,
+  "verified": {
+   "head": 0,
+   "tail": 0.66,
+   "ok": true
+  }
+ },
+ "YEfRJr006GG6vPS29k5Zj024fDBqRVjVu01H00tgCcrPxR8": {
+  "contentId": "be77a25e-fb59-4ba4-a8a0-f08c42d188fb",
+  "title": "Tomorrow Me vs. Today Me",
+  "newAssetId": "33l02qdWc01jIewPEJR4lFB2RQRgRn01SrxlWG9L9sDebM",
+  "trimStart": null,
+  "trimEnd": 83.92,
+  "oldDuration": 88.142667,
+  "newDuration": 84,
+  "cutAt": "2026-10-06T19:14:48.461Z",
+  "durationOk": true,
+  "expectedDuration": 83.92,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "naTunOdTOCaqvsVQEnp9Wt00AyYHisTS3fevZ02NaikdI": {
+  "contentId": "d2f9dc9a-5ae7-443d-86d8-be3ddf61b1d8",
+  "title": "Did I Get Better Today?",
+  "newAssetId": "ZC4RJKm4GQ4pk2iW5g00MYvFbCeC47HFyqtbyWjm8d01w",
+  "trimStart": null,
+  "trimEnd": 40.69,
+  "oldDuration": 41.606667,
+  "newDuration": 41,
+  "cutAt": "2026-10-06T19:16:22.757Z",
+  "durationOk": true,
+  "expectedDuration": 40.69,
+  "verified": {
+   "head": 0,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "y7ixhJtGpp95017765Ncn0101jpHSBMCqcBumSj8Cpb92I": {
+  "contentId": "dcd371b8-01c2-428e-a39b-acc929d97726",
+  "title": "All for One and One for All Versus Every Man for Himself",
+  "newAssetId": "00SVaQSo2Fzl9X64FcbpxOWK4ialLkT6WbXAN100kZDbA",
+  "trimStart": 7.68,
+  "trimEnd": 92.41,
+  "oldDuration": 97.809333,
+  "newDuration": 85,
+  "cutAt": "2026-10-06T19:19:05.800Z",
+  "durationOk": true,
+  "expectedDuration": 84.73,
+  "verified": {
+   "head": 1.98,
+   "tail": 0.61,
+   "ok": false
+  }
+ },
+ "ABncOweSQPI005U3fgh4Wy17PO4I8KGYOtcV02Je2JacI": {
+  "contentId": "e4d40ca9-0587-48f6-ba40-95a55251ce0c",
+  "title": "20 Years to Build a Reputation",
+  "newAssetId": "cTJdxq01fuvuXhO387xX5QUudpm700eOMwR01tR02KySbyk",
+  "trimStart": null,
+  "trimEnd": 26.11,
+  "oldDuration": 27.203332999999997,
+  "newDuration": 26,
+  "cutAt": "2026-10-06T19:20:54.533Z",
+  "durationOk": true,
+  "expectedDuration": 26.11,
+  "verified": {
+   "head": 0,
+   "tail": 0.65,
+   "ok": true
+  }
+ },
+ "CT00FhLSP47qOntJ8hsqzwaAXQlLCl6FNntkecXkSO9o": {
+  "contentId": "72788ac6-48ff-4da8-a599-17624bf8358f",
+  "title": "The OE Approach — Lifetime Fluid",
+  "newAssetId": "y19DgLiTPF02OrJyg9lYW6vqs3lDk3aF15OPchkRoGvs",
+  "trimStart": null,
+  "trimEnd": 152.67,
+  "oldDuration": 153.636667,
+  "newDuration": 153,
+  "cutAt": "2026-10-06T19:24:57.605Z",
+  "durationOk": true,
+  "expectedDuration": 152.67,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "tIQCfdVnT76HawGlyPTH7XHFZN6lrcQh4NCXkIjyAXw": {
+  "contentId": "7574149a-5477-4959-adbf-e34a09c02479",
+  "title": "The OE Approach — The Maintenance Menu",
+  "newAssetId": "rjBJa026qj01OAzysa98EX017xUjIjR9SZGK6xe7UjKmEk",
+  "trimStart": null,
+  "trimEnd": 167.35,
+  "oldDuration": 168.161667,
+  "newDuration": 167,
+  "cutAt": "2026-10-06T19:30:35.049Z",
+  "durationOk": true,
+  "expectedDuration": 167.35,
+  "verified": {
+   "head": 0,
+   "tail": 0.76,
+   "ok": true
+  }
+ },
+ "xNmTFfxpPunPzkUoO02Gy2IiFCXL2wimD01cq7VfRh9DY": {
+  "contentId": "a5b0f57b-55a7-4d18-b06f-6c569b72d5f0",
+  "title": "Dealer Upsell Menus and Interval Charts — Opener",
+  "newAssetId": "dlt7KK8BviHFuWUjHJXhTmo6SHDLU4aDAuCFaE4nQtw",
+  "trimStart": null,
+  "trimEnd": 156.82,
+  "oldDuration": 162.036667,
+  "newDuration": 157,
+  "cutAt": "2026-10-06T19:36:04.289Z",
+  "durationOk": true,
+  "expectedDuration": 156.82,
+  "verified": {
+   "head": 0.55,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "Ec6T6ycozrpiEpeTexWgoJRxYuVI7IbJZCLqamGeL00A": {
+  "contentId": "2d1b4feb-c002-4aa9-8b10-c01a2cfb992e",
+  "title": "30 Second Walk-Around, Part 4, Step 3, Start It",
+  "newAssetId": "xkABwvrDQzFjwTzKgD7GXRLIS14JvvfjxrYePu2gFuI",
+  "trimStart": 13.56,
+  "trimEnd": 151.95,
+  "oldDuration": 156.405,
+  "newDuration": 138,
+  "cutAt": "2026-10-06T19:41:03.415Z",
+  "durationOk": true,
+  "expectedDuration": 138.39,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "8MpFphBar2C1vaN5BGw022VmTyE9a6J1SakQI68DsZ84": {
+  "contentId": "4fe0f497-9572-408f-a7ee-445770e5f7fa",
+  "title": "30 Second Walk-Around, Part 8, Step 6 and 7, Miles, Shut It Off and Tires",
+  "newAssetId": "02piAjJJRVaPTfGCp5uP9XbzReztEyACb2nm7QBvjoPw",
+  "trimStart": 12.68,
+  "trimEnd": 163.24,
+  "oldDuration": 166.773333,
+  "newDuration": 151,
+  "cutAt": "2026-10-06T19:45:56.198Z",
+  "durationOk": true,
+  "expectedDuration": 150.56,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "bcI8901wnjfp02Ge8NSZ1AJJGV3cUjSkHjemIpjVxRCu4": {
+  "contentId": "76dfe519-6c42-4eee-a1d3-e5122a6aae9c",
+  "title": "30 Second Walk-Around, Part 6, Step 5, Washer Fluid",
+  "newAssetId": "OrAeDvIDpcKMar02q02MjXigh02u00spsNSmRM01a3i6piP00",
+  "trimStart": 10.4,
+  "trimEnd": 120.7,
+  "oldDuration": 126.371667,
+  "newDuration": 110,
+  "cutAt": "2026-10-06T19:49:56.832Z",
+  "durationOk": true,
+  "expectedDuration": 110.3,
+  "verified": {
+   "head": 0.36,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "kZxhB8gUy7LkZlPqApTwEOaxGjZCF76kqyfE00nMJZoY": {
+  "contentId": "b3d690cd-f9d1-4a5d-be33-c234d2c74fce",
+  "title": "Two Minute Walk-Around, Part 2, 4 things under the hood",
+  "newAssetId": "J5oigV4mKooZJ55eqtWm500EaX00t4GN02CWoebSyoggiM",
+  "trimStart": null,
+  "trimEnd": 181.05,
+  "oldDuration": 187.34,
+  "newDuration": 181,
+  "cutAt": "2026-10-06T19:55:07.231Z",
+  "durationOk": true,
+  "expectedDuration": 181.05,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "gWiDVsj00A01qe00NQgW4MNpf9rs3L02uk001f1iGwL1T005U": {
+  "contentId": "ee8551f3-c0af-4345-8dc1-5c2e7d092a65",
+  "title": "Two Minute Walk-Around, Part 1, Pop the Hood",
+  "newAssetId": "GKeZBISfA4uB4WLCQwry6XGP4o00QyjoHUV01MCxCA020100",
+  "trimStart": null,
+  "trimEnd": 150.69,
+  "oldDuration": 154.471667,
+  "newDuration": 151,
+  "cutAt": "2026-10-06T19:59:28.307Z",
+  "durationOk": true,
+  "expectedDuration": 150.69,
+  "verified": {
+   "head": 0,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "pM3d00RBxTg902q9Pj5EjlJ1NUoWzuFUKs02kO1YCfLvUo": {
+  "contentId": "f9f0edc7-cf89-4c06-83cd-07e3d7081d51",
+  "title": "30 Second Walk-Around, Part 5, Step 4, Wheels to the Left",
+  "newAssetId": "tfylaC1NLmLE01BjwxeVfVFlNTYegOLcPY3AY2eCFRRQ",
+  "trimStart": 12.6,
+  "trimEnd": 136.78,
+  "oldDuration": 143.105,
+  "newDuration": 124,
+  "cutAt": "2026-10-06T20:03:07.004Z",
+  "durationOk": true,
+  "expectedDuration": 124.18,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "MIxgvgNdPWSTRMTpgrzPFNGx0190202dH4HS3rhbQspRhs": {
+  "contentId": "fe74e7f0-ae86-40c4-9550-fe3cbd0435e7",
+  "title": "30 Second Walk-Around, Part 7, The Four Step Close",
+  "newAssetId": "wXr01QlrFfMb9WqbY75JzMWNaX6ILgUPTUjYHrIZkfKA",
+  "trimStart": 10.66,
+  "trimEnd": 123.24,
+  "oldDuration": 128.038333,
+  "newDuration": 113,
+  "cutAt": "2026-10-06T20:06:27.196Z",
+  "durationOk": true,
+  "expectedDuration": 112.58,
+  "verified": {
+   "head": 0.58,
+   "tail": 0.64,
+   "ok": true
+  }
+ },
+ "uEQT4PnvCeonc9h1ct8Xrwtj01QbuCD00hJrlGQhWg9Vw": {
+  "contentId": "28a76251-df96-482e-8159-233cb79bfc45",
+  "title": "Selling Skills, Part 4",
+  "newAssetId": "mZ48pzCd8ZG5ExO017UtWQWj1EE4HOkza2t00Dc6ihsV00",
+  "trimStart": 9.34,
+  "trimEnd": 73.14,
+  "oldDuration": 78.101667,
+  "newDuration": 64,
+  "cutAt": "2026-10-06T20:08:47.559Z",
+  "durationOk": true,
+  "expectedDuration": 63.8,
+  "verified": {
+   "head": 0.6,
+   "tail": 0.5,
+   "ok": true
+  }
+ },
+ "1AAJQC01U2lwx4JpfOYhUlFZo72z00witKLnssNfoZ6I00": {
+  "contentId": "2a458ec9-6f0c-4d77-ac95-3be768576347",
+  "title": "Lasting Impressions — Closer",
+  "newAssetId": "bCIcrT6aHY23PWrehYHt5W01PGxj00NjvhEp7Dt00wTNdA",
+  "trimStart": 11.88,
+  "trimEnd": 81.48,
+  "oldDuration": 86.442667,
+  "newDuration": 70,
+  "cutAt": "2026-10-06T20:11:09.286Z",
+  "durationOk": true,
+  "expectedDuration": 69.6,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "6USRjwY7XsrrGip025VVm00BsZk3rJhdo8w45wKpNSxv00": {
+  "contentId": "2b3bf742-525a-497e-b9e1-1613b1e5c2ad",
+  "title": "Lasting Impressions, Part 10",
+  "newAssetId": "4S702YdoO6ct4evTRc9rWYrLTZivDoGD2BMy7mI5EKGQ",
+  "trimStart": 12.48,
+  "trimEnd": 105.09,
+  "oldDuration": 110.571667,
+  "newDuration": 93,
+  "cutAt": "2026-10-06T20:14:36.914Z",
+  "durationOk": true,
+  "expectedDuration": 92.61,
+  "verified": {
+   "head": 0,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "Oa3HF6ugoRKJEZwzEEMcvdfQfS012pstqVZrXvhag01DY": {
+  "contentId": "2c1248e3-e06f-4344-9c30-4869b9b7dcb9",
+  "title": "Name Tag, Part 7",
+  "newAssetId": "rBin5o9R015YqjBaAkIFAnTOBhfBeD0101flmHOOOzYLH4",
+  "trimStart": 12.5,
+  "trimEnd": 172.28,
+  "oldDuration": 177.106667,
+  "newDuration": 160,
+  "cutAt": "2026-10-06T20:20:05.345Z",
+  "durationOk": true,
+  "expectedDuration": 159.78,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "TcjWldIjCpRwMDXWHLaZBj1igm00zvUuKPaILTI2usEw": {
+  "contentId": "2c186b71-cb1f-48d2-af63-54894486f81f",
+  "title": "Coverage is Key, Part 2",
+  "newAssetId": "Yi48TbLX9lEXqGmXvg9qyObMkNTnGuSvxF94dMwYElQ",
+  "trimStart": 13.38,
+  "trimEnd": 126.26,
+  "oldDuration": 130.705,
+  "newDuration": 113,
+  "cutAt": "2026-10-06T20:23:13.482Z",
+  "durationOk": true,
+  "expectedDuration": 112.88,
+  "verified": {
+   "head": 0,
+   "tail": 0.26,
+   "ok": true
+  }
+ },
+ "cAlFvOXwb3ZVsDfhz8688HTzzO6qdHhBhbJhBbr8wAs": {
+  "contentId": "2f779f00-5020-4a1c-ae91-de01a46203e2",
+  "title": "Four Step Close, Part 2",
+  "newAssetId": "LWqauzOeBhWaXh3midbXpkCtnFCHnku2bcrpJdlO2Zs",
+  "trimStart": 10.14,
+  "trimEnd": 71.03,
+  "oldDuration": 75.235,
+  "newDuration": 61,
+  "cutAt": "2026-10-06T20:25:28.130Z",
+  "durationOk": true,
+  "expectedDuration": 60.89,
+  "verified": {
+   "head": 0.42,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "79xiyvJi02gdPO6s00N6jufX1pulOSmjSbsqIO892KWJA": {
+  "contentId": "2feff211-2775-49ce-8021-0e6e1670a7bd",
+  "title": "Menu Wrap-Up, Part 2",
+  "newAssetId": "C6R51c6ybcUb5KHBjSAyalfY9nyf3ZCbpgox4nnkUPM",
+  "trimStart": null,
+  "trimEnd": 205.81,
+  "oldDuration": 210.473333,
+  "newDuration": 206,
+  "cutAt": "2026-10-06T20:30:51.918Z",
+  "durationOk": true,
+  "expectedDuration": 205.81,
+  "verified": {
+   "head": 0,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "ZB6SH6K6Dz2O4sv5iuPxlw003x029yHGTWBOqXSCmIdiI": {
+  "contentId": "3223a2a3-9434-40f8-9972-e8a9fd13dde6",
+  "title": "Success Cycle — Closer",
+  "newAssetId": "H8NUTV2BfuwLeyeGrtLQM5sH02gJ8KEDyGwegTae00pRM",
+  "trimStart": 9.82,
+  "trimEnd": 80.63,
+  "oldDuration": 85.642667,
+  "newDuration": 71,
+  "cutAt": "2026-10-06T20:33:07.816Z",
+  "durationOk": true,
+  "expectedDuration": 70.81,
+  "verified": {
+   "head": 0.16,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "UxUueX8viZee0002jUAuaE8W902TII4JNCSy5auizqAYjM": {
+  "contentId": "386c63f5-23e5-4507-9570-f71f5f920ad4",
+  "title": "Selling Skills, The Steer Objection",
+  "newAssetId": "1CJjPohh02pEp8I9f31acfOO015rvn01uLq1o78yRvPco00",
+  "trimStart": 10.98,
+  "trimEnd": 99.9,
+  "oldDuration": 104.671667,
+  "newDuration": 89,
+  "cutAt": "2026-10-06T20:35:59.338Z",
+  "durationOk": true,
+  "expectedDuration": 88.92,
+  "verified": {
+   "head": 0,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "fOmRU1jtYhatI6sfzFrMY801bTWig6JCO4Ks00IC6ENcA": {
+  "contentId": "39fa3064-71e1-40e0-845c-843a956d5345",
+  "title": "Get the Hell Out of Here, Part 4",
+  "newAssetId": "6meUN00iJcMzxg7XXilIJYxSbpINFkHYYD5fuQypnQXk",
+  "trimStart": 12.72,
+  "trimEnd": 96.8,
+  "oldDuration": 101.376,
+  "newDuration": 84,
+  "cutAt": "2026-10-06T20:38:21.745Z",
+  "durationOk": true,
+  "expectedDuration": 84.08,
+  "verified": {
+   "head": 0.8,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "KAqy8DN4QNMC01EA73Kxl7phyyMXpI7BSeOSqyluoXXs": {
+  "contentId": "3a1a6e00-b92c-42a6-a598-c25930cf0824",
+  "title": "Four Step Close, Part 7",
+  "newAssetId": "YHA97WQlzybDh01J300t1Hlk9XWZsWSMktUh902Tjrn201U",
+  "trimStart": null,
+  "trimEnd": 99.42,
+  "oldDuration": 104.938333,
+  "newDuration": 99,
+  "cutAt": "2026-10-06T20:41:19.052Z",
+  "durationOk": true,
+  "expectedDuration": 99.42,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "pyGyKRF6AGzMHqlUa2VG01wJvXsNL5MUuphU3y01G3RMY": {
+  "contentId": "3e12212a-02b0-4f41-9b47-9cab52bb58ed",
+  "title": "Name Tag, Part 6",
+  "newAssetId": "zh5vSOO3ieOIhJT01Z01dQNyZmQzT02tKEUYl7UpNBwcW8",
+  "trimStart": 15.54,
+  "trimEnd": null,
+  "oldDuration": 128.209333,
+  "newDuration": 113,
+  "cutAt": "2026-10-06T20:44:09.043Z",
+  "durationOk": true,
+  "expectedDuration": 112.67,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": true
+  }
+ },
+ "rrvlmTypsVUuORFMaq9DzvDQD2o4018dkhx9vHlGawRc": {
+  "contentId": "4167cc0c-ae2a-4916-bc36-03b1b34038c0",
+  "title": "Lasting Impressions, Part 1",
+  "newAssetId": "Uz17seDwVCr2hulfWx65CjOR01yrHqWb1hlk7StHqe6M",
+  "trimStart": null,
+  "trimEnd": 123.6,
+  "oldDuration": 128.538333,
+  "newDuration": 124,
+  "cutAt": "2026-10-06T20:47:33.943Z",
+  "durationOk": true,
+  "expectedDuration": 123.6,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "wIfJ4hfh47qED6U2H026Zr78Dg3olSuI9WxDHnf29pfo": {
+  "contentId": "416c1690-88c7-4fcf-aca2-39cdbea47326",
+  "title": "Get the Hell Out of Here, Part 5",
+  "newAssetId": "L8odtLm0001Av75AF00GZJVKNQRXxbYad9wZ27kRi01YbF8",
+  "trimStart": 14.06,
+  "trimEnd": 122.94,
+  "oldDuration": 126.576,
+  "newDuration": 109,
+  "cutAt": "2026-10-06T20:50:16.591Z",
+  "durationOk": true,
+  "expectedDuration": 108.88,
+  "verified": {
+   "head": 0,
+   "tail": 0.5,
+   "ok": true
+  }
+ },
+ "nyI6mr01FJu3XWIldiWU3mMpeD000197a77h01uXVuW68EU": {
+  "contentId": "44cfa330-24ab-4338-9667-705a35a27306",
+  "title": "Coverage is Key, Part 1",
+  "newAssetId": "W80002C7sDKPn01N01AOZi00ES8EC8RTl9nofmnHuz1o8E4A",
+  "trimStart": 10.46,
+  "trimEnd": 95.61,
+  "oldDuration": 100.205,
+  "newDuration": 85,
+  "cutAt": "2026-10-06T20:52:34.160Z",
+  "durationOk": true,
+  "expectedDuration": 85.15,
+  "verified": {
+   "head": 0.44,
+   "tail": 0.17,
+   "ok": true
+  }
+ },
+ "LeXtCE2lelQPoEZbRCyrw9i53rIEmlSsC9lTJj01ciwA": {
+  "contentId": "454e441a-d442-4d3b-9165-5597d6d385f9",
+  "title": "Lasting Impressions, Part 4",
+  "newAssetId": "oVqmyzwTY600O94RMahLIqF953P8FbDUYlDVsL2RI2ek",
+  "trimStart": 11.18,
+  "trimEnd": 78.34,
+  "oldDuration": 83.335,
+  "newDuration": 67,
+  "cutAt": "2026-10-06T20:54:46.830Z",
+  "durationOk": true,
+  "expectedDuration": 67.16,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "bXoLgCy501Wavc9P017ogjO02Dv4tMsuJueLRlG7JOAFwQ": {
+  "contentId": "51e395fd-0e36-46bc-a1f3-6f2ee7f07867",
+  "title": "Lasting Impressions, Part 8",
+  "newAssetId": "EGL4Zz75wij4CYssHTynhe7t9tyZN9SfWIIklock00jA",
+  "trimStart": 15.24,
+  "trimEnd": 112.03,
+  "oldDuration": 117.838333,
+  "newDuration": 97,
+  "cutAt": "2026-10-06T20:57:21.895Z",
+  "durationOk": true,
+  "expectedDuration": 96.79,
+  "verified": {
+   "head": 0,
+   "tail": 0.31,
+   "ok": true
+  }
+ },
+ "xgM9MyVa7UedEpqKSh4XF3A5wOuj3gfULOOBrviPkwk": {
+  "contentId": "578d541d-292a-4e4b-9b2a-8a06c5051c97",
+  "title": "Success Cycle, Part 2, Vocabulary That Sails",
+  "newAssetId": "n1yLG102BrMRJda7S72z600TQU4XXlveQZYnbgyB63aBc",
+  "trimStart": 10.64,
+  "trimEnd": 191.61,
+  "oldDuration": 195.742667,
+  "newDuration": 181,
+  "cutAt": "2026-10-06T21:01:46.771Z",
+  "durationOk": true,
+  "expectedDuration": 180.97,
+  "verified": {
+   "head": 0.04,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "zmhrABoLvt4Dk02rMkhh0102cdNmU6REO8fvl0277AQierQ": {
+  "contentId": "58f8ee90-f4dc-4594-ad02-5018eef1da38",
+  "title": "Name Tag, Part 10",
+  "newAssetId": "myCzWP01LlRp012OZ8wtPTfC2Qb3sBO93e901lJ5Yx00Kk4",
+  "trimStart": 12.48,
+  "trimEnd": 153.44,
+  "oldDuration": 158.109333,
+  "newDuration": 141,
+  "cutAt": "2026-10-06T21:05:06.929Z",
+  "durationOk": true,
+  "expectedDuration": 140.96,
+  "verified": {
+   "head": 0,
+   "tail": 0.52,
+   "ok": true
+  }
+ },
+ "2dfeiETHqz00ODQeXLdMyf4OXfUt02019o01jyBrEE4W3028": {
+  "contentId": "6326b8df-7e33-43f9-bbb0-3da11f1dca20",
+  "title": "Four Step Close, Part 5",
+  "newAssetId": "XtvYw7bqyq9tzvWbo6wg3701RVMxE02tl66XzB02ZWptgA",
+  "trimStart": 11.74,
+  "trimEnd": null,
+  "oldDuration": 87.703333,
+  "newDuration": 76,
+  "cutAt": "2026-10-06T21:07:19.611Z",
+  "durationOk": true,
+  "expectedDuration": 75.96,
+  "verified": {
+   "head": 0,
+   "tail": 0.623,
+   "ok": true
+  }
+ },
+ "hkBFBSK8LCzW7K7IXPSICsJqdH8PKuhAUrFY2iOhV8s": {
+  "contentId": "633fb98a-2df7-48fa-97cb-4617e538070e",
+  "title": "Selling Skills, Part 3",
+  "newAssetId": "JnocWWT6HCPU01VrGz6faB025ySlYjTd8FSyYjV7iHFzU",
+  "trimStart": null,
+  "trimEnd": 100.44,
+  "oldDuration": 104.876,
+  "newDuration": 100,
+  "cutAt": "2026-10-06T21:09:48.771Z",
+  "durationOk": true,
+  "expectedDuration": 100.44,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "NngGRGDVUN6SoV42ttZBNUvUFPRbbvHgX3ok2I00r3HA": {
+  "contentId": "63456d6d-1807-4bac-90ce-489cab8d15eb",
+  "title": "Success Cycle, Part 6, More Staging",
+  "newAssetId": "LOSRRgR2FxkTJfqicIOIsPVkTV49dWtVlV9y2UK2O800",
+  "trimStart": 12.5,
+  "trimEnd": 168.81,
+  "oldDuration": 173.176,
+  "newDuration": 156,
+  "cutAt": "2026-10-06T21:13:36.445Z",
+  "durationOk": true,
+  "expectedDuration": 156.31,
+  "verified": {
+   "head": 0.04,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "vardM01tZsIfz01yqRV8hFwHa7J3mjqwVjx9t2uc1dWpo": {
+  "contentId": "64b35132-41ff-42e3-96a7-6a1f7975e2e3",
+  "title": "Phones and Tones, Part 10",
+  "newAssetId": "uQ4smpLINis63pcA4ow72KsS93i801SheoKMqZc8sHuY",
+  "trimStart": 10.36,
+  "trimEnd": 129.74,
+  "oldDuration": 134.371667,
+  "newDuration": 119,
+  "cutAt": "2026-10-06T21:16:45.518Z",
+  "durationOk": true,
+  "expectedDuration": 119.38,
+  "verified": {
+   "head": 0,
+   "tail": 0.5,
+   "ok": true
+  }
+ },
+ "3b5XqyuAHc1777g4gTmkNZlekCXVTOuv2bNhEYOWXIE": {
+  "contentId": "64b81c6c-8b20-4999-b17d-c2b75a177578",
+  "title": "Phones and Tones, Part 11",
+  "newAssetId": "JXdcUG291dVqWY02WXvZGbhhKTdNqsFG021g1eZOfwB5I",
+  "trimStart": 12.72,
+  "trimEnd": 97.23,
+  "oldDuration": 102.271667,
+  "newDuration": 85,
+  "cutAt": "2026-10-06T21:18:58.368Z",
+  "durationOk": true,
+  "expectedDuration": 84.51,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "C002UfwqduEjXAr8RHOOtTW00og44IacItub73101QJWK4": {
+  "contentId": "663f1788-cc6e-4e93-9de9-6437270d63f1",
+  "title": "Get the Hell Out of Here, Part 8",
+  "newAssetId": "p3XH8x4ZCKyt9ilT7m01fGqHuXVlanMAcKk300aXFP02EM",
+  "trimStart": 13.48,
+  "trimEnd": 106.76,
+  "oldDuration": 111.042667,
+  "newDuration": 93,
+  "cutAt": "2026-10-06T21:21:22.400Z",
+  "durationOk": true,
+  "expectedDuration": 93.28,
+  "verified": {
+   "head": 0,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "02YTkWWO00N6of1g01O01014UqzeNgwb01Fe4Bj6mSeXKmoGo": {
+  "contentId": "6700b936-9943-4d70-96b7-0d1ed655abf1",
+  "title": "Coverage is Key, Part 7",
+  "newAssetId": "f7KPVzohF00dabd3Nv77br3hi9MTr8ZpW3k7aSbt01VX00",
+  "trimStart": 14.64,
+  "trimEnd": 103.42,
+  "oldDuration": 108.871667,
+  "newDuration": 89,
+  "cutAt": "2026-10-06T21:23:46.847Z",
+  "durationOk": true,
+  "expectedDuration": 88.78,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "AImgVM8rRP00CK2ficNWI2dRyf01kaxwpkctnLeftrY01o": {
+  "contentId": "6bce6f3c-84b4-4427-9342-f481697ef4bb",
+  "title": "Name Tag, Part 3",
+  "newAssetId": "WvMDzcg8l1E02qMwx01gAWhzIJxj00rP7uO0002QTUaUG700Y",
+  "trimStart": 12.08,
+  "trimEnd": 117.62,
+  "oldDuration": 122.405,
+  "newDuration": 106,
+  "cutAt": "2026-10-06T21:26:22.181Z",
+  "durationOk": true,
+  "expectedDuration": 105.54,
+  "verified": {
+   "head": null,
+   "tail": 0.58,
+   "ok": null
+  }
+ },
+ "CKn01yNfEP9vmpT1Gq79EgNYfrI1h9mmzdPZvoyfnzsg": {
+  "contentId": "6c9f2411-0da6-4638-b356-1bfffda60134",
+  "title": "Coverage is Key, Part 8",
+  "newAssetId": "YrgpY2MmmxzSECxzPhRh00hC2PFUiYZwcwVsvDaj9fjQ",
+  "trimStart": null,
+  "trimEnd": 139.85,
+  "oldDuration": 146.038333,
+  "newDuration": 140,
+  "cutAt": "2026-10-06T21:29:39.713Z",
+  "durationOk": true,
+  "expectedDuration": 139.85,
+  "verified": {
+   "head": 10,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "u9stWaXjW02gngUFRhOB5D1UwKbDAMO4ajuvHcBuvjsQ": {
+  "contentId": "6f720ea2-c2f4-409e-857c-08c1976784d5",
+  "title": "Success Cycle, Part 4, Green Yellow Red",
+  "newAssetId": "w3SBLhcRCz02sgsVL5xC3RXOwsElUE9f2UZDGtjHbt9A",
+  "trimStart": 9.88,
+  "trimEnd": 147.41,
+  "oldDuration": 151.705,
+  "newDuration": 138,
+  "cutAt": "2026-10-06T21:33:03.345Z",
+  "durationOk": true,
+  "expectedDuration": 137.53,
+  "verified": {
+   "head": 0.1,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "4Kb8PJ7cterBuTgoXPs5n7k00tTLEFM1UR7QENyS00EI00": {
+  "contentId": "73149ac1-3064-4fd9-86f0-2a098035a4ff",
+  "title": "Name Tag, Part 4",
+  "newAssetId": "bypgEwnxH5YBMpdXGhPssSxNuOrdLCHz177sWAQPvRY",
+  "trimStart": 12.98,
+  "trimEnd": 123.98,
+  "oldDuration": 128.276,
+  "newDuration": 111,
+  "cutAt": "2026-10-06T21:35:37.728Z",
+  "durationOk": true,
+  "expectedDuration": 111,
+  "verified": {
+   "head": 0.1,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "Ldwn3xo9SszINgfaRApF3tBQUzIQueqNoMq02GLV9Ro4": {
+  "contentId": "799b05d7-f8c8-4972-b0ab-2c6028ad9813",
+  "title": "Selling Skills, Part 6",
+  "newAssetId": "B0001uQa35tsrezekiBq138Q62hC1Z1aAsIgFTTPjZDqM",
+  "trimStart": 11.24,
+  "trimEnd": 113.15,
+  "oldDuration": 117.538333,
+  "newDuration": 102,
+  "cutAt": "2026-10-06T21:38:30.433Z",
+  "durationOk": true,
+  "expectedDuration": 101.91,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "3TcZEpK4WpkDyYTtf4cSbLnm01LTEA00Xa4IcgQvaMAS8": {
+  "contentId": "7c6095bf-d8d8-40e8-920b-40bac2e141e8",
+  "title": "Phones and Tones, Part 8",
+  "newAssetId": "HWQwQtxOqAR00ij2SeRoYA01JV7lQocXnwaKyI5jpkol8",
+  "trimStart": 11.26,
+  "trimEnd": 82.17,
+  "oldDuration": 87.77,
+  "newDuration": 71,
+  "cutAt": "2026-10-06T21:40:36.722Z",
+  "durationOk": true,
+  "expectedDuration": 70.91,
+  "verified": {
+   "head": 0.4,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "JOYCdaGQGnHfIPB7bpoGqG012U8N01Sig8kTfAWz1Dc2M": {
+  "contentId": "7e15c899-dbec-4702-9973-82d5f528d12a",
+  "title": "Lasting Impressions, Part 12",
+  "newAssetId": "Ny9YlrVI1WY6i4TMk5ZHLTH84tKEMojdZhS9xj9aOEY",
+  "trimStart": 12.06,
+  "trimEnd": 114.17,
+  "oldDuration": 119.105,
+  "newDuration": 102,
+  "cutAt": "2026-10-06T21:43:35.390Z",
+  "durationOk": true,
+  "expectedDuration": 102.11,
+  "verified": {
+   "head": 0.58,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "GeXPCj00i6NcClwGNJzt5zzdH02dWyc6nbieDGkPPKAaw": {
+  "contentId": "7ef36c38-802b-4254-bd55-039eea3da4eb",
+  "title": "Phones and Tones, Part 3",
+  "newAssetId": "mxog3Gi23L7DwixaV01tx01r1l3CDSwq87XpPvu7mwTKE",
+  "trimStart": 10.48,
+  "trimEnd": 79.23,
+  "oldDuration": 84.07,
+  "newDuration": 69,
+  "cutAt": "2026-10-06T21:45:29.019Z",
+  "durationOk": true,
+  "expectedDuration": 68.75,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "dtOufVjlks00IEmXbdox4NujSQeGy7cz5lfqJXKFQPjY": {
+  "contentId": "80d8f415-5456-4139-bc7d-2c13037dec3f",
+  "title": "Selling Skills, Part 2",
+  "newAssetId": "025aYBckyIm01Mbj02lfBd58zM6Zz00C7WNtC7mJZteuum8",
+  "trimStart": 10.92,
+  "trimEnd": 87.26,
+  "oldDuration": 91.976,
+  "newDuration": 76,
+  "cutAt": "2026-10-06T21:47:36.910Z",
+  "durationOk": true,
+  "expectedDuration": 76.34,
+  "verified": {
+   "head": 0,
+   "tail": 0.46,
+   "ok": true
+  }
+ },
+ "BfMZQpWh601gv6BVFjcjbjW8CbLaHePNLIhR7ugRLHmk": {
+  "contentId": "8170b494-6529-479b-8d62-e8b2c21d8f74",
+  "title": "Success Cycle, Part 11, The Repair Call",
+  "newAssetId": "84Z9W01r8021D01w7NMfiLfC9qsli2MFgE402f003z2CCsVw",
+  "trimStart": 9.96,
+  "trimEnd": 205.05,
+  "oldDuration": 209.14,
+  "newDuration": 195,
+  "cutAt": "2026-10-06T21:52:29.766Z",
+  "durationOk": true,
+  "expectedDuration": 195.09,
+  "verified": {
+   "head": 0,
+   "tail": 0.17,
+   "ok": true
+  }
+ },
+ "zxOS8VZSmSW4UF00uRXgwsotFgBdq3Mx007lIsXoRpC1c": {
+  "contentId": "82e3496c-2c91-4451-b16f-2b1659f875a6",
+  "title": "Selling Skills, Part 7",
+  "newAssetId": "aDwT00liDYasK8E2vja9b8wfTt4hQ7exhfqSe9vGqBYI",
+  "trimStart": 10.44,
+  "trimEnd": 105,
+  "oldDuration": 110.038333,
+  "newDuration": 95,
+  "cutAt": "2026-10-06T21:57:02.244Z",
+  "durationOk": true,
+  "expectedDuration": 94.56,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "Jc7msRTgc5csY9bYmjQiFgt7OLVtageFLb02lHB02JAA00": {
+  "contentId": "84f0d456-5971-4318-91b5-7d498831b278",
+  "title": "Success Cycle, Part 5, The 6 Stages",
+  "newAssetId": "xnP9x9x42WYkQLDwbjMTKbXCpzvLSFyJFzWwz02BrB900",
+  "trimStart": 11.5,
+  "trimEnd": 195.69,
+  "oldDuration": 199.54,
+  "newDuration": 184,
+  "cutAt": "2026-10-06T22:01:15.794Z",
+  "durationOk": true,
+  "expectedDuration": 184.19,
+  "verified": {
+   "head": 0,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "6DmUmjApRRr4Rd5ETUvQe4CQ001bZwlrHTD3bOieMhQw": {
+  "contentId": "88d65da7-964e-43db-8115-49896ad2a06f",
+  "title": "Get the Hell Out of Here, Part 3",
+  "newAssetId": "uEbDr6m59uRrMAugb802aKXFOb01FyrNV00InBU46PtRZQ",
+  "trimStart": 14.3,
+  "trimEnd": 120.5,
+  "oldDuration": 124.976,
+  "newDuration": 106,
+  "cutAt": "2026-10-06T22:03:49.140Z",
+  "durationOk": true,
+  "expectedDuration": 106.2,
+  "verified": {
+   "head": null,
+   "tail": 0.52,
+   "ok": null
+  }
+ },
+ "RxeK1ZsXpnNc5FKL6gY01jNPhmpsHDDhmThthqyKOyJg": {
+  "contentId": "8aa3f97d-d941-416c-954c-f851cc8efb77",
+  "title": "Lasting Impressions, Part 11",
+  "newAssetId": "XFPaW001joczhrTuppwN3KZN4ewcMvDZZ01EvbJQeSsRg",
+  "trimStart": 11.78,
+  "trimEnd": 135.66,
+  "oldDuration": 139.705,
+  "newDuration": 124,
+  "cutAt": "2026-10-06T22:07:00.674Z",
+  "durationOk": true,
+  "expectedDuration": 123.88,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "qky4TsK22VykG7bKa01901OI01rOtzyfl9O4ysm99IuhS8": {
+  "contentId": "8abe28de-8bf1-490e-8d53-8a26dab908f3",
+  "title": "Phones and Tones, Part 2",
+  "newAssetId": "Yr5Hlowk100IaH635nlmi5jJ5dGaf019HQzd19hrPYk24",
+  "trimStart": 10.72,
+  "trimEnd": 85.38,
+  "oldDuration": 90.57,
+  "newDuration": 75,
+  "cutAt": "2026-10-06T22:09:04.417Z",
+  "durationOk": true,
+  "expectedDuration": 74.66,
+  "verified": {
+   "head": 0.08,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "NTTskSME75339TmoMyuDeaknSIFkCtj5InMtcYQ9v4k": {
+  "contentId": "8b17978e-bef3-4cf3-a42e-a397230bb990",
+  "title": "Coverage is Key, Part 4",
+  "newAssetId": "00R700M2L6rPrzTCgjiUJRrza9Z55KCTLuSebXcKZ7Uj00",
+  "trimStart": 10.82,
+  "trimEnd": 122.33,
+  "oldDuration": 127.105,
+  "newDuration": 112,
+  "cutAt": "2026-10-06T22:11:50.975Z",
+  "durationOk": true,
+  "expectedDuration": 111.51,
+  "verified": {
+   "head": null,
+   "tail": 0.53,
+   "ok": null
+  }
+ },
+ "hnUequU00GMi3w78qvKn01DBsSXh7Xsh8cjGFB4VvCvEs": {
+  "contentId": "8b48d7b3-1816-4061-ae60-8a5d250ce5c3",
+  "title": "Coverage is Key — Opener",
+  "newAssetId": "bkojJ5ulpE02KCTJRHZEidlaypEiI5Ez4DbpBjvd99G8",
+  "trimStart": 10.18,
+  "trimEnd": 89.77,
+  "oldDuration": 95.076,
+  "newDuration": 80,
+  "cutAt": "2026-10-06T22:14:09.864Z",
+  "durationOk": true,
+  "expectedDuration": 79.59,
+  "verified": {
+   "head": 0,
+   "tail": 0.51,
+   "ok": true
+  }
+ },
+ "1CEIk8x2MBg9RUtArYAMd4tFv4hpIyPOXdlm37GHURQ": {
+  "contentId": "949ad465-baf2-4043-a8a9-f9d241fa2c9e",
+  "title": "Name Tag, Part 8",
+  "newAssetId": "mXgis01PsDBX9DL9gCOEPZDV4dtN7Y4CkEMrP2f7RYj4",
+  "trimStart": 12.16,
+  "trimEnd": 128.88,
+  "oldDuration": 133.738333,
+  "newDuration": 117,
+  "cutAt": "2026-10-06T22:17:16.535Z",
+  "durationOk": true,
+  "expectedDuration": 116.72,
+  "verified": {
+   "head": 0.08,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "D5L01OicCS3Q02JpvUKKvYOCbFg3uKkEP02g101p00F3DJ7k": {
+  "contentId": "964a07d4-40f1-43ce-8015-8215757fd0f7",
+  "title": "Coverage is Key — Closer",
+  "newAssetId": "PUDi3pHWWrHWnLc1RSBgBGZNFDiMMADTsxUOew6ovr4",
+  "trimStart": 10.42,
+  "trimEnd": 72.79,
+  "oldDuration": 77.776,
+  "newDuration": 62,
+  "cutAt": "2026-10-06T22:19:06.155Z",
+  "durationOk": true,
+  "expectedDuration": 62.37,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "yBwZ8e02ii02q8WrNv8029G2dtueHWw902wpF5zUoEfZW8s": {
+  "contentId": "9becc01b-737f-4f44-b672-5da41dc2a7d9",
+  "title": "Setting up the MPI — Closer",
+  "newAssetId": "sN5jFtr02AaXuEyecNQZYYiZkJyYGCl4U8qLVkWb00Ftg",
+  "trimStart": 11.24,
+  "trimEnd": 80.42,
+  "oldDuration": 86.309333,
+  "newDuration": 69,
+  "cutAt": "2026-10-06T22:21:21.316Z",
+  "durationOk": true,
+  "expectedDuration": 69.18,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "s64NzDPwMQDZfYrg8Y13apLJUrsi4ztHOWnAE02l01ksM": {
+  "contentId": "9c901936-b900-4cd7-9ba2-a56c2f97daad",
+  "title": "Selling Skills, Part 9",
+  "newAssetId": "81Lots6s1fXwMKFY6h3EKfewhRviB5rWElWVmK3NXMg",
+  "trimStart": 10.2,
+  "trimEnd": 91.32,
+  "oldDuration": 95.938333,
+  "newDuration": 81,
+  "cutAt": "2026-10-06T22:23:39.776Z",
+  "durationOk": true,
+  "expectedDuration": 81.12,
+  "verified": {
+   "head": 0,
+   "tail": 0.52,
+   "ok": true
+  }
+ },
+ "g7AdLJqruN00PYw00Kp5KOxGEP0201TJsPRpMQ4WX2jGpIA": {
+  "contentId": "9d1370c9-3e0b-46cc-af02-41b49399e6f2",
+  "title": "Four Step Close, Part 3",
+  "newAssetId": "aF4nAKhFqCGZNjsCz6TDbhqxdRFTjG4cXoCnuxyWbas",
+  "trimStart": 12.6,
+  "trimEnd": 90.91,
+  "oldDuration": 95.57,
+  "newDuration": 78,
+  "cutAt": "2026-10-06T22:25:58.812Z",
+  "durationOk": true,
+  "expectedDuration": 78.31,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "ZjCb1Yd77NqgPsrlkuVis011XMeGkvm01CSeFOCrXt834": {
+  "contentId": "9dff627a-9fb2-4e4c-a96c-10d2ae9b44a9",
+  "title": "Phones and Tones, Part 7",
+  "newAssetId": "q9k4LVb01fKI9T9a8sA01nM1WKdsRHJzlcdnTbpAPuVTg",
+  "trimStart": 9.64,
+  "trimEnd": 99.22,
+  "oldDuration": 103.071667,
+  "newDuration": 90,
+  "cutAt": "2026-10-06T22:28:26.819Z",
+  "durationOk": true,
+  "expectedDuration": 89.58,
+  "verified": {
+   "head": 0.36,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "ktYrRVIBvWEYVUFUf8REv8loiYgE1Ff006EH1600nfDM4": {
+  "contentId": "9fdfcb29-3d37-47bc-8562-5bd8ee85cb2f",
+  "title": "Success Cycle, Part 9, More on Overcoming Objections",
+  "newAssetId": "IDsVvNykOUtSx5r55F9dbSANI5UQ2zZB57ZnrcWb02c8",
+  "trimStart": 10.88,
+  "trimEnd": 191.11,
+  "oldDuration": 196.142667,
+  "newDuration": 180,
+  "cutAt": "2026-10-06T22:32:24.559Z",
+  "durationOk": true,
+  "expectedDuration": 180.23,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "vHfTZYv00xD029W01nFcwA7cnJ4Hk6Tzu7zgSK7wdVN4cU": {
+  "contentId": "a343869b-98cb-4376-91dc-371d7c9e7b21",
+  "title": "Lasting Impressions, Part 6",
+  "newAssetId": "Sf00VpXYYIxitNVBfeJRuSBhWzxRNZoO02p00bfBGap6sA",
+  "trimStart": null,
+  "trimEnd": 106.66,
+  "oldDuration": 111.638333,
+  "newDuration": 107,
+  "cutAt": "2026-10-06T22:35:17.978Z",
+  "durationOk": true,
+  "expectedDuration": 106.66,
+  "verified": {
+   "head": 0,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "Otk02MySWu5qCz5hRPG6a00S5TM1ZAArwSdtBEz7hlQFw": {
+  "contentId": "a3560d82-2b7f-42ee-b717-6ff8cb880138",
+  "title": "Name Tag, Part 2",
+  "newAssetId": "U015WRL4v4oJLmMyOnyKvRJXA8t00A9LyaUWNerKv8PW00",
+  "trimStart": 10.38,
+  "trimEnd": 113.92,
+  "oldDuration": 118.738333,
+  "newDuration": 104,
+  "cutAt": "2026-10-06T22:37:55.393Z",
+  "durationOk": true,
+  "expectedDuration": 103.54,
+  "verified": {
+   "head": 0,
+   "tail": 0.52,
+   "ok": true
+  }
+ },
+ "02yzVLn4q00uUhU8YjjlaBnwKwJZLrMUe1iNuu7OhtjzQ": {
+  "contentId": "a610fd66-0260-496e-bb1b-ca3ad36bbba5",
+  "title": "Get the Hell Out of Here, Part 9",
+  "newAssetId": "kzbhTQk445YjQfYikKLv1IMFxC8lZrTPn9rvmTu7oyo",
+  "trimStart": 12.64,
+  "trimEnd": 99.92,
+  "oldDuration": 103.609333,
+  "newDuration": 87,
+  "cutAt": "2026-10-06T22:40:09.785Z",
+  "durationOk": true,
+  "expectedDuration": 87.28,
+  "verified": {
+   "head": 0,
+   "tail": 0.48,
+   "ok": true
+  }
+ },
+ "Fk9XyAOiaPg3lXHvf4Z01lUdA8WK500xgQ02AV2t01LLM02Q": {
+  "contentId": "a728335b-b488-476a-9f19-58e83197265c",
+  "title": "Lasting Impressions, Part 3",
+  "newAssetId": "uYsdDKUj9YiEnvgGV01jvUdnufMWZu6bLo00IY5ijwhYo",
+  "trimStart": 13.36,
+  "trimEnd": 113.35,
+  "oldDuration": 118.838333,
+  "newDuration": 100,
+  "cutAt": "2026-10-06T22:42:48.348Z",
+  "durationOk": true,
+  "expectedDuration": 99.99,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "JOgxHOn0001CCAgs8EOmu3ALOKErzqNIRzNjHv8MT02jLQ": {
+  "contentId": "aa5ec8bb-26f2-4018-9df0-32c0887ba392",
+  "title": "Phones and Tones, Part 4",
+  "newAssetId": "th91YEcizV8Vx1UtG5tSrcFcHwkjppGXINdfI6ooHmE",
+  "trimStart": 11.26,
+  "trimEnd": 88.95,
+  "oldDuration": 93.103333,
+  "newDuration": 78,
+  "cutAt": "2026-10-06T22:44:56.047Z",
+  "durationOk": true,
+  "expectedDuration": 77.69,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "s01q9dw5HOQAh7o01Rxc00501GRVPFcp02GoM12kAFgg3L9U": {
+  "contentId": "b1ec44f5-de6b-473c-8895-df9533bcd400",
+  "title": "Selling Skills, Part 10",
+  "newAssetId": "KOu1xK1orZ8LJyjRwBoXTca4hNfWIygq72wdaDCCXBQ",
+  "trimStart": null,
+  "trimEnd": 96.4,
+  "oldDuration": 100.603333,
+  "newDuration": 96,
+  "cutAt": "2026-10-06T22:47:21.379Z",
+  "durationOk": true,
+  "expectedDuration": 96.4,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "iPbYbnZYy02iIhzuTdHk1pM8fwIW01HOAHr2DuVhi9bYI": {
+  "contentId": "b60ace0d-5ffc-43ee-ba22-67bade9619f6",
+  "title": "Get the Hell Out of Here, Part 2",
+  "newAssetId": "JUHSXp00N4vED802DXbON1wvbTLUtitGBu00sZPKN7lGL8",
+  "trimStart": 13.04,
+  "trimEnd": 81.9,
+  "oldDuration": 85.276,
+  "newDuration": 69,
+  "cutAt": "2026-10-06T22:49:12.756Z",
+  "durationOk": true,
+  "expectedDuration": 68.86,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "GPlmSeAWKgOPbizZTFuyrSwyflxFHhSXzUS1yt01o3zc": {
+  "contentId": "b7f57bba-614d-48cf-9be4-ef4c29c6ac9f",
+  "title": "Lasting Impressions, Part 5",
+  "newAssetId": "kVX01C2sTmPoKlQ02fDiCwIYRT8fP8CQgtXhnjpqF2TT00",
+  "trimStart": 11.58,
+  "trimEnd": null,
+  "oldDuration": 117.405,
+  "newDuration": 106,
+  "cutAt": "2026-10-06T22:52:12.526Z",
+  "durationOk": true,
+  "expectedDuration": 105.83,
+  "verified": {
+   "head": 0,
+   "tail": 0.365,
+   "ok": true
+  }
+ },
+ "00FMtXJ3oJb1WyEU3DzReF005GySiA4NMUMIRbJHcyjDo": {
+  "contentId": "bbca03ce-7f84-42f9-ade0-78f041641f49",
+  "title": "Success Cycle, Part 7, Features and Benefits",
+  "newAssetId": "m02KRUfPT2rM6J92XKBQ502NI85Vh2wHXXsmF7c1jix74",
+  "trimStart": 11.04,
+  "trimEnd": 192.65,
+  "oldDuration": 197.509333,
+  "newDuration": 182,
+  "cutAt": "2026-10-06T22:56:18.022Z",
+  "durationOk": true,
+  "expectedDuration": 181.61,
+  "verified": {
+   "head": 0,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "8o7KAjU6zPBWlmam4S02zhxG7F7TPj00DD02iHAL82UO9g": {
+  "contentId": "bd6628e4-f5cb-4df7-a9df-32ee7355164a",
+  "title": "Phones and Tones, Part 9",
+  "newAssetId": "Hf6XPC85Llhbug1SuXWpNTfOlQNsabnv7GnLI00007Nfk",
+  "trimStart": 10.66,
+  "trimEnd": 153.51,
+  "oldDuration": 158.136667,
+  "newDuration": 143,
+  "cutAt": "2026-10-06T22:59:50.859Z",
+  "durationOk": true,
+  "expectedDuration": 142.85,
+  "verified": {
+   "head": 0.62,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "UqreWONGLHzn2XQSB2F4Tr1AUvo1OHsNpS1vzpDdORo": {
+  "contentId": "c51a6e82-2577-4c92-bd5b-8c64433b145c",
+  "title": "Coverage is Key, Part 9",
+  "newAssetId": "g02BCj5M9ZvkOH9DmpjU8402SMmUXhYnqplb6RCqkCRA4",
+  "trimStart": 11.58,
+  "trimEnd": 97.04,
+  "oldDuration": 101.738333,
+  "newDuration": 85,
+  "cutAt": "2026-10-06T23:02:00.154Z",
+  "durationOk": true,
+  "expectedDuration": 85.46,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "hop2IQMDM5bzDqeHfml002ISWnpdXL2FYfJl7jbUghqc": {
+  "contentId": "c9526267-b08f-4a4e-803b-a364a5d4bc78",
+  "title": "Coverage is Key, Part 3",
+  "newAssetId": "bXeW7MMjCJZgTMNKKZ2TgxSnDYOu8bxuvlj4myjb8UU",
+  "trimStart": 13.96,
+  "trimEnd": 96.99,
+  "oldDuration": 101.405,
+  "newDuration": 83,
+  "cutAt": "2026-10-06T23:04:16.177Z",
+  "durationOk": true,
+  "expectedDuration": 83.03,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "Hu02lXRN8RX85n4clLi00XYBlK3p5gRY00HwNRddvtElq4": {
+  "contentId": "cf75eeef-6a96-46cd-806b-042e944703a5",
+  "title": "Menus — Closer",
+  "newAssetId": "QRLedAKQzL0202JWU00Y27EENIDgqbe701HwIiyILo00fXoA",
+  "trimStart": null,
+  "trimEnd": 71.77,
+  "oldDuration": 77.176,
+  "newDuration": 72,
+  "cutAt": "2026-10-06T23:06:24.771Z",
+  "durationOk": true,
+  "expectedDuration": 71.77,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "ZkKdwy6ttZLzrUlSqAHiPsaSPL3BnSeOAaWpRt5TYIA": {
+  "contentId": "d1d5a00b-3102-4e94-ae8c-fc63abe97198",
+  "title": "Success Cycle, Part 1, Not a Rut Team",
+  "newAssetId": "MKUm5cVcAhLX01qAi00IT7QELDlGb2BePc5zzOXYeuSOo",
+  "trimStart": 9.08,
+  "trimEnd": 100.65,
+  "oldDuration": 105.542667,
+  "newDuration": 92,
+  "cutAt": "2026-10-06T23:08:46.120Z",
+  "durationOk": true,
+  "expectedDuration": 91.57,
+  "verified": {
+   "head": 1.8,
+   "tail": 0.61,
+   "ok": false
+  }
+ },
+ "4iP8kqABibqOmHK2b7h6cLyLc3rminXMEKNDEl8UdEI": {
+  "contentId": "d78c051e-f3ef-4397-bf26-3bdff9ffd2ca",
+  "title": "Name Tag, Part 5",
+  "newAssetId": "JIEtPTECjKVxsfu7ybff01BH02NjQ68loB6vweDnuOELk",
+  "trimStart": 11.54,
+  "trimEnd": 187.45,
+  "oldDuration": 191.976,
+  "newDuration": 176,
+  "cutAt": "2026-10-06T23:12:49.856Z",
+  "durationOk": true,
+  "expectedDuration": 175.91,
+  "verified": {
+   "head": 0,
+   "tail": 0.33,
+   "ok": true
+  }
+ },
+ "JmwR01nXzzRqdZVKTnARmfsqfgrz7N5xVfnimZ18ZHm8": {
+  "contentId": "d83fe9d5-f79a-4972-8c4a-55bbf11b3c86",
+  "title": "Lasting Impressions, Part 9",
+  "newAssetId": "rXhfOQnmumC146WDHDctRELvrZ76bgsDwZSNKipNWH4",
+  "trimStart": 12.18,
+  "trimEnd": 116.12,
+  "oldDuration": 121.403333,
+  "newDuration": 104,
+  "cutAt": "2026-10-06T23:15:26.447Z",
+  "durationOk": true,
+  "expectedDuration": 103.94,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "LQikJ02H8vYYi7iD8PEujaYTrj2nLPSlVBCzrUhFC4Xk": {
+  "contentId": "db0f13a0-2671-4582-b5a6-0b45233ff349",
+  "title": "Phones and Tones, Part 5",
+  "newAssetId": "CYwPtI9uuG01sZSxJlvvZWuAzcZNPonJhgPy2r01mo68g",
+  "trimStart": 11.82,
+  "trimEnd": 88.78,
+  "oldDuration": 93.503333,
+  "newDuration": 77,
+  "cutAt": "2026-10-06T23:17:43.315Z",
+  "durationOk": true,
+  "expectedDuration": 76.96,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "j00022mVrdHDXLr5Q014pQkYAynlJQsDMwh11g5rH5iOI00": {
+  "contentId": "dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3",
+  "title": "Menu Wrap-Up, Part 1",
+  "newAssetId": "ou0001mKhhbxC4sHh01NN01nrQT4fj02TYheLCa2dpK5C8p00",
+  "trimStart": 11.42,
+  "trimEnd": 155.43,
+  "oldDuration": 159.973333,
+  "newDuration": 144,
+  "cutAt": "2026-10-06T23:21:04.713Z",
+  "durationOk": true,
+  "expectedDuration": 144.01,
+  "verified": {
+   "head": 1.18,
+   "tail": 0.59,
+   "ok": false
+  }
+ },
+ "4IuqmECHeQR024Bj400e1aWzqJVV00Tx2SQJkxcTArDW4k": {
+  "contentId": "df013ac8-3aea-48c5-8c74-7c0fb22ff525",
+  "title": "Four Step Close — Closer",
+  "newAssetId": "Rv1gyTT01LyCLuRJ2o7VzdH00yzUcVkDEp9vQEYoe1Nkc",
+  "trimStart": null,
+  "trimEnd": 64.8,
+  "oldDuration": 71.276,
+  "newDuration": 65,
+  "cutAt": "2026-10-06T23:22:47.883Z",
+  "durationOk": true,
+  "expectedDuration": 64.8,
+  "verified": {
+   "head": 0,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "veGtf3dywW02CtNPr3ut7IYJqameRxr6kNNNjLwMQoR00": {
+  "contentId": "e4cdf07c-58e0-4820-b3fd-6435caddd181",
+  "title": "Four Step Close, Part 6",
+  "newAssetId": "CSxAnIlIe7y00q2YQ8z01mVzREqO02fJTC00RTLgwO019ix00",
+  "trimStart": 13.44,
+  "trimEnd": 86.57,
+  "oldDuration": 91.235,
+  "newDuration": 73,
+  "cutAt": "2026-10-06T23:24:56.172Z",
+  "durationOk": true,
+  "expectedDuration": 73.13,
+  "verified": {
+   "head": 0,
+   "tail": 0.85,
+   "ok": true
+  }
+ },
+ "At02cthfjdLHlKfYbX00tKdNnC3cGR026fNFzRjGxYAO68": {
+  "contentId": "e54c1885-c71c-4613-af09-924b2fc2394b",
+  "title": "Get the Hell Out of Here, Part 7",
+  "newAssetId": "O1W7RAS6uohMiFXw37ZU9qpOBUKVezZWKcs3a73wDQg",
+  "trimStart": 12.6,
+  "trimEnd": 162.89,
+  "oldDuration": 166.342667,
+  "newDuration": 150,
+  "cutAt": "2026-10-06T23:28:17.392Z",
+  "durationOk": true,
+  "expectedDuration": 150.29,
+  "verified": {
+   "head": 0,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "LoHq1IMBey5cvB7FP2O023OIVqUj7LI01aydqHqnWYiWI": {
+  "contentId": "e5d1de92-01c1-4d36-9949-aac66309735f",
+  "title": "Success Cycle, Part 10, Anatomy of the Speech",
+  "newAssetId": "4QheWtPyPegek9H8DwXyPHGkK02cdhNMrsxVvsUob026o",
+  "trimStart": null,
+  "trimEnd": 217.53,
+  "oldDuration": 221.406667,
+  "newDuration": 218,
+  "cutAt": "2026-10-06T23:33:34.565Z",
+  "durationOk": true,
+  "expectedDuration": 217.53,
+  "verified": {
+   "head": null,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "sY025ZzWzDHisld5QZOzCYyxhH3grQYv2yBJ5aYqM8Ws": {
+  "contentId": "eb8c53a1-38aa-49c7-b6c7-09e8b02ed485",
+  "title": "Success Cycle, Part 3, More Vocabulary",
+  "newAssetId": "Fg4b5cCKKBs7N601BwaKipptHSR00GpHKxEEKDQxfMcV4",
+  "trimStart": 10.66,
+  "trimEnd": 251.75,
+  "oldDuration": 256.842667,
+  "newDuration": 241,
+  "cutAt": "2026-10-06T23:38:58.207Z",
+  "durationOk": true,
+  "expectedDuration": 241.09,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "mCw102opP7RgT1gzfBlzCSqwAjyrFhtcYY01X01dC4uZ38": {
+  "contentId": "ed2ecea0-660e-4a35-9813-31e9e21e5079",
+  "title": "Four Step Close, Part 1",
+  "newAssetId": "7PzNAScycpAFo01jwamFxzMCdbTD7v00CSQbP2V0259qRo",
+  "trimStart": 13.5,
+  "trimEnd": 76.66,
+  "oldDuration": 81.568333,
+  "newDuration": 63,
+  "cutAt": "2026-10-06T23:40:43.651Z",
+  "durationOk": true,
+  "expectedDuration": 63.16,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "j5DgpvwaXRukG7zyASuoYF02lCPB8Ab9PEcVfOAkjw5o": {
+  "contentId": "ee1e7814-8762-40f5-b967-4c6557bc4f6f",
+  "title": "Selling Skills, Part 8",
+  "newAssetId": "F2E01YI6dW1TVYAXvD9qJXakv0200M02qa3Quw01c701Y5VIk",
+  "trimStart": 11.7,
+  "trimEnd": 72.22,
+  "oldDuration": 77.235,
+  "newDuration": 61,
+  "cutAt": "2026-10-06T23:42:25.557Z",
+  "durationOk": true,
+  "expectedDuration": 60.52,
+  "verified": {
+   "head": 0,
+   "tail": 0.86,
+   "ok": true
+  }
+ },
+ "K8zit2ws53W8Qi3UOzBsX9yKRjTjdwsyaluv23jtneI": {
+  "contentId": "eefd9f40-a9e1-45fb-9743-3734a14b6df6",
+  "title": "Name Tag, Part 1",
+  "newAssetId": "nFgrZA00ogwmXR3zqtVCoY4KxWnWtWEmk9yFbHT11PdE",
+  "trimStart": 11.34,
+  "trimEnd": 164.29,
+  "oldDuration": 169.676,
+  "newDuration": 153,
+  "cutAt": "2026-10-06T23:45:46.978Z",
+  "durationOk": true,
+  "expectedDuration": 152.95,
+  "verified": {
+   "head": 0,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "cYwxVXNtLhrT5301QJcyqPWe9JFwh6as00oOA7IEl02Ya00": {
+  "contentId": "fec78df5-1a2d-4956-a1d6-3543193fe3fc",
+  "title": "Coverage is Key, Part 5",
+  "newAssetId": "oGmUCzZ8at502mqL7UsdfWo1LEZq9gItnPUW1ZbrTTeI",
+  "trimStart": 10.48,
+  "trimEnd": 119.88,
+  "oldDuration": 125.338333,
+  "newDuration": 109,
+  "cutAt": "2026-10-06T23:48:29.729Z",
+  "durationOk": true,
+  "expectedDuration": 109.4,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "ZfsuJbL1GqeGRmeyW2gO3f8kyE02L02bGNMdR02wVYyRD8": {
+  "contentId": "27557eb4-833b-470d-bb7b-6f57832257d7",
+  "title": "5,000/7,500 Mile Dealer Upsell Menu (2714)",
+  "newAssetId": "5XbVe4TbV2gZKzC8jy01lfQW8lWpMSqA027gQW5dXEJC00",
+  "trimStart": 16.08,
+  "trimEnd": 138.96,
+  "oldDuration": 145.103333,
+  "newDuration": 123,
+  "cutAt": "2026-10-06T23:51:45.889Z",
+  "durationOk": true,
+  "expectedDuration": 122.88,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
  }
 }
