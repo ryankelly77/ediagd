@@ -44,6 +44,7 @@ function row(over: Partial<Row>): Row {
     inOldLedger: false,
     captionHead: null,
     captionMahaloEnd: null,
+    captionLastCueEnd: null,
     alohaAt: null,
     mahaloEnd: null,
     head: null,

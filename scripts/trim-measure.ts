@@ -198,6 +198,8 @@ const PAD_TAIL = num("pad-tail", 0.7);
 const LIMIT = num("limit", 0);
 const ONLY = str("only");
 const CAPTIONS_ONLY = argv.includes("--captions-only");
+/** Leave the pulled wavs and the manifest in .tmp-trim-measure for inspection. */
+const KEEP_AUDIO = argv.includes("--keep-audio");
 const MODEL = str("model") ?? "small.en";
 
 /** How far pass one and pass two may disagree about Mahalo before the window
@@ -248,6 +250,9 @@ export type Row = {
 
   captionHead: number | null;
   captionMahaloEnd: number | null;
+  /** End of the last caption cue carrying any text — where speech stops, which
+   *  is known even when the sign-off word was not transcribed. */
+  captionLastCueEnd: number | null;
   alohaAt: number | null;
   mahaloEnd: number | null;
   head: number | null;
@@ -418,6 +423,12 @@ async function captionPass(film: Film, row: Row): Promise<void> {
     row.headMeasuredBy = "caption";
     row.head = row.captionHead;
   }
+  /* Where speech stops, whether or not "Mahalo" was transcribed. This is the
+     fallback anchor for the tail window — see the note at the pull. */
+  let lastSpoken: Cue | null = null;
+  for (const c of cues) if (c.text) lastSpoken = c;
+  if (lastSpoken) row.captionLastCueEnd = Number(lastSpoken.end.toFixed(3));
+
   let lastMahalo: Cue | null = null;
   for (const c of cues) if (/\bmahalo\b/i.test(c.text)) lastMahalo = c;
   if (lastMahalo) {
@@ -452,7 +463,7 @@ async function wavDuration(path: string): Promise<number> {
  * verifies what came back by its duration and, for the tail, by agreement with
  * the captions.
  */
-async function pullWindow(
+async function pullOnce(
   hls: string,
   dest: string,
   from: number | null,
@@ -466,12 +477,67 @@ async function pullWindow(
   if (!existsSync(dest)) throw new Error("ffmpeg produced no file");
 }
 
+/** How far short of the expected window a pull may land before it is a partial. */
+const PULL_SLACK = 1.0;
+const PULL_ATTEMPTS = 3;
+
+/**
+ * Pull a window and PROVE it is the window that was asked for.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THE LENGTH CHECK IS THE WHOLE POINT, AND WHY IT HAS TO BE THIS STRICT
+ * ---------------------------------------------------------------------------
+ * The first build guarded only against an empty file (`got < 1`), and six of
+ * the first thirty-five tail pulls came back truncated by a transient HLS I/O
+ * error — ffmpeg printing "Error during demuxing: Input/output error", writing
+ * a short wav, and EXITING 0. Whisper then failed on them with a numpy
+ * zero-size-axis error, which is the only reason anybody noticed.
+ *
+ * The silent version of that failure is the dangerous one. The tail offset is
+ * computed as (asset duration − the duration of the wav that came back), which
+ * is correct ONLY IF the pull ran to the end of the film. A pull that stops
+ * early returns a SHORT wav, so the offset comes out LATE by exactly the amount
+ * that was lost — and every word timestamp in that window is then shifted by
+ * the same amount, which is the consistent-error shape that reads as a finding
+ * rather than as a bug.
+ *
+ * So self-calibration is not enough on its own: it needs the guarantee that the
+ * window ends where it was meant to. That is this check.
+ *
+ * Retried because a transient I/O fault over nine hundred pulls is not an
+ * exception, it is a matter of time — replace-video.ts learned the same thing
+ * about uploads after one 503 lost a film.
+ */
+async function pullVerified(
+  hls: string,
+  dest: string,
+  from: number | null,
+  seconds: number | null,
+  expected: number
+): Promise<number> {
+  let last = "";
+  for (let attempt = 1; attempt <= PULL_ATTEMPTS; attempt++) {
+    try {
+      await pullOnce(hls, dest, from, seconds);
+      const got = await wavDuration(dest);
+      if (got >= expected - PULL_SLACK) return got;
+      last = `came back ${got.toFixed(2)}s of an expected ${expected.toFixed(2)}s`;
+    } catch (e) {
+      last = e instanceof Error ? e.message : String(e);
+    }
+    if (attempt < PULL_ATTEMPTS) await new Promise((r) => setTimeout(r, 2000 * attempt));
+  }
+  throw new Error(`partial pull after ${PULL_ATTEMPTS} attempts — ${last}`);
+}
+
 type WordResult = {
   alohaAt: number | null;
   mahaloEnd: number | null;
   headHeard: string;
   tailHeard: string;
   errors: string[];
+  /** Set by the worker when a window needed the padded retry. */
+  notes?: string[];
 };
 
 async function wordBatch(
@@ -510,39 +576,59 @@ async function wordBatch(
           row.captionHead != null ? Math.max(HEAD_WINDOW, row.captionHead + 10) : HEAD_WINDOW;
         const seconds = Math.min(need, row.assetDuration);
         const dest = join(WORK, `${row.id}-head.wav`);
-        await pullWindow(hls, dest, null, seconds);
-        const got = await wavDuration(dest);
-        /* A head pull starts at zero, so its own duration is the only thing to
-           check: a pull that came back far short was truncated. */
-        if (got < Math.min(seconds, row.assetDuration) - 2) {
-          row.notes.push(`head-pull-short-${got.toFixed(1)}s`);
-        } else {
+        try {
+          await pullVerified(hls, dest, null, seconds, seconds);
           job.headWav = dest;
+        } catch (e) {
+          row.notes.push(`head-pull-failed(${e instanceof Error ? e.message : String(e)})`);
         }
       }
 
       if (row.flagTail) {
-        /* Anchored on the caption's Mahalo where there is one, so a film with a
-           long tail cannot have its sign-off fall outside the window. A fixed
-           "last 30 seconds" would mark a film with 40s of dead air as
-           no-signoff — and that is the very film this pass is looking for. */
+        /*
+         * ---- THE ANCHOR, AND WHY "THE LAST THIRTY SECONDS" IS WRONG -------
+         *
+         * A fixed last-30s window marks a film with 40 seconds of dead air as
+         * `no-signoff` — and that is precisely the film this pass exists to
+         * find. So the window is anchored on evidence from pass one:
+         *
+         *   1. the caption cue holding "Mahalo", where there is one;
+         *   2. otherwise the END OF THE LAST CUE THAT HAS ANY TEXT, which is
+         *      where speech stops whether or not the word was transcribed;
+         *   3. only then the last 30 seconds.
+         *
+         * Two is the one that matters. Without it, a film whose captions missed
+         * the sign-off AND carries a long tail falls outside its own window and
+         * comes back as a confident "no sign-off" — a ruling handed to Ryan
+         * about a film the measurement never looked at properly.
+         */
+        const anchorFrom =
+          row.captionMahaloEnd ?? row.captionLastCueEnd ?? null;
         const anchor =
-          row.captionMahaloEnd != null
-            ? Math.min(row.assetDuration - TAIL_WINDOW, row.captionMahaloEnd - 10)
+          anchorFrom != null
+            ? Math.min(row.assetDuration - TAIL_WINDOW, anchorFrom - 10)
             : row.assetDuration - TAIL_WINDOW;
         const from = Math.max(0, Number(anchor.toFixed(3)));
         const dest = join(WORK, `${row.id}-tail.wav`);
-        await pullWindow(hls, dest, from, null);
-        const got = await wavDuration(dest);
-        /* THE OFFSET COMES FROM WHAT CAME BACK, NOT FROM WHAT WAS ASKED.
-           ffmpeg seeks HLS to a segment boundary, so the audio may begin before
-           `from`; deriving the offset from the returned duration makes the
-           systematic error impossible rather than merely unlikely. */
-        job.tailOffset = Number((row.assetDuration - got).toFixed(3));
-        if (got < 1) {
-          row.notes.push("tail-pull-empty");
-        } else {
+        /* Runs to the end of the film, so the window it should return is
+           everything from `from` onwards. */
+        const expected = row.assetDuration - from;
+        try {
+          const got = await pullVerified(hls, dest, from, null, expected);
+          if (KEEP_AUDIO) {
+            console.log(
+              `      ${row.id.slice(0, 8)} tail: from=${from} expected=${expected.toFixed(3)} ` +
+                `got=${got.toFixed(3)} offset=${(row.assetDuration - got).toFixed(3)} dur=${row.assetDuration}`
+            );
+          }
+          /* THE OFFSET COMES FROM WHAT CAME BACK, NOT FROM WHAT WAS ASKED.
+             ffmpeg seeks HLS to a segment boundary, so the audio may begin
+             before `from`. Trustworthy only because pullVerified has already
+             established that the window ends where it was meant to. */
+          job.tailOffset = Number((row.assetDuration - got).toFixed(3));
           job.tailWav = dest;
+        } catch (e) {
+          row.notes.push(`tail-pull-failed(${e instanceof Error ? e.message : String(e)})`);
         }
       }
 
@@ -566,12 +652,33 @@ async function wordBatch(
     ? ".venv-whisper/bin/python3"
     : "python3";
   console.log(`    transcribing ${jobs.length}…`);
-  await run(python, [
-    "scripts/trim-words.py",
-    `--manifest=${manifest}`,
-    `--out=${out}`,
-    `--model=${MODEL}`,
-  ], { maxBuffer: 1 << 24 });
+  /*
+   * ---- READ WHAT IT PRODUCED, NOT JUST WHETHER IT EXITED WELL -------------
+   *
+   * The worker writes a per-film record for every job and reports each film's
+   * own failure inside it. Treating a non-zero exit as "this batch produced
+   * nothing" discarded twenty films' measurements because one of them hit an
+   * alignment fault — including head measurements that had succeeded in the
+   * same process.
+   *
+   * So the output file is the result, and the exit code is a hint. Only a
+   * missing or unparseable file is a batch failure.
+   */
+  let exitNote = "";
+  try {
+    await run(python, [
+      "scripts/trim-words.py",
+      `--manifest=${manifest}`,
+      `--out=${out}`,
+      `--model=${MODEL}`,
+    ], { maxBuffer: 1 << 24 });
+  } catch (e) {
+    exitNote = e instanceof Error ? e.message.split("\n")[0] : String(e);
+    console.log(`    worker exited non-zero (${exitNote}) — reading what it wrote`);
+  }
+  if (!existsSync(out)) {
+    throw new Error(`worker wrote no results${exitNote ? ` — ${exitNote}` : ""}`);
+  }
 
   const words = JSON.parse(readFileSync(out, "utf8")) as Record<string, WordResult>;
   for (const row of rows) {
@@ -580,8 +687,32 @@ async function wordBatch(
     row.headHeard = w.headHeard ?? "";
     row.tailHeard = w.tailHeard ?? "";
     if (w.errors?.length) row.notes.push(...w.errors.map((e) => `whisper:${e}`));
+    if (w.notes?.length) row.notes.push(...w.notes);
 
-    if (row.flagHead) {
+    /*
+     * ---- A FAILED SIDE IS UNMEASURED, NOT A RULING -------------------------
+     *
+     * `alohaAt == null` is produced both by a film that genuinely never says
+     * Aloha and by a window that failed to decode. The first is a ruling for
+     * Ryan; the second is a measurement this pass owes him and did not deliver.
+     * Collapsing them would put films on the no-greeting list on the strength
+     * of audio nobody read — the label-is-not-evidence failure, with Ryan's
+     * attention as the cost.
+     */
+    const headFailed =
+      (w.errors ?? []).some((e) => e.startsWith("head:")) ||
+      row.notes.some((n) => n.startsWith("head-pull-failed"));
+    const tailFailed =
+      (w.errors ?? []).some((e) => e.startsWith("tail:")) ||
+      row.notes.some((n) => n.startsWith("tail-pull-failed"));
+    if (headFailed || tailFailed) {
+      row.error = [row.error, `word pass failed on the ${headFailed ? "head" : ""}` +
+        `${headFailed && tailFailed ? " and " : ""}${tailFailed ? "tail" : ""}`]
+        .filter(Boolean)
+        .join("; ");
+    }
+
+    if (row.flagHead && !headFailed) {
       if (w.alohaAt == null) {
         row.notes.push("no-greeting");
       } else if (w.alohaAt > MAX_HEAD) {
@@ -592,7 +723,7 @@ async function wordBatch(
         row.headMeasuredBy = "word";
       }
     }
-    if (row.flagTail) {
+    if (row.flagTail && !tailFailed) {
       if (w.mahaloEnd == null) {
         row.notes.push("no-signoff");
       } else {
@@ -701,7 +832,12 @@ async function main() {
 
   let films = await loadFilms();
   console.log(`  published films: ${films.length}`);
-  if (ONLY) films = films.filter((f) => f.id === ONLY || f.id.startsWith(ONLY));
+  if (ONLY) {
+    /* Comma-separated, and each may be an id prefix — so a batch of films named
+       in a report can be re-measured without editing the script. */
+    const want = ONLY.split(",").map((x) => x.trim()).filter(Boolean);
+    films = films.filter((f) => want.some((w) => f.id === w || f.id.startsWith(w)));
+  }
   if (LIMIT) films = films.slice(0, LIMIT);
   if (ONLY || LIMIT) {
     console.log(`  SCOPED to ${films.length} film(s) — this plan is evidence about those only`);
@@ -723,6 +859,7 @@ async function main() {
     inOldLedger: Boolean(oldLedger[f.id]),
     captionHead: null,
     captionMahaloEnd: null,
+    captionLastCueEnd: null,
     alohaAt: null,
     mahaloEnd: null,
     head: null,
@@ -781,12 +918,14 @@ async function main() {
         }
         console.log(`    batch ${b + 1} FAILED — continuing`);
       }
-      for (const r of slice) {
-        try {
-          rmSync(join(WORK, `${r.id}-head.wav`), { force: true });
-          rmSync(join(WORK, `${r.id}-tail.wav`), { force: true });
-        } catch {
-          /* a wav that will not delete is not a reason to stop measuring */
+      if (!KEEP_AUDIO) {
+        for (const r of slice) {
+          try {
+            rmSync(join(WORK, `${r.id}-head.wav`), { force: true });
+            rmSync(join(WORK, `${r.id}-tail.wav`), { force: true });
+          } catch {
+            /* a wav that will not delete is not a reason to stop measuring */
+          }
         }
       }
     }
