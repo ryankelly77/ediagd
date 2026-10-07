@@ -2783,5 +2783,1484 @@
    "tail": null,
    "ok": null
   }
+ },
+ "KKwQaKZu9h11rgZO5mR9XjheLe00MSf4CD00011ekGYFxI": {
+  "contentId": "28061ce2-d886-4a44-9c02-83130361cf08",
+  "title": "30,000 Mile Dealer Upsell Menu, Part 5",
+  "newAssetId": "gj6u7L1e1i6hbJt4FMk02u012sfptcK32oDDYW00FB6nL4",
+  "trimStart": 15.68,
+  "trimEnd": 128.05,
+  "oldDuration": 133.571667,
+  "newDuration": 112,
+  "cutAt": "2026-10-06T23:54:44.370Z",
+  "durationOk": true,
+  "expectedDuration": 112.37,
+  "verified": {
+   "head": 0.24,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "TgA5qDVo1zpsmpXlxdaF7QTKdtK02LOo4LFmZamKQ7fA": {
+  "contentId": "2a52f994-74a7-4ab5-9595-c584500662d2",
+  "title": "25,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "prb12vCjajh902rWKrdOklgnT9Tz02TNPh9z9G3leGM44",
+  "trimStart": 13.14,
+  "trimEnd": 152.1,
+  "oldDuration": 157.503333,
+  "newDuration": 139,
+  "cutAt": "2026-10-06T23:58:04.598Z",
+  "durationOk": true,
+  "expectedDuration": 138.96,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "N012hPD800YB36Db9RCoQCBRDd02u6S94ZZEuNdz00BaryU": {
+  "contentId": "2cfa11d2-d475-421d-b701-07a8eeb2f89a",
+  "title": "Diesel, Part 5",
+  "newAssetId": "SiOgEYMwQrJALqMzUo6Ul1Y00Hloy00WIzxj1HqzCkf54",
+  "trimStart": 13.58,
+  "trimEnd": null,
+  "oldDuration": 92.47,
+  "newDuration": 79,
+  "cutAt": "2026-10-07T00:00:22.667Z",
+  "durationOk": true,
+  "expectedDuration": 78.89,
+  "verified": {
+   "head": 0,
+   "tail": 0.23,
+   "ok": true
+  }
+ },
+ "rrlN2yg3u3RGoYJsMmfu00Ix4wRLOFPGMXV00Td69AAEc": {
+  "contentId": "30ba8555-3be7-4bee-bd00-11700b81562b",
+  "title": "100,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "9l96OzPKkerAflzqzQlI4SFxIOffDUP9kqTYmIhMG6Y",
+  "trimStart": 16.5,
+  "trimEnd": 190.08,
+  "oldDuration": 194.806667,
+  "newDuration": 174,
+  "cutAt": "2026-10-07T00:04:51.842Z",
+  "durationOk": true,
+  "expectedDuration": 173.58,
+  "verified": {
+   "head": 0.18,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "B01vXfiqE7JBixzL7021u3vXyqcaxjJx7eR4ctfLkFYqA": {
+  "contentId": "321bff34-33b1-4361-b355-36cf10801d8e",
+  "title": "120,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "7sPCkqCJhDw2M7FLgVMfxDCjiXKK2JSX02bjRAfLV4wY",
+  "trimStart": 17.38,
+  "trimEnd": 132.54,
+  "oldDuration": 137.838333,
+  "newDuration": 115,
+  "cutAt": "2026-10-07T00:07:38.491Z",
+  "durationOk": true,
+  "expectedDuration": 115.16,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "6HrB5MctQXVIs72867xrvGwxf004PQnckVUfJqhC9lvI": {
+  "contentId": "327d0d15-49f7-42fc-a683-305519b84044",
+  "title": "Seasonal Menus, Part 3",
+  "newAssetId": "mXyxv02TXTAIa8eZof6QBw7HCRm9301e8fAkcwcO6LIZw",
+  "trimStart": 14.48,
+  "trimEnd": 154.55,
+  "oldDuration": 159.942667,
+  "newDuration": 140,
+  "cutAt": "2026-10-07T00:11:04.676Z",
+  "durationOk": true,
+  "expectedDuration": 140.07,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "01uIMrrap02ZHxwKcJ1UziL9HMrUhPhO6uEoRpmG6BuRI": {
+  "contentId": "3280e37a-22b0-4feb-96e3-707200553d0c",
+  "title": "120,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "9H5rYbTNrI7lLfqgqE9X8O01gZxFlsL9F4g9V4GacB5c",
+  "trimStart": 14.82,
+  "trimEnd": 105.43,
+  "oldDuration": 110.138333,
+  "newDuration": 91,
+  "cutAt": "2026-10-07T00:13:18.155Z",
+  "durationOk": true,
+  "expectedDuration": 90.61,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "xyC02mQ8hrHyoOhOjiMSA9HPqJ99EHUHXp5JB1oQHiCQ": {
+  "contentId": "34bab295-c069-481f-bb26-55a6f97e97f6",
+  "title": "80,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "uih7202EXm1RlEDYv76OrdixxzQ3rxGlzcronCqeqnr4",
+  "trimStart": 17.32,
+  "trimEnd": 135.23,
+  "oldDuration": 141.105,
+  "newDuration": 118,
+  "cutAt": "2026-10-07T00:16:04.623Z",
+  "durationOk": true,
+  "expectedDuration": 117.91,
+  "verified": {
+   "head": 0.08,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "02wZZPmIqrq8YAmyYEPhMJtn6whpJVz4HzhWpTbQt67s": {
+  "contentId": "354b725e-07cf-43a9-8b25-0f339bdfb2d9",
+  "title": "25,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "O22qsuYA9jkykD5ODUpTuMqSdpDbJWPAi9sESSPJcpQ",
+  "trimStart": 16.68,
+  "trimEnd": 112.19,
+  "oldDuration": 118.138333,
+  "newDuration": 96,
+  "cutAt": "2026-10-07T00:18:30.079Z",
+  "durationOk": true,
+  "expectedDuration": 95.51,
+  "verified": {
+   "head": 0.7,
+   "tail": 1.39,
+   "ok": true
+  }
+ },
+ "TqjpHJiSYJ6YglzLpX69mlTbepn02RqifkcEjDRXRxvY": {
+  "contentId": "35b9d042-3b65-4193-8426-6c0e5b9cb0ec",
+  "title": "150,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "dVlQQ02SV2tTACVaI5AhM1IxE9yvw01gzZXZnFJn8CZkY",
+  "trimStart": 15.88,
+  "trimEnd": 183.25,
+  "oldDuration": 187.773333,
+  "newDuration": 167,
+  "cutAt": "2026-10-07T00:22:31.518Z",
+  "durationOk": true,
+  "expectedDuration": 167.37,
+  "verified": {
+   "head": 0,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "l6cHKIGmaelMqbPnKPNggVPaITx88S8j2W1gBY3hyTw": {
+  "contentId": "3790edc4-71e4-4ee2-8b4e-405c07e69fa5",
+  "title": "15,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "h4cq3Uvwt01yFj3SrBDuC7tIclOL6BVruwJFCjolHhrw",
+  "trimStart": 15.92,
+  "trimEnd": null,
+  "oldDuration": 113.571667,
+  "newDuration": 98,
+  "cutAt": "2026-10-07T00:24:54.907Z",
+  "durationOk": true,
+  "expectedDuration": 97.65,
+  "verified": {
+   "head": 0.92,
+   "tail": 5.212,
+   "ok": true
+  }
+ },
+ "TJCS5hjE2epsyvJ00YV5buE4QdSKfXbC9TrYQAIc6S34": {
+  "contentId": "396c64d9-5a6b-4b8e-a311-04c3253c15a9",
+  "title": "25,000 Mile Dealer Upsell Menu (2749)",
+  "newAssetId": "Uq01W1OQ22P01XH2g9NXcL6JgudQ00mjabzDEAlCaTE7O00",
+  "trimStart": 17.1,
+  "trimEnd": 160.12,
+  "oldDuration": 165.006667,
+  "newDuration": 143,
+  "cutAt": "2026-10-07T00:28:19.699Z",
+  "durationOk": true,
+  "expectedDuration": 143.02,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "3HO01x01u78bd02Rr25oyJC00I00X3Y7Hn2wwiE4faJWbHkI": {
+  "contentId": "4842968c-7be9-4f76-864e-3a6dd8d8f8a4",
+  "title": "CSI — CSI Is Not a Score, Part 1",
+  "newAssetId": "KTyZOQCqrdQy1Lvts0102sf5zZgzCHdku8BJDuhR02n2U00",
+  "trimStart": 11.82,
+  "trimEnd": 118.87,
+  "oldDuration": 123.609333,
+  "newDuration": 107,
+  "cutAt": "2026-10-07T00:31:03.590Z",
+  "durationOk": true,
+  "expectedDuration": 107.05,
+  "verified": {
+   "head": 0,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "lbhRYA6GrgYMGJAYeRDZK01okapCK3bukIBepkXlF0202s": {
+  "contentId": "4a5cf641-c4ec-41ac-ba0b-fbac1c4d2f48",
+  "title": "Diesel, Part 6",
+  "newAssetId": "EuJyIWLrnfVwKICtRUgLPI7ZRcLlnazaobG4IYN3fQQ",
+  "trimStart": 13.2,
+  "trimEnd": null,
+  "oldDuration": 203.706667,
+  "newDuration": 191,
+  "cutAt": "2026-10-07T00:35:54.144Z",
+  "durationOk": true,
+  "expectedDuration": 190.51,
+  "verified": {
+   "head": 0,
+   "tail": 0.307,
+   "ok": true
+  }
+ },
+ "El00yr32yVvs5uGxPxuDpR6Mjnbus6rR39StE6MeBc3E": {
+  "contentId": "4a84c86c-def1-4692-bc5e-5864f69a58fc",
+  "title": "105,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "FfJnvgDRa7U3yYPaUXqC84ZOvzn9OS2xZ02KgFkPzM008",
+  "trimStart": 16.4,
+  "trimEnd": 89.39,
+  "oldDuration": 97.171667,
+  "newDuration": 73,
+  "cutAt": "2026-10-07T00:37:55.192Z",
+  "durationOk": true,
+  "expectedDuration": 72.99,
+  "verified": {
+   "head": null,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "g18qdjU02ywRFIEX86pjwVbfYjQbouHJ2oBizxNln5TQ": {
+  "contentId": "4ce42240-90c7-4318-9766-a69a00b002d3",
+  "title": "EV Series, Part 2",
+  "newAssetId": "01yQk8rYyxDQqbpgZOnufUlKm01fEdm01UAK5hvGYoeDkU",
+  "trimStart": 14.2,
+  "trimEnd": 217.46,
+  "oldDuration": 222.14,
+  "newDuration": 203,
+  "cutAt": "2026-10-07T00:43:00.663Z",
+  "durationOk": true,
+  "expectedDuration": 203.26,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "cUFGpv01NlsfSpYKwqItsX7ImqrDxo02uq9YMZ2lMnyuw": {
+  "contentId": "53e3fa52-1c1d-42a0-a1c4-6ea64e905279",
+  "title": "60,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "l7i00KBlKmjUPXaw6yoTqIVAuDe24qgNZUDHDo01x01ODs",
+  "trimStart": 16.72,
+  "trimEnd": 183.5,
+  "oldDuration": 189.906667,
+  "newDuration": 167,
+  "cutAt": "2026-10-07T00:47:32.908Z",
+  "durationOk": true,
+  "expectedDuration": 166.78,
+  "verified": {
+   "head": 0.56,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "Gi00801kf00BLyUrmJ2mx6jdTRcM9L01P7fTxm68UehHBCA": {
+  "contentId": "5637821a-5061-4840-9ace-ac449ea5b49c",
+  "title": "50,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "W2mAH9Qo8MFG8MOMtBlZmJNf3Pi013ja38dqLp0015uuk",
+  "trimStart": 16.68,
+  "trimEnd": 123.33,
+  "oldDuration": 129.605,
+  "newDuration": 107,
+  "cutAt": "2026-10-07T00:50:27.420Z",
+  "durationOk": true,
+  "expectedDuration": 106.65,
+  "verified": {
+   "head": 0.68,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "r02EOQ0002AySiKh2fcfWYaoR61oVg3DyhTOxhYIikhfAI": {
+  "contentId": "56389e51-2ed0-43f2-803f-642df29918bc",
+  "title": "85,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "rft4EeQx7MT1kM7G7pjqhwP2fCnOtBBIyLp01o4y00sNE",
+  "trimStart": 15.04,
+  "trimEnd": 236.5,
+  "oldDuration": 241.908333,
+  "newDuration": 221,
+  "cutAt": "2026-10-07T00:56:34.823Z",
+  "durationOk": true,
+  "expectedDuration": 221.46,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "Fenly3qsOj02IQl5JpNEsyRAhH01uN14EZtJhC6ziJLHg": {
+  "contentId": "56697a80-7320-4765-b9ba-c8f8d04fe6c7",
+  "title": "45,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "qXvWVxo2jbFBMAAuhEVSVdRQuZLv2ymB9wI335UCjIs",
+  "trimStart": 18.04,
+  "trimEnd": 96.02,
+  "oldDuration": 100.636667,
+  "newDuration": 78,
+  "cutAt": "2026-10-07T00:59:01.464Z",
+  "durationOk": true,
+  "expectedDuration": 77.98,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "gRB4Bp6RIzxC5siPO202B2ll68DHjjcrm8FqMKMypO8U": {
+  "contentId": "5e08224b-3aeb-4d22-bfb2-acdbc537667e",
+  "title": "55,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "Xb2FjLQ3GhPM2WCpuhT01vye01022joIy9dP7I7WYdcZDM",
+  "trimStart": 16.9,
+  "trimEnd": 206.95,
+  "oldDuration": 212.838333,
+  "newDuration": 190,
+  "cutAt": "2026-10-07T01:04:37.124Z",
+  "durationOk": true,
+  "expectedDuration": 190.05,
+  "verified": {
+   "head": 0.02,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "yIo3jM02WQ5KgafpKfr54b4902I2fIwv7tBMWjLvB4Azw": {
+  "contentId": "61532700-a504-4805-9e14-17fd4fa24897",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "8g4W5oyekiDgeqfoFMGVsLwcXwG6e4R4556Weh5j9Kk",
+  "trimStart": 16.68,
+  "trimEnd": 120.76,
+  "oldDuration": 125.77,
+  "newDuration": 104,
+  "cutAt": "2026-10-07T01:07:43.162Z",
+  "durationOk": true,
+  "expectedDuration": 104.08,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "cXY6ZW45vEokctytzTerPKFHV72cVxjPyrMVHCKR3nU": {
+  "contentId": "64d900ad-cc81-4d18-9df5-03faf4adcb7a",
+  "title": "Seasonal Menus, Part 2",
+  "newAssetId": "yXKmlNA3200kOYaZtOxxmdFN1AXuUwY8FETGm4iKhAz4",
+  "trimStart": 13.6,
+  "trimEnd": 160.15,
+  "oldDuration": 163.909333,
+  "newDuration": 147,
+  "cutAt": "2026-10-07T01:11:35.363Z",
+  "durationOk": true,
+  "expectedDuration": 146.55,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "QjlviOGD1HbJtgv4pRYB85pSjgScTsHZ97gFRLGOnmo": {
+  "contentId": "656843e9-6e42-4942-b9a7-44276d16d39b",
+  "title": "15,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "A6ur00PbrpZM025eZKhNzVH6EWBNGYtl2dd7RysH6E00g8",
+  "trimStart": 17.48,
+  "trimEnd": 172.83,
+  "oldDuration": 178.873333,
+  "newDuration": 155,
+  "cutAt": "2026-10-07T01:20:09.146Z",
+  "durationOk": true,
+  "expectedDuration": 155.35,
+  "verified": {
+   "head": 0,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "F00004KhaousTEPnwdss1u00yGxeyMWABjw02D4oWR7IB4I": {
+  "contentId": "67820488-3f84-4413-bd6c-adf03bf5b8ba",
+  "title": "Phones and Tones — Opener",
+  "newAssetId": "oHcqO9T00HQ45wzGEX1cFE00pSEv7O00YO9E2FjLLVvliw",
+  "trimStart": null,
+  "trimEnd": 63.75,
+  "oldDuration": 68.742667,
+  "newDuration": 64,
+  "cutAt": "2026-10-07T01:22:36.327Z",
+  "durationOk": true,
+  "expectedDuration": 63.75,
+  "verified": {
+   "head": 0,
+   "tail": 0.47,
+   "ok": true
+  }
+ },
+ "gsYTvSswKjiXhJ4BLnehYKRuO4PQNUSczMNFEliAeUo": {
+  "contentId": "683053cb-980e-4386-b007-bd5c3d1e362f",
+  "title": "EV Series, Part 3",
+  "newAssetId": "QcPXxFP13xG2RGlKm46yET6D00mofqHOgDI5YJUopqpM",
+  "trimStart": 15.22,
+  "trimEnd": 240.83,
+  "oldDuration": 245.775,
+  "newDuration": 226,
+  "cutAt": "2026-10-07T01:31:12.414Z",
+  "durationOk": true,
+  "expectedDuration": 225.61,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "TjMf02JpY3fz3hnHYhod39rV7sztXUPkURBN3zphUKNM": {
+  "contentId": "69be19f1-afde-4349-9ba8-c5eed6f60b39",
+  "title": "60,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "7m1gmu3dNVqi7AtAzcpZqRKfr4FHPDUS0067e3uFqNOI",
+  "trimStart": 13.5,
+  "trimEnd": 110.58,
+  "oldDuration": 115.405,
+  "newDuration": 97,
+  "cutAt": "2026-10-07T01:34:24.850Z",
+  "durationOk": true,
+  "expectedDuration": 97.08,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "jcEQgOT00hL01xkgC51tlf3QZEVlb1Stf1HuvawRHYpyw": {
+  "contentId": "6a53c1f3-cc3d-4eed-9ed1-21725417e4df",
+  "title": "120,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "01F2CoktE9jIpVRep2026T8b35X01WXtEVAn92CLCVhAEw",
+  "trimStart": 15.12,
+  "trimEnd": 152.95,
+  "oldDuration": 158.238333,
+  "newDuration": 138,
+  "cutAt": "2026-10-07T01:37:47.241Z",
+  "durationOk": true,
+  "expectedDuration": 137.83,
+  "verified": {
+   "head": 0,
+   "tail": 0.59,
+   "ok": true
+  }
+ },
+ "SEgVUkAG7Y8t3Evhpvx900NiSJ4P8sDzhdMpU57wGxuc": {
+  "contentId": "6d43e011-387f-498d-946c-c62b1c44cc9f",
+  "title": "10,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "01Rt026sDdUBk3QkeS4MIqmHFGpQasH4QC24UhLX9uhHM",
+  "trimStart": 17.04,
+  "trimEnd": 121.86,
+  "oldDuration": 128.238333,
+  "newDuration": 105,
+  "cutAt": "2026-10-07T01:41:06.611Z",
+  "durationOk": true,
+  "expectedDuration": 104.82,
+  "verified": {
+   "head": 0.62,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "7WZM17a001EdhQAm005w9sVxgd9S004CgsEq7H7wKM02xy8": {
+  "contentId": "6d91a34b-ff94-4188-ae32-da332b1c6c66",
+  "title": "CSI — Upon Departure, Part 4",
+  "newAssetId": "teta02F00m5eiH7gn4cbv9lDME9xo7tl63vfDThvW5FlU",
+  "trimStart": null,
+  "trimEnd": 104.36,
+  "oldDuration": 108.676,
+  "newDuration": 104,
+  "cutAt": "2026-10-07T01:45:15.980Z",
+  "durationOk": true,
+  "expectedDuration": 104.36,
+  "verified": {
+   "head": 0,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "yZAIRkryX8CIQyPeaSuP6zO39rdaPlnkiQ3lxvAfd14": {
+  "contentId": "722c3843-8d87-4949-9a15-17d921fa224c",
+  "title": "70,000 Mile Dealer Upsell Menu, Part 2 (2822)",
+  "newAssetId": "5YhhJT1WAcrpa3O01YnFsg2c01RKCQopnuO2UFnw02xU3U",
+  "trimStart": 15.12,
+  "trimEnd": 155.1,
+  "oldDuration": 161.776,
+  "newDuration": 140,
+  "cutAt": "2026-10-07T02:16:58.087Z",
+  "durationOk": true,
+  "expectedDuration": 139.98,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "gMe01hQPp3zAi1LQST01XYF00yB693E3bJ500Mdr301obzMk": {
+  "contentId": "7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e",
+  "title": "110,000 Mile Dealer Upsell Menu",
+  "newAssetId": "ZrVVCwQ9Ahrw1Fm3pdwhc02HtTlsoPRKIkRCakM7dhfI",
+  "trimStart": 17.74,
+  "trimEnd": 193.4,
+  "oldDuration": 198.906667,
+  "newDuration": 176,
+  "cutAt": "2026-10-07T02:21:40.897Z",
+  "durationOk": true,
+  "expectedDuration": 175.66,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "NE9BtSlVJHYNe52AsW3GoQpBnCg01uFeMpbe1uVNGnnE": {
+  "contentId": "7f3f25d1-429d-4ea0-979d-7b0674c1ab13",
+  "title": "120,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "PDgj9KaT02JHuRkIIWOsoaOTL00T2DwP0100RPzevKVyCww",
+  "trimStart": 18.78,
+  "trimEnd": 179.06,
+  "oldDuration": 182.873333,
+  "newDuration": 160,
+  "cutAt": "2026-10-07T02:25:40.323Z",
+  "durationOk": true,
+  "expectedDuration": 160.28,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "P7xNHvSKFJVPTCWU9YQLPuL7ehMlz9vXJF00bHQWk00SQ": {
+  "contentId": "80163645-2849-4751-ba42-e3774019b9b2",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "WsFGvDZbhDCQUjbNvgpXLCxI2Du401foyNp3JnEESgd00",
+  "trimStart": 15.78,
+  "trimEnd": 187.3,
+  "oldDuration": 192.973333,
+  "newDuration": 172,
+  "cutAt": "2026-10-07T02:30:28.151Z",
+  "durationOk": true,
+  "expectedDuration": 171.52,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "LC2QzRjagCmMNulQig01s94KMp4jPPnVFVYw00C58WPWM": {
+  "contentId": "80d6d72e-1d59-46d8-b412-3466b2781037",
+  "title": "30,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "iFViD7EV00h8BYCoKWsbb00z5aPwvDLiM1gGj52YPcC01w",
+  "trimStart": 16.34,
+  "trimEnd": 154.07,
+  "oldDuration": 159.44,
+  "newDuration": 138,
+  "cutAt": "2026-10-07T02:34:10.973Z",
+  "durationOk": true,
+  "expectedDuration": 137.73,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "7oljKROe6WALPO3q2KYS1scwSxrzlCrvpCUUrsWoqWM": {
+  "contentId": "821c0a1d-e963-4be7-b619-e076cc456cd7",
+  "title": "Name Tag — Opener",
+  "newAssetId": "Qj00nAwHNnZEjhyz4Hgcj02iKg01DmLRlqfjtRys92zGp4",
+  "trimStart": 10.26,
+  "trimEnd": 86.03,
+  "oldDuration": 90.609333,
+  "newDuration": 76,
+  "cutAt": "2026-10-07T02:47:16.046Z",
+  "durationOk": true,
+  "expectedDuration": 75.77,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "C2TAOUAlohlx1Wx0172uF00jzC02sY3RsnPqzCGsnfjh8U": {
+  "contentId": "87595a92-7009-4994-ac6d-bfae100b84c3",
+  "title": "20,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "LyBBwl84ZJ115cXfJxX3sjxsCqomUyZJGc9ErTusBuU",
+  "trimStart": 15.96,
+  "trimEnd": 157.53,
+  "oldDuration": 162.606667,
+  "newDuration": 142,
+  "cutAt": "2026-10-07T02:50:50.545Z",
+  "durationOk": true,
+  "expectedDuration": 141.57,
+  "verified": {
+   "head": 0.08,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "rb1xL4TXuwG5nNDJ4cN8sdkvRbJSxfZ7fhzvXUpjSe4": {
+  "contentId": "8aede114-1de5-4000-89b6-f10b59eec638",
+  "title": "Setting up the MPI — Opener",
+  "newAssetId": "jhu6xKRi1BOTiMHduDavrraTJOGnHECE2RxFqBHucOo",
+  "trimStart": null,
+  "trimEnd": 47.86,
+  "oldDuration": 52.976,
+  "newDuration": 48,
+  "cutAt": "2026-10-07T02:52:26.318Z",
+  "durationOk": true,
+  "expectedDuration": 47.86,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "MIktX01NIQ00zwiL3vQR3sXSt8dyVRKf023KMfo16bRHrc": {
+  "contentId": "8d736820-45c1-4cc2-b434-d98dbc47368a",
+  "title": "65,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "mMzMrj7wTedjxzIGGmuZvk8QquVtMe028DPGEnwZ00x78",
+  "trimStart": 16.62,
+  "trimEnd": 159.58,
+  "oldDuration": 165.273333,
+  "newDuration": 143,
+  "cutAt": "2026-10-07T02:56:31.381Z",
+  "durationOk": true,
+  "expectedDuration": 142.96,
+  "verified": {
+   "head": 0.02,
+   "tail": 0.86,
+   "ok": true
+  }
+ },
+ "o7bLkaYR8Bgto01jpQi4hXVYlIagL2kFED02x8oRl9tD8": {
+  "contentId": "9605ce68-c52b-4baf-91e4-12eab3878116",
+  "title": "45,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "dWQbyerKV006k02IyzDsyZudII9pucYB6fX2Zds02E4i9g",
+  "trimStart": 18.58,
+  "trimEnd": 226.5,
+  "oldDuration": 232.075,
+  "newDuration": 208,
+  "cutAt": "2026-10-07T03:01:58.637Z",
+  "durationOk": true,
+  "expectedDuration": 207.92,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "wgOjnH8tj2FMhI013fEByleYS0058aPo23DXkW01rLmLjw": {
+  "contentId": "97117cd8-80d0-4025-a92a-8d1cbd978015",
+  "title": "15,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "g00GoeFcK01LqroVjHCLZmLqYrO1vMc00pa5nhgs006yqN00",
+  "trimStart": 16.48,
+  "trimEnd": 141.39,
+  "oldDuration": 146.771667,
+  "newDuration": 125,
+  "cutAt": "2026-10-07T03:05:04.152Z",
+  "durationOk": true,
+  "expectedDuration": 124.91,
+  "verified": {
+   "head": 0.24,
+   "tail": 0,
+   "ok": true
+  }
+ },
+ "qqAuusV9yR138N02m6aUjozKEIxoUg01sGp9xuyjIAy5E": {
+  "contentId": "97e0e1d6-7df1-4664-8356-b2e43e71a576",
+  "title": "50,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "b4xZQdR5DCQDh7yh029PLffVPgAGZO4NKCXbjHbM027lk",
+  "trimStart": 15.48,
+  "trimEnd": 58.27,
+  "oldDuration": 65.07,
+  "newDuration": 43,
+  "cutAt": "2026-10-07T03:06:34.443Z",
+  "durationOk": true,
+  "expectedDuration": 42.79,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "ITYWoldyvkG3szHoH6URP3OAw301pucqrICp5OT1iSVU": {
+  "contentId": "9a4190b3-16cb-47bb-adfc-1e062b1d5028",
+  "title": "CSI — Prior to Arrival, Part 2",
+  "newAssetId": "FvqrSKngRMN8XSkmH71OR01Udmd5p9o00TQyILqCcTFFA",
+  "trimStart": 11,
+  "trimEnd": null,
+  "oldDuration": 127.476,
+  "newDuration": 116,
+  "cutAt": "2026-10-07T03:10:03.362Z",
+  "durationOk": true,
+  "expectedDuration": 116.48,
+  "verified": {
+   "head": 0,
+   "tail": 5.476,
+   "ok": true
+  }
+ },
+ "ndoTtLqAQVDVAQq7QYXz9Oy3rov2kRLsx00D5ZRvFAfI": {
+  "contentId": "9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e",
+  "title": "150,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "ezDa27FpgKFLoTiibEZr015zzQ003VxAJRSXuNsoEG3Qo",
+  "trimStart": 17.36,
+  "trimEnd": 213.28,
+  "oldDuration": 218.973333,
+  "newDuration": 196,
+  "cutAt": "2026-10-07T03:15:11.737Z",
+  "durationOk": true,
+  "expectedDuration": 195.92,
+  "verified": {
+   "head": 0,
+   "tail": 0.52,
+   "ok": true
+  }
+ },
+ "8ytEPnYApcY2HWAQhwhr02qts36lVQYG1Cl00ZeL4B3LQ": {
+  "contentId": "9c8e186d-bce4-4a1b-a12e-c606b72aebce",
+  "title": "Four Step Close — Opener",
+  "newAssetId": "82J2ekBwjCo5qFVVxDS9bVk01XkaNrNSdOx1k8w55iLg",
+  "trimStart": null,
+  "trimEnd": 89.68,
+  "oldDuration": 93.676,
+  "newDuration": 90,
+  "cutAt": "2026-10-07T03:17:47.034Z",
+  "durationOk": true,
+  "expectedDuration": 89.68,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "wHG7zgByLo5Assc02SzexjOETFbJLx02oUKZDJNssK01gM": {
+  "contentId": "a33ed276-05e9-4b2a-9102-65bd81ec7b50",
+  "title": "Seasonal Menus, Part 1",
+  "newAssetId": "czpywokOvjs9u00YwfSp6nLVTdWcbEsLrjMH1UzROICY",
+  "trimStart": 14.54,
+  "trimEnd": 172.71,
+  "oldDuration": 177.876,
+  "newDuration": 158,
+  "cutAt": "2026-10-07T03:21:47.089Z",
+  "durationOk": true,
+  "expectedDuration": 158.17,
+  "verified": {
+   "head": 0.5,
+   "tail": 0.57,
+   "ok": true
+  }
+ },
+ "MD7IrFp1wSiP5H00VcJ3P68agaaA4n3XFEry66Wg8Pk8": {
+  "contentId": "a417f0ac-d63c-490f-94ce-0623e494acbd",
+  "title": "35,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "3kQ6wme8nOLO4AWX4WI4pe02eBjvIGMxcyMFNu4s8Ko00",
+  "trimStart": 17.82,
+  "trimEnd": 139.46,
+  "oldDuration": 145.671667,
+  "newDuration": 122,
+  "cutAt": "2026-10-07T03:25:46.428Z",
+  "durationOk": true,
+  "expectedDuration": 121.64,
+  "verified": {
+   "head": 0.36,
+   "tail": 0.6,
+   "ok": true
+  }
+ },
+ "xMEO78Akb00mcAq5TE7aPtc01hrDNRq8WRzOs9m1A2XJQ": {
+  "contentId": "a676439e-0c22-4c62-bcd9-6153bf93425c",
+  "title": "150,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "ATbgLQCg9nfqKPQXZXnAWMrZSyLqkQEdJ4fK01S5yQy8",
+  "trimStart": 19.08,
+  "trimEnd": 159.2,
+  "oldDuration": 163.24,
+  "newDuration": 140,
+  "cutAt": "2026-10-07T03:29:28.921Z",
+  "durationOk": true,
+  "expectedDuration": 140.12,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "vnCf5eIXoJ7pVOxoXw02uDoMtAHRcdjK28wXWVzHfWjI": {
+  "contentId": "ab70fed9-b840-4df8-af45-d956f6e7360e",
+  "title": "105,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "B43nTF2Og017J7Y0100M5OZeBZ02X00OXs7heXw3sOSu01M38",
+  "trimStart": 17.94,
+  "trimEnd": 68.57,
+  "oldDuration": 75.503333,
+  "newDuration": 51,
+  "cutAt": "2026-10-07T03:31:13.812Z",
+  "durationOk": true,
+  "expectedDuration": 50.63,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "rbcXwFcPArY2QGKdSvmNUOeWbn8QnTjhWlbONwoLmfQ": {
+  "contentId": "ad3bd915-9e95-4b58-b6bb-5fa234fe91ab",
+  "title": "55,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "Sf5uoAGIRyJoP900ofXAJini9Dy7MpRi00T2jRfqu6xRI",
+  "trimStart": 16.26,
+  "trimEnd": null,
+  "oldDuration": 121.87,
+  "newDuration": 106,
+  "cutAt": "2026-10-07T03:34:14.535Z",
+  "durationOk": true,
+  "expectedDuration": 105.61,
+  "verified": {
+   "head": 0,
+   "tail": 3.15,
+   "ok": true
+  }
+ },
+ "UYkmqHe01Fv01xiiAcW1vz007CXCKnEcrQXISZf200Afvyw": {
+  "contentId": "adf42b80-2f57-4181-961b-ed15ebf30fa7",
+  "title": "EV Series, Part 4",
+  "newAssetId": "yivWFK9BW01soLLbMxiRC6HmThW02iplkCIkaXH2wcOfk",
+  "trimStart": 17.86,
+  "trimEnd": 255.23,
+  "oldDuration": 259.475,
+  "newDuration": 237,
+  "cutAt": "2026-10-07T03:40:36.150Z",
+  "durationOk": true,
+  "expectedDuration": 237.37,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "KdKn5302Gsx02R00i1UF7gemSCs8BR6FbMBLK5Tonh5I44": {
+  "contentId": "af408777-698d-4448-bd5e-4c61c1b25801",
+  "title": "15,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "N9a02gBIImtLqvzG401QTEj4UxEd49qrF8zcmRz93syWg",
+  "trimStart": 20.22,
+  "trimEnd": 151.3,
+  "oldDuration": 156.471667,
+  "newDuration": 131,
+  "cutAt": "2026-10-07T03:43:59.549Z",
+  "durationOk": true,
+  "expectedDuration": 131.08,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "7rMMq900vxS8IAkmt01QecgXOv4O7QwVNLfOpykn3c39c": {
+  "contentId": "b497f293-eedb-4d07-9095-669cf5722b14",
+  "title": "30,000 Mile Dealer Upsell Menu (2769)",
+  "newAssetId": "00NA9UIiNO48ffksnyXXM2Pt00J9A00D6lP01NALbSuC02DU",
+  "trimStart": 17.08,
+  "trimEnd": 261.42,
+  "oldDuration": 266.941667,
+  "newDuration": 244,
+  "cutAt": "2026-10-07T03:50:37.655Z",
+  "durationOk": true,
+  "expectedDuration": 244.34,
+  "verified": {
+   "head": 0,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "k5G02fcnGw2p3V53DZwOPJyIBZWzRBN6MJfzBHd01LOQs": {
+  "contentId": "ba4ba1ba-df5a-4476-9e50-4d7f73108c14",
+  "title": "Phones and Tones — Closer",
+  "newAssetId": "T8tnLm7K02I175C5yAZRdZT9YWY9exziMCuBtnzDt1oQ",
+  "trimStart": 10.44,
+  "trimEnd": 64.57,
+  "oldDuration": 69.642667,
+  "newDuration": 54,
+  "cutAt": "2026-10-07T03:52:28.330Z",
+  "durationOk": true,
+  "expectedDuration": 54.13,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "OpVO8gCLbQRWZEshkxXAy7P2oweY007DAKKFPjWPJhQ4": {
+  "contentId": "beb63665-496b-4f5e-bfc3-c494dc8d9508",
+  "title": "40,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "EQeJEDNVnibXH01XikxhF014g9WOyxU444ViPAOJ2d4Sk",
+  "trimStart": 15.48,
+  "trimEnd": 154.27,
+  "oldDuration": 160.14,
+  "newDuration": 139,
+  "cutAt": "2026-10-07T03:56:11.181Z",
+  "durationOk": true,
+  "expectedDuration": 138.79,
+  "verified": {
+   "head": 0,
+   "tail": 0.63,
+   "ok": true
+  }
+ },
+ "ymCZLaPRsOXF9qM9swNhZ7ZKJCUk5ihDmJQ6hZ01VcfE": {
+  "contentId": "bfe2d90b-487c-4347-b8cc-f43d188df825",
+  "title": "60,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "vKianrZFMAB02djKq003h007b502R5ei02v3D6Vr7hqdsAg4",
+  "trimStart": 16.28,
+  "trimEnd": 200.47,
+  "oldDuration": 205.073333,
+  "newDuration": 184,
+  "cutAt": "2026-10-07T04:01:19.817Z",
+  "durationOk": true,
+  "expectedDuration": 184.19,
+  "verified": {
+   "head": 0.16,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "02SADNSA9sUvDZWCRS7NqAU00ts1Op9b01UCfYlvrbG6Aw": {
+  "contentId": "c2de2af9-d723-4a5f-b71b-1271be753fc9",
+  "title": "10,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "nVDkJLIQ33lefXTNZAboS005lUahI5inZvele69yTBPM",
+  "trimStart": 18.08,
+  "trimEnd": 80.01,
+  "oldDuration": 86.603333,
+  "newDuration": 62,
+  "cutAt": "2026-10-07T04:03:34.057Z",
+  "durationOk": true,
+  "expectedDuration": 61.93,
+  "verified": {
+   "head": 0.08,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "QZwQeVPBZ47sbGxrCfRtkAuJHsQKcIoSNjvbwzSosUs": {
+  "contentId": "c4c4e3dd-6fdc-405c-9a9e-b64e0e117572",
+  "title": "40,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "iWaM8AIjZGiWM02Pq7bHFVtPw701yDM6bk7zn2lv00cSfI",
+  "trimStart": 16.3,
+  "trimEnd": null,
+  "oldDuration": 236.908333,
+  "newDuration": 221,
+  "cutAt": "2026-10-07T04:09:20.318Z",
+  "durationOk": true,
+  "expectedDuration": 220.61,
+  "verified": {
+   "head": 0,
+   "tail": -0.032,
+   "ok": true
+  }
+ },
+ "McCenUTwPV6okPJr4mSkyNLqmCgGSTy7LEb027YCJmwo": {
+  "contentId": "c561b924-5d78-43fe-af79-89381567cdb2",
+  "title": "Seasonal Menus, Part 5",
+  "newAssetId": "8DONIfeVkYH3DJfMxV7zr027400WEpVzatDjlJUiy027AA",
+  "trimStart": 15.12,
+  "trimEnd": 225.01,
+  "oldDuration": 229.375,
+  "newDuration": 210,
+  "cutAt": "2026-10-07T04:15:16.815Z",
+  "durationOk": true,
+  "expectedDuration": 209.89,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "Ix3vwOhOPzJWVYuXxocaXYLst9NKQscYUVnQmv11whM": {
+  "contentId": "c6bedfd2-252f-4623-a00b-40f347760de4",
+  "title": "EV Series, Part 1",
+  "newAssetId": "kyRn2hsfw027vzh702kRr7PP00Kq99E8Q8OubdwELGNabw",
+  "trimStart": 17.18,
+  "trimEnd": 191.93,
+  "oldDuration": 196.973333,
+  "newDuration": 175,
+  "cutAt": "2026-10-07T04:20:25.085Z",
+  "durationOk": true,
+  "expectedDuration": 174.75,
+  "verified": {
+   "head": 0.06,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "4ZSdR01o00q00pqMs0102KM6QUh02jC7IwS024ZPShK1Cegc8U": {
+  "contentId": "c7726af7-ea0c-4671-a0ec-41fc394e2e8d",
+  "title": "35,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "rnKlxYcjIIQ00Yo1GY4cAIh01nvaZT2Ur7Lng28ZdgVA00",
+  "trimStart": 14.76,
+  "trimEnd": 110.02,
+  "oldDuration": 116.271667,
+  "newDuration": 95,
+  "cutAt": "2026-10-07T04:23:07.251Z",
+  "durationOk": true,
+  "expectedDuration": 95.26,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "9vPFfqfBPqJIRWRJ4NGMm4HHQQ2umhVI3AdsTO1lrho": {
+  "contentId": "cc56bdc0-b4ae-411f-9bdc-1d4948b976fb",
+  "title": "65,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "Q4YaPWOGaZ00OIqhgU9LzF01C702qI2k91GnaUgXj6tEgI",
+  "trimStart": 18.24,
+  "trimEnd": 178.73,
+  "oldDuration": 184.14,
+  "newDuration": 160,
+  "cutAt": "2026-10-07T04:27:31.341Z",
+  "durationOk": true,
+  "expectedDuration": 160.49,
+  "verified": {
+   "head": 0.12,
+   "tail": 0.51,
+   "ok": true
+  }
+ },
+ "QWwE8LBVc4uWTi7AZ01Mp2F1ZmabIfEBdLZSqANfF5Hc": {
+  "contentId": "cfdb1aba-242b-4fd3-a931-be0d31105282",
+  "title": "20,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "hYXijHbZUsM9CQbuXYyfjMALUC01XjFY2D0101EVeks00hc",
+  "trimStart": 15.34,
+  "trimEnd": 207.9,
+  "oldDuration": 212.809333,
+  "newDuration": 193,
+  "cutAt": "2026-10-07T04:32:26.214Z",
+  "durationOk": true,
+  "expectedDuration": 192.56,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "YeUZIwJIulMsYNnze28lgT0002djTyvFfjYdLO3TnJI1Y": {
+  "contentId": "d220095f-5660-47fa-9bd8-6976b11a7e15",
+  "title": "45,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "sAcspPjaDSeFmPvBt8rEZmFW02FAHwzytbm2QUa7Dd02s",
+  "trimStart": 14.72,
+  "trimEnd": 202.26,
+  "oldDuration": 207.74,
+  "newDuration": 188,
+  "cutAt": "2026-10-07T04:37:05.599Z",
+  "durationOk": true,
+  "expectedDuration": 187.54,
+  "verified": {
+   "head": 0,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "ooiaAbB0001e31EwSCiA3inECF02jjbYeC3YKDrGd1LLhA": {
+  "contentId": "d2248d9c-9c84-4817-94d3-1ede9d2a12d6",
+  "title": "20,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "1r8p5oNnn9z6l9011WgSHxTIfm6icItXki72wcrmwfiE",
+  "trimStart": 14.58,
+  "trimEnd": 90.2,
+  "oldDuration": 94.935,
+  "newDuration": 76,
+  "cutAt": "2026-10-07T04:39:25.196Z",
+  "durationOk": true,
+  "expectedDuration": 75.62,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "7NCBfrBHQQDX5D5H3tfkh01dSmk5ljxlD8vvIe943900Y": {
+  "contentId": "d3b6be3f-90f2-4d1e-b21f-6725b16921f9",
+  "title": "50,000 Mile Dealer Upsell Menu, Part 3",
+  "newAssetId": "XNBeP9UDVjyVFYizMX2BRqF7Lm8DR00W6O6VBNJs902DA",
+  "trimStart": 16.9,
+  "trimEnd": 97.5,
+  "oldDuration": 103.671667,
+  "newDuration": 81,
+  "cutAt": "2026-10-07T04:41:42.475Z",
+  "durationOk": true,
+  "expectedDuration": 80.6,
+  "verified": {
+   "head": 0.38,
+   "tail": 0.62,
+   "ok": true
+  }
+ },
+ "kOuW2d8uh1I00QGglqy6IBRsOluC4bEuQrUVA7CEf6AM": {
+  "contentId": "da1adb1a-40f2-464f-87d5-a111069c2359",
+  "title": "100,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "tBVsrVxic3277ECKgcGR4vUMfzVL4rnE7af3QpLbHYQ",
+  "trimStart": 18.54,
+  "trimEnd": 182.43,
+  "oldDuration": 187.94,
+  "newDuration": 164,
+  "cutAt": "2026-10-07T04:46:11.833Z",
+  "durationOk": true,
+  "expectedDuration": 163.89,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "e2ZdmXzziBVz3hvQTNEXnImICYTFMaDmqLYs01k01JtXM": {
+  "contentId": "db297b0f-8a16-4984-a5b8-80c9379b285a",
+  "title": "50,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "pA3LSHu5QY61eci2xgY8K00c2yPTZ4P402c00QSVggUc4w",
+  "trimStart": 14.66,
+  "trimEnd": 163.28,
+  "oldDuration": 169.64,
+  "newDuration": 149,
+  "cutAt": "2026-10-07T04:49:55.100Z",
+  "durationOk": true,
+  "expectedDuration": 148.62,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "01IBqhzxtSxg6022OCUN2n4QlwHg004G9DqkwJuBWxedHQ": {
+  "contentId": "dbaa8209-4991-420d-8e7a-f13a3e908e54",
+  "title": "150,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "6vdnqLb6qpoGrrUwxno5Wsai01LA8TF6BrHJXQOhdaWQ",
+  "trimStart": 18.66,
+  "trimEnd": 152.97,
+  "oldDuration": 158.105,
+  "newDuration": 134,
+  "cutAt": "2026-10-07T04:53:24.589Z",
+  "durationOk": true,
+  "expectedDuration": 134.31,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "EBwyBCxuJD13rQSapnskaatnrqTp01Gdm9zkL802e36Ro": {
+  "contentId": "dc55f1e2-2bdd-418f-bb9b-4a2ae4583666",
+  "title": "90,000 Mile Dealer Upsell Menu",
+  "newAssetId": "e02o200GohznLW5aUWmd68026YNWUa24K4yO00FpVky02CQ8",
+  "trimStart": 21.2,
+  "trimEnd": 193.32,
+  "oldDuration": 198.505,
+  "newDuration": 172,
+  "cutAt": "2026-10-07T04:57:29.386Z",
+  "durationOk": true,
+  "expectedDuration": 172.12,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "01uswb00UeC00wzEwQQGYjDja7I341GoSVfejyrwYeZfss": {
+  "contentId": "dd4efdc7-0a06-45aa-bec4-70bc3f61d1b0",
+  "title": "90,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "vwH8mtwvAL01HQwpBC600jsQALgr6x300qonEv2jUn3EEI",
+  "trimStart": 16.88,
+  "trimEnd": 141.34,
+  "oldDuration": 147.271667,
+  "newDuration": 124,
+  "cutAt": "2026-10-07T05:00:40.621Z",
+  "durationOk": true,
+  "expectedDuration": 124.46,
+  "verified": {
+   "head": 0,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "H74OlY2k00Si8i2sfb8lTx8iEPWwQ1ByvBLBvJyfTXrY": {
+  "contentId": "e1183510-e514-41aa-af42-ce905b80762c",
+  "title": "Lasting Impressions — Opener",
+  "newAssetId": "Zf3NUZNZXHYfry00QU2R75ReseqUNtQkqjcW2L3UvJ3w",
+  "trimStart": null,
+  "trimEnd": 66.72,
+  "oldDuration": 71.442667,
+  "newDuration": 67,
+  "cutAt": "2026-10-07T05:02:45.857Z",
+  "durationOk": true,
+  "expectedDuration": 66.72,
+  "verified": {
+   "head": 0,
+   "tail": 0.48,
+   "ok": true
+  }
+ },
+ "HCZOygjfEVcGEq44ncdLbcfnoUSQbZy00D8yjPAEEUQM": {
+  "contentId": "e7bf8633-e7e8-470e-843b-db04560de84c",
+  "title": "100,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "5Jy56EML1WTnPTEVfbhUnM01tfvNArC57nhxdl83qUZw",
+  "trimStart": 17.74,
+  "trimEnd": 178.76,
+  "oldDuration": 185.206667,
+  "newDuration": 161,
+  "cutAt": "2026-10-07T05:06:48.742Z",
+  "durationOk": true,
+  "expectedDuration": 161.02,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "wY4tyWB01Avj02l9qzt02502s4yowRfKJbFPE1ukryyP014s": {
+  "contentId": "eac42e00-5aa1-4368-8dc5-fef14ca95b70",
+  "title": "Diesel, Part 4",
+  "newAssetId": "3215ZFsyV96700BMrOWYTg26EXzSCR01VfV00UP025G4yfw",
+  "trimStart": 14.7,
+  "trimEnd": null,
+  "oldDuration": 170.04,
+  "newDuration": 155,
+  "cutAt": "2026-10-07T05:10:52.039Z",
+  "durationOk": true,
+  "expectedDuration": 155.34,
+  "verified": {
+   "head": 0.08,
+   "tail": -0.58,
+   "ok": true
+  }
+ },
+ "NmIByQD2baU7yW01A01yR6IxayHtSTTn8600HGaYEsWpYA": {
+  "contentId": "ec00d373-9622-45b7-a0d1-59536f40bbc6",
+  "title": "35,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "odlm1Ww5s1qr2004HASe8FAvsz85bVLnuMBWKtuWgcVk",
+  "trimStart": 16.28,
+  "trimEnd": 192.03,
+  "oldDuration": 199.44,
+  "newDuration": 176,
+  "cutAt": "2026-10-07T05:15:10.743Z",
+  "durationOk": true,
+  "expectedDuration": 175.75,
+  "verified": {
+   "head": 0.62,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "xnsdlZPaUyhQwSv1NBwFbjnrtS55M28YlN9PxTZaHRk": {
+  "contentId": "ee3849c1-9708-4ee7-b20e-8879f5a4606b",
+  "title": "90,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "b2KD5eW024ZpvbvLOzNYxhoAv7YycI5oaL7bqdy5qywk",
+  "trimStart": 18.78,
+  "trimEnd": null,
+  "oldDuration": 179.406667,
+  "newDuration": 161,
+  "cutAt": "2026-10-07T05:19:19.204Z",
+  "durationOk": true,
+  "expectedDuration": 160.63,
+  "verified": {
+   "head": 0,
+   "tail": 2.207,
+   "ok": true
+  }
+ },
+ "6lAedyBpOVMSkJZ66ZoLC4VIHlXu01Sg17wtBGCWCw38": {
+  "contentId": "eef634f1-3a07-4826-8d0f-f398bdfeb5b5",
+  "title": "5,000/7,500 Mile Dealer Upsell Menu (2716)",
+  "newAssetId": "GqiqL5EVC01Me1sNI00aoG6247x00MTdEQxd02DI2TPSX01Q",
+  "trimStart": 18.6,
+  "trimEnd": null,
+  "oldDuration": 222.773333,
+  "newDuration": 204,
+  "cutAt": "2026-10-07T05:24:55.980Z",
+  "durationOk": true,
+  "expectedDuration": 204.17,
+  "verified": {
+   "head": 1.04,
+   "tail": 0.313,
+   "ok": false
+  }
+ },
+ "ejdxkdlsX00s42sGnTMRG8h2Q02GOONLwFTeZcUo7r14Y": {
+  "contentId": "effafbce-02e5-45cc-bcd8-f66d6559328c",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "01qbnzA02bI02g6bg6cj029qZyNeXKg5PdB8Yt8zM002Fnlo",
+  "trimStart": 16.48,
+  "trimEnd": 126.75,
+  "oldDuration": 131.938333,
+  "newDuration": 110,
+  "cutAt": "2026-10-07T05:27:38.438Z",
+  "durationOk": true,
+  "expectedDuration": 110.27,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
+ },
+ "ZSeV01OZBU5RM5naUzXKYCPj2lvo00iOSNQP02ScSjsJYw": {
+  "contentId": "f0d826fa-784c-4559-81ea-55b6c213ad10",
+  "title": "Diesel, Part 2",
+  "newAssetId": "w2zrFEif2x02aurl00bgUFa4hbuiPEljuQ02x8tpnRbEPw",
+  "trimStart": 13.48,
+  "trimEnd": 159.25,
+  "oldDuration": 163.306667,
+  "newDuration": 146,
+  "cutAt": "2026-10-07T05:31:24.876Z",
+  "durationOk": true,
+  "expectedDuration": 145.77,
+  "verified": {
+   "head": 0,
+   "tail": null,
+   "ok": null
+  }
+ },
+ "HC1VJOD1ZFipc5xy9MO4PNHkOJuSCpsUDebZaOMUx100": {
+  "contentId": "f1156a28-a9c9-4932-88d0-5ad96e8b7fc4",
+  "title": "15,000 Mile Dealer Upsell Menu, Part 5",
+  "newAssetId": "M9oGixuqN29ul02QhhBOh4GO00lt7zjEk00V01IS6uwTZtI",
+  "trimStart": 17.46,
+  "trimEnd": 157.39,
+  "oldDuration": 162.606667,
+  "newDuration": 140,
+  "cutAt": "2026-10-07T05:34:51.213Z",
+  "durationOk": true,
+  "expectedDuration": 139.93,
+  "verified": {
+   "head": 0,
+   "tail": 0.53,
+   "ok": true
+  }
+ },
+ "SSGptSARK67r24jgKF87SBc0100VDFOg6oOOY01E6FNk9o": {
+  "contentId": "f4222417-e03a-49c7-90e7-c8d16d72d45e",
+  "title": "30,000 Mile Dealer Upsell Menu (2760)",
+  "newAssetId": "mjbXTU401vzxE5N1jTHnlWnd01xW1851cHuNg1V7gEVSc",
+  "trimStart": 16.76,
+  "trimEnd": 152.5,
+  "oldDuration": 157.438333,
+  "newDuration": 136,
+  "cutAt": "2026-10-07T05:38:14.280Z",
+  "durationOk": true,
+  "expectedDuration": 135.74,
+  "verified": {
+   "head": 0.76,
+   "tail": 0.58,
+   "ok": true
+  }
+ },
+ "g9tz00gxPJEX3nYKkZo02wKo7F01HPJMLzJJYGDH2I01jio": {
+  "contentId": "f7303616-faee-4836-be6e-eae8c2433da6",
+  "title": "95,000 Mile Dealer Upsell Menu",
+  "newAssetId": "TpF01Q3ubf2i3tKHKrH5jQnSsfuYeCIqdv8aBy2GOLv8",
+  "trimStart": 16.24,
+  "trimEnd": 131.41,
+  "oldDuration": 136.705,
+  "newDuration": 115,
+  "cutAt": "2026-10-07T05:41:20.436Z",
+  "durationOk": true,
+  "expectedDuration": 115.17,
+  "verified": {
+   "head": 0,
+   "tail": 1.37,
+   "ok": true
+  }
+ },
+ "s02LX4wqdHCksR2gjpTQsTgbiLheFaPsSKV762WxLGus": {
+  "contentId": "f7ca4fac-2f1c-4154-81e5-cc82edbe9655",
+  "title": "60,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "fRpzjl8Idjp38nBJoAFsyrKKkv9pYQG4r2NxyuUSufc",
+  "trimStart": 17.16,
+  "trimEnd": 180.16,
+  "oldDuration": 187.14,
+  "newDuration": 163,
+  "cutAt": "2026-10-07T05:45:38.393Z",
+  "durationOk": true,
+  "expectedDuration": 163,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "M65UD00fAc00wr7301pFw003BL00XJoM3P8bUGE9TPYcJjuc": {
+  "contentId": "fa55abfe-1309-4be7-a282-3fa484144dc0",
+  "title": "100,000 Mile Dealer Upsell Menu, Part 1",
+  "newAssetId": "xHtseRujYXj5GUQiRd7400IHZYDj7h4aeqSULiQUJOcw",
+  "trimStart": 14.54,
+  "trimEnd": 171,
+  "oldDuration": 177.54,
+  "newDuration": 156,
+  "cutAt": "2026-10-07T05:49:40.507Z",
+  "durationOk": true,
+  "expectedDuration": 156.46,
+  "verified": {
+   "head": 0,
+   "tail": 0.54,
+   "ok": true
+  }
+ },
+ "Ea1ha1Tla4y02iR5Qo8kfbsPi428BppNOf9LZtYcJPK00": {
+  "contentId": "fabd44aa-ee49-44b6-b016-10baad50b0db",
+  "title": "20,000 Mile Dealer Upsell Menu, Part 2",
+  "newAssetId": "lDNIOJsXML00Agjxeg202Ud5EM02xYVXCgLXU9cYq100Tgw",
+  "trimStart": 14.38,
+  "trimEnd": 103.72,
+  "oldDuration": 108.738333,
+  "newDuration": 89,
+  "cutAt": "2026-10-07T05:52:01.210Z",
+  "durationOk": true,
+  "expectedDuration": 89.34,
+  "verified": {
+   "head": 0,
+   "tail": 0.56,
+   "ok": true
+  }
+ },
+ "cAFvDNF13PdvxbiULy8G8D8Uh7DNQ00lmxGmPCkAjK6w": {
+  "contentId": "fecc71e1-ce3b-414b-9317-d9d9c354c40b",
+  "title": "25,000 Mile Dealer Upsell Menu, Part 4",
+  "newAssetId": "ea3TUgXdFGtaFQ3KDXmdfs6L8QiB02NW5YldOOgZyTi00",
+  "trimStart": 15.98,
+  "trimEnd": 148.99,
+  "oldDuration": 156.403333,
+  "newDuration": 133,
+  "cutAt": "2026-10-07T05:55:14.216Z",
+  "durationOk": true,
+  "expectedDuration": 133.01,
+  "verified": {
+   "head": 0,
+   "tail": 0.61,
+   "ok": true
+  }
+ },
+ "nA3gwdtSMb900s1jccrXtAS02pR9HcZ7cFtGaYGw01To58": {
+  "contentId": "ff3809d2-0e10-41ba-91cb-67649b82bef8",
+  "title": "CSI — The 2 Week and 2 Month Follow-Ups, Part 6",
+  "newAssetId": "9ld89sIt5ccGVOJnEBkQnsGInzxoSFP00GUmQ5bOQa01w",
+  "trimStart": 11.98,
+  "trimEnd": 122.07,
+  "oldDuration": 126.809333,
+  "newDuration": 110,
+  "cutAt": "2026-10-07T05:58:16.461Z",
+  "durationOk": true,
+  "expectedDuration": 110.09,
+  "verified": {
+   "head": 0,
+   "tail": 0.55,
+   "ok": true
+  }
  }
 }
