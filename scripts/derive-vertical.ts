@@ -14,6 +14,7 @@
      npm run derive:vertical -- --dry     list what it would do
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
+import { readEnds, strip } from "./trim-check";
 import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -153,13 +154,51 @@ async function deriveOne(row: Row) {
     const pid = asset.playback_ids?.find((p) => p.policy === "signed");
     if (!pid) throw new Error("derived asset has no signed playback id");
 
+    /*
+     * ---- READ THE RENDITION BEFORE WRITING ITS ID ------------------------
+     *
+     * A phone plays the VERTICAL. Two of 447 of these — "Coverage is Key —
+     * Opener" and "Name Tag — Opener" — were derived from the right asset,
+     * got their own fresh playback id, reported ready, and began SIX SECONDS
+     * into the film. The id was correct and the content inside it was not, so
+     * nothing that checked ids, durations or statuses could see it. Ryan found
+     * it by pressing play on his phone.
+     *
+     * Every other check in the trim pass read mux_playback_id and none of them
+     * ever read this rendition. So the derive reads its own output now, and a
+     * rendition that does not open on "Aloha" and close on "Mahalo", at the
+     * same length as the master it came from, DOES NOT GET ITS ID WRITTEN. The
+     * row keeps the vertical it had — stale is survivable, wrong is not, and
+     * pickRendition already handles a missing one by serving the master
+     * letterboxed.
+     */
+    const ends = await readEnds(mux, pid.id, asset.duration ?? 0, 3, "small.en", ".tmp-derive-check");
+    const first = strip(ends.firstWord ?? "");
+    const last = strip(ends.lastWord ?? "");
+    const lengthOk =
+      asset.duration != null && row.duration_sec != null
+        ? Math.abs(asset.duration - row.duration_sec) <= 1.0
+        : true;
+    const ok = first === "aloha" && last === "mahalo" && lengthOk;
+    console.log(
+      `    checked       opens "${ends.firstWord ?? "—"}", closes "${ends.lastWord ?? "—"}", ` +
+        `${asset.duration?.toFixed(2)}s vs master ${row.duration_sec}s`
+    );
+    if (!ok) {
+      throw new Error(
+        `REFUSING to write this vertical: opens "${ends.firstWord ?? "—"}" closes ` +
+          `"${ends.lastWord ?? "—"}" ${asset.duration?.toFixed(2)}s vs ${row.duration_sec}s. ` +
+          `The row keeps its previous vertical. Asset ${assetId} is left in Mux for inspection.`
+      );
+    }
+
     await sb.rpc("set_vertical_rendition", {
       _content_id: row.content_id,
       _asset_id: assetId,
       _playback_id: pid.id,
     });
 
-    console.log(`    VERTICAL      ${pid.id.slice(0, 14)}…  ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s`);
+    console.log(`    VERTICAL      ${pid.id.slice(0, 14)}…  ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s  verified`);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

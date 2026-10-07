@@ -39,13 +39,26 @@ import {
 } from "./trim-check";
 
 const LEDGER = "reports/trim-pass.json";
-const OUT = "reports/trim-verify.json";
+const OUT = process.argv.slice(2).find((a) => a.startsWith("--out="))?.slice(6) ?? "reports/trim-verify.json";
 const WORK = ".tmp-trim-verify";
 
 const argv = process.argv.slice(2);
 const ONLY = argv.find((a) => a.startsWith("--only="))?.slice(7);
 const WINDOW = Number(argv.find((a) => a.startsWith("--window="))?.slice(9) ?? 3);
 const MODEL = argv.find((a) => a.startsWith("--model="))?.slice(8) ?? "small.en";
+/*
+ * WHICH RENDITION. A phone plays the VERTICAL, and every check in the trim pass
+ * read the landscape — which is how two films shipped a vertical that begins six
+ * seconds into the film with correct ids, durations and statuses all the way
+ * down. Default stays landscape; `--rendition=vertical` is the one that answers
+ * "what does a phone play".
+ */
+const RENDITION = (argv.find((a) => a.startsWith("--rendition="))?.slice(12) ?? "landscape") as
+  "landscape" | "vertical";
+/** Every published film, not only the ones this pass cut. */
+const ALL = argv.includes("--all");
+/** For the vertical, the master's length is the thing it must agree with. */
+const MAX_LENGTH_GAP = Number(argv.find((a) => a.startsWith("--max-gap="))?.slice(10) ?? 0.5);
 
 function requireEnv() {
   const m = ["SB_URL", "SB_KEY", "MUX_TOKEN_ID", "MUX_TOKEN_SECRET", "MUX_SIGNING_KEY_ID", "MUX_SIGNING_KEY_PRIVATE"]
@@ -63,18 +76,38 @@ const video = () => (_mux ??= new Mux({
 type Result = Ends & {
   contentId: string; title: string;
   archivedAssetId: string; currentAssetId: string | null;
+  masterDuration: number | null; lengthGap: number | null;
   headOk: boolean; tailOk: boolean; pass: boolean;
 };
 
 async function main() {
   requireEnv();
   const ledger = JSON.parse(readFileSync(LEDGER, "utf8")) as Record<string, { contentId: string; title: string }>;
-  let entries = Object.entries(ledger).map(([archived, v]) => ({ archived, ...v }));
+  const archivedOf = new Map<string, string>();
+  for (const [asset, v] of Object.entries(ledger)) archivedOf.set(v.contentId, asset);
+
+  type Film = { contentId: string; title: string; archived: string };
+  let entries: Film[];
+  if (ALL) {
+    const rows: { id: string; title: string }[] = [];
+    for (let page = 0; ; page++) {
+      const { data, error } = await db().from("content").select("id, title")
+        .eq("type", "advisor_video").eq("status", "published").is("retired_at", null)
+        .order("id").range(page * 1000, page * 1000 + 999);
+      if (error) throw new Error(error.message);
+      if (!data?.length) break;
+      rows.push(...(data as { id: string; title: string }[]));
+      if (data.length < 1000) break;
+    }
+    entries = rows.map((r) => ({ contentId: r.id, title: r.title, archived: archivedOf.get(r.id) ?? "" }));
+  } else {
+    entries = Object.entries(ledger).map(([archived, v]) => ({ archived, contentId: v.contentId, title: v.title }));
+  }
   if (ONLY) {
     const want = ONLY.split(",").map((s) => s.trim()).filter(Boolean);
     entries = entries.filter((e) => want.some((w) => e.contentId.startsWith(w)));
   }
-  console.log(`\n  trim:verify — ${entries.length} cut film(s), ${WINDOW}s read at each end`);
+  console.log(`\n  trim:verify — ${entries.length} film(s), ${RENDITION} rendition, ${WINDOW}s read at each end`);
   console.log(`  PASS = opens on "Aloha" with >= ${MIN_FIRST_WORD_START}s of air, closes on "Mahalo" with >= ${MIN_TAIL_AFTER_MAHALO}s after\n`);
 
   const results: Result[] = [];
@@ -86,23 +119,45 @@ async function main() {
       whisperFirstStart: null, headHeard: "", tailHeard: "", note: null,
     };
     let current: string | null = null;
+    let masterDur: number | null = null;
     try {
       const { data } = await db().from("content")
-        .select("mux_playback_id, mux_asset_id").eq("id", e.contentId).maybeSingle();
-      const row = data as unknown as { mux_playback_id: string | null; mux_asset_id: string | null } | null;
-      if (!row?.mux_playback_id) throw new Error("no playback id");
-      current = row.mux_asset_id;
-      const pb = await video().video.playbackIds.retrieve(row.mux_playback_id);
+        .select("mux_playback_id, vertical_playback_id, mux_asset_id, duration_sec")
+        .eq("id", e.contentId).maybeSingle();
+      const row = data as unknown as {
+        mux_playback_id: string | null; vertical_playback_id: string | null;
+        mux_asset_id: string | null; duration_sec: number | null;
+      } | null;
+      const pbId = RENDITION === "vertical" ? row?.vertical_playback_id : row?.mux_playback_id;
+      if (!pbId) throw new Error(`no ${RENDITION} playback id`);
+      current = row!.mux_asset_id;
+      /* The master's true length, for the gap test. */
+      if (row!.mux_asset_id) {
+        try { masterDur = (await video().video.assets.retrieve(row!.mux_asset_id)).duration ?? null; } catch { /* reported below */ }
+      }
+      const pb = await video().video.playbackIds.retrieve(pbId);
       const asset = await video().video.assets.retrieve(pb.object!.id as string);
       if (asset.duration == null) throw new Error("no asset duration");
-      ends = await readEnds(video(), row.mux_playback_id, asset.duration, WINDOW, MODEL, WORK);
+      ends = await readEnds(video(), pbId, asset.duration, WINDOW, MODEL, WORK);
     } catch (err) {
       ends.note = err instanceof Error ? err.message : String(err);
     }
+    /*
+     * RYAN'S CRITERION FOR THE RENDITION A PHONE PLAYS: the first word is
+     * "Aloha", the last is "Mahalo", and the length agrees with the master.
+     * It deliberately does NOT test lead-in — whisper cannot measure that, and
+     * an earlier build that tried called ten good films over-cut.
+     */
+    const gap = masterDur != null && ends.duration != null ? Math.abs(ends.duration - masterDur) : null;
+    const wordsOk = strip(ends.firstWord ?? "") === "aloha" && strip(ends.lastWord ?? "") === "mahalo";
+    const lengthOk = gap == null ? false : gap <= MAX_LENGTH_GAP;
     const r: Result = {
       ...ends, contentId: e.contentId, title: e.title,
       archivedAssetId: e.archived, currentAssetId: current,
-      headOk: headOk(ends), tailOk: tailOk(ends), pass: passes(ends),
+      masterDuration: masterDur, lengthGap: gap == null ? null : Number(gap.toFixed(3)),
+      headOk: RENDITION === "vertical" ? strip(ends.firstWord ?? "") === "aloha" : headOk(ends),
+      tailOk: RENDITION === "vertical" ? strip(ends.lastWord ?? "") === "mahalo" : tailOk(ends),
+      pass: RENDITION === "vertical" ? wordsOk && lengthOk : passes(ends),
     };
     results.push(r);
     if (n % 10 === 0) console.log(`  ${n}/${entries.length}`);
@@ -113,13 +168,13 @@ async function main() {
   const wrongWord = fail.filter((r) => r.firstWord && strip(r.firstWord) !== "aloha");
 
   console.log(`\n  ${"═".repeat(96)}`);
-  console.log(`  ${"air".padStart(6)} ${"first".padEnd(12)} ${"last".padEnd(12)} ${"air".padStart(6)} ${"dur".padStart(7)}  film`);
+  console.log(`  ${"air".padStart(6)} ${"first".padEnd(12)} ${"last".padEnd(12)} ${"air".padStart(6)} ${"dur".padStart(7)} ${"gap".padStart(6)}  film`);
   console.log(`  ${"═".repeat(96)}`);
   for (const r of [...results].sort((a, b) => (a.leadIn ?? 9) - (b.leadIn ?? 9))) {
     console.log(
       `  ${(r.leadIn ?? NaN).toFixed(2).padStart(6)} ${String(r.firstWord ?? "—").slice(0, 12).padEnd(12)} ` +
       `${String(r.lastWord ?? "—").slice(0, 12).padEnd(12)} ${(r.tailAfterLast ?? NaN).toFixed(2).padStart(6)} ` +
-      `${(r.duration ?? 0).toFixed(2).padStart(7)}  ${r.pass ? "    " : "FAIL"} ${r.title.slice(0, 40)}`
+      `${(r.duration ?? 0).toFixed(2).padStart(7)} ${(r.lengthGap ?? NaN).toFixed(2).padStart(6)}  ${r.pass ? "    " : "FAIL"} ${r.title.slice(0, 40)}`
     );
   }
   console.log(`  ${"═".repeat(96)}`);

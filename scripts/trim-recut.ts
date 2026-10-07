@@ -53,6 +53,15 @@ const PAD_HEAD = Number(argv.find((a) => a.startsWith("--pad-head="))?.slice(11)
 const PAD_TAIL = Number(argv.find((a) => a.startsWith("--pad-tail="))?.slice(11) ?? 0.7);
 const WINDOW = Number(argv.find((a) => a.startsWith("--window="))?.slice(9) ?? 3);
 const MODEL = argv.find((a) => a.startsWith("--model="))?.slice(8) ?? "small.en";
+/*
+ * Hand-measured overrides, for a film whose plan number is simply wrong.
+ * "Coverage is Key, Part 6" is the worked example: the plan put Aloha at 10.64,
+ * which is inside the spoken slate — "Coverage is Key Part 6, Fuel, Oil, and
+ * A.C." runs to 10.38 and the greeting is at 11.54. A cut from the plan's
+ * number opens on "and". Only ever used with --only, and recorded on the row.
+ */
+const ALOHA_AT = argv.find((a) => a.startsWith("--aloha-at="))?.slice(11);
+const MAHALO_END = argv.find((a) => a.startsWith("--mahalo-end="))?.slice(13);
 
 function requireEnv() {
   const m = ["SB_URL", "SB_KEY", "MUX_TOKEN_ID", "MUX_TOKEN_SECRET", "MUX_SIGNING_KEY_ID", "MUX_SIGNING_KEY_PRIVATE"]
@@ -134,10 +143,16 @@ async function main() {
     const source = archivedOf.get(id)!;
     /* The new cut, in the ORIGINAL timeline. A side the first pass did not cut
        is still not cut: nothing here widens the scope of the original ruling. */
-    const start = p.proposedStart != null && p.alohaAt != null
-      ? Math.max(0, Number((p.alohaAt - PAD_HEAD).toFixed(2))) : null;
-    const end = p.proposedEnd != null && p.mahaloEnd != null
-      ? Number(Math.min(p.assetDuration ?? 1e9, p.mahaloEnd + PAD_TAIL).toFixed(2)) : null;
+    const aloha = ALOHA_AT != null ? Number(ALOHA_AT) : p.alohaAt;
+    const mahalo = MAHALO_END != null ? Number(MAHALO_END) : p.mahaloEnd;
+    if (ALOHA_AT != null && !ONLY) {
+      console.error("\n  --aloha-at is a hand measurement of ONE film; use it with --only.\n");
+      process.exit(1);
+    }
+    const start = (p.proposedStart != null || ALOHA_AT != null) && aloha != null
+      ? Math.max(0, Number((aloha - PAD_HEAD).toFixed(2))) : null;
+    const end = (p.proposedEnd != null || MAHALO_END != null) && mahalo != null
+      ? Number(Math.min(p.assetDuration ?? 1e9, mahalo + PAD_TAIL).toFixed(2)) : null;
 
     console.log(`  ──────── ${p.title}`);
     console.log(`           original ${p.assetDuration}s, aloha ${p.alohaAt}, mahaloEnd ${p.mahaloEnd}`);
@@ -194,13 +209,14 @@ async function main() {
       }
 
       /* The client is built without a generated Database type, so `rpc` infers
-         its argument as `undefined`. The call is the same one replace-video.ts
-         makes; the cast is about the absent schema types, not about the shape. */
-      const rpc = db().rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>
-      ) => Promise<{ error: { message: string } | null }>;
-      const { error: swapErr } = await rpc("replace_master_asset", {
+         its argument as `undefined`. Cast the CLIENT, not the method: pulling
+         `rpc` off the object detaches it from its `this` and the call dies with
+         "Cannot read properties of undefined (reading 'rest')" — after the clip
+         has already been made and verified, which is the worst moment for it. */
+      const client = db() as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+      };
+      const { error: swapErr } = await client.rpc("replace_master_asset", {
         _content_id: id, _new_asset_id: clip.id, _new_playback_id: pb.id,
         _new_duration: asset.duration ? Math.round(asset.duration) : null,
         _new_version: null, _new_canonical: null,
