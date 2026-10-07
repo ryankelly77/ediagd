@@ -1,0 +1,45 @@
+{
+ "44cfa330-24ab-4338-9667-705a35a27306": {
+  "contentId": "44cfa330-24ab-4338-9667-705a35a27306",
+  "title": "Coverage is Key, Part 1",
+  "sourceAssetId": "nyI6mr01FJu3XWIldiWU3mMpeD000197a77h01uXVuW68EU",
+  "supersededAssetId": "W80002C7sDKPn01N01AOZi00ES8EC8RTl9nofmnHuz1o8E4A",
+  "newAssetId": "K2i99TFkr6JsHNBnxgUbi01jdncMrhT43dTG3YQRRfhc",
+  "trimStart": 10.16,
+  "trimEnd": 95.61,
+  "padHead": 0.6,
+  "padTail": 0.7,
+  "before": {
+   "contentId": "44cfa330-24ab-4338-9667-705a35a27306",
+   "title": "Coverage is Key, Part 1",
+   "archivedAssetId": "nyI6mr01FJu3XWIldiWU3mMpeD000197a77h01uXVuW68EU",
+   "currentAssetId": "W80002C7sDKPn01N01AOZi00ES8EC8RTl9nofmnHuz1o8E4A",
+   "duration": 85.15,
+   "firstWord": "Aloha.",
+   "firstStart": 0,
+   "lastWord": "Mahalo.",
+   "lastEnd": 84.498,
+   "tailAfterLast": 0.652,
+   "headOk": false,
+   "tailOk": true,
+   "pass": false,
+   "headHeard": "Aloha. Welcome to the coverage's...",
+   "tailHeard": "called coverage is key. Mahalo.",
+   "note": null
+  },
+  "after": {
+   "duration": 85.45,
+   "firstWord": "Aloha,",
+   "firstStart": 0,
+   "lastWord": "Mahalo.",
+   "lastEnd": 84.8,
+   "tailAfterLast": 0.65,
+   "headHeard": "Aloha, welcome to the coverage.",
+   "tailHeard": "called coverage is key. Mahalo.",
+   "note": null
+  },
+  "swapped": false,
+  "note": "clip REFUSED: head BAD, tail ok",
+  "at": "2026-10-07T14:47:12.204Z"
+ }
+}

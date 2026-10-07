@@ -171,6 +171,12 @@ def main() -> int:
                     # trim without opening the video. When no Aloha was found,
                     # this is the evidence for the no-greeting ruling.
                     rec["headHeard"] = " ".join(w["word"] for w in words[:40])
+                    # The FIRST words with their timings. trim-verify.ts asks a
+                    # different question from the measure pass — not "where is
+                    # Aloha" but "is the first word of the finished film Aloha,
+                    # and does it start after a beat of air" — and only the
+                    # words themselves can answer it.
+                    rec["headWords"] = words[:10]
             except Exception as exc:  # noqa: BLE001 — one bad file must not end the run
                 rec["errors"].append(f"head: {str(exc)[:160]}")
 
@@ -192,6 +198,7 @@ def main() -> int:
                         rec["mahaloEnd"] = hit["end"]
                         rec["mahaloStart"] = hit["start"]
                     rec["tailHeard"] = " ".join(w["word"] for w in words[-40:])
+                    rec["tailWords"] = words[-10:]
             except Exception as exc:  # noqa: BLE001
                 rec["errors"].append(f"tail: {str(exc)[:160]}")
 
