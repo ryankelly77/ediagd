@@ -27,7 +27,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { loadTrackDetail, type TrackModuleRow } from "@/lib/certifications";
+import {
+  loadTrackDetail,
+  storyLessonsMet,
+  type TrackModuleRow,
+} from "@/lib/certifications";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
@@ -152,44 +156,124 @@ export default async function TrackPage({
       {/* ---- The story leg — the track's close ----------------------------
           One per track, at track exit, mirroring the entry film. The form
           itself carries the "please don't use customer names" line; this row
-          names the leg and opens the door. */}
+          names the leg and opens the door.
+
+          LISTED EVEN WHEN LOCKED, never hidden. The leg is a third of what the
+          credential asks for, and an advisor who cannot see it coming meets it
+          as a surprise on the morning they expected to finish. Ryan, 5 October:
+          the complaint was that the story could be submitted early, not that it
+          was visible early. */}
       {track.storyRequired && (
         <Card className="mt-4 px-4">
-          <Link
-            href={`/certifications/${encodeURIComponent(track.slug)}/story`}
-            className="flex min-h-[3.5rem] items-center gap-3 py-3 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-          >
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill text-xs font-extrabold"
-              style={{
-                background: track.storySubmitted
-                  ? "color-mix(in srgb, rgb(var(--ediagd-palm)) 18%, transparent)"
-                  : "color-mix(in srgb, rgb(var(--ediagd-gold)) 22%, transparent)",
-                color: track.storySubmitted
-                  ? "rgb(var(--ediagd-palm))"
-                  : "rgb(var(--ediagd-ocean))",
-              }}
-            >
-              {track.storySubmitted ? "✓" : "✎"}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-base font-bold text-navy">
-                Your Good News Story
-              </span>
-              <span className="mt-0.5 block text-xs text-ink-soft">
-                {track.storySubmitted
-                  ? "Submitted — it closes the track"
-                  : "Something you did differently on the drive because of this track. No customer names."}
-              </span>
-            </span>
-            <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
-              ›
-            </span>
-          </Link>
+          <StoryRow
+            slug={track.slug}
+            submitted={track.storySubmitted}
+            lessonsDone={track.gatingDone}
+            lessonsTotal={track.gatingTotal}
+          />
         </Card>
       )}
     </main>
+  );
+}
+
+/**
+ * The story leg: locked until the lessons are done, then a door, then a tick.
+ *
+ * ---------------------------------------------------------------------------
+ * THE LOCK HERE IS COURTESY. THE BOUNDARY IS submitStory()
+ * ---------------------------------------------------------------------------
+ * This row not navigating is a kindness to the advisor, not a control: the
+ * /story URL is typeable and the server action is reachable by direct POST. Both
+ * check the same predicate for themselves — see lib/story-actions.ts.
+ *
+ * A SUBMITTED STORY STAYS OPEN whatever the lessons now say. Content is
+ * published, retired and re-cut underneath people; a track that was complete in
+ * March and gained a tenth film in April must not swallow the words somebody
+ * already wrote. The gate is on reaching the form for the first time, and
+ * 0127's update policy is deliberately not narrowed to match.
+ */
+function StoryRow({
+  slug,
+  submitted,
+  lessonsDone,
+  lessonsTotal,
+}: {
+  slug: string;
+  submitted: boolean;
+  lessonsDone: number;
+  lessonsTotal: number;
+}) {
+  const locked = !submitted && !storyLessonsMet(lessonsDone, lessonsTotal);
+
+  const glyph = submitted ? "✓" : locked ? "🔒" : "✎";
+  const detail = submitted
+    ? "Submitted — it closes the track"
+    : locked
+      ? /* The count is the useful half. "Finish the lessons first" alone invites
+           "which lessons?", and the answer is already on this page — the number
+           tells them how much of it is left. Films still to be shot read as
+           0 of 0, so the sentence changes rather than claiming a denominator. */
+        lessonsTotal > 0
+        ? `Finish the lessons first — ${lessonsDone} of ${lessonsTotal} done`
+        : "Finish the lessons first — they're still being filmed"
+      : "Something you did differently on the drive because of this track. No customer names.";
+
+  const body = (
+    <>
+      <span
+        aria-hidden="true"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill text-xs font-extrabold"
+        style={{
+          background: submitted
+            ? "color-mix(in srgb, rgb(var(--ediagd-palm)) 18%, transparent)"
+            : locked
+              ? /* The muted disc reinforcement rows use — "not yours to do yet"
+                   in the same voice the page already speaks. */
+                "color-mix(in srgb, rgb(var(--ediagd-ink-soft)) 12%, transparent)"
+              : "color-mix(in srgb, rgb(var(--ediagd-gold)) 22%, transparent)",
+          color: submitted ? "rgb(var(--ediagd-palm))" : "rgb(var(--ediagd-ocean))",
+        }}
+      >
+        {glyph}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={`block text-base ${
+            locked ? "font-semibold text-ink-soft" : "font-bold text-navy"
+          }`}
+        >
+          Your Good News Story
+        </span>
+        <span className="mt-0.5 block text-xs text-ink-soft">{detail}</span>
+      </span>
+      {/* No chevron when locked: the chevron is this page's promise that a row
+          goes somewhere, and it must not make one the row cannot keep. */}
+      {!locked && (
+        <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
+          ›
+        </span>
+      )}
+    </>
+  );
+
+  /* A DIV, NOT A DISABLED LINK. `pointer-events-none` on an <a> still leaves it
+     in the tab order and still announces a destination to a screen reader —
+     reachable by keyboard while unreachable by mouse is the worst of both. No
+     anchor means no navigation to suppress. */
+  if (locked) {
+    return (
+      <div className="flex min-h-[3.5rem] items-center gap-3 py-3">{body}</div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/certifications/${encodeURIComponent(slug)}/story`}
+      className="flex min-h-[3.5rem] items-center gap-3 py-3 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      {body}
+    </Link>
   );
 }
 

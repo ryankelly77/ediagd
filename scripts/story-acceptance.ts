@@ -14,6 +14,13 @@
      3. a shared story reaches advisors at that rooftop, and only when shared
      4. nobody reads across rooftops — not a manager at another store
 
+   AND SINCE 0161 A FIFTH, which is about WHEN rather than who:
+
+     5. a story cannot be written until the track's GATING lessons are done
+        (section 8 — and its acceptance half is the one that catches a gate
+        keyed on 0117's unfiltered module denominator, which is false forever
+        on six of the nine core tracks)
+
    AND EVERY REFUSAL IS PROVED NON-VACUOUS. A test that asserts "this query
    returns nothing" passes just as well when the relation is missing, the login
    failed, or the fixture was never written. So each refusal is paired with the
@@ -137,10 +144,89 @@ async function main() {
   if (cErr) throw new Error(`certification: ${cErr.message}`);
   const certId = cert!.id as string;
 
+  /* ---- The track needs real lessons now (0161) ---------------------------
+     Until 0161 this fixture track had no courses and no modules at all, and the
+     insert policy did not care. It does now: `my_track_lessons_complete()` must
+     be true, so the track gets ONE gating lesson and — deliberately — one
+     cue-only module beside it.
+
+     THE CUE-ONLY MODULE IS NOT DECORATION. It is what makes section 8's
+     acceptance half mean something: under 0117's `done_modules >=
+     total_modules` this track could never qualify, so a suite without it would
+     pass just as happily with the wrong rollup in the policy. Same reason the
+     migration's own probe builds one. */
+  const { data: course, error: coErr } = await sb
+    .from("course")
+    .insert({ track: "craft", name: `${TAG} Course`, slug: `${TAG}-course` })
+    .select("id")
+    .single();
+  if (coErr) throw new Error(`course: ${coErr.message}`);
+  await sb
+    .from("certification_course")
+    .insert({ certification_id: certId, course_id: course!.id, sort: 1 });
+
+  const mkModule = async (name: string, sort: number) => {
+    const { data, error } = await sb
+      .from("module")
+      .insert({ course_id: course!.id, name: `${TAG} ${name}`, sort_order: sort })
+      .select("id")
+      .single();
+    if (error) throw new Error(`module ${name}: ${error.message}`);
+    return data!.id as string;
+  };
+  const lessonMod = await mkModule("Lesson", 1);
+  const cueMod = await mkModule("Reinforcement", 2);
+
+  const mkContent = async (title: string, type: string, moduleId: string) => {
+    const { data, error } = await sb
+      .from("content")
+      .insert({ title: `${TAG} ${title}`, type, status: "published", module_id: moduleId })
+      .select("id")
+      .single();
+    if (error) throw new Error(`content ${title}: ${error.message}`);
+    return data!.id as string;
+  };
+  const filmId = await mkContent("film", "advisor_video", lessonMod);
+  await mkContent("cue", "cue", cueMod);
+
+  /**
+   * Make this advisor genuinely finished with the track's gating lessons.
+   *
+   * AS THE SERVICE ROLE, because this is fixture-building and not the thing
+   * under test — what is under test is whether the POLICY then accepts the
+   * story, asked as the advisor over PostgREST.
+   */
+  const finishLessons = async (userId: string, rooftopId: string) => {
+    const { error: cpErr } = await sb.from("content_progress").upsert({
+      user_id: userId,
+      rooftop_id: rooftopId,
+      content_id: filmId,
+      completed_at: new Date().toISOString(),
+    });
+    if (cpErr) throw new Error(`content_progress: ${cpErr.message}`);
+    const { error: mcErr } = await sb
+      .from("module_completion")
+      .upsert({ user_id: userId, module_id: lessonMod, rooftop_id: rooftopId });
+    if (mcErr) throw new Error(`module_completion: ${mcErr.message}`);
+  };
+
   const author = await makeUser("author", roofA, "advisor");
   const peerA = await makeUser("peer-a", roofA, "advisor");
   const mgrA = await makeUser("mgr-a", roofA, "manager");
   const mgrB = await makeUser("mgr-b", roofB, "manager");
+
+  /*
+   * EVERY ADVISOR WHO WRITES A STORY BELOW IS FINISHED FIRST — including the
+   * peer, who only ever writes one to prove a refusal is non-vacuous.
+   *
+   * This matters more than it looks. `my_track_lessons_complete()` is evaluated
+   * for `auth.uid()`, not for the row's `user_id`, so an unfinished peer would
+   * be refused by the LESSONS arm — and "a colleague cannot write a story in
+   * the advisor's name" would pass while proving nothing about the user_id arm
+   * it names. A refusal with two possible causes tests neither.
+   */
+  await finishLessons(author, roofA);
+  await finishLessons(peerA, roofA);
 
   const authorC = await signedInAs(author);
   const peerC = await signedInAs(peerA);
@@ -281,6 +367,7 @@ async function main() {
   /* NON-VACUITY for rule 4: give store B its own story and prove mgrB reads
      THAT. Same client, same table, same query — only the rooftop differs. */
   const fenceUser = await makeUser("fence", roofB, "advisor");
+  await finishLessons(fenceUser, roofB);
   const fenceC = await signedInAs(fenceUser);
   const { data: fenceStory } = await fenceC
     .from("advisor_story")
@@ -420,9 +507,105 @@ async function main() {
     reErr?.message
   );
 
+  /* ==================================================================== */
+  section("8 — the story waits for the lessons (0161)");
+
+  /*
+   * Ryan, 5 October: "I can submit my good news story ahead of completing all
+   * of the videos. This should not be possible."
+   *
+   * A FRESH ADVISOR, so the refusal is about the lessons and nothing else: same
+   * rooftop as the author, same track, their own user_id, every other arm of
+   * the policy satisfied.
+   */
+  const earlyUser = await makeUser("early", roofA, "advisor");
+  const earlyC = await signedInAs(earlyUser);
+
+  const { error: earlyErr } = await earlyC.from("advisor_story").insert({
+    user_id: earlyUser,
+    rooftop_id: roofA,
+    certification_id: certId,
+    body: "day one, nothing watched",
+  });
+  ok(
+    "REFUSED: a story cannot be written with the lessons outstanding",
+    Boolean(earlyErr),
+    earlyErr ? undefined : "the insert succeeded — the story does not wait for the lessons"
+  );
+
+  const { data: earlyGate } = await earlyC.rpc("my_track_lessons_complete", {
+    _certification: certId,
+  });
+  ok(
+    "  ↳ and the predicate agrees, asked as the advisor: not complete",
+    earlyGate === false,
+    `my_track_lessons_complete returned ${JSON.stringify(earlyGate)}`
+  );
+
+  /*
+   * THE ACCEPTANCE HALF, and it is the one that would have caught the gate this
+   * change nearly shipped. Keying on `my_certification_progress` — 0117's
+   * `done_modules >= total_modules` — refuses this insert too, because the track
+   * holds a cue-only module that can never earn a module_completion row. On
+   * production that is six of the nine core tracks, locked forever and silently.
+   *
+   * Same client, same table, same row shape. Only the lessons changed.
+   */
+  await finishLessons(earlyUser, roofA);
+
+  const { data: lateGate } = await earlyC.rpc("my_track_lessons_complete", {
+    _certification: certId,
+  });
+  ok(
+    "the GATING lessons done, the predicate opens — the cue-only module does not block it",
+    lateGate === true,
+    `my_track_lessons_complete returned ${JSON.stringify(lateGate)} — if false, the ` +
+      `condition is counting every module rather than the gating ones`
+  );
+
+  const { data: lateStory, error: lateErr } = await earlyC
+    .from("advisor_story")
+    .insert({
+      user_id: earlyUser,
+      rooftop_id: roofA,
+      certification_id: certId,
+      body: "and now it is earned",
+    })
+    .select("id")
+    .single();
+  ok(
+    "  ↳ and the SAME insert now succeeds — the refusal was the gate, not the wiring",
+    !lateErr && Boolean(lateStory),
+    lateErr?.message
+  );
+
+  /*
+   * THE PREDICATE CANNOT BE POINTED AT SOMEBODY ELSE. It takes no user
+   * argument, so there is nothing to forge — asked by the peer about the same
+   * track it answers about the PEER. Proved by asking as a user who has NOT
+   * finished and getting false for a track somebody else has finished.
+   */
+  const probeUser = await makeUser("probe", roofA, "advisor");
+  const probeC = await signedInAs(probeUser);
+  const { data: probeGate } = await probeC.rpc("my_track_lessons_complete", {
+    _certification: certId,
+  });
+  ok(
+    "the predicate answers about the CALLER, not about the track",
+    probeGate === false,
+    "it returned true for an advisor who has finished nothing — it is reading " +
+      "somebody else's progress"
+  );
+
   /* ---- Cleanup -------------------------------------------------------- */
   await sb.from("advisor_story").delete().eq("certification_id", certId);
+  await sb.from("module_completion").delete().in("module_id", [lessonMod, cueMod]);
+  await sb.from("content_progress").delete().eq("content_id", filmId);
+  await sb.from("certification_course").delete().eq("certification_id", certId);
   await sb.from("certification").delete().eq("id", certId);
+  await sb.from("content").delete().in("module_id", [lessonMod, cueMod]);
+  await sb.from("module").delete().in("id", [lessonMod, cueMod]);
+  await sb.from("course").delete().eq("id", course!.id);
   await sb.from("membership").delete().in("user_id", madeUsers);
   await sb.from("app_user").delete().in("id", madeUsers);
   for (const id of madeUsers) await sb.auth.admin.deleteUser(id);

@@ -18,12 +18,30 @@
    reason: the RLS is the feature here, and a service-role write would route
    around the thing accept:story exists to prove.
 
+   ---------------------------------------------------------------------------
+   THE UI CHECKS ARE NOT THE BOUNDARY. THIS FILE IS
+   ---------------------------------------------------------------------------
+   Since 8 October the story waits for the lessons (Ryan, 5 October: "I can
+   submit my good news story ahead of completing all of the videos. This should
+   not be possible."). THREE things enforce that and only one of them counts:
+
+     the track page      locks the row and does not navigate   — courtesy
+     the story page      redirects an early arrival            — courtesy
+     submitStory()       refuses                               — THE BOUNDARY
+
+   A locked row is markup and a redirect is advice to a browser. A server action
+   takes a POST from anywhere, which is the same reason the user comes from the
+   session above. Both courtesies read the same predicate this does —
+   storyLessonsMet() in lib/certifications.ts — so no surface can invite a write
+   this function will refuse.
+
    NOTE: a "use server" module may only export async functions. Types and the
    read side live in lib/story.ts.
    ============================================================================ */
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { loadStoryLessons } from "@/lib/certifications";
 
 export type StoryResult = { ok: true } | { ok: false; error: string };
 
@@ -95,6 +113,30 @@ export async function submitStory(
     .is("retired_at", null)
     .maybeSingle();
   if (readErr) return { ok: false, error: readErr.message };
+
+  /*
+   * ---- THE LESSONS COME FIRST --------------------------------------------
+   *
+   * Read AFTER the existing-story lookup and applied only to a NEW story, for
+   * the reason the story page spells out: an advisor who already wrote one keeps
+   * the ability to edit it whatever the lesson count now says. The words are
+   * already theirs and already filed; the gate is about writing a first one
+   * early, not about freezing what is written.
+   *
+   * THE ADVISOR'S OWN CLIENT, so the gate is evaluated for the caller —
+   * loadStoryLessons takes no userId precisely because `my_module_progress`
+   * keys on auth.uid(), and a gate that could be pointed at the wrong viewer is
+   * the mistake this codebase has made three times.
+   */
+  if (!existing) {
+    const lessons = await loadStoryLessons(supabase as never, certificationId);
+    if (!lessons.complete) {
+      return {
+        ok: false,
+        error: "Finish the track's lessons before writing your story",
+      };
+    }
+  }
 
   if (existing) {
     /*

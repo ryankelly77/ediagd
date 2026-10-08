@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminViewer } from "@/lib/access";
 import { loadMyStory } from "@/lib/story";
+import { loadStoryLessons } from "@/lib/certifications";
 import { StoryForm } from "@/components/certification/StoryForm";
 
 /* ============================================================================
@@ -89,23 +90,21 @@ export default async function StoryPage({
    * on six of seven tracks told an advisor they had passed checks that never
    * existed.
    *
-   * completesTrack — is the story the LAST leg? True only when every module is
-   * already complete, which is how the tile that links here is chosen. Someone
-   * arriving by URL with modules outstanding must not be told the track is
-   * finished. One read of the same rollup the wall uses, so the two cannot
-   * disagree.
+   * completesTrack — is the story the LAST leg? True only when the track's
+   * lessons are done. It no longer only words the hero line: since 8 October it
+   * also decides whether this screen may be reached at all.
+   *
+   * ---------------------------------------------------------------------------
+   * THIS USED TO READ `my_certification_progress` AND WAS WRONG ON SIX OF NINE
+   * ---------------------------------------------------------------------------
+   * `done_modules >= total_modules` over 0117's unfiltered module denominator is
+   * false forever on any track holding a cue-only module, because such a module
+   * can never earn a module_completion row. So an advisor who had genuinely
+   * finished every film and every quiz on Walk Around was told by this very
+   * screen that their story did NOT complete the track. Same wrong answer, same
+   * silence — see loadStoryLessons() for the per-track measurement.
    */
-  const { data: progress, error: progressError } = await supabase.rpc(
-    "my_certification_progress"
-  );
-  if (progressError) {
-    throw new Error(`certification progress: ${progressError.message}`);
-  }
-  const mine = ((progress ?? []) as {
-    certification_id: string;
-    total_modules: number;
-    done_modules: number;
-  }[]).find((r) => r.certification_id === cert.id);
+  const lessons = await loadStoryLessons(supabase as never, cert.id as string);
 
   /*
    * THE PREVIEW ASSUMES A FINISHED TRACK, and the banner says so. The point of
@@ -114,10 +113,38 @@ export default async function StoryPage({
    * that. Same posture as the track-entry morning borrowing a film: substitute,
    * and name the substitution on screen.
    */
-  const completesTrack = isPreview
-    ? true
-    : Boolean(mine) && Number(mine!.total_modules) > 0 &&
-      Number(mine!.done_modules) >= Number(mine!.total_modules);
+  const completesTrack = isPreview ? true : lessons.complete;
+
+  /*
+   * ---- ARRIVING EARLY GOES BACK WHERE THE LOCK IS -------------------------
+   *
+   * The track page states the leg and the count; this screen has nothing useful
+   * to say to somebody who is not finished, and rendering the form to tell them
+   * so is how a form gets submitted. The ADMIN PREVIEW is exempt by design —
+   * the state worth previewing is the finished one, which an admin's own module
+   * progress is not, and the preview writes nothing (enforced above, not
+   * trusted).
+   *
+   * NOT the boundary. submitStory() checks the same predicate for itself,
+   * because a redirect is advice to a browser and the action takes a POST from
+   * anywhere.
+   *
+   * ---------------------------------------------------------------------------
+   * `!existing` IS NOT A LOOPHOLE, IT IS THE OTHER HALF OF THE RULE
+   * ---------------------------------------------------------------------------
+   * An advisor who ALREADY HAS A STORY here keeps the door, whatever the lessons
+   * now say. Three ways that state is reachable and all of them are legitimate:
+   * a story submitted before this gate existed (nothing is deleted — Ryan's
+   * instruction), a tenth film published onto a track that was complete when
+   * they wrote, and a film retired from under them. In every case the words are
+   * theirs and already filed, and the track page shows that row as a ✓ pointing
+   * HERE. Redirecting on the strength of the lesson count alone would make that
+   * tick a link to nowhere — and would hide a person's own words from them to
+   * enforce a gate about writing new ones.
+   */
+  if (!isPreview && !existing && !lessons.complete) {
+    redirect(`/certifications/${encodeURIComponent(cert.slug as string)}`);
+  }
 
   const hasChecks = await trackHasChecks(supabase, cert.id as string);
 

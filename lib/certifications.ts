@@ -576,6 +576,103 @@ export async function loadTrackDetail(
   };
 }
 
+/* ---------------------------------------------------------------------------
+   THE STORY WAITS FOR THE LESSONS — 8 October
+--------------------------------------------------------------------------- */
+
+/**
+ * Is the track's teaching finished — the condition the Good News Story waits on?
+ *
+ * ---------------------------------------------------------------------------
+ * THE POPULATION IS GATING MODULES, AND `my_certification_progress` IS NOT IT
+ * ---------------------------------------------------------------------------
+ * The obvious reading of "every module complete" is 0117's rollup —
+ * `done_modules >= total_modules`, which the story page already read for its
+ * hero line. That rollup's `mods` CTE is `certification_course join module` with
+ * NO gating filter, so its denominator holds cue-only modules. A cue-only module
+ * can never earn a `module_completion` row (0143: moduleRequirementsMet refuses
+ * an empty gating set), so on any track holding one the comparison is false
+ * FOREVER.
+ *
+ * Measured on production, 8 October, craft tracks only:
+ *
+ *     track                              0117  gating  cue-only  reachable?
+ *     craft-walk-around                    13      12         1  NEVER  [core]
+ *     craft-setting-up-the-mpi             11      10         1  NEVER  [core]
+ *     craft-four-step-close                13      11         2  NEVER  [core]
+ *     craft-success-cycle                  20      13         7  NEVER  [core]
+ *     craft-overcoming-objections          15      12         3  NEVER  [core]
+ *     craft-power-of-positive-language      7       0         7  NEVER  [core]
+ *     craft-lasting-impressions            13      13         0  yes    [core]
+ *     craft-name-tag                       11      11         0  yes    [core]
+ *     craft-menus                          10      10         0  yes    [core]
+ *     craft-chemical-warranty              18      12         6  NEVER  [master]
+ *     craft-phones-and-tones               12      12         0  yes    [master]
+ *
+ * SIX OF THE NINE CORE TRACKS. That is not a new number — it is the 30 September
+ * incident verbatim, recorded in lib/lms.ts: requiring every module "made six of
+ * the nine core tracks structurally unearnable". Keying the story lock on that
+ * rollup would have locked the leg permanently on the same six, and locked it
+ * SILENTLY: no error, no log, just a row that never opens.
+ *
+ * So the gate is the gating-module population — `gatingModuleIds()`, the one
+ * definition — which is also exactly what craftModuleProgress() feeds the
+ * credential. The story is the last leg before the credential, so "lessons done"
+ * here MUST mean what the credential means by it, or an advisor is told to write
+ * their story by one surface and refused by another.
+ */
+export type StoryLessons = {
+  gatingDone: number;
+  gatingTotal: number;
+  /** done >= total, over a non-empty gating population. */
+  complete: boolean;
+};
+
+/**
+ * The comparison, written once so the four readers cannot each grow their own.
+ *
+ * `gatingTotal > 0` IS LOAD-BEARING, and not for tidiness: `every()` over an
+ * empty set is true, which would open the story on a track whose films have not
+ * been shot. Power of Positive Language is that track today — seven modules,
+ * every one cue-only — and its tile already says "Lessons on the way".
+ * certificationEarned() refuses the empty set for the same reason.
+ */
+export function storyLessonsMet(gatingDone: number, gatingTotal: number): boolean {
+  return gatingTotal > 0 && gatingDone >= gatingTotal;
+}
+
+/**
+ * The gate for ONE track, for the SIGNED-IN advisor.
+ *
+ * ---------------------------------------------------------------------------
+ * NO `userId` PARAMETER, AND THAT IS THE POINT
+ * ---------------------------------------------------------------------------
+ * `my_module_progress` is scoped to `auth.uid()`, so the viewer is the session
+ * and there is nothing to pass. A `userId` argument would be a parameter the
+ * function accepts and then ignores — which is how a gate ends up keyed on a
+ * role that excludes the viewer it exists to protect, three times in this
+ * codebase already.
+ *
+ * HANDED THE SERVICE CLIENT IT FAILS CLOSED, deliberately: `auth.uid()` is null
+ * there, no module reads as complete, and the answer is "not finished". A gate
+ * that opened for the backend would be the has_performance_surface() mistake
+ * pointing the other way. Nothing server-side writes a story, so this costs
+ * nothing today and refuses rather than invents if something ever does.
+ */
+export async function loadStoryLessons(
+  client: Client,
+  certificationId: string
+): Promise<StoryLessons> {
+  const facts = await loadModuleFacts(client);
+  const gating = modulesForCert(certificationId, facts).filter((m) => m.gates);
+  const gatingDone = gating.filter((m) => m.state === "complete").length;
+  return {
+    gatingDone,
+    gatingTotal: gating.length,
+    complete: storyLessonsMet(gatingDone, gating.length),
+  };
+}
+
 export type CredentialCard = {
   level: "certified" | "master";
   certificateId: string;
