@@ -21,12 +21,32 @@
 # ============================================================================
 name: derive-vertical
 
+# ----------------------------------------------------------------------------
+# THE SCHEDULE IS PAUSED, 8 OCTOBER 2026. RE-ENABLE IT DELIBERATELY.
+# ----------------------------------------------------------------------------
+# `vertical_derivation_queue` selects rows in ('pending', 'stale', 'failed'), and
+# the trim close-out puts rows INTO that queue on purpose: 29 verticals that do
+# not match their master were set 'stale' so phones fall back to the master, and
+# every film trimmed by trim:apply is marked 'stale' by replace_master_asset.
+#
+# With the schedule live, this worker would claim those rows within the hour and
+# re-derive them — which is a separate, unanswered ticket. Nobody yet knows why
+# Mux declined to prepare a master inside 200 s on 8 October (account setting,
+# asset age, or time), and that question has to be answered before a sweep is
+# trusted to re-cut 60-odd renditions unattended.
+#
+# It would also be a writer racing a reader: the 447-film verification measures
+# which rendition a phone gets, and a worker changing vertical_status underneath
+# it makes the measurement describe a library that no longer exists.
+#
+# `workflow_dispatch` is deliberately left in place, so a sweep is one click
+# whenever it is wanted — the pause removes the automatic claim, not the ability.
 on:
-  schedule:
-    # Every 30 minutes. Mux takes a few minutes per 4K master, so this picks up
-    # a batch in waves rather than all at once — which is what we want, since
-    # each derivation downloads a master and re-encodes it.
-    - cron: "*/30 * * * *"
+  # schedule:
+  #   # Every 30 minutes. Mux takes a few minutes per 4K master, so this picks up
+  #   # a batch in waves rather than all at once — which is what we want, since
+  #   # each derivation downloads a master and re-encodes it.
+  #   - cron: "*/30 * * * *"
   # So a batch can be pushed along by hand without waiting for the next tick.
   workflow_dispatch:
 
