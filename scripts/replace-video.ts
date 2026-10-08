@@ -444,14 +444,48 @@ async function main() {
   /* ---- 6. Rebuild the vertical -------------------------------------------- */
   /* Shelling out to the worker rather than duplicating it: one implementation
      of the crop, and it stays the one that gets fixed. */
+  /*
+   * ---- A REFUSED VERTICAL IS NOT A FAILED TRIM, AND THIS USED TO THROW ----
+   *
+   * The swap is already committed four lines above. So throwing here reports
+   * the whole run as failed for something that happened AFTER the only
+   * irreversible step, and the caller believes the cut did not land.
+   *
+   * That is not hypothetical. trim:apply writes its ledger row only once this
+   * process exits 0 — so a derive refusal produced a film that had been cut,
+   * on a new asset, with NO LEDGER ROW naming the asset it was cut from. The
+   * ledger is the one thing standing between this pipeline and a double trim,
+   * and INGEST.md already records that it is incomplete by construction. This
+   * would have been a second way to put a hole in it, on the failure path,
+   * where nobody looks.
+   *
+   * derive:vertical now exits non-zero whenever it refuses a row — which is
+   * correct of IT, and was previously masked because its refusal path returned
+   * 0. A refusal is a recorded, survivable state: 0058's `stale`/`failed` both
+   * mean "no usable crop", pickRendition serves the master letterboxed, and the
+   * reason is in vertical_error. The trim, meanwhile, is done and verified.
+   *
+   * So it is REPORTED rather than thrown, which is exactly the judgement the
+   * archive step below already makes in the same situation: "the replacement is
+   * already live and the row is already correct, so failing the run here would
+   * be worse than a stale file on a shelf."
+   */
   console.log(`\n  Deriving the new vertical…`);
-  await new Promise<void>((resolve, reject) => {
+  const deriveCode = await new Promise<number>((resolve) => {
     const p = spawn("npm", ["run", "derive:vertical", "--", `--id=${contentId}`], {
       stdio: "inherit",
       env: process.env,
     });
-    p.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`derive exited ${code}`))));
+    p.on("exit", (code) => resolve(code ?? 1));
   });
+  if (deriveCode !== 0) {
+    console.log(
+      `\n  The vertical was NOT rebuilt (derive exited ${deriveCode}).` +
+      `\n  The trim is committed and the row is correct. The vertical is left in a` +
+      `\n  recorded state — see content.vertical_status and content.vertical_error —` +
+      `\n  and a phone letterboxes the master until it is re-cut.`
+    );
+  }
 
   /* ---- Archive the superseded master in Drive --------------------------
      Best effort, after the swap has succeeded. A file that cannot be moved is
