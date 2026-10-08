@@ -14,6 +14,7 @@
      npm run derive:vertical -- --dry     list what it would do
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
+import { readEnds, strip } from "./trim-check";
 import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -44,6 +45,7 @@ type Row = {
   content_id: string;
   title: string;
   mux_asset_id: string;
+  mux_playback_id: string | null;
   vertical_status: string;
   duration_sec: number | null;
 };
@@ -153,13 +155,113 @@ async function deriveOne(row: Row) {
     const pid = asset.playback_ids?.find((p) => p.policy === "signed");
     if (!pid) throw new Error("derived asset has no signed playback id");
 
+    /*
+     * ---- READ THE RENDITION BEFORE WRITING ITS ID ------------------------
+     *
+     * A phone plays the VERTICAL. Two of 447 of these — "Coverage is Key —
+     * Opener" and "Name Tag — Opener" — were derived from the right asset,
+     * got their own fresh playback id, reported ready, and began SIX SECONDS
+     * into the film. The id was correct and the content inside it was not, so
+     * nothing that checked ids, durations or statuses could see it. Ryan found
+     * it by pressing play on his phone.
+     *
+     * Every other check in the trim pass read mux_playback_id and none of them
+     * ever read this rendition. So the derive reads its own output now, and a
+     * rendition that does not open on "Aloha" and close on "Mahalo", at the
+     * same length as the master it came from, DOES NOT GET ITS ID WRITTEN. The
+     * row keeps the vertical it had — stale is survivable, wrong is not, and
+     * pickRendition already handles a missing one by serving the master
+     * letterboxed.
+     */
+    /*
+     * TEN SECONDS, NOT THREE. A 3s window is too short for whisper to decode
+     * reliably: measured across 447 films it produced 34 heads and 25 tails with
+     * NO WORDS AT ALL, and turned "Mahalo" into "Hello" or "." often enough to
+     * fail films that are perfectly good. Three films checked by hand — 55,000
+     * Mile Part 2, Name Tag Part 9, Four Step Close Part 5 — all read "Mahalo"
+     * cleanly at 10s and garbage at 6s.
+     *
+     * A gate on a flaky instrument refuses good work, which is the failure mode
+     * that looks like caution. The first build of this gate used 3s and refused
+     * a vertical for opening "He" and closing "You".
+     */
+    /*
+     * READ IT MORE THAN ONCE BEFORE REFUSING IT.
+     *
+     * A Mux asset reports "ready" before its HLS is reliably complete, so a
+     * read taken the instant it flips can come back truncated. Measured on
+     * "Buffalos and the Cows": the gate read the fresh clip's tail as ending on
+     * "day" and refused it, while the same asset read a minute later ends
+     * "...run into the storm. Mahalo." — as does its master.
+     *
+     * The first and last word of a finished film do not change between reads,
+     * so a PASS on any attempt is a true pass and a FAIL may be transient.
+     * Refusing on a transient read is the expensive direction: the row keeps the
+     * broken vertical this derive exists to replace.
+     */
+    let ends = await readEnds(mux, pid.id, asset.duration ?? 0, 10, "small.en", ".tmp-derive-check");
+    for (let attempt = 2; attempt <= 3; attempt++) {
+      if (strip(ends.firstWord ?? "") === "aloha" && strip(ends.lastWord ?? "") === "mahalo") break;
+      await new Promise((r) => setTimeout(r, 15000));
+      const again = await readEnds(mux, pid.id, asset.duration ?? 0, 10, "small.en", ".tmp-derive-check");
+      console.log(`    re-read ${attempt}    opens "${again.firstWord ?? "—"}", closes "${again.lastWord ?? "—"}"`);
+      ends = again;
+    }
+    const first = strip(ends.firstWord ?? "");
+    const last = strip(ends.lastWord ?? "");
+    const lengthOk =
+      asset.duration != null && row.duration_sec != null
+        ? Math.abs(asset.duration - row.duration_sec) <= 1.0
+        : true;
+    let ok = first === "aloha" && last === "mahalo" && lengthOk;
+    let against = "Aloha/Mahalo";
+
+    /*
+     * ---- A VERTICAL IS JUDGED AGAINST ITS MASTER, NOT AGAINST THE IDEAL ----
+     *
+     * The absolute test — opens Aloha, closes Mahalo — is the right one for the
+     * LIBRARY, and the wrong one to block a derive with on its own. A handful of
+     * films genuinely do not end on "Mahalo"; one refused here opened "Aloha!"
+     * and closed "day", at the correct length. Judged absolutely it can never
+     * have a vertical at all, and a film with NO vertical is worse off than one
+     * whose vertical faithfully reproduces an imperfect master.
+     *
+     * What this derive is actually responsible for is FIDELITY: the rendition a
+     * phone plays must be the same cut as the one a desktop plays. So where the
+     * absolute test fails, the vertical is compared against the master's own
+     * first and last word, and accepted if it matches. The film's content is
+     * then a question for the library — trim:verify still reports it — and not a
+     * reason to leave the row without a rendition.
+     */
+    if (!ok && lengthOk && row.mux_playback_id) {
+      try {
+        const master = await readEnds(mux, row.mux_playback_id, row.duration_sec ?? 0, 10, "small.en", ".tmp-derive-check");
+        if (strip(master.firstWord ?? "") === first && strip(master.lastWord ?? "") === last) {
+          ok = true;
+          against = `the master, which also opens "${master.firstWord}" and closes "${master.lastWord}"`;
+          console.log(`    faithful      matches the master word for word; the master itself is what differs from Aloha/Mahalo`);
+        }
+      } catch { /* fall through to the refusal below */ }
+    }
+    console.log(
+      `    checked       opens "${ends.firstWord ?? "—"}", closes "${ends.lastWord ?? "—"}", ` +
+        `${asset.duration?.toFixed(2)}s vs master ${row.duration_sec}s  [against ${against}]`
+    );
+    if (!ok) {
+      throw new Error(
+        `REFUSING to write this vertical: opens "${ends.firstWord ?? "—"}" closes ` +
+          `"${ends.lastWord ?? "—"}" ${asset.duration?.toFixed(2)}s vs ${row.duration_sec}s. ` +
+          `The row keeps its previous vertical. Asset ${assetId} is left in Mux for inspection.`
+      );
+    }
+
     await sb.rpc("set_vertical_rendition", {
       _content_id: row.content_id,
       _asset_id: assetId,
       _playback_id: pid.id,
     });
 
-    console.log(`    VERTICAL      ${pid.id.slice(0, 14)}…  ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s`);
+    console.log(`    VERTICAL      ${pid.id.slice(0, 14)}…  ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s  verified`);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
