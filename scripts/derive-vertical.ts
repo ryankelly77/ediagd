@@ -50,23 +50,132 @@ type Row = {
   duration_sec: number | null;
 };
 
-/** Highest-quality readable source: the master if Mux will prepare one. */
+/**
+ * The master, or nothing.
+ *
+ * ---------------------------------------------------------------------------
+ * THE HLS FALLBACK THIS USED TO HAVE WROTE A RENDITION NOBODY COULD TRUST
+ * ---------------------------------------------------------------------------
+ * When Mux had not prepared a master inside the wait, this fell through to the
+ * signed HLS — "capped at top rendition" — and cropped that instead. On 8
+ * October that path read a 960-pixel stream off a 3840x2160 master and reported
+ * a NaN frame height, so both guards below were inert: `h >= w` is false for
+ * NaN, and `sliceW < 1080` is false for NaN, so neither the portrait refusal
+ * nor the softness warning fired. A 9:16 slice of a 960x540 stream is 304
+ * pixels wide and was then upscaled 3.6x to 1080. The output had the right
+ * geometry, the right duration, a ready status and a correct playback id — and
+ * a picture derived from 8% of the master's pixels.
+ *
+ * Nothing errored. That is the whole problem: it is the confident wrong answer
+ * AGENTS.md puts above a crash, and it would have repeated on every `pending`,
+ * `stale` or `failed` row the scheduler swept.
+ *
+ * So the fallback is gone rather than fixed. A vertical is derived from the
+ * master or it is not derived: the crop is the one irreversible step in this
+ * pipeline, and a soft rendition that looks fine in the database is worse than
+ * no rendition at all, because `stale`/`pending` makes the phone letterbox a
+ * master nobody has damaged.
+ *
+ * This only ever PREVENTS a write — the same shape as the dump check in
+ * scripts/db-migrate.sh. The caller records the refusal; see main().
+ *
+ * ---------------------------------------------------------------------------
+ * WHY IT FELL THROUGH ON 8 OCTOBER, WHICH IS NOT WHAT THE OLD COMMENT GUESSED
+ * ---------------------------------------------------------------------------
+ * The bare `catch {}` this replaces was annotated "master access may be off
+ * account-wide", and that guess became the standing explanation. It is
+ * measurably wrong, and so is "the asset was too old" and "Mux was slow":
+ *
+ *   - Asked cold on 8 October, this account prepared a master for a 23
+ *     September 4K asset in 42 SECONDS — a fifth of the wait.
+ *   - `updateMasterAccess(id, 'temporary')` returns **400 "Download already
+ *     exists"** when the asset ALREADY has temporary access. Measured on
+ *     FaRpjV5A… ("Successful vs. Really Successful"), whose master was `ready`
+ *     with a live mezzanine URL at the moment the call threw.
+ *
+ * That is the whole fault. The old catch wrapped the request AND the poll, so a
+ * 400 on the request skipped the poll entirely and went to HLS having waited
+ * zero seconds — while the master it was looking for was already prepared and
+ * one `retrieve` away. Temporary access lasts about a day, so every asset
+ * touched by a previous sweep poisons the next one. It fails on the SECOND run,
+ * which is why it looked intermittent.
+ *
+ * So the request is best-effort and the POLL ALWAYS RUNS. Being told the
+ * download already exists is not an error; it is the thing we wanted being
+ * already true. Refusing on it would be a false refusal — the kind that
+ * survives review because it wears the costume of care — and the acceptance
+ * test is what caught it: the first build of this guard refused a film whose
+ * master was ready, and reported that as working.
+ *
+ * ---------------------------------------------------------------------------
+ * AND THE MASTER IS NOT ALWAYS THE SAME CUT AS THE ASSET. READ THIS BEFORE
+ * TRUSTING A RE-DERIVE SWEEP.
+ * ---------------------------------------------------------------------------
+ * Removing the HLS branch fixes the SOFTNESS. It does not make the master
+ * correct, and on some rows it is not. Measured 8 October over four films —
+ * two of the 29 whose verticals do not match, two that pass — pulling the first
+ * ten seconds of the mezzanine and of the signed HLS of the SAME asset, through
+ * one whisper batch:
+ *
+ *   Successful vs. Really Successful   mezz "successful…"      hls "Aloha!"
+ *   Four Step Close, Part 2            mezz "and say it…"      hls "Aloha!"
+ *   On the Drive            (passes)   mezz "Aloha!"           hls "Aloha!"
+ *   MPI Setup               (passes)   mezz "Aloha!" 1.30      hls "Aloha!" 1.22
+ *
+ * On the two failing films the mezzanine begins about five seconds INTO the
+ * film and contains no "Aloha" at all, while the HLS — which is what a desktop
+ * plays and what every check in the trim pass read — opens on it.
+ *
+ * THE DURATIONS AGREE IN ALL FOUR CASES, to within a quarter second. That is
+ * what hid it: same asset, same name, same length, different cut. AGENTS.md
+ * already has this lesson, bought with eighteen byte-identical masters that
+ * read as reshoots — a uniform difference is the thing to explain, not the
+ * thing that makes a comparison credible.
+ *
+ * So "the 29 were derived before the trim" is not established. A crop made from
+ * the master TODAY reproduces the defect: deriving Successful vs. Really
+ * Successful from its current master on 8 October produced a vertical opening on
+ * "successful", which is what the live one already does.
+ *
+ * Why only some rows is NOT known, and trim status does not predict it — one of
+ * the two failures was never trimmed and one of the two controls was. That is
+ * the open question, and it belongs to the re-derive ticket.
+ *
+ * WHAT KEEPS THIS SAFE MEANWHILE is the gate further down in deriveOne: the
+ * derive reads its own output and refuses to write a playback id for a
+ * rendition that does not match the master's first and last word. On the film
+ * above it refused, correctly. With the HLS branch gone, a misaligned master
+ * now yields a RECORDED REFUSAL rather than a silent wrong vertical — which is
+ * the whole point. A sweep that refuses half its rows is telling you something;
+ * one that writes them all is not.
+ */
 async function sourceUrl(assetId: string): Promise<{ url: string; quality: string }> {
+  /*
+   * Best-effort, and deliberately NOT wrapped around the poll below. Mux
+   * refuses a redundant request rather than treating it as a no-op, so the
+   * common case on any re-run is a 400 that means "already granted".
+   */
+  let requestNote = "";
   try {
     await mux.video.assets.updateMasterAccess(assetId, { master_access: "temporary" });
-    for (let i = 0; i < 40; i++) {
-      const a = await mux.video.assets.retrieve(assetId);
-      if (a.master?.status === "ready" && a.master.url) return { url: a.master.url, quality: "master" };
-      if (a.master?.status === "errored") break;
-      await new Promise((r) => setTimeout(r, 5000));
-    }
-  } catch { /* master access may be off account-wide */ }
+  } catch (e) {
+    requestNote = e instanceof Error ? e.message.replace(/\s+/g, " ").slice(0, 160) : String(e);
+  }
 
-  const a = await mux.video.assets.retrieve(assetId);
-  const pid = a.playback_ids?.find((p) => p.policy === "signed");
-  if (!pid) throw new Error("no signed playback id to read from");
-  const token = await mux.jwt.signPlaybackId(pid.id, { type: "video", expiration: "3600s" });
-  return { url: `https://stream.mux.com/${pid.id}.m3u8?token=${token}`, quality: "hls (capped at top rendition)" };
+  for (let i = 0; i < 40; i++) {
+    const a = await mux.video.assets.retrieve(assetId);
+    if (a.master?.status === "ready" && a.master.url) return { url: a.master.url, quality: "master" };
+    if (a.master?.status === "errored") {
+      throw new Error(`Mux reports master status 'errored' for ${assetId}`);
+    }
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+
+  /* The wait genuinely expired. Say what the request said, because a 400 here
+     alongside a master that never arrives is a different bug from a slow one. */
+  throw new Error(
+    `no master within 200 s${requestNote ? ` (the access request said: ${requestNote})` : ""}`
+  );
 }
 
 async function deriveOne(row: Row) {
@@ -267,6 +376,56 @@ async function deriveOne(row: Row) {
   }
 }
 
+/**
+ * Write down that a row was refused, and say whether the writing worked.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS NOT JUST `fail_vertical_rendition`
+ * ---------------------------------------------------------------------------
+ * 0058's check constraint is
+ *
+ *     (vertical_playback_id is not null) = (vertical_status in ('ready','stale'))
+ *
+ * and `fail_vertical_rendition` sets `failed` WITHOUT clearing the playback id.
+ * So on a row that already holds a vertical — every `stale` row, which is a
+ * third of this queue — it raises 23514 and changes nothing. Measured through
+ * PostgREST as `service_role`, which is the role and the path the worker really
+ * uses: a `pending` row accepts it and returns `{"status":"failed"}`; a `stale`
+ * row rejects it with `content_vertical_consistent`.
+ *
+ * The caller used to `await sb.rpc(...)` without reading `error`, so that
+ * rejection was silent and the run still printed a success summary and exited
+ * 0. Both halves of that are fixed here: the status write suits the row's
+ * actual population, and the outcome is returned rather than assumed.
+ *
+ * `stale` IS THE RIGHT TERMINAL STATE FOR A REFUSED STALE ROW. It already means
+ * "playable, but cut from a master that has since changed, so the player falls
+ * back" — which is exactly true after a refusal, and it keeps the playback id
+ * the eventual re-derive needs to replace. Only the reason is new, and
+ * `vertical_error` is legal alongside `stale`: the constraint couples the status
+ * to the id, not to the error.
+ */
+async function recordRefusal(row: Row, msg: string): Promise<boolean> {
+  /* A row holding a vertical cannot become 'failed'. Keep it where it is and
+     write down why, so the next reader sees that a machine objected. */
+  if (row.vertical_status === "stale") {
+    const { error } = await sb.from("content")
+      .update({ vertical_error: msg.slice(0, 500) })
+      .eq("id", row.content_id);
+    if (error) { console.log(`      could not record: ${error.message}`); return false; }
+    console.log(`      left stale, reason recorded`);
+    return true;
+  }
+
+  const { error } = await sb.rpc("fail_vertical_rendition", {
+    _content_id: row.content_id,
+    _error: msg,
+  });
+  if (error) { console.log(`      could not record: ${error.message}`); return false; }
+  console.log(`      marked failed`);
+  return true;
+}
+
 async function main() {
   let q = sb.from("vertical_derivation_queue").select("*");
   if (only) q = q.eq("content_id", only);
@@ -281,6 +440,8 @@ async function main() {
   }
 
   let ok = 0;
+  let refused = 0;
+  let unrecorded = 0;
   for (const row of rows) {
     try {
       await deriveOne(row);
@@ -288,10 +449,18 @@ async function main() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.log(`    FAILED — ${msg}`);
-      await sb.rpc("fail_vertical_rendition", { _content_id: row.content_id, _error: msg });
+      refused++;
+      if (!(await recordRefusal(row, msg))) unrecorded++;
     }
   }
-  console.log(`\n  done: ${ok}/${rows.length} derived\n`);
+  /* A summary is computed from counters the run incremented, and the exit code
+     is a function of the failure count. Neither line prints regardless. */
+  console.log(`\n  done: ${ok}/${rows.length} derived, ${refused} refused`);
+  if (unrecorded) {
+    console.log(`  ${unrecorded} refusal(s) COULD NOT BE RECORDED — the row still claims its old state`);
+  }
+  console.log();
+  if (refused || unrecorded) process.exitCode = 1;
 }
 
 /*
