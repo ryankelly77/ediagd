@@ -243,7 +243,10 @@ async function main() {
     /* One string literal, not a concatenation: PostgREST infers the row type
        from the literal, and splitting it across a `+` makes every field an
        error type. */
-    .select("id, title, mux_asset_id, mux_playback_id, vertical_status, duration_sec, status, collection, version, canonical_filename")
+    /* archived_asset_id is read for the clip-of-a-clip hazard note at step 4:
+       its presence means this master is itself a clip. Without it in the
+       select the note is unreachable, which is a check that cannot fire. */
+    .select("id, title, mux_asset_id, mux_playback_id, vertical_status, duration_sec, status, collection, version, canonical_filename, archived_asset_id")
     .eq("id", contentId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -394,8 +397,45 @@ async function main() {
   }
 
   /* ---- 4. Trim, if asked — BEFORE the swap, so both formats share the cut - */
+  /*
+   * ---------------------------------------------------------------------------
+   * KNOWN HAZARD, 9 OCTOBER 2026: THIS IS SAFE FOR A FRESH UPLOAD AND NOT SAFE
+   * FOR A SECOND TRIM OF AN ALREADY-TRIMMED MASTER.
+   * ---------------------------------------------------------------------------
+   * `mux://assets/ID` where ID is ITSELF a clip does not deliver that clip's
+   * timeline. Mux re-resolves to the underlying source and lands on a keyframe
+   * BEFORE the clip's zero, so the output carries extra lead at the front and
+   * loses the same amount off the back — while coming back EXACTLY the length
+   * that was asked for, which is why the length check below cannot see it.
+   *
+   * Measured on `15,000 Mile Dealer Upsell Menu, Part 4`, whose master was
+   * already a clip: asked for 0 → 89.59s of a master whose Mahalo ends at
+   * 88.89s, and got 89.59s of content opening 0.90s late and closing on
+   * "Maha!" with no air after it. On `30 Second Walk-Around, Part 3` the shift
+   * was about 4.7s. The same films clipped from `archived_asset_id` in the
+   * archive's timeline come back correct to the centisecond.
+   *
+   * WHEN THIS BITES: a `--trim-only` run on a row whose `archived_asset_id` is
+   * already set — that is, any film the trim passes have touched. The 252 films
+   * trim:apply cut were first-generation masters at the time, so they were
+   * fine; a film cut twice through here would not be.
+   *
+   * NOT FIXED HERE, deliberately: the right gate is probably "refuse
+   * --trim-only when archived_asset_id is set, and clip the archive instead",
+   * but that changes the ingest path's behaviour and belongs in its own change
+   * with its own acceptance run rather than riding along with a trim batch.
+   * scripts/trim-last-batch.ts carries the working construction to copy.
+   * ---------------------------------------------------------------------------
+   */
   if (trimStart != null || trimEnd != null) {
     console.log(`\n  Trimming…`);
+    if (row.archived_asset_id) {
+      console.log(
+        `    NOTE: this row already has an archived asset, so its master is itself a clip.\n` +
+        `          Clipping a clip shifts the result — see the hazard note in this file.\n` +
+        `          Read the result's ends before trusting this cut.`
+      );
+    }
     const clip = await mux.video.assets.create({
       inputs: [{
         url: `mux://assets/${newAssetId}`,

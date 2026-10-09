@@ -146,3 +146,11 @@ Claude outputs/
 # command rather than a stack trace. See INGEST.md, "Where the transcripts
 # live".
 reports/dropzone-transcripts.json
+
+# Run locks. A lock says "a process is alive right now", which is true of
+# exactly one machine for a few hours and false everywhere else — so a
+# committed lock is a lie that blocks the next run on somebody else's laptop.
+# trim:apply and trim:last-batch both clear a stale lock by checking the pid,
+# but neither should have to handle one that arrived over the network.
+reports/.trim-pass.lock
+reports/.trim-last-batch.lock
