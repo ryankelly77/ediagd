@@ -32,6 +32,7 @@ import {
   storyLessonsMet,
   type TrackModuleRow,
 } from "@/lib/certifications";
+import { trackRowProgress } from "@/lib/certification";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
@@ -55,10 +56,17 @@ export default async function TrackPage({
   if (!track) notFound();
 
   const earned = track.state !== "unearned";
-  const pct =
-    track.gatingTotal > 0
-      ? Math.round((track.gatingDone / track.gatingTotal) * 100)
-      : 0;
+  /* THE SAME RULE AS THE ROW THAT GOT YOU HERE. The header's lesson count and
+     the bar under it come from one call (0162), so this page cannot show a
+     different proportion from the /certifications row the advisor just tapped —
+     including the earned case, which is full and palm on both. */
+  const { pct } = trackRowProgress({
+    held: earned,
+    active: track.active,
+    gatingDone: track.gatingDone,
+    gatingModules: track.gatingTotal,
+    earnedLine: track.earnedLine,
+  });
 
   /* A track that is not yet earnable, or a service certification: say what it
      is and stop. No module list, no progress, no links — nothing behind it is
@@ -106,7 +114,7 @@ export default async function TrackPage({
           are listed below and marked, but a denominator holding modules that
           cannot complete would freeze this bar under 100% for an advisor who
           has done everything there is to do. */}
-      {!earned && track.gatingTotal > 0 && (
+      {pct !== null && (
         <div className="mt-3 px-1">
           <ProgressBar pct={pct} />
         </div>

@@ -28,12 +28,38 @@
           never 7
        5  the negative: an inactive Master track comes back comingSoon with
           NO modules, NO progress, NO links to render
+       6  THE BAR ON EVERY TRACK (0162, added 9 October): all nine core rows
+          printed as a table with the line and the bar beside each other; the
+          width read back OUT OF THE SENTENCE on every active row; no bar on a
+          track that has not opened or has no lessons; and a held track full —
+          palm, not teal — beside its currency line rather than a count
+
+   ---------------------------------------------------------------------------
+   STALE SNAPSHOTS, 9 October — read this before believing a red run
+   ---------------------------------------------------------------------------
+   Thirteen assertions in steps 1-4 hold CATALOGUE NUMBERS from 30 September
+   and the catalogue has grown since. Measured against a 8 October production
+   restore: Walk Around is 12 gating lessons, not 3; the credential denominator
+   is 92, not 77; Walk Around's lesson modules now carry cues, so watching only
+   module 1's FILM no longer offers its quiz; one cue-only module, not four;
+   and Power of Positive Language is inactive rather than merely empty. Those
+   thirteen fail identically on main and are not evidence about any change made
+   since. They are left as they are because repairing them is a different piece
+   of work from the one in hand.
+
+   THE QUESTION, RECORDED SO IT SURVIVES — who else hardcodes a September
+   catalogue snapshot? Anything asserting a lesson count, a module count or a
+   track's shape as a literal is making a claim that Mitch can falsify by
+   publishing a film, and the fix is to derive the number rather than to
+   retype it.
    ============================================================================ */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   loadCertificationsOverview,
   loadTrackDetail,
+  trackRowInput as rowInput,
 } from "@/lib/certifications";
+import { currentThrough, trackRowProgress } from "@/lib/certification";
 import { gradeAttempt } from "@/lib/quiz";
 import { completeModuleIfReady } from "@/lib/lms";
 import { accrueFromModule } from "@/lib/certification-server";
@@ -103,13 +129,37 @@ async function main() {
       .eq("rooftop_id", m.rooftop_id);
     if (Number(count ?? 0) > 0) provisioned.add(m.rooftop_id);
   }
-  const advisorRow = rows.find(
+  const candidates = rows.filter(
     (m) =>
       m.role === "advisor" &&
       provisioned.has(m.rooftop_id) &&
       rolesByUser.get(m.user_id)?.size === 1
   );
-  if (!advisorRow) throw new Error("no advisor-only membership at a provisioned rooftop");
+  /* AND THE ACCOUNT HAS TO BE SIGNABLE. A local restore of production carries
+     production's membership rows against the LOCAL auth schema, so most of
+     these ids have no auth user — picking one of those failed later, inside
+     signedInAs, as "User not found", which reads like a broken suite rather
+     than a missing fixture. Skipped candidates are COUNTED and printed: a
+     silent skip here would quietly change which viewer was measured. */
+  let unsignable = 0;
+  let advisorRow: (typeof candidates)[number] | undefined;
+  for (const m of candidates) {
+    const { data: u } = await service.auth.admin.getUserById(m.user_id);
+    if (u?.user?.email) {
+      advisorRow = m;
+      break;
+    }
+    unsignable += 1;
+  }
+  if (unsignable > 0) {
+    console.log(
+      `\n  (setup) skipped ${unsignable} advisor-only membership(s) with no auth user in this database`
+    );
+  }
+  if (!advisorRow)
+    throw new Error(
+      `no SIGNABLE advisor-only membership at a provisioned rooftop (${candidates.length} candidate(s), none with an auth user)`
+    );
   const advisorId = advisorRow.user_id;
   console.log(`\n  advisor-only account ${advisorId} at rooftop ${advisorRow.rooftop_id}\n`);
 
@@ -159,6 +209,71 @@ async function main() {
     assert(
       view.coreTracks.map((t) => t.sort).every((s, i, a) => i === 0 || a[i - 1]! <= s),
       "core tiles are in certification.sort order"
+    );
+
+    /* ---- THE BAR ON EVERY TRACK (0162) ----------------------------------
+       Ryan, 5 October. The row renders trackRowProgress(tile) and nothing
+       else, so asserting it here is asserting the pixels. Printed as a table
+       because the claim is about the POPULATION — all nine core rows, as the
+       advisor, over PostgREST — and a claim about nine rows needs nine rows
+       shown. See AGENTS.md: a sample is evidence about the sample. */
+    console.log("\n  the nine core rows, as this advisor:\n");
+    console.log("    track                            line                   bar");
+    let drawn = 0;
+    for (const t of view.coreTracks) {
+      const r = trackRowProgress(rowInput(t));
+      if (r.pct !== null) drawn += 1;
+      console.log(
+        `    ${t.name.padEnd(32)} ${r.line.padEnd(22)} ${
+          r.pct === null ? "none" : `${r.pct}%`
+        }`
+      );
+    }
+    console.log("");
+
+    /* THE POSITIVE HALF FIRST — an implementation that drew no bars at all
+       would satisfy every "shows none" assertion below. */
+    assert(
+      drawn === view.coreTracks.filter((t) => t.active && t.gatingModules > 0).length &&
+        drawn > 0,
+      `a bar is drawn on every active track with lessons, and on ${drawn} of the nine`
+    );
+    assert(
+      view.coreTracks.every((t) => {
+        const r = trackRowProgress(rowInput(t));
+        if (t.state === "unearned" && t.active && t.gatingModules > 0) {
+          /* THE WIDTH MATCHES THE SENTENCE — recomputed from the words on the
+             row, not from the same expression that produced the bar, so the
+             two numbers cross a boundary before being compared. */
+          const m = /^(\d+) of (\d+) lesson/.exec(r.line);
+          if (!m) return false;
+          return r.pct === Math.round((Number(m[1]) / Number(m[2])) * 100);
+        }
+        return true;
+      }),
+      "every active row's bar width is its own lessons line, read back out of the sentence"
+    );
+    assert(
+      view.coreTracks.every(
+        (t) =>
+          t.state !== "unearned" ||
+          t.active ||
+          trackRowProgress(rowInput(t)).pct === null
+      ),
+      "a track that has not opened draws no bar"
+    );
+    assert(
+      view.coreTracks.every(
+        (t) =>
+          t.state !== "unearned" ||
+          t.gatingModules > 0 ||
+          trackRowProgress(rowInput(t)).pct === null
+      ),
+      "a track with no lessons yet draws no bar (never an empty one at 0%)"
+    );
+    assert(
+      trackRowProgress(rowInput(popl!)).pct === null,
+      `Power of Positive Language has no lessons and therefore no bar (got ${JSON.stringify(trackRowProgress(rowInput(popl!)).pct)})`
     );
   }
 
@@ -389,6 +504,96 @@ async function main() {
       detail?.state === "held" && detail.gatingDone === 3 && detail.gatingTotal === 3 && detail.storySubmitted === true,
       `track page: earned, 3 of 3 lessons, story submitted (got ${detail?.state}, ${detail?.gatingDone} of ${detail?.gatingTotal})`
     );
+  }
+
+  /* ---- 7 · THE HELD ROW IS A FULL PALM BAR (0162) -------------------------
+     Ryan, 5 October: earned tracks show a full bar in palm.
+
+     WHY THE HOLDING IS INSERTED RATHER THAN EARNED HERE. What renders the bar
+     is the ROW, and the row reads held-ness out of advisor_certification
+     through the advisor's own client. Step 5 above exercises the accrual that
+     writes that row; this step exercises the render that reads it, with the
+     precondition supplied the same way the film progress above is supplied.
+     The read is still the advisor's, over PostgREST, under RLS.
+
+     Also stated as the negative: the bar must have been something OTHER than
+     100 immediately before the grant, or "it is 100 when held" would be
+     compatible with a bar that is always 100. */
+  {
+    const { data: cert } = await service
+      .from("certification")
+      .select("id, slug, name")
+      .eq("is_core", true)
+      .eq("active", true)
+      .neq("name", "Walk Around")
+      .order("sort", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const target = cert as { id: string; slug: string; name: string };
+
+    const before = await loadCertificationsOverview(asAdvisor as never, advisorId, today);
+    const beforeRow = trackRowProgress(
+      rowInput(before.coreTracks.find((t) => t.slug === target.slug)!)
+    );
+    assert(
+      beforeRow.pct !== null && beforeRow.pct < 100,
+      `${target.name} is not full before the grant (got ${JSON.stringify(beforeRow.pct)}%, "${beforeRow.line}")`
+    );
+
+    /* current_through from the real rule, not a literal — a holding the app
+       would read as lapsed is not the thing under test. */
+    const ins = await service.from("advisor_certification").insert({
+      user_id: advisorId,
+      certification_id: target.id,
+      current_through: currentThrough(today),
+      source: "accrued",
+    });
+    assert(!ins.error, `the holding row inserts (${ins.error?.message ?? "ok"})`);
+
+    const after = await loadCertificationsOverview(asAdvisor as never, advisorId, today);
+    const tile = after.coreTracks.find((t) => t.slug === target.slug)!;
+    const heldRow = trackRowProgress(rowInput(tile));
+    assert(
+      tile.state === "held",
+      `the advisor's own client sees ${target.name} as held through RLS (got ${tile.state})`
+    );
+    /* FULL, and therefore palm: ProgressBar paints palm at >= 100 and teal
+       below it, so 100 here IS the colour claim. */
+    assert(
+      heldRow.pct === 100,
+      `the held row is a full bar — palm, not teal (got ${JSON.stringify(heldRow.pct)}%)`
+    );
+    /* And the line beside it is the credential, not a lesson tally — which is
+       why a held track does not divide. This one is earned on 1 of N lessons. */
+    assert(
+      !/\d+ of \d+ lesson/.test(heldRow.line) && heldRow.line.length > 0,
+      `the held row says the currency line, never a count (got "${heldRow.line}")`
+    );
+    assert(
+      tile.gatingDone < tile.gatingModules,
+      `and it is full DESPITE ${tile.gatingDone} of ${tile.gatingModules} lessons — the bar follows the seal, not the tally`
+    );
+
+    /* ONE TAP AWAY, THE SAME WIDTH. The track page header and this row run the
+       same rule, so they cannot show different proportions. */
+    const detail = await loadTrackDetail(asAdvisor as never, advisorId, target.slug);
+    const headerPct = trackRowProgress({
+      held: detail!.state !== "unearned",
+      active: detail!.active,
+      gatingDone: detail!.gatingDone,
+      gatingModules: detail!.gatingTotal,
+      earnedLine: detail!.earnedLine,
+    }).pct;
+    assert(
+      headerPct === heldRow.pct,
+      `the track page header's bar matches the row that linked to it (${JSON.stringify(headerPct)} vs ${JSON.stringify(heldRow.pct)})`
+    );
+
+    await service
+      .from("advisor_certification")
+      .delete()
+      .eq("user_id", advisorId)
+      .eq("certification_id", target.id);
   }
 
   /* ---- 6 · the negative: an inactive Master track ------------------------- */

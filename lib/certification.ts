@@ -442,3 +442,58 @@ export function certificationProgress(modules: ModuleProgress[]): number {
   if (modules.length === 0) return 0;
   return modules.filter(moduleComplete).length / modules.length;
 }
+
+/* ---------------------------------------------------------------------------
+   A TRACK ROW: THE LINE AND THE BAR FROM ONE DERIVATION
+
+   Ryan, 5 October: every track on the certifications page carries a progress
+   bar, the way every course row in the Lesson Library does.
+
+   This returns BOTH halves of that row because a bar computed anywhere other
+   than where the sentence is computed is a second claim about the same number,
+   and the two can then disagree on screen with nothing to notice it. One
+   function, one pair, called by both the core row and the Master row.
+--------------------------------------------------------------------------- */
+
+export type TrackRowInput = {
+  /** certificationState(...) === "held" — the credential is in hand. */
+  held: boolean;
+  /** certification.active — whether the track is earnable at all yet. */
+  active: boolean;
+  /** GATING modules only: those with a film. Cue-only modules cannot complete
+      (0143) and sit in no denominator on any of these screens. */
+  gatingDone: number;
+  gatingModules: number;
+  /** What a held track says instead of a count — earnedLine()/currency. */
+  earnedLine: string | null;
+};
+
+export type TrackRow = {
+  /** The sentence under the track's name. */
+  line: string;
+  /**
+   * The bar's width 0..100 — or NULL when there is no proportion to draw, and
+   * null is emphatically not zero. An empty bar claims "none of this is done",
+   * which is false of a track whose lessons are not written yet and false of
+   * one that has not opened: in both cases the advisor is not behind, there is
+   * simply nothing to be ahead of. Those rows draw no bar at all.
+   */
+  pct: number | null;
+};
+
+export function trackRowProgress(t: TrackRowInput): TrackRow {
+  /* HELD IS FULL, whatever the module count says. The line here is the earned
+     line rather than a count, so the bar's companion is the credential and not
+     the lesson tally — a track earned before a tenth lesson was published is
+     still earned, and a bar at 90% under the word "Earned" would be the row
+     arguing with itself. pct >= 100 is what ProgressBar paints palm. */
+  if (t.held) return { line: t.earnedLine ?? "Earned", pct: 100 };
+  if (!t.active) return { line: "Coming soon", pct: null };
+  if (t.gatingModules <= 0) return { line: "No lessons yet", pct: null };
+  return {
+    line: `${t.gatingDone} of ${t.gatingModules} ${
+      t.gatingModules === 1 ? "lesson" : "lessons"
+    }`,
+    pct: Math.round((t.gatingDone / t.gatingModules) * 100),
+  };
+}

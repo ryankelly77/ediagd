@@ -25,6 +25,7 @@ import {
   earnedLine,
   isCurrent,
   moduleComplete,
+  trackRowProgress,
   type CertificationHolding,
   type ModuleProgress,
 } from "../lib/certification";
@@ -285,6 +286,61 @@ check("the word expired never appears",
   currencyStatement("2027-03-14" as IsoDate, false).toLowerCase().includes("expired"), false);
 check("nor invalid",
   currencyStatement("2027-03-14" as IsoDate, false).toLowerCase().includes("invalid"), false);
+
+/* ---- The track row: one derivation for the line and the bar -------------- */
+
+section("12. a track row's line and its bar");
+
+const TRACK_ROW = {
+  held: false,
+  active: true,
+  gatingDone: 0,
+  gatingModules: 0,
+  earnedLine: null as string | null,
+};
+const rowOf = (over: Partial<typeof TRACK_ROW>) =>
+  trackRowProgress({ ...TRACK_ROW, ...over });
+
+/* THE ACCEPTANCE HALF FIRST — the bar must be DRAWN, at the width the sentence
+   states, for the ordinary row. A rule that only ever returned null would pass
+   every "shows no bar" test below while putting a bar on nothing. */
+check("an active track in progress draws a bar",
+  rowOf({ gatingDone: 3, gatingModules: 12 }), { line: "3 of 12 lessons", pct: 25 });
+check("the bar and the line come from the same two numbers",
+  rowOf({ gatingDone: 1, gatingModules: 3 }), { line: "1 of 3 lessons", pct: 33 });
+check("untouched is a drawn bar at zero, not an absent one",
+  rowOf({ gatingDone: 0, gatingModules: 9 }), { line: "0 of 9 lessons", pct: 0 });
+check("a one-lesson track says lesson, like the library row does",
+  rowOf({ gatingDone: 0, gatingModules: 1 }), { line: "0 of 1 lesson", pct: 0 });
+check("every lesson done is 100 even before the story grants",
+  rowOf({ gatingDone: 3, gatingModules: 3 }), { line: "3 of 3 lessons", pct: 100 });
+
+/* HELD IS FULL AND PALM — ProgressBar paints palm at >= 100, so the earned row
+   asking for 100 is what makes the seal and the bar say the same thing. */
+check("a held track is full, and says the currency line",
+  rowOf({ held: true, gatingDone: 3, gatingModules: 3, earnedLine: "Current through 14 March 2028" }),
+  { line: "Current through 14 March 2028", pct: 100 });
+check("a held track with no currency line still says something",
+  rowOf({ held: true, gatingDone: 3, gatingModules: 3 }), { line: "Earned", pct: 100 });
+/* Earned before a tenth lesson was published: the line is the credential, so
+   the bar is the credential. A 90% bar under "Earned" is the row arguing with
+   itself — and this is the case a naive gatingDone/gatingModules gets wrong. */
+check("a held track whose track grew since is still full",
+  rowOf({ held: true, gatingDone: 9, gatingModules: 10, earnedLine: "Earned" }),
+  { line: "Earned", pct: 100 });
+
+/* NULL IS NOT ZERO. An empty bar claims none of it is done; these two rows
+   have nothing to be behind on, so they draw no bar at all. */
+check("a track that has not opened draws no bar",
+  rowOf({ active: false }), { line: "Coming soon", pct: null });
+check("an open track with no lessons yet draws no bar",
+  rowOf({ active: true, gatingModules: 0 }), { line: "No lessons yet", pct: null });
+check("never 0 of 0",
+  rowOf({ active: true, gatingModules: 0 }).line.includes("0 of 0"), false);
+/* A held track that was later deactivated is still held — the seal does not
+   un-earn because Mitch withdrew the content behind it. */
+check("held beats inactive",
+  rowOf({ held: true, active: false, earnedLine: "Earned" }), { line: "Earned", pct: 100 });
 
 /* ---- Summary ------------------------------------------------------------- */
 

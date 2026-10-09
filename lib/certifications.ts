@@ -17,6 +17,7 @@ import {
   earnedLine,
   type CertificationHolding,
   type CertificationState,
+  type TrackRowInput,
 } from "@/lib/certification";
 import { pendingQuizzes } from "@/lib/loop";
 import { gatingModuleIds } from "@/lib/lms";
@@ -248,6 +249,25 @@ export type CoreTrackTile = CertificationTile & {
   gatingModules: number;
   gatingDone: number;
 };
+
+/**
+ * The tile, as trackRowProgress() wants it — the lessons line and the progress
+ * bar a row renders (0162).
+ *
+ * ONE ADAPTER, HERE, and not in the page: the core row, the Master row and the
+ * acceptance suite all go through it, so none of them can pass a different
+ * count and none can drift from the others. A suite that rebuilt this mapping
+ * itself would be testing its own copy.
+ */
+export function trackRowInput(tile: CoreTrackTile): TrackRowInput {
+  return {
+    held: tile.state !== "unearned",
+    active: tile.active,
+    gatingDone: tile.gatingDone,
+    gatingModules: tile.gatingModules,
+    earnedLine: tile.currency,
+  };
+}
 
 export type CertificationsOverview = CertificationsView & {
   /** The nine, in certification.sort order — the order the loop walks. */

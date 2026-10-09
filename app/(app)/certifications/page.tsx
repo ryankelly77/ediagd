@@ -29,10 +29,12 @@ import { createClient } from "@/lib/supabase/server";
 import { rooftopToday } from "@/lib/admin-advisor-detail";
 import {
   loadCertificationsOverview,
+  trackRowInput,
   type CertificationTile,
   type CoreTrackTile,
 } from "@/lib/certifications";
 import { loadLightMode } from "@/lib/service-family";
+import { trackRowProgress } from "@/lib/certification";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
 import { ProgressBar } from "@/components/library/CoursePieces";
@@ -236,14 +238,10 @@ export default async function CertificationsPage() {
 function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
   const earned = tile.state !== "unearned";
   /* Lessons — the same number craftComplete() and the track page count. A
-     track with no lessons yet says so instead of showing "0 of 0". */
-  const line = earned
-    ? tile.currency ?? "Earned"
-    : !tile.active
-      ? "Coming soon"
-      : tile.gatingModules === 0
-        ? "No lessons yet"
-        : `${tile.gatingDone} of ${tile.gatingModules} lessons`;
+     track with no lessons yet says so instead of showing "0 of 0". The bar
+     comes out of the SAME call, so it cannot be computed from a second
+     population: pct is null exactly when there is no count to draw. */
+  const { line, pct } = trackRowProgress(trackRowInput(tile));
 
   return (
     <Link
@@ -263,8 +261,11 @@ function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
         <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
           {line}
         </span>
+        {/* Same bar, same height, same spacing as a Lesson Library course row —
+            the two screens are one system and must not look like two. */}
+        {pct !== null && <ProgressBar pct={pct} />}
         {tile.nextLine && (
-          <span className="mt-0.5 block text-xs font-bold text-ocean">
+          <span className="mt-1 block text-xs font-bold text-ocean">
             {tile.nextLine}
           </span>
         )}
@@ -279,6 +280,10 @@ function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
 /** An active Master track: same row shape, same lesson numbers, marked as Master. */
 function MasterTrackRow({ tile }: { tile: CoreTrackTile }) {
   const earned = tile.state !== "unearned";
+  /* The same derivation as a core row — the "Master track · " prefix is the
+     only difference, and it goes on the sentence rather than into the rule, so
+     a Master row can never be given a bar a core row would not be given. */
+  const { line, pct } = trackRowProgress(trackRowInput(tile));
   return (
     <Link
       href={`/certifications/${encodeURIComponent(tile.slug)}`}
@@ -295,10 +300,9 @@ function MasterTrackRow({ tile }: { tile: CoreTrackTile }) {
           {tile.name}
         </span>
         <span className="ediagd-numeral mt-0.5 block text-xs text-ink-soft">
-          {earned
-            ? tile.currency ?? "Earned"
-            : `Master track · ${tile.gatingDone} of ${tile.gatingModules} lessons`}
+          {earned ? line : `Master track · ${line}`}
         </span>
+        {pct !== null && <ProgressBar pct={pct} />}
       </span>
       <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
         ›
