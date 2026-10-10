@@ -42,6 +42,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { loadStoryLessons } from "@/lib/certifications";
+import { recordEvent } from "@/lib/events/record";
 
 export type StoryResult = { ok: true } | { ok: false; error: string };
 
@@ -166,6 +167,25 @@ export async function submitStory(
       body: text,
     });
     if (insErr) return { ok: false, error: insErr.message };
+
+    /*
+     * ---- THE ROLLCALL EVENT, ON THE INSERT BRANCH ONLY -------------------
+     *
+     * A FIRST story filed is a thing that happened on a day. An edit is not,
+     * which is why this sits inside the else and not after the branch:
+     * advisor_story.updated_at already records the edit, and an event per save
+     * would make "stories submitted" a count of keystroke sessions.
+     *
+     * AFTER the insert succeeded, never before. The whole point of this
+     * record is that it is evidence, and an event written ahead of the row it
+     * describes would survive a failed insert as a claim about nothing.
+     */
+    await recordEvent({
+      userId,
+      rooftopId: membership.rooftop_id as string,
+      kind: "story_submitted",
+      targetId: certificationId,
+    });
   }
 
   revalidatePath("/certifications");

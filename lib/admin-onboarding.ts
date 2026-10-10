@@ -67,6 +67,20 @@ export type OnboardingRow = {
   /** membership.op_code_id — without it Eddie's Pick has nothing to read. */
   operatorLinked: boolean;
   firstCompletionOn: IsoDate | null;
+  /**
+   * HOW MANY mornings, and the LAST one — not just the first.
+   *
+   * Added for Rollcall. "Completed a daily loop" was already answered by
+   * firstCompletionOn, and the question Ryan actually asks on rollout week is
+   * whether somebody came back: one completion on 6 October and nothing since
+   * is a different story from eleven, and the first-completion date alone
+   * cannot tell them apart.
+   *
+   * Counted from the SAME daily_completion rows the first date comes from, in
+   * the same pass, so the two cannot disagree.
+   */
+  completionCount: number;
+  lastCompletionOn: IsoDate | null;
   ready: boolean;
   flags: ScheduleFlag[];
 };
@@ -257,6 +271,17 @@ export async function loadOnboardingStatus(
   const firstLogin = firstOf(activity, "user_id", "activity_date");
   const firstCompletion = firstOf(completions, "user_id", "completion_date");
 
+  /* The same rows again, for how many and how recently. The query is ordered
+     ascending, so the LAST one seen for a user is their most recent. */
+  const completionTally = new Map<string, { count: number; last: IsoDate | null }>();
+  for (const r of (completions ?? []) as { user_id: string; completion_date: string }[]) {
+    const prev = completionTally.get(r.user_id) ?? { count: 0, last: null };
+    completionTally.set(r.user_id, {
+      count: prev.count + 1,
+      last: day(r.completion_date) ?? prev.last,
+    });
+  }
+
   const today = new Date().toISOString().slice(0, 10) as IsoDate;
 
   const out: OnboardingRow[] = rows.map((m) => {
@@ -283,6 +308,8 @@ export async function loadOnboardingStatus(
       workDays: workDaysPerWeek(schedule),
       operatorLinked,
       firstCompletionOn: firstCompletion.get(m.user_id) ?? null,
+      completionCount: completionTally.get(m.user_id)?.count ?? 0,
+      lastCompletionOn: completionTally.get(m.user_id)?.last ?? null,
       ready: Boolean(scheduleSetOn) && operatorLinked,
       flags: scheduleFlags(schedule, {
         confirmed: Boolean(scheduleSetOn),

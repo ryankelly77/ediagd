@@ -215,7 +215,10 @@ export function CueDeck({
     setPending(id);
     setError(null);
 
-    const result = await completeLibraryItem(id, opts.watchedPct);
+    /* "library" — the deck IS the library. Required by the signature so that
+       content_progress.source and the Rollcall event both name the surface
+       that finished the lesson; see lib/library-actions.ts. */
+    const result = await completeLibraryItem(id, "library", opts.watchedPct);
     setPending(null);
 
     if (!result.ok) {
