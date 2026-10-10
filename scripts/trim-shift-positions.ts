@@ -33,6 +33,17 @@ import { existsSync, readFileSync } from "node:fs";
 
 const LEDGER = "reports/trim-pass.json";
 const RECUT = "reports/trim-recut.json";
+/*
+ * The 9 October last batch keeps its own ledger, in the same shape as the
+ * re-cut one: {contentId, title, trimStart, at, swapped}. It is read HERE
+ * rather than given its own shifter, because the question "who reads
+ * content_progress.position_sec raw" has one answer and it has to stay one
+ * answer — a second copy of this arithmetic is how the first one goes stale.
+ *
+ * Only its 7 head cuts carry a trimStart; its 33 tail cuts do not move a
+ * saved position at all, because nothing before the Mahalo changed.
+ */
+const LAST_BATCH = "reports/trim-last-batch.json";
 const APPLY = process.argv.includes("--apply");
 
 type Cut = { head: number; cutAt: string; title: string };
@@ -51,8 +62,11 @@ async function main() {
   }>)) {
     if (v.trimStart) cuts.set(v.contentId, { head: v.trimStart, cutAt: v.cutAt, title: v.title });
   }
-  if (existsSync(RECUT)) {
-    for (const v of Object.values(JSON.parse(readFileSync(RECUT, "utf8")) as Record<string, {
+  /* Later ledgers supersede earlier ones for the same film, because the head a
+     saved position must move by is the one most recently applied. */
+  for (const file of [RECUT, LAST_BATCH]) {
+    if (!existsSync(file)) continue;
+    for (const v of Object.values(JSON.parse(readFileSync(file, "utf8")) as Record<string, {
       contentId: string; title: string; trimStart: number | null; at: string; swapped: boolean;
     }>)) {
       if (v.swapped && v.trimStart) cuts.set(v.contentId, { head: v.trimStart, cutAt: v.at, title: v.title });

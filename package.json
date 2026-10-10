@@ -118,7 +118,9 @@
     "captions:sync": "rm -rf .tmp-cs && tsc scripts/captions-sync.ts --outDir .tmp-cs --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-cs/captions-sync.js",
     "repro:start-here": "rm -rf .tmp-rsh && tsc -p scripts/tsconfig.startshere.json && mkdir -p .tmp-rsh/node_modules/server-only && echo \"module.exports={};\" > .tmp-rsh/node_modules/server-only/index.js && ln -sfn .. .tmp-rsh/node_modules/@ && node .tmp-rsh/scripts/reproduce-start-here.js",
     "audit:library": "rm -rf .tmp-la2 && tsc scripts/library-audit.ts --outDir .tmp-la2 --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-la2/library-audit.js",
-    "report:hopper": "rm -rf .tmp-hop && tsc scripts/hopper.ts --outDir .tmp-hop --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-hop/hopper.js"
+    "report:hopper": "rm -rf .tmp-hop && tsc scripts/hopper.ts --outDir .tmp-hop --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-hop/hopper.js",
+    "trim:last-batch": "rm -rf .tmp-tlb && tsc scripts/trim-last-batch.ts scripts/trim-check.ts --outDir .tmp-tlb --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlb/trim-last-batch.js",
+    "trim:last-batch-report": "rm -rf .tmp-tlbr && tsc scripts/trim-last-batch-report.ts --outDir .tmp-tlbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlbr/trim-last-batch-report.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
