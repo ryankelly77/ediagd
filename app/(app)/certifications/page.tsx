@@ -38,6 +38,7 @@ import { trackRowProgress } from "@/lib/certification";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
 import { ProgressBar } from "@/components/library/CoursePieces";
+import { RecordOpen } from "@/components/events/RecordOpen";
 import type { IsoDate } from "@/lib/gamification/streak";
 
 export const metadata = { title: "Certifications" };
@@ -77,6 +78,12 @@ export default async function CertificationsPage() {
 
   return (
     <main className="mx-auto max-w-app px-4 pb-8 pt-6">
+      {/* Renders nothing. Records that somebody tapped Certs — the question
+          Ryan asked that no row anywhere implied an answer to. A CLIENT
+          component on purpose: this route is on the tab bar of every signed-in
+          screen, so logging from the server render would count every prefetch
+          as an open. See components/events/RecordOpen.tsx. */}
+      <RecordOpen kind="certs_opened" />
       <h1 className="ediagd-eyebrow">Your certifications</h1>
 
       {/* ---- The credential you are inside --------------------------------

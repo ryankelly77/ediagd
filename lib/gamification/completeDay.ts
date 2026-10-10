@@ -50,6 +50,7 @@ import { readWatchTicket, watchTicketRef } from "@/lib/watch-ticket";
 import { readGate } from "@/lib/watch-gate";
 import { readDayStamp, type ServedDay } from "@/lib/day-stamp";
 import { clampWatchPct, isWatched, watchIsPlausible } from "@/lib/watch-coverage";
+import { recordEvent } from "@/lib/events/record";
 
 export type CompleteDayInput = {
   /**
@@ -759,6 +760,35 @@ export async function completeDay(
        */
       if (served.item) {
         await completeModuleIfReady(supabase, userId, served.item, rooftopId, 0);
+
+        /*
+         * ---- THE ROLLCALL EVENT: finished IN THE MORNING ------------------
+         *
+         * The other half of the pair in lib/library-actions.ts, and the reason
+         * the pair exists: the content_progress row written at step 3b is
+         * identical whichever surface produced it, so "who completed lessons
+         * outside the daily loop" needs the two surfaces to have said which
+         * they were. `source: 'loop'` is already on that row; this is the
+         * append-only record of the act, which the loop cannot later overwrite
+         * by re-serving the same film.
+         *
+         * The module is read here rather than threaded down from the stamp,
+         * because the stamp carries a CONTENT id and the Rollcall names a
+         * module. One extra select on a path that has already made thirty.
+         */
+        const { data: itemRow } = await supabase
+          .from("content")
+          .select("module_id")
+          .eq("id", served.item)
+          .maybeSingle();
+
+        await recordEvent({
+          userId,
+          rooftopId,
+          kind: "lesson_completed",
+          targetId: (itemRow?.module_id as string | null) ?? null,
+          meta: { source: "loop", content_id: served.item },
+        });
       }
 
       for (const contentId of consumed) {

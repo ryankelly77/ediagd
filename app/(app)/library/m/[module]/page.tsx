@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CueDeck, type DeckItem } from "@/components/library/CueDeck";
 import { lessonCount } from "@/components/library/CoursePieces";
+import { RecordOpen } from "@/components/events/RecordOpen";
 import {
   loadCourseCrumb,
   loadModule,
@@ -108,6 +109,9 @@ export default async function ModulePage({
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
+      {/* A lesson OPENED, which is not a lesson completed and is not counted
+          as one. Renders nothing; see components/events/RecordOpen.tsx. */}
+      <RecordOpen kind="lesson_opened" targetId={moduleId} />
       <AdminPageHeader
         // One level up is the COURSE, not the library. Falls back to the
         // library only if the course somehow can't be read — a broken crumb is

@@ -37,6 +37,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
 import { ProgressBar } from "@/components/library/CoursePieces";
+import { RecordOpen } from "@/components/events/RecordOpen";
 
 export const metadata = { title: "Certification track" };
 
@@ -74,6 +75,11 @@ export default async function TrackPage({
   if (track.comingSoon || track.kind === "service") {
     return (
       <main className="mx-auto max-w-app px-4 pb-12 pt-5">
+        {/* BOTH branches of this page record the open, because both of them
+            ARE one. A track somebody opened and found nothing to do in is the
+            most interesting row on the Rollcall, not one to leave out —
+            "opened it once and never again" is a finding. */}
+        <RecordOpen kind="track_opened" targetId={track.id} />
         <AdminPageHeader
           back={{ href: "/certifications", label: "Certifications" }}
           title={track.name}
@@ -100,6 +106,8 @@ export default async function TrackPage({
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
+      {/* The other half of the pair above. */}
+      <RecordOpen kind="track_opened" targetId={track.id} />
       <AdminPageHeader
         back={{ href: "/certifications", label: "Certifications" }}
         title={track.name}

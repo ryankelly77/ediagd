@@ -7,6 +7,7 @@ import { ComingSoon } from "@/components/library/LibraryPieces";
 import { ProgressBar, ContinueCard } from "@/components/library/CoursePieces";
 import { loadCourses, loadContinuePoint } from "@/lib/lms";
 import { isAdminViewer } from "@/lib/access";
+import { RecordOpen } from "@/components/events/RecordOpen";
 
 /**
  * The library landing: tracks, then courses, with progress.
@@ -42,6 +43,9 @@ export default async function LibraryPage() {
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
+      {/* "who clicked on Certs and other courses" — this is the other courses
+          half. Renders nothing; see components/events/RecordOpen.tsx. */}
+      <RecordOpen kind="library_opened" />
       <AdminPageHeader
         back={{ href: "/more", label: "More" }}
         title="Lesson Library"

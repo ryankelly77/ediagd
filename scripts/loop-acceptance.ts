@@ -1145,6 +1145,11 @@ async function counters(userId: string, moduleId: string, family: string) {
 /* ---- cleanup -------------------------------------------------------------- */
 async function cleanup() {
   for (const u of madeUsers) {
+    /* 0163: completeDay now writes a Rollcall event for the morning's item.
+       This suite completes real mornings, so it leaves real events — and a
+       suite that litters makes the NEXT run's counts wrong, which is a worse
+       failure than the litter. */
+    await sb.from("app_event").delete().eq("user_id", u);
     await sb.from("advisor_credential").delete().eq("user_id", u);
     await sb.from("advisor_certification").delete().eq("user_id", u);
     await sb.from("advisor_track_entry").delete().eq("user_id", u);

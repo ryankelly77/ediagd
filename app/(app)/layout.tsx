@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/nav/AppHeader";
 import { TabBar, type Tab } from "@/components/nav/TabBar";
 import { DayRollover } from "@/components/nav/DayRollover";
+import { SignInPing } from "@/components/events/RecordOpen";
 import { SwipeNavigation } from "@/components/nav/SwipeNavigation";
 import type { IsoDate } from "@/lib/gamification/streak";
 import { loadScheduleContext, restDayFor, type RestDay } from "@/lib/work-schedule";
@@ -253,6 +254,12 @@ export default async function AppLayout({
       {/* Renders nothing. Adds the full-screen swipe that the system's
           edge-only gesture does not cover — see SwipeNavigation. */}
       <SwipeNavigation />
+      {/* Renders nothing. Hands up the ONE fact the server cannot derive: which
+          shell this session is running in. markActiveToday above records the
+          store-day; this records the platform, which is as close as the app can
+          honestly get to "they installed the TestFlight build" — App Store
+          Connect is the record of an install, per tester. */}
+      <SignInPing />
       <AppHeader
         balance={balance}
         streak={streak}

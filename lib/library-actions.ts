@@ -32,6 +32,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { completeModuleIfReady } from "@/lib/lms";
 import { accrueFromCompletion } from "@/lib/certification-server";
 import { gateThreshold, isWatched } from "@/lib/watch-coverage";
+import { recordEvent } from "@/lib/events/record";
+import type { CompletionSurface } from "@/lib/events/kinds";
 
 export type CompleteResult =
   | {
@@ -63,9 +65,32 @@ const FIFTY = 50;
  * same one the morning uses. NOT `game_settings.video_complete_pct`, which
  * nothing reads for credit any more. Cues have no progress to measure and
  * complete outright.
+ *
+ * ---------------------------------------------------------------------------
+ * `surface` IS REQUIRED, AND IT IS SECOND SO IT CANNOT BE FORGOTTEN
+ * ---------------------------------------------------------------------------
+ * 0123 added `content_progress.source` — 'loop' | 'card' | 'library' | 'quiz'
+ * — to record which surface produced a consumption row, and commented that
+ * the provenance "is not recoverable afterwards from a watched_pct". It was
+ * right, and then NOTHING EVER WROTE IT except completeDay, which writes
+ * 'loop'. Every library and every family-card completion in production has
+ * `source = NULL`, because this function — the only path either surface
+ * finishes a lesson through — had no parameter for it.
+ *
+ * That is the exclusion-by-value hole in its purest form: a column that
+ * answers "which surface" is only as strong as the guarantee that something
+ * writes it, and the one writer declined. Ryan's sixth question — who
+ * completed lessons OUTSIDE the daily loop — was unanswerable not because the
+ * record was missing but because the record was blank.
+ *
+ * So it is a required positional argument ahead of the optional one: a caller
+ * cannot take the default, because there is no default. Two call sites,
+ * CueDeck ('library') and ServiceShelf ('card'), and TypeScript refuses a
+ * third that stays silent.
  */
 export async function completeLibraryItem(
   contentId: string,
+  surface: CompletionSurface,
   watchedPct?: number
 ): Promise<CompleteResult> {
   const supabase = await createClient();
@@ -79,7 +104,12 @@ export async function completeLibraryItem(
   // or content their rooftop hasn't bought, simply isn't here.
   const { data: item } = await supabase
     .from("content")
-    .select("id, type, service_family, duration_sec")
+    /* module_id is read for the Rollcall event only — "lessons completed
+       outside the daily loop" has to name WHICH lesson, and the event's
+       target_id is a module id. It is nullable (reference content carries a
+       family and no module), so the reader must count an event with no
+       target; see 0163. */
+    .select("id, type, service_family, duration_sec, module_id")
     .eq("id", contentId)
     .maybeSingle();
 
@@ -172,6 +202,12 @@ export async function completeLibraryItem(
       content_id: contentId,
       watched_pct: claimPct,
       completed_at: nowIso,
+      /* BOTH CLAIM PATHS STAMP IT, because either one can be the one that
+         completes the row. record_watch_progress inserts a row with no source
+         while the film plays, so on a credit-only player the UPDATE below is
+         usually the completing write — stamping only the insert would have
+         left source NULL for exactly the common case. */
+      source: surface,
     })
     .select("id")
     .maybeSingle();
@@ -187,7 +223,7 @@ export async function completeLibraryItem(
     // `is null` filter makes this atomic, so two finishers cannot both be paid.
     const { data: finished } = await service
       .from("content_progress")
-      .update({ completed_at: nowIso })
+      .update({ completed_at: nowIso, source: surface })
       .eq("user_id", user.id)
       .eq("content_id", contentId)
       .is("completed_at", null)
@@ -260,6 +296,43 @@ export async function completeLibraryItem(
    * policy for any session role; see lib/certification-server.ts.
    */
   const accrual = await accrueFromCompletion(service, user.id, rooftopId, contentId);
+
+  /*
+   * ---- 8. The Rollcall event: finished HERE, not in the morning -----------
+   *
+   * WHY THIS IS NOT A SECOND COUNTER FOR content_progress.source, WHICH IS
+   * THE FIRST THING TO SUSPECT NOW THAT THE COLUMN ABOVE IS FINALLY WRITTEN.
+   *
+   * `content_progress.source` is LAST-WRITER-WINS. There is one row per
+   * (user_id, content_id) and completeDay upserts it with
+   * `onConflict: user_id,content_id`, so a film finished here and later served
+   * as a morning pitch has its source rewritten to 'loop'. The column answers
+   * "which surface touched this row most recently", which is a different
+   * question from "which surface finished it", and only the second one is
+   * Ryan's.
+   *
+   * app_event is append-only. The event is therefore the record of the ACT and
+   * the column is the record of the ROW, and the two are reconcilable rather
+   * than redundant: every event here should have a content_progress row whose
+   * source agrees, unless the loop has since overwritten it. That
+   * reconciliation is what makes either number worth quoting.
+   *
+   * AFTER THE COMPENSATION BRANCH, DELIBERATELY. A failed payment above
+   * deletes the progress row and returns an error, so an event written at the
+   * claim would record a completion that was then undone. Everything that can
+   * roll back has run by here.
+   *
+   * It cannot throw — see lib/events/record.ts.
+   */
+  await recordEvent({
+    userId: user.id,
+    rooftopId,
+    kind: "lesson_completed",
+    /* The module, which is what the Rollcall names. Null for reference content
+       that carries a family and no module — counted all the same. */
+    targetId: (item.module_id as string | null) ?? null,
+    meta: { source: surface, content_id: contentId, type: item.type },
+  });
 
   revalidatePath("/library");
   revalidatePath("/badges");
@@ -347,7 +420,12 @@ export async function completeFromForm(formData: FormData): Promise<void> {
   const pctRaw = formData.get("watchedPct");
   const pct = pctRaw == null ? undefined : Number(pctRaw);
 
-  const result = await completeLibraryItem(contentId, pct);
+  /* "library": this wrapper exists for a library <form action>. Nothing calls
+     it today — the deck and the shelf both call the action directly — and it
+     is kept because a progressive-enhancement fallback is the one thing a
+     webview with broken JS would need. Named explicitly rather than defaulted,
+     so a future caller inherits a surface somebody chose. */
+  const result = await completeLibraryItem(contentId, "library", pct);
   // Throwing surfaces the reason rather than silently doing nothing; the happy
   // path and "already done" both return ok.
   if (!result.ok) throw new Error(result.error);

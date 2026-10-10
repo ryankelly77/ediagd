@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/streak-saver",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/rollcall",
+      "schedule": "30 12,22 * * *"
     }
   ]
 }

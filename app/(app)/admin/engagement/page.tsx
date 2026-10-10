@@ -4,8 +4,8 @@ import { Card } from "@/components/brand/Card";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminSearch } from "@/components/admin/AdminSearch";
 import { AdvisorDetail } from "@/components/admin/AdvisorDetail";
-import { OnboardingStatusSection } from "@/components/admin/OnboardingStatus";
-import { loadOnboardingStatus } from "@/lib/admin-onboarding";
+import { RollcallSection, type RooftopChip } from "@/components/admin/Rollcall";
+import { loadRollcall } from "@/lib/rollcall";
 import { DistributionDonut } from "@/components/admin/DistributionDonut";
 import { EngagementHero } from "@/components/admin/EngagementHero";
 import { EngagementList, type EngagementRow } from "@/components/admin/EngagementList";
@@ -44,6 +44,16 @@ export default async function AdminPage({
     show?: string;
     /** The people section pages on its own, so "Show more" moves one list. */
     pshow?: string;
+    /**
+     * Rollcall's rooftop filter, and ONLY Rollcall's.
+     *
+     * Deliberately not applied to the engagement half above it: that half is
+     * driven by the 0026 views at whatever scope the policies give the viewer,
+     * and a filter that silently narrowed the headline score as well would
+     * mean two different scopes on one screen with one word for both. The
+     * chips sit inside the Rollcall section for the same reason.
+     */
+    roof?: string;
   }>;
 }) {
   const supabase = await createClient();
@@ -52,7 +62,7 @@ export default async function AdminPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { band: bandParam, q, show, pshow } = await searchParams;
+  const { band: bandParam, q, show, pshow, roof } = await searchParams;
   const band = parseBand(bandParam);
   const search = q?.trim() || null;
   const limit = resolveLimit(show);
@@ -221,12 +231,26 @@ export default async function AdminPage({
    * typed a name into the search box would be a rollout number nobody could
    * trust twice.
    */
-  const onboarding = await loadOnboardingStatus(supabase);
+  /*
+   * ROLLCALL, scoped by the ?roof= chip and by nothing else.
+   *
+   * Read through the caller's own client so RLS decides who is in scope: a
+   * dealer admin sees their rooftops' advisors, the platform owner sees
+   * everyone, and app_event_rollcall is security_invoker so the event half
+   * obeys the same policy as the rest of it.
+   *
+   * The ROOFTOP ID IS NOT VALIDATED HERE and does not need to be. A viewer who
+   * puts somebody else's rooftop in the query string gets the policy's answer,
+   * which is zero rows — the filter can narrow what RLS allows and can never
+   * widen it.
+   */
+  const rollcall = await loadRollcall(supabase, roof || null);
 
   const query = {
     q: search ?? undefined,
     show: show || undefined,
     pshow: pshow || undefined,
+    roof: roof || undefined,
   };
   // Each "Show more" grows its own list and leaves the other where it was.
   const moreHref = buildHref("/admin/engagement", {
@@ -239,6 +263,28 @@ export default async function AdminPage({
     band: band ?? undefined,
     pshow: String(peopleLimit + LIST_PAGE_STEP),
   });
+
+  /*
+   * Rollcall's rooftop chips. A chip keeps every other query parameter, so
+   * tapping a store does not quietly reset the search or either "show more".
+   *
+   * CAPPED, because this screen's whole design rule is that it reads the same
+   * for one rooftop and for hundreds. loadRollcall has already dropped the
+   * stores with nobody to call; this bounds what is left, and the count of
+   * what it dropped goes to the component so the shortfall is stated rather
+   * than silently absorbed.
+   */
+  const CHIP_LIMIT = 8;
+  const chipSource = rollcall.rooftops.slice(0, CHIP_LIMIT);
+  const chipsHidden = rollcall.rooftops.length - chipSource.length;
+  const rooftopChips: RooftopChip[] = chipSource.map((r) => ({
+    ...r,
+    href: buildHref("/admin/engagement", {
+      ...query,
+      band: band ?? undefined,
+      roof: r.id,
+    }),
+  }));
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -329,16 +375,27 @@ export default async function AdminPage({
         />
       )}
 
-      {/* ---- 5. Who is actually set up -----------------------------------
+      {/* ---- 5. Rollcall: who is set up, and what they have actually done -
           BELOW the engagement list, not above it. Engagement is the standing
-          question this screen answers every day; onboarding is a question that
-          gets answered once and then stops mattering, and putting a list that
-          empties itself at the top of a screen somebody opens every morning
-          would leave a dead heading there for the next year.
+          question this screen answers every day; the setup half of Rollcall is
+          a question that gets answered once and then stops mattering, and
+          putting a list that empties itself at the top of a screen somebody
+          opens every morning would leave a dead heading there for the next
+          year.
 
           Read through the caller's own client, so RLS scopes it: a dealer
           admin sees their rooftops, the platform owner sees everyone. */}
-      <OnboardingStatusSection status={onboarding} showRooftop={!advisorLevel} />
+      <RollcallSection
+        rollcall={rollcall}
+        showRooftop={!advisorLevel}
+        chips={rooftopChips}
+        chipsHidden={chipsHidden}
+        allHref={buildHref("/admin/engagement", {
+          ...query,
+          roof: undefined,
+          band: band ?? undefined,
+        })}
+      />
 
       {/* ---- 6. Tools ---------------------------------------------------- */}
     </main>

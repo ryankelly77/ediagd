@@ -76,7 +76,11 @@ export function ServiceShelf({
     setDone((prev) => new Set(prev).add(contentId));
     startTransition(async () => {
       try {
-        await completeLibraryItem(contentId, pct);
+        /* "card", NOT "library". This shelf shares the library's server
+           action and is not the library — a completion here is outside the
+           daily loop and outside the library both, and 0123's source
+           vocabulary already had the word for it. */
+        await completeLibraryItem(contentId, "card", pct);
       } catch {
         /*
          * Swallowed, and the tick stays. A failed write means the film is
