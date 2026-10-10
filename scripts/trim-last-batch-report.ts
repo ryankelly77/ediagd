@@ -10,9 +10,11 @@
    ---------------------------------------------------------------------------
    IT READS THE PRISTINE REPORT FROM GIT, NOT THE FILE ON DISK
    ---------------------------------------------------------------------------
-   `git show HEAD:reports/trim-verify-447.md` is the source, so running this
-   twice produces the same file rather than a report of a report. The 385 rows
-   this batch never touched come through unchanged, byte for byte.
+   The source is the report as it stood at the branch's MERGE BASE with
+   origin/main — not at HEAD, which becomes this generator's own output the
+   moment the batch commits anything. So running this twice produces the same
+   file rather than a report of a report, and the rows this batch never touched
+   come through unchanged, byte for byte.
 
    ---------------------------------------------------------------------------
    THE TWO VERIFIED COLUMNS MEAN SOMETHING ELSE FOR A CUT FILM, AND IT SAYS SO
@@ -56,13 +58,29 @@ type PlanRow = {
   reportSecond: number | null; reportTail: number | null; reportVertical: string;
   reportOpens: string | null; reportCloses: string | null;
   masterAssetId: string | null; durationSec: number | null; because: string;
-  reportSecondFrom?: string; rereadNote?: string;
+  reportSecondFrom?: string; rereadNote?: string; expectFirstWord?: string;
 };
 
 const n = (v: number | null | undefined, d = 2) => (v == null ? "—" : v.toFixed(d));
 
 async function main() {
-  const pristine = execFileSync("git", ["show", `HEAD:${OUT}`], { encoding: "utf8", maxBuffer: 1 << 26 });
+  /*
+   * ---- THE PRISTINE SOURCE IS THE FORK POINT, NOT HEAD -------------------
+   *
+   * `HEAD:` was wrong the moment this batch's first commit landed: the
+   * generator then read its own output, found no rows marked "Ryan's list",
+   * and rewrote 0 of 62. It failed loudly, which is the only reason this is a
+   * paragraph rather than a silently empty report.
+   *
+   * The right source is the report as it stood BEFORE this branch — the merge
+   * base with origin/main — so the generator is idempotent across any number
+   * of commits on the branch.
+   */
+  const base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+  const pristine = execFileSync("git", ["show", `${base}:${OUT}`], { encoding: "utf8", maxBuffer: 1 << 26 });
+  if (!/Ryan's list/.test(pristine)) {
+    throw new Error(`${base}:${OUT} carries no "Ryan's list" rows — that is not the 9 October reading`);
+  }
   const plan = JSON.parse(readFileSync(PLAN, "utf8")) as { rows: PlanRow[] };
   const ledger: Record<string, Entry> = existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, "utf8")) : {};
   const attempt1: { note: string; entries: Record<string, Entry> } = existsSync(ATTEMPT1)
@@ -133,17 +151,29 @@ async function main() {
         kind: "cut",
         outcome: isTail
           ? `cut — ${n(b.tailAfterLast)}s past Mahalo became ${n(a.tailAfterLast)}s`
-          : `cut — ${n(b.leadIn)}s of air at the head became ${n(a.leadIn)}s`,
+          : r.expectFirstWord
+            ? `cut at the greeting — opened on "${b.firstWord ?? "—"}", now "${a.firstWord ?? "—"}" with ${n(a.leadIn)}s of air`
+            : `cut — ${n(b.leadIn)}s of air at the head became ${n(a.leadIn)}s`,
         head: n(a.leadIn), tail: n(a.tailAfterLast), vertical: "stale",
         detail: [
           isTail
             ? `**cut at the Mahalo + 0.7s pad.** Ran ${n(b.tailAfterLast)}s past its sign-off; now ${n(a.tailAfterLast)}s.`
-            : `**cut at the energy onset − 0.3s pad.** Opened after ${n(b.leadIn)}s of air; now ${n(a.leadIn)}s.`,
+            : r.expectFirstWord
+              ? `**cut at the greeting − 0.3s pad.** It opened on sound at ${n(b.leadIn)}s with the stray ` +
+                `word "${b.firstWord ?? "—"}" in front of the Aloha; it now opens on "${a.firstWord ?? "—"}" ` +
+                `with ${n(a.leadIn)}s of air. Ryan's ruling, 9 October: a word before the greeting is what ` +
+                `the head rule removes, not a different rule.`
+              : `**cut at the energy onset − 0.3s pad.** Opened after ${n(b.leadIn)}s of air; now ${n(a.leadIn)}s.`,
           `master ${n(b.assetDuration)}s → ${n(a.assetDuration)}s, which is what the cut asked for`,
           isTail
             ? `closes "${a.lastWord ?? "—"}" — the head was untouched and reads ${n(a.leadIn)}s against ${n(b.leadIn)}s before`
             : `opens on "${a.firstWord ?? "—"}" — the tail was untouched and reads ${n(a.tailAfterLast)}s against ${n(b.tailAfterLast)}s before`,
-          r.reportSecond != null
+          r.expectFirstWord
+            ? `the anchor was measured on this master and **tested** — a short window pulled from ` +
+              `${n(r.reportSecond, 3)}s opens on "Aloha", after ${"a pause"} of silence that separates the ` +
+              `stray word from the greeting. There is no cross-check against the 447 reading here, and the ` +
+              `gate is instead that the finished clip must open on "${r.expectFirstWord}", which it does.`
+            : r.reportSecond != null
             ? `the master and the 447 reading agreed to ${n(e.reconcileGap, 3)}s about where to cut` +
               (r.reportSecondFrom === "master re-read, not independent"
                 ? ` — but for this film the report had no number, so that cross-check is the master against itself and proves nothing`

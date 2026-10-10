@@ -156,6 +156,10 @@ const PAD_TAIL = 0.7;
 const PAD_HEAD = 0.3;
 /** One window, both ends, on the master — the same width the 447 reading used. */
 const WINDOW = 10;
+/* The head window for --find-aloha. Wider than the verification window only
+   because the greeting can sit behind a stray word and a gap, and a window
+   that ends before the Aloha reports "no Aloha" rather than "look further". */
+const ALOHA_WINDOW = 15;
 const MODEL = "small.en";
 /**
  * How far the master may disagree with the report before this refuses.
@@ -207,6 +211,14 @@ type PlanRow = {
    */
   reportSecondFrom?: "447 report, served rendition" | "master re-read, not independent";
   rereadNote?: string;
+  /**
+   * The word the finished film MUST open on, when the cut was made to remove
+   * something specific rather than just air. A head cut that only checks for
+   * 0.3s of air would be satisfied by a film still opening on the stray word
+   * the cut existed to remove — so where that is the point, say so and assert
+   * it. The unsafe state stops being representable rather than being avoided.
+   */
+  expectFirstWord?: string;
 };
 
 type Measured = {
@@ -650,6 +662,321 @@ async function reread() {
   console.log(`  rewrote ${PLAN}\n`);
 }
 
+/* ---- --find-aloha -------------------------------------------------------- */
+/**
+ * For a film that opens on a stray word BEFORE the greeting.
+ *
+ * Ryan's ruling, 9 October: a word before the greeting is what the head rule
+ * removes, not a different rule. So the anchor is the Aloha rather than the
+ * energy onset — on these two films the energy onset is 0.000s, because the
+ * stray word is already sounding when the asset begins.
+ *
+ * ---------------------------------------------------------------------------
+ * WHISPER SAYS WHICH WORD; ENERGY STILL SAYS WHERE IT STARTS
+ * ---------------------------------------------------------------------------
+ * The obvious implementation — cut at whisper's "Aloha" timestamp minus 0.3s —
+ * is the one that already went wrong once in this project. trim-recut.ts exists
+ * because the apply pass cut at `alohaAt - 0.3` and whisper's word timestamps
+ * "land fractionally INSIDE the first phoneme"; trim-slates.ts uses 0.35 for
+ * the same reason, and trim:recut defaults to 0.6.
+ *
+ * So whisper is asked only WHICH word and roughly where, and the cut is taken
+ * from the ENERGY onset of the sound region that word falls in — the start of
+ * the audible Aloha, from silencedetect, which cannot land inside a phoneme.
+ * Then 0.3s in front of that is a real 0.3s of air.
+ *
+ * `reports/trim-plan.json` already recorded this as the house anchor —
+ * "min(energy onset, whisper aloha) - 0.3s" — and these two films are exactly
+ * where that formula breaks: the minimum is the stray word at 0.000s. The fix
+ * is not a different pad, it is asking energy about the right region.
+ */
+async function findAloha() {
+  const plan = JSON.parse(readFileSync(PLAN, "utf8")) as {
+    rows: PlanRow[]; tally: Record<string, number>; [k: string]: unknown;
+  };
+  const want = ONLY ? ONLY.split(",").map((s) => s.trim()).filter(Boolean) : [];
+  if (!want.length) {
+    console.error(`\n  --find-aloha needs --only=<id>[,<id>] — it is a per-film ruling, not a sweep.\n`);
+    process.exit(1);
+  }
+  const targets = plan.rows.filter((r) => want.some((w) => r.id === w || r.id.startsWith(w)));
+  if (targets.length !== want.length) {
+    console.error(`\n  asked for ${want.length} film(s), the plan matched ${targets.length}. Refusing.\n`);
+    process.exit(1);
+  }
+  console.log(`\n  trim:last-batch --find-aloha — ${targets.length} film(s)`);
+  console.log(`  anchor: the ENERGY onset of the sound region whisper puts "Aloha" in, minus ${PAD_HEAD}s\n`);
+
+  for (const r of targets) {
+    console.log(`  ──────── ${r.title}`);
+    try {
+      const { data } = await db().from("content")
+        .select("mux_asset_id, mux_playback_id, status, retired_at").eq("id", r.id).maybeSingle();
+      const cur = data as unknown as {
+        mux_asset_id: string | null; mux_playback_id: string | null; status: string; retired_at: string | null;
+      } | null;
+      if (!cur?.mux_asset_id || !cur.mux_playback_id) throw new Error("row has no master asset");
+      if (cur.status !== "published" || cur.retired_at) throw new Error("row is not published");
+      r.masterAssetId = cur.mux_asset_id;
+      const asset = await video().video.assets.retrieve(cur.mux_asset_id);
+      if (asset.duration == null) throw new Error("master reports no duration");
+
+      const found = await alohaOnset(cur.mux_playback_id, asset.duration);
+      console.log(`           whisper puts "Aloha" at ~${n(found.whisperStart, 3)}s in "${found.heard.slice(0, 70)}…"`);
+      console.log(`           sound regions begin at: ${found.onsets.map((o) => o.toFixed(3)).join(", ")}`);
+      console.log(`           candidates tested: ${found.tried.join("  |  ")}`);
+      console.log(`           energy onset that opens on "Aloha": ${n(found.energyOnset, 3)}s`);
+
+      if (found.energyOnset <= 0.1) {
+        throw new Error(
+          `the Aloha's own sound region starts at ${n(found.energyOnset, 3)}s, so there is nothing ` +
+            `before the greeting to remove — this film does not match the ruling`
+        );
+      }
+      const start = Math.max(0, Number((found.energyOnset - PAD_HEAD).toFixed(2)));
+      r.rule = "head-cut";
+      r.reportSecond = Number(found.energyOnset.toFixed(3));
+      r.reportSecondFrom = "master re-read, not independent";
+      /* The gate must assert the film now OPENS on the greeting. A head cut
+         that merely leaves 0.3s of air would be satisfied by still opening on
+         the stray word, which is the whole thing being removed. */
+      r.expectFirstWord = "aloha";
+      r.because =
+        `**Ryan's ruling, 9 October: a word before the greeting is what the head rule removes.** ` +
+        `The master opens on sound at 0.00s with the stray word "${r.reportOpens}", then the greeting. ` +
+        `Whisper puts "Aloha" at ~${n(found.whisperStart, 2)}s; the energy onset of the region it falls in ` +
+        `is ${n(found.energyOnset, 3)}s, and the cut is that minus the ${PAD_HEAD}s pad — ` +
+        `taken from energy, not from whisper, because a whisper timestamp sits inside the first phoneme ` +
+        `and cutting 0.3s off one is what trim:recut had to be written to undo.`;
+      console.log(`           -> head-cut at ${start} (anchor ${n(found.energyOnset, 3)} - ${PAD_HEAD}), must open on "Aloha"\n`);
+    } catch (e) {
+      console.log(`           FAILED — ${e instanceof Error ? e.message : String(e)}`);
+      console.log(`           left as ${r.rule}\n`);
+    }
+  }
+
+  const tally: Record<string, number> = {};
+  for (const r of plan.rows) tally[r.rule] = (tally[r.rule] ?? 0) + 1;
+  plan.tally = tally;
+  plan.alohaAnchoredAt = new Date().toISOString();
+  writeFileSync(PLAN, `${JSON.stringify(plan, null, 1)}\n`);
+  console.log(`  ${Object.entries(tally).map(([k, v]) => `${k} ${v}`).join("   ")}`);
+  console.log(`  rewrote ${PLAN}\n`);
+}
+
+/**
+ * Where the audible "Aloha" starts in an asset's head, by both instruments.
+ *
+ * Returns the energy onset of the sound region whisper found the word in, which
+ * is the only number here safe to cut 0.3s in front of.
+ */
+async function alohaOnset(
+  playbackId: string,
+  duration: number
+): Promise<{
+  energyOnset: number; whisperStart: number; onsets: number[]; heard: string; tried: string[];
+}> {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const { mkdirSync, rmSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { randomUUID } = await import("node:crypto");
+  const run = promisify(execFile);
+
+  mkdirSync(WORK, { recursive: true });
+  const tag = randomUUID().slice(0, 8);
+  const wav = join(WORK, `${tag}-aloha.wav`);
+  const man = join(WORK, `${tag}-aloha-man.json`);
+  const out = join(WORK, `${tag}-aloha-out.json`);
+  const w = Math.min(ALOHA_WINDOW, duration);
+
+  try {
+    const token = await video().jwt.signPlaybackId(playbackId, { type: "video", expiration: "3600s" });
+    const hls = `https://stream.mux.com/${playbackId}.m3u8?token=${token}`;
+    await run("ffmpeg", ["-nostdin", "-hide_banner", "-loglevel", "error",
+      "-t", w.toFixed(3), "-i", hls, "-vn", "-ac", "1", "-ar", "16000", "-y", wav],
+      { maxBuffer: 1 << 24 });
+    const { stdout: probe } = await run("ffprobe",
+      ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", wav]);
+    const got = Number(probe.trim());
+    if (!Number.isFinite(got) || got < w - 0.75) {
+      throw new Error(`partial pull: came back ${got.toFixed(2)}s of ${w.toFixed(2)}s`);
+    }
+
+    /* ---- every point where sound STARTS in the window, by energy -------- */
+    let stderr = "";
+    try {
+      const res = await run("ffmpeg",
+        ["-hide_banner", "-i", wav, "-af", "silencedetect=noise=-40dB:d=0.05", "-f", "null", "-"],
+        { maxBuffer: 1 << 24 });
+      stderr = `${res.stderr ?? ""}${res.stdout ?? ""}`;
+    } catch (e) {
+      const err = e as { stderr?: string; stdout?: string };
+      stderr = `${err.stderr ?? ""}${err.stdout ?? ""}`;
+    }
+    const silenceStarts = [...stderr.matchAll(/silence_start:\s*(-?[\d.]+)/g)].map((m) => Number(m[1]));
+    const silenceEnds = [...stderr.matchAll(/silence_end:\s*(-?[\d.]+)/g)].map((m) => Number(m[1]));
+    /* A sound region begins at 0 when the window opens on sound, and at every
+       silence_end thereafter. These two films open on sound, which is exactly
+       why their energy onset reads 0.000 and why that number is useless here. */
+    const opensOnSound = !(silenceStarts.length && silenceStarts[0] <= 0.02);
+    const onsets = [...(opensOnSound ? [0] : []), ...silenceEnds].sort((a, b) => a - b);
+
+    /* ---- which word, and roughly where, from whisper ------------------- */
+    writeFileSync(man, JSON.stringify({
+      jobs: [{ key: "x", headWav: wav, tailWav: wav, tailOffset: 0 }],
+    }, null, 1));
+    const py = existsSync(".venv-whisper/bin/python3") ? ".venv-whisper/bin/python3" : "python3";
+    try {
+      await run(py, ["scripts/trim-words.py", `--manifest=${man}`, `--out=${out}`, `--model=${MODEL}`],
+        { maxBuffer: 1 << 24 });
+    } catch { /* per-film errors live in the output file */ }
+    if (!existsSync(out)) throw new Error("the whisper worker wrote nothing");
+    const rec = (JSON.parse(readFileSync(out, "utf8")) as Record<string, {
+      headWords?: { word: string; start: number; end: number }[]; headHeard: string; errors?: string[];
+    }>)["x"];
+    if (!rec) throw new Error("no record for this asset");
+    const words = rec.headWords ?? [];
+    if (!words.length) throw new Error("whisper decoded no words in the head window");
+    const idx = words.findIndex((x) => strip(x.word) === "aloha");
+    if (idx < 0) {
+      throw new Error(
+        `no "Aloha" in the first ${w.toFixed(0)}s — heard "${(rec.headHeard ?? "").slice(0, 90)}"`
+      );
+    }
+    if (idx === 0) throw new Error(`"Aloha" is already the first word, so there is nothing before it`);
+    const whisperStart = words[idx].start;
+
+    /*
+     * ---- THE CANDIDATE IS TESTED, NOT TRUSTED --------------------------
+     *
+     * The first build picked "the last energy onset at or just before whisper's
+     * timestamp" and got `Lasting Impressions, Part 12` wrong. Whisper placed
+     * its "Aloha" at 0.360s, which selected the 0.509s region — while the
+     * energy shows a silence running from just after 0.509 to 2.152s, and the
+     * 447 report independently put the second to look at near 2.04s.
+     *
+     * The reason is the same trap one level down: whisper ANCHORS the first
+     * word of a window to 0.00 and compresses what follows, so its absolute
+     * positions in a window that opens on sound are not measurements. It was
+     * trusted for WHICH word, correctly, and then quietly for WHERE, which is
+     * the thing it cannot do.
+     *
+     * So each candidate onset is TESTED: pull a short window starting exactly
+     * there and ask whisper what the first word is. The right anchor is the one
+     * whose window opens on "Aloha". Whisper is used only for word identity,
+     * which is what it is good at, and the answer is verified before a single
+     * frame is cut rather than after.
+     */
+    /*
+     * ORDER BY THE PAUSE IN FRONT, NOT BY WHISPER'S GUESS.
+     *
+     * Ordering candidates by nearness to whisper's timestamp got `Lasting
+     * Impressions, Part 12` wrong a second time, and the test did not catch it:
+     * whisper's 0.360s selected the 0.249s onset, a 4-second window from there
+     * contains the tail of "Prospect" AND the greeting, and whisper dropped the
+     * fragment and reported "Aloha," as the first word. A passing test for the
+     * wrong anchor, which would have cut 0.249s off a film that needs 1.85s off.
+     *
+     * The structure these films actually have is: stray word, a real pause,
+     * then the greeting. So the greeting is the onset with the LONGEST SILENCE
+     * in front of it — 1.55s on Part 12, against the 0.05–0.2s dips inside the
+     * stray word — and onsets preceded by less than a quarter second are not
+     * word boundaries at all, they are energy dips inside one.
+     *
+     * Candidates are still each tested by pulling from them, so the ordering
+     * only decides what is tried first. What makes the test meaningful is that
+     * a correct anchor has nothing but the greeting after it.
+     */
+    const gaps: { onset: number; pause: number }[] = [];
+    for (const o of onsets) {
+      if (o <= 0.1) continue;
+      /* the silence that ENDS at this onset */
+      let pause = 0;
+      for (let i = 0; i < silenceEnds.length; i++) {
+        if (Math.abs(silenceEnds[i] - o) < 0.001 && silenceStarts[i] != null) {
+          pause = silenceEnds[i] - silenceStarts[i];
+          break;
+        }
+      }
+      gaps.push({ onset: o, pause });
+    }
+    const MIN_PAUSE = 0.25;
+    const ordered = gaps
+      .filter((g) => g.pause >= MIN_PAUSE)
+      .sort((a, b) => b.pause - a.pause)
+      .slice(0, 6);
+    if (!ordered.length) {
+      throw new Error(
+        `no sound region in the first ${w.toFixed(0)}s is preceded by ${MIN_PAUSE}s of silence, so there ` +
+          `is no word boundary to anchor on — this film needs a human ear`
+      );
+    }
+    const tried: string[] = [];
+    for (const g of ordered) {
+      const first = await firstWordAt(playbackId, g.onset, 4);
+      tried.push(`${g.onset.toFixed(3)}s (after ${g.pause.toFixed(2)}s of silence) -> "${first ?? "—"}"`);
+      if (first != null && strip(first) === "aloha") {
+        return { energyOnset: g.onset, whisperStart, onsets, heard: rec.headHeard ?? "", tried };
+      }
+    }
+    throw new Error(
+      `no sound region opens on "Aloha". Tried: ${tried.join("; ")}. ` +
+        `Whisper placed the word at ${whisperStart.toFixed(3)}s in the full head window, but that is a ` +
+        `word identity and not a position — this film needs a human ear, not a wider tolerance`
+    );
+  } finally {
+    for (const f of [wav, man, out]) rmSync(f, { force: true });
+  }
+}
+
+/**
+ * The first word of an asset starting exactly at `from`, by whisper.
+ *
+ * Used to TEST a candidate cut point before anything is cut. Whisper is asked
+ * only which word it is — its position within this window is deliberately
+ * ignored, because anchoring the first word of a window to 0.00 is precisely
+ * the behaviour that made the candidate need testing in the first place.
+ */
+async function firstWordAt(playbackId: string, from: number, secs: number): Promise<string | null> {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const { mkdirSync, rmSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { randomUUID } = await import("node:crypto");
+  const run = promisify(execFile);
+
+  mkdirSync(WORK, { recursive: true });
+  const tag = randomUUID().slice(0, 8);
+  const wav = join(WORK, `${tag}-c.wav`);
+  const man = join(WORK, `${tag}-c-man.json`);
+  const out = join(WORK, `${tag}-c-out.json`);
+  try {
+    const token = await video().jwt.signPlaybackId(playbackId, { type: "video", expiration: "3600s" });
+    const hls = `https://stream.mux.com/${playbackId}.m3u8?token=${token}`;
+    await run("ffmpeg", ["-nostdin", "-hide_banner", "-loglevel", "error",
+      "-ss", from.toFixed(3), "-t", secs.toFixed(3), "-i", hls,
+      "-vn", "-ac", "1", "-ar", "16000", "-y", wav], { maxBuffer: 1 << 24 });
+    writeFileSync(man, JSON.stringify({
+      jobs: [{ key: "x", headWav: wav, tailWav: wav, tailOffset: 0 }],
+    }, null, 1));
+    const py = existsSync(".venv-whisper/bin/python3") ? ".venv-whisper/bin/python3" : "python3";
+    try {
+      await run(py, ["scripts/trim-words.py", `--manifest=${man}`, `--out=${out}`, `--model=${MODEL}`],
+        { maxBuffer: 1 << 24 });
+    } catch { /* per-film errors live in the output file */ }
+    if (!existsSync(out)) return null;
+    const rec = (JSON.parse(readFileSync(out, "utf8")) as Record<string, {
+      headWords?: { word: string }[];
+    }>)["x"];
+    return rec?.headWords?.[0]?.word ?? null;
+  } catch {
+    return null;
+  } finally {
+    for (const f of [wav, man, out]) rmSync(f, { force: true });
+  }
+}
+
 /* ---- --verify-rows ------------------------------------------------------- */
 /**
  * Read every cut film's row back and check it against the ledger.
@@ -950,6 +1277,7 @@ async function main() {
   requireEnv();
   if (MAKE_PLAN) return buildPlan();
   if (argv.includes("--reread")) return reread();
+  if (argv.includes("--find-aloha")) return findAloha();
   if (argv.includes("--verify-rows")) return verifyRows();
   if (argv.includes("--replan-from-master")) return replanFromMaster();
   if (argv.includes("--unpublish")) return unpublish();
@@ -1144,6 +1472,35 @@ async function main() {
         if (end >= srcAsset.duration - 0.05) {
           throw new Error(`the cut would remove nothing (end ${end} vs duration ${srcAsset.duration.toFixed(2)})`);
         }
+      } else if (r.expectFirstWord) {
+        /*
+         * ---- AN ALOHA-ANCHORED HEAD CUT IS NOT RECONCILED ON leadIn -------
+         *
+         * For these films `reportSecond` is the onset of the GREETING, not the
+         * onset of sound — they open on a stray word, so their `leadIn` is
+         * 0.000s by definition. Comparing the two refused both films with a
+         * "2.15s disagreement" between an energy onset and an Aloha onset:
+         * two numbers with the same name from different quantities, which is
+         * the thing the reconcile exists to prevent, committed by the
+         * reconcile itself.
+         *
+         * There is nothing to cross-check against here, and that is stated
+         * rather than papered over: the anchor was measured ON THIS MASTER by
+         * --find-aloha, tested by pulling from it and hearing "Aloha", and the
+         * independent check is the assertion below that the finished clip
+         * opens on the greeting. A gate on the result, not on a second guess
+         * at the input.
+         */
+        if (r.reportSecond == null) throw new Error("the plan carries no Aloha anchor for this film");
+        entry.reconcileGap = null;
+        entry.note = `${entry.note ? `${entry.note}; ` : ""}anchored on the greeting at ` +
+          `${r.reportSecond}s (measured on this master by --find-aloha, not cross-checked against the ` +
+          `447 reading — the check is that the clip opens on "${r.expectFirstWord}")`;
+        console.log(`           anchor: the greeting at ${r.reportSecond}s on this master ` +
+          `(leadIn is ${n(m.leadIn)}s — the stray word; not comparable, so not compared)`);
+        start = Math.max(0, Number((r.reportSecond - PAD_HEAD).toFixed(2)));
+        entry.trimStart = start; entry.padHead = PAD_HEAD;
+        if (start <= 0.05) throw new Error(`the cut would remove nothing (start ${start})`);
       } else {
         if (m.leadIn == null) throw new Error("no energy onset could be read from the master");
         const gap = r.reportSecond == null ? null : Number(Math.abs(m.leadIn - r.reportSecond).toFixed(3));
@@ -1258,6 +1615,17 @@ async function main() {
         if (after.leadIn == null) reasons.push("no onset could be read");
         else if (after.leadIn > HEAD_CEILING) reasons.push(`first sound at ${after.leadIn}s > ${HEAD_CEILING}s`);
         else if (after.leadIn < MIN_FIRST_WORD_START) reasons.push(`first sound at ${after.leadIn}s — cut into the first word`);
+        /* Where the cut was made to remove a specific word, the film has to
+           come back opening on the next one. See PlanRow.expectFirstWord. */
+        if (r.expectFirstWord) {
+          const got = strip(after.firstWord ?? "");
+          if (got !== r.expectFirstWord) {
+            reasons.push(
+              `opens on "${after.firstWord ?? "—"}" and this cut exists to make it open on ` +
+              `"${r.expectFirstWord}"`
+            );
+          }
+        }
       }
       /*
        * ---- DID THE CLIP COME BACK THE LENGTH THE CUT ASKED FOR? -----------

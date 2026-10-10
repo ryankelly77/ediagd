@@ -7,18 +7,18 @@ which is the rule `renditionsFor` and `pickRendition` apply — read once at a
 
 | | films |
 |---|---:|
-| **pass — nothing to do** | **408** |
-| **cut, verified before the swap** | **32** |
+| **pass — nothing to do** | **406** |
+| **cut, verified before the swap** | **34** |
 | unpublished, Mitch reshoots | 2 |
 | left alone, and why is said | 5 |
 | total | 447 |
 
-*Of the 62 on Ryan's list: **32 cut**, **23 passed**, 
+*Of the 62 on Ryan's list: **34 cut**, **21 passed**, 
 **2 unpublished**, **5 left alone**. The 385 that passed the 9 October
 reading are untouched and their rows are unchanged below.*
 
-*Of those 23 passes, **18 stand on the 9 October report's own evidence** and
-**5 stand on a fresh reading of the master that CONTRADICTS the report** — the master won,
+*Of those 21 passes, **18 stand on the 9 October report's own evidence** and
+**3 stand on a fresh reading of the master that CONTRADICTS the report** — the master won,
 and nothing else corroborates it. Those rows say so individually. The distinction matters: the
 first group needed no measurement, and the second is where the report was found to be wrong
 about the very thing it put the film on the list for.*
@@ -33,8 +33,8 @@ which reads `alohaAt` 0.58 on the master and 0.00 on the vertical with the same
 transcript. Across the 414 films whose vertical was compared, whisper's delta
 exceeds 0.5s on 7 films and energy's on 1 — so whisper would have staled 7 good crops.
 
-**Re-counted after this batch, 2026-10-09:** of 445 published films, a phone gets
-the vertical on **381** and the letterboxed master on **64** (64 `stale`, 0 with no crop).
+**Re-counted after this batch, 2026-10-10:** of 445 published films, a phone gets
+the vertical on **379** and the letterboxed master on **66** (66 `stale`, 0 with no crop).
 
 The 9 October reading counted 413 and 34, of a population of 447 that included the two
 films now unpublished. **32 of the stale crops are this batch's**, verified one by one
@@ -298,7 +298,7 @@ master), `none` (no crop exists).
 | Lasting Impressions, Part 1 | Craft | yes | 0.01 | 0.81 | ready | pass |
 | Lasting Impressions, Part 10 | Craft | yes | 0.00 | 0.76 | ready | pass |
 | Lasting Impressions, Part 11 | Craft | yes | 0.02 | 0.80 | ready | pass |
-| Lasting Impressions, Part 12 | Craft | yes | 0.00 | 0.54 | ready | pass — the master does not reproduce the report; no air at the head |
+| Lasting Impressions, Part 12 | Craft | yes | 0.30 | 0.54 | stale | cut at the greeting — opened on "Prospect", now "Aloha," with 0.30s of air |
 | Lasting Impressions, Part 2 | Craft | yes | 0.00 | 0.76 | stale | cut — 1.54s past Mahalo became 0.76s |
 | Lasting Impressions, Part 3 | Craft | yes | 0.02 | 0.82 | ready | pass |
 | Lasting Impressions, Part 4 | Craft | yes | 0.02 | 0.72 | ready | pass |
@@ -309,7 +309,7 @@ master), `none` (no crop exists).
 | Lasting Impressions, Part 9 | Craft | yes | 0.18 | 0.79 | ready | pass |
 | Lazy People vs. Winners | Mindset | yes | 0.00 | 1.33 | ready | pass |
 | Mediocre People Don't Like High Achievers | Mindset | yes | 0.00 | 1.44 | ready | pass |
-| Menu Wrap-Up, Part 1 | Craft | yes | 0.00 | 0.65 | ready | pass — the master does not reproduce the report; no air at the head |
+| Menu Wrap-Up, Part 1 | Craft | yes | 0.30 | 0.65 | stale | cut at the greeting — opened on "coverage.", now "Aloha." with 0.30s of air |
 | Menu Wrap-Up, Part 2 | Craft | yes | 0.00 | 0.90 | ready | pass |
 | Menus — Closer | Craft | yes | 0.02 | 0.78 | ready | pass |
 | More Life | Mindset | yes | 0.00 | 1.31 | ready | pass |
@@ -507,7 +507,7 @@ master), `none` (no crop exists).
 | You'll Never Feel Ready | Mindset | yes | 0.01 | 1.42 | ready | pass |
 | Your Toughest Opponent Is Staring at You | Mindset | no sign-off | — | 0.29 | stale | pass — closes "full...", not Mahalo; tail 0.29s is within standard |
 
-## Cut, and verified before the swap — 32
+## Cut, and verified before the swap — 34
 
 Each of these was measured on its **master** at a 10-second window, cut, and the clip read again **before any row pointed at it**. The swap marks the vertical `stale`, so a phone letterboxes the master that was just verified. Re-deriving the crops is t29 and is not this pass.
 
@@ -710,6 +710,18 @@ Each of these was measured on its **master** at a 10-second window, cut, and the
 - verified at a 10-second window **before** the swap; the crop is now `stale`, so a phone letterboxes this master
 - tail now: "our actions. In the car business, we need to use our words, our opportunity, and our trust with care. Mahalo."
 
+### Lasting Impressions, Part 12
+`7e15c899-dbec-4702-9973-82d5f528d12a` · Craft · 102s → 100s · vertical `stale`
+
+- **cut at the greeting − 0.3s pad.** It opened on sound at 0.00s with the stray word "Prospect" in front of the Aloha; it now opens on "Aloha," with 0.30s of air. Ryan's ruling, 9 October: a word before the greeting is what the head rule removes, not a different rule.
+- master 102.11s → 100.26s, which is what the cut asked for
+- opens on "Aloha," — the tail was untouched and reads 0.54s against 0.54s before
+- the anchor was measured on this master and **tested** — a short window pulled from 2.152s opens on "Aloha", after a pause of silence that separates the stray word from the greeting. There is no cross-check against the 447 reading here, and the gate is instead that the finished clip must open on "aloha", which it does.
+- cut from the **archive**: archive 119.11s holds a 102.11s master at 12.06s (needs 114.17s); the remaining 4.94s is a prior tail cut the old ledger did not record; master t maps to archive t + 12.06
+- verified at a 10-second window **before** the swap; the crop is now `stale`, so a phone letterboxes this master
+- tail now: "or, you wipe the mirror, you wave and that's the lasting impression a customer is gonna have with you. Mahalo!"
+- head now: "Aloha, two more things before the customer bounces. One asks for business. Are you currently prospecting at de"
+
 ### Lasting Impressions, Part 2
 `142ef72e-7ca4-4eee-943b-328b594546cb` · Craft · 110s → 109s · vertical `stale`
 
@@ -731,6 +743,18 @@ Each of these was measured on its **master** at a 10-second window, cut, and the
 - cut from the **archive**: archive 117.41s minus the prior head cut of 11.58s implies a 105.83s master and the master is 105.83s (off by 0.00s); master t maps to archive t + 11.58
 - verified at a 10-second window **before** the swap; the crop is now `stale`, so a phone letterboxes this master
 - tail now: "re you say anything else. And deferred, not decline, decline is so final. That's not what we're doing. Mahalo."
+
+### Menu Wrap-Up, Part 1
+`dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3` · Craft · 144s → 142s · vertical `stale`
+
+- **cut at the greeting − 0.3s pad.** It opened on sound at 0.00s with the stray word "coverage." in front of the Aloha; it now opens on "Aloha." with 0.30s of air. Ryan's ruling, 9 October: a word before the greeting is what the head rule removes, not a different rule.
+- master 144.01s → 142.30s, which is what the cut asked for
+- opens on "Aloha." — the tail was untouched and reads 0.65s against 0.65s before
+- the anchor was measured on this master and **tested** — a short window pulled from 2.012s opens on "Aloha", after a pause of silence that separates the stray word from the greeting. There is no cross-check against the 447 reading here, and the gate is instead that the finished clip must open on "aloha", which it does.
+- cut from the **archive**: archive 159.97s holds a 144.01s master at 11.42s (needs 155.43s); the remaining 4.54s is a prior tail cut the old ledger did not record; master t maps to archive t + 11.42
+- verified at a 10-second window **before** the swap; the crop is now `stale`, so a phone letterboxes this master
+- tail now: "in ends. You gotta report to the customer what they're getting for their money and how it is valuable. Mahalo!"
+- head now: "Aloha. We've walked the whole ladder, 5 ,000 to 150 ,000 miles. Now, here's a handful of things that make any"
 
 ### MPI Setup
 `508e939e-ed11-4c8d-8321-3b8f1bbde208` · Pitches by Op Code · 97s → 96s · vertical `stale`
@@ -867,7 +891,7 @@ Each of these was measured on its **master** at a 10-second window, cut, and the
 - tail now: "o you because then you lose their confidence. Next up, what we're actually looking for under the hood. Mahalo!"
 - head now: "2 minute walk around part 1. Pop the hood. Aloha. Now let's talk about the 2 minute walk around. We did the 30"
 
-## Passes as it is — 23
+## Passes as it is — 21
 
 The report already said enough. A film with no Mahalo heard still ends within the library's 1.5-second tail standard, and a film with no Aloha heard that starts talking at once has no air to remove. No cut, no reshoot.
 
@@ -931,22 +955,6 @@ The report already said enough. A film with no Mahalo heard still ends within th
 `2a458ec9-6f0c-4d77-ac95-3be768576347` · Craft · 70s · vertical `ready`
 
 - **passes as it is.** opens "That's" at 0.06s — Mitch is already talking, so there is nothing to cut
-- no cut, no reshoot.
-
-### Lasting Impressions, Part 12
-`7e15c899-dbec-4702-9973-82d5f528d12a` · Craft · 102s · vertical `ready`
-
-- **passes as it is.** the 447 report put this at 2.04s and the master reads 0.00s — a 2.04s disagreement the master wins. **The master opens on sound at 0.00s — there is no dead air to remove.** What it opens on is a stray word, "Prospect", before the Aloha. Removing that is a cut at the Aloha, which is a different decision from the one this batch was given, so the film is left alone and the finding is Ryan's to rule on.
-- measured on the master: 0.00s air then "Prospect" … "Mahalo!" then 0.54s
-- *this film's number comes from the master and nothing corroborates it — the 447 reading, which is the only other reading there is, disagrees.*
-- no cut, no reshoot.
-
-### Menu Wrap-Up, Part 1
-`dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3` · Craft · 144s · vertical `ready`
-
-- **passes as it is.** the 447 report put this at 1.86s and the master reads 0.00s — a 1.86s disagreement the master wins. **The master opens on sound at 0.00s — there is no dead air to remove.** What it opens on is a stray word, "coverage.", before the Aloha. Removing that is a cut at the Aloha, which is a different decision from the one this batch was given, so the film is left alone and the finding is Ryan's to rule on.
-- measured on the master: 0.00s air then "coverage." … "Mahalo!" then 0.65s
-- *this film's number comes from the master and nothing corroborates it — the 447 reading, which is the only other reading there is, disagrees.*
 - no cut, no reshoot.
 
 ### MPI Setup
@@ -1180,7 +1188,7 @@ trade than leaving them, so they are left and named here instead of quietly.
 
 ### The fallback path is where every tight result came from
 
-2 of the 32 cut films were clipped from their own master rather than an
+2 of the 34 cut films were clipped from their own master rather than an
 archive, because no ledger could explain the master's length. Those are the only cut films with a
 non-zero drift on the end they did not cut. The archive path produced `0.000s` every time. If this
 batch has one reusable lesson for the next one, it is that **a drift of zero is the signature of a

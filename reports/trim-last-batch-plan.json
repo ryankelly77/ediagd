@@ -13,10 +13,10 @@
  },
  "tally": {
   "tail-cut": 30,
-  "head-pass": 7,
+  "head-pass": 5,
   "tail-pass": 16,
   "unpublish": 2,
-  "head-cut": 5,
+  "head-cut": 7,
   "reread": 2
  },
  "rows": [
@@ -520,16 +520,17 @@
    "id": "7e15c899-dbec-4702-9973-82d5f528d12a",
    "title": "Lasting Impressions, Part 12",
    "series": "Craft",
-   "rule": "head-pass",
-   "reportSecond": 0,
+   "rule": "head-cut",
+   "reportSecond": 2.152,
    "reportTail": null,
    "reportVertical": "ready",
    "reportOpens": "Prospect.",
    "reportCloses": null,
    "masterAssetId": "Ny9YlrVI1WY6i4TMk5ZHLTH84tKEMojdZhS9xj9aOEY",
    "durationSec": 102,
-   "because": "the 447 report put this at 2.04s and the master reads 0.00s — a 2.04s disagreement the master wins. **The master opens on sound at 0.00s — there is no dead air to remove.** What it opens on is a stray word, \"Prospect\", before the Aloha. Removing that is a cut at the Aloha, which is a different decision from the one this batch was given, so the film is left alone and the finding is Ryan's to rule on.",
-   "reportSecondFrom": "master re-read, not independent"
+   "because": "**Ryan's ruling, 9 October: a word before the greeting is what the head rule removes.** The master opens on sound at 0.00s with the stray word \"Prospect.\", then the greeting. Whisper puts \"Aloha\" at ~0.36s; the energy onset of the region it falls in is 2.152s, and the cut is that minus the 0.3s pad — taken from energy, not from whisper, because a whisper timestamp sits inside the first phoneme and cutting 0.3s off one is what trim:recut had to be written to undo.",
+   "reportSecondFrom": "master re-read, not independent",
+   "expectFirstWord": "aloha"
   },
   {
    "id": "142ef72e-7ca4-4eee-943b-328b594546cb",
@@ -565,16 +566,17 @@
    "id": "dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3",
    "title": "Menu Wrap-Up, Part 1",
    "series": "Craft",
-   "rule": "head-pass",
-   "reportSecond": 0,
+   "rule": "head-cut",
+   "reportSecond": 2.012,
    "reportTail": null,
    "reportVertical": "ready",
    "reportOpens": "coverage.",
    "reportCloses": null,
    "masterAssetId": "ou0001mKhhbxC4sHh01NN01nrQT4fj02TYheLCa2dpK5C8p00",
    "durationSec": 144,
-   "because": "the 447 report put this at 1.86s and the master reads 0.00s — a 1.86s disagreement the master wins. **The master opens on sound at 0.00s — there is no dead air to remove.** What it opens on is a stray word, \"coverage.\", before the Aloha. Removing that is a cut at the Aloha, which is a different decision from the one this batch was given, so the film is left alone and the finding is Ryan's to rule on.",
-   "reportSecondFrom": "master re-read, not independent"
+   "because": "**Ryan's ruling, 9 October: a word before the greeting is what the head rule removes.** The master opens on sound at 0.00s with the stray word \"coverage.\", then the greeting. Whisper puts \"Aloha\" at ~1.90s; the energy onset of the region it falls in is 2.012s, and the cut is that minus the 0.3s pad — taken from energy, not from whisper, because a whisper timestamp sits inside the first phoneme and cutting 0.3s off one is what trim:recut had to be written to undo.",
+   "reportSecondFrom": "master re-read, not independent",
+   "expectFirstWord": "aloha"
   },
   {
    "id": "508e939e-ed11-4c8d-8321-3b8f1bbde208",
@@ -955,5 +957,6 @@
   }
  ],
  "rereadAt": "2026-10-09T17:40:56.280Z",
- "replannedAt": "2026-10-09T19:51:03.283Z"
+ "replannedAt": "2026-10-09T19:51:03.283Z",
+ "alohaAnchoredAt": "2026-10-10T01:47:32.049Z"
 }
