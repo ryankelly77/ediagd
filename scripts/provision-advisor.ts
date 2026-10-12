@@ -49,6 +49,18 @@
    for months.
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
+import {
+  ensureAppUser,
+  ensureMembership,
+  ensureRooftopProduct,
+  findAuthUserByEmail,
+  opCodeHeldByOthers,
+  resolveOperator,
+  resolveRooftop,
+  whoseBook,
+  type Result,
+  type Sb,
+} from "./provisioning";
 
 const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
   auth: { persistSession: false },
@@ -82,16 +94,19 @@ function required(): { email: string; rooftop: string; op: string } {
   return { email: EMAIL, rooftop: ROOFTOP, op: OP };
 }
 
-/** Page the auth list; there is no server-side email filter on listUsers. */
-async function findByEmail(email: string) {
-  const wanted = email.trim().toLowerCase();
-  for (let page = 1; ; page++) {
-    const { data, error } = await sb.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) throw new Error(error.message);
-    const hit = data.users.find((u) => (u.email ?? "").toLowerCase() === wanted);
-    if (hit) return hit;
-    if (data.users.length < 1000) return null;
-  }
+/*
+ * findByEmail, resolveRooftop, the op-code checks and the whose-book read-back
+ * now live in ./provisioning.ts, which scripts/provision-roster.ts imports too.
+ * They were lifted rather than copied: one implementation of "is this mapping
+ * safe", run by every script that provisions anybody.
+ *
+ * The shared versions RETURN a refusal instead of exiting, because the roster
+ * runner has eight more people to report on. This script's contract is
+ * unchanged — it still dies on the first one, through die() below.
+ */
+function must<T>(r: Result<T>): T {
+  if (r.ok) return r.value;
+  die(r.reason, r.hint);
 }
 
 async function main() {
@@ -99,133 +114,65 @@ async function main() {
   console.log(`\n  ${DRY ? "DRY RUN — nothing will be written" : "APPLYING"}\n`);
 
   /* ---- 1. The auth user must already exist ------------------------------ */
-  const user = await findByEmail(email);
+  const user = await findAuthUserByEmail(sb as unknown as Sb, email);
   if (!user) {
     die(
       `no auth user for ${email}`,
       "Invite them from Supabase Auth first (Authentication → Users → Invite), then re-run."
     );
   }
-  const pending = !user.email_confirmed_at;
+  const pending = !user.emailConfirmedAt;
   console.log(`  auth user     ${user.email}  id=${user.id}`);
   console.log(
     `  invite        ${pending ? "PENDING — the grant lands anyway and applies at first sign-in" : "accepted"}`
   );
 
   /* ---- 2. The rooftop --------------------------------------------------- */
-  const { data: roofs, error: roofErr } = await sb
-    .from("rooftop")
-    .select("id, name")
-    .eq("name", rooftop);
-  if (roofErr) throw new Error(`rooftop: ${roofErr.message}`);
-  if (!roofs?.length) die(`no rooftop named ${JSON.stringify(rooftop)}`);
-  if (roofs.length > 1) die(`${roofs.length} rooftops named ${JSON.stringify(rooftop)}`);
-  const roof = roofs[0];
+  const roof = must(await resolveRooftop(sb as unknown as Sb, rooftop));
   console.log(`  rooftop       ${roof.name}  id=${roof.id}`);
 
   /* ---- 3. The op code, which is the dangerous one ----------------------- */
-  const { data: operator, error: opErr } = await sb
-    .from("dms_advisor")
-    .select("advisor_op_id, display_name, last_seen, departed_on")
-    .eq("rooftop_id", roof.id)
-    .eq("advisor_op_id", op)
-    .maybeSingle();
-  if (opErr) throw new Error(`dms_advisor: ${opErr.message}`);
-  if (!operator) {
-    die(
-      `op code ${op} is not an operator at ${roof.name}`,
-      "An op code from another rooftop resolves to nothing and the pitch slot stays empty forever."
-    );
-  }
-  if (operator.departed_on) {
-    die(`op code ${op} (${operator.display_name}) departed on ${operator.departed_on}`);
-  }
-
-  /* Already held by somebody else? */
-  const { data: held, error: heldErr } = await sb
-    .from("membership")
-    .select("user_id, app_user:user_id(full_name)")
-    .eq("op_code_id", op)
-    .eq("active", true);
-  if (heldErr) throw new Error(`membership check: ${heldErr.message}`);
-  const others = (held ?? []).filter((h) => h.user_id !== user.id);
-  if (others.length) {
-    const who = others
-      .map((h) => (h.app_user as { full_name?: string } | null)?.full_name ?? h.user_id.slice(0, 8))
-      .join(", ");
-    die(
-      `op code ${op} is already held by ${who}`,
-      "Two accounts on one book is legitimate for owners, but say so explicitly rather than by accident."
-    );
-  }
+  const operator = must(await resolveOperator(sb as unknown as Sb, roof, op));
+  must(await opCodeHeldByOthers(sb as unknown as Sb, op, user.id));
 
   /* ---- 4. app_user ------------------------------------------------------ */
-  const { data: appUser } = await sb
-    .from("app_user")
-    .select("id, full_name")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!appUser) {
-    console.log(`  app_user      creating (${NAME ?? user.email})`);
-    if (!DRY) {
-      const { error } = await sb
-        .from("app_user")
-        .insert({ id: user.id, full_name: NAME ?? user.email });
-      if (error) throw new Error(`app_user insert: ${error.message}`);
-    }
-  } else {
-    console.log(`  app_user      exists (${JSON.stringify(appUser.full_name)})`);
-  }
+  const appUserOutcome = must(
+    await ensureAppUser(sb as unknown as Sb, user.id, NAME ?? user.email, DRY)
+  );
+  console.log(
+    appUserOutcome === "exists"
+      ? `  app_user      exists`
+      : `  app_user      creating (${NAME ?? user.email})`
+  );
 
   /* ---- 5. membership ---------------------------------------------------- */
-  const { data: mine } = await sb
-    .from("membership")
-    .select("id, rooftop_id, role, op_code_id, active")
-    .eq("user_id", user.id)
-    .eq("rooftop_id", roof.id)
-    .eq("role", ROLE)
-    .maybeSingle();
-  if (mine) {
-    console.log(`  membership    exists — op_code ${mine.op_code_id ?? "(none)"} -> ${op}`);
-    if (!DRY) {
-      const { error } = await sb
-        .from("membership")
-        .update({ op_code_id: op, active: true })
-        .eq("id", mine.id);
-      if (error) throw new Error(`membership update: ${error.message}`);
-    }
-  } else {
-    console.log(`  membership    creating  role=${ROLE}  op_code=${op}`);
-    if (!DRY) {
-      const { error } = await sb.from("membership").insert({
-        user_id: user.id,
-        rooftop_id: roof.id,
-        role: ROLE,
-        active: true,
-        op_code_id: op,
-      });
-      if (error) throw new Error(`membership insert: ${error.message}`);
-    }
-  }
+  /*
+   * ---- ONE TIGHTENING, AND IT IS NARROWER THAN IT FIRST WAS ---------------
+   *
+   * The lifted ensureMembership() still MAPS a book onto a membership that has
+   * none — which is this script's documented job for Sztaba and Pinder — and
+   * still reports an unchanged mapping as `exists`. What it no longer does is
+   * silently move somebody from one operator's numbers to ANOTHER's, which
+   * this script used to do on any re-run with a different --op-code.
+   *
+   * To genuinely repoint a book, clear the membership first, deliberately.
+   */
+  const memberOutcome = must(
+    await ensureMembership(sb as unknown as Sb, user.id, roof.id, ROLE, op, DRY)
+  );
+  console.log(
+    memberOutcome === "exists"
+      ? `  membership    exists  role=${ROLE}  op_code=${op}`
+      : `  membership    ${memberOutcome}  role=${ROLE}  op_code=${op}`
+  );
 
   /* ---- 6. rooftop entitlement ------------------------------------------ */
-  const { data: prod } = await sb
-    .from("rooftop_product")
-    .select("product")
-    .eq("rooftop_id", roof.id)
-    .eq("product", "advisor_base")
-    .maybeSingle();
-  if (!prod) {
-    console.log(`  entitlement   creating advisor_base for ${roof.name}`);
-    if (!DRY) {
-      const { error } = await sb
-        .from("rooftop_product")
-        .insert({ rooftop_id: roof.id, product: "advisor_base" });
-      if (error) throw new Error(`rooftop_product insert: ${error.message}`);
-    }
-  } else {
-    console.log(`  entitlement   advisor_base already on ${roof.name}`);
-  }
+  const prodOutcome = must(await ensureRooftopProduct(sb as unknown as Sb, roof.id, DRY));
+  console.log(
+    prodOutcome === "exists"
+      ? `  entitlement   advisor_base already on ${roof.name}`
+      : `  entitlement   creating advisor_base for ${roof.name}`
+  );
 
   if (KEEP) console.log(`  retention     flagged --do-not-delete (see the note printed below)`);
 
@@ -236,14 +183,12 @@ async function main() {
   console.log(`  WHAT THEY WILL SEE${DRY ? "  (projected — nothing was written)" : ""}`);
   console.log(`  ${"─".repeat(70)}`);
 
+  const book = whoseBook(operator, NAME ?? null);
   console.log(`\n  WHOSE BOOK`);
-  console.log(`    op code ${op}  =  ${operator.display_name}`);
-  console.log(`    last seen in the DMS feed: ${operator.last_seen ?? "never"}`);
-  const nameMatches =
-    (NAME ?? "").toLowerCase().split(/\s+/).some((w) => w.length > 2 &&
-      (operator.display_name ?? "").toLowerCase().includes(w));
+  console.log(`    op code ${op}  =  ${operator.displayName}`);
+  console.log(`    last seen in the DMS feed: ${operator.lastSeen ?? "never"}`);
   console.log(
-    `    ${nameMatches ? "matches the account name" : "DOES NOT match the account name — deliberate borrow, or a mistake?"}`
+    `    ${book.nameMatches ? "matches the account name" : "DOES NOT match the account name — deliberate borrow, or a mistake?"}`
   );
 
   /* The latest period for this rooftop, and the floor the loop applies. */

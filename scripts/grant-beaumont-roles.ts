@@ -40,6 +40,7 @@
    downgraded. Prints a read-back of every row it wrote or found.
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
+import { ensureMembership, orgRooftops, type Sb } from "./provisioning";
 
 const URL = process.env.SB_URL!;
 const KEY = process.env.SB_KEY!;
@@ -87,15 +88,10 @@ async function main() {
   let grants: Grant[] = [];
   switch (WHO) {
     case "lance": {
-      const { data: roofs, error } = await sb
-        .from("rooftop")
-        .select("id, name")
-        .eq("org_id", DOGGETT_ORG)
-        .order("name");
-      if (error) refuse(error.message);
-      if (!roofs || roofs.length === 0) refuse("no rooftops in the Doggett org");
-      grants = roofs.map((r) => ({ rooftopId: r.id as string, role: "admin", opCodeId: null }));
-      console.log(`\n  lance: admin at ${roofs.length} Doggett rooftop(s). NEVER is_platform_owner.`);
+      const roofs = await orgRooftops(sb as unknown as Sb, DOGGETT_ORG);
+      if (!roofs.ok) refuse(roofs.reason);
+      grants = roofs.value.map((r) => ({ rooftopId: r.id, role: "admin", opCodeId: null }));
+      console.log(`\n  lance: admin at ${roofs.value.length} Doggett rooftop(s). NEVER is_platform_owner.`);
       break;
     }
     case "patterson":
@@ -147,24 +143,14 @@ async function main() {
           : ""
     }`;
 
-    const { data: existing, error: existErr } = await sb
-      .from("membership")
-      .select("id, op_code_id, active")
-      .eq("user_id", USER_ID)
-      .eq("rooftop_id", g.rooftopId)
-      .eq("role", g.role)
-      .maybeSingle();
-    if (existErr) refuse(`${label}: ${existErr.message}`);
-
-    if (existing && (existing.op_code_id ?? null) !== g.opCodeId) {
-      refuse(
-        `${label}: a membership already exists with op code ` +
-          `${existing.op_code_id ?? "none"} — this script never repoints a book. ` +
-          `If the mapping should change, that is provision:advisor with Lance's ` +
-          `confirmation. Nothing was written.`
-      );
-    }
-    planned.push({ g, label, exists: Boolean(existing) });
+    /* dry:true — this is the CHECK half. ensureMembership refuses an existing
+       row carrying a different op code, which is this script's "never repoints
+       a book" rule, now shared with provision:roster rather than written twice. */
+    const probe = await ensureMembership(
+      sb as unknown as Sb, USER_ID!, g.rooftopId, g.role, g.opCodeId, true
+    );
+    if (!probe.ok) refuse(`${label}: ${probe.reason} Nothing was written.`);
+    planned.push({ g, label, exists: probe.value === "exists" });
   }
 
   for (const p of planned) {
@@ -176,14 +162,12 @@ async function main() {
       console.log(`  would   ${p.label}`);
       continue;
     }
-    const { error } = await sb.from("membership").insert({
-      user_id: USER_ID,
-      rooftop_id: p.g.rooftopId,
-      role: p.g.role,
-      op_code_id: p.g.opCodeId,
-      active: true,
-    });
-    if (error) refuse(`${p.label}: ${error.message} — earlier rows in this run WERE written; re-run to see current state`);
+    const wrote = await ensureMembership(
+      sb as unknown as Sb, USER_ID!, p.g.rooftopId, p.g.role, p.g.opCodeId, false
+    );
+    if (!wrote.ok) {
+      refuse(`${p.label}: ${wrote.reason} — earlier rows in this run WERE written; re-run to see current state`);
+    }
     console.log(`  wrote   ${p.label}`);
   }
 
