@@ -4806,5 +4806,59 @@
    "tail": null,
    "ok": true
   }
+ },
+ "QF01G7y6ZBnKNwftRCe400xdBVhWj3JeokvuWttzExfnM": {
+  "contentId": "21255996-7945-43df-bb4a-047bee505a10",
+  "title": "At the Kiosk",
+  "newAssetId": "Hu007S63XAsmDwqUVUgF2gtoOcBd4th02s6HUwQsfpEv4",
+  "trimStart": 12.1,
+  "trimEnd": 93.86,
+  "oldDuration": 98.67,
+  "newDuration": 82,
+  "cutAt": "2026-10-12T02:32:16.309Z",
+  "verified": {
+   "head": 0.3,
+   "tail": 0.5,
+   "ok": true
+  },
+  "expectedDuration": 81.76,
+  "durationOk": true,
+  "backfilledBy": "ingest 11 October — replace:video trims inline and writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "e98DVFUm9JfKylLhvr8QWAhEoBvEJAkb4izYbrL9YJo": {
+  "contentId": "64b33bb7-c09d-473a-bb10-2e91aec34aa1",
+  "title": "MPI Setup",
+  "newAssetId": "u4avygV00YWfQBrHKO3qGWKznfnlzjHYY26EmhJClz24",
+  "trimStart": 10.9,
+  "trimEnd": 120.7,
+  "oldDuration": 125.14,
+  "newDuration": 110,
+  "cutAt": "2026-10-12T02:32:16.309Z",
+  "verified": {
+   "head": 0.23,
+   "tail": 0.49,
+   "ok": true
+  },
+  "expectedDuration": 109.8,
+  "durationOk": true,
+  "backfilledBy": "ingest 11 October — replace:video trims inline and writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "IesmnEyCN7IMYWlNo01APOjdJlWIvTe00OrptAy2kRdk4": {
+  "contentId": "142cef75-cd8d-4b67-8a1c-4539f922c024",
+  "title": "At the Kiosk, Part 2",
+  "newAssetId": "7aHvq7ZPJqKZVgJUqqhigV3QaVoOwmmFRPj8ANysUWs",
+  "trimStart": 10.6,
+  "trimEnd": 152.32,
+  "oldDuration": 156.94,
+  "newDuration": 142,
+  "cutAt": "2026-10-12T03:23:53.435Z",
+  "expectedDuration": 141.72,
+  "durationOk": true,
+  "backfilledBy": "ingest 11 October — new draft, cut with replace:video --trim-only, which writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the cut.",
+  "verified": {
+   "head": 0.17,
+   "tail": 0.49,
+   "ok": true
+  }
  }
 }
