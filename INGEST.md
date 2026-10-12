@@ -202,6 +202,9 @@ On Ryan's confirmation of the dry-run table: upload to Mux. New films land **dra
 **Trimming is the dangerous part of this pipeline. A double-trim is invisible — the film still plays, it just starts mid-sentence.**
 
 - `replace:video` trims reshoots **inline** and does **not** write the trim ledger. The ledger is therefore incomplete by construction and must never be the sole check.
+- **`replace:video` keeps the untrimmed upload, and that is what a later re-cut must be taken from.** When a run both uploads a file and trims it, the row is swapped **twice** — the untrimmed upload first, carrying the version and the canonical name, then the clip, carrying neither (0107: a trim is the same take cut differently). `archived_asset_id` is therefore the **untrimmed generation of the current master**, not the superseded previous version.
+
+  *Why, and it was paid for.* A reshoot replaced as v2 and trimmed inline used to record only the trimmed asset, so when PR #59 needed to re-cut three of them there was nothing to cut from: `mux://assets/<clip>` makes Mux resolve back to the underlying source and land before the clip's zero, returning exactly the length asked for and the wrong content. The cost of the fix is that the row stops pointing at the superseded v1 asset — accepted, because v1's master is still on the shelf under `04 - Archive` as "(superseded by vN)" while the untrimmed v2 upload had no other record anywhere.
 - **Verify trims from durations, not from the ledger or the ingest report**: full audio length minus slate offset, compared against live duration, for every file in the batch. That comparison is unambiguous; a ledger lookup is not.
 - After any trim applied outside the ledger-writing path, **backfill the ledger row** so the next blanket run can't re-cut it.
 - Never run `trim:slates --apply` across a set without duration-verifying that set first.

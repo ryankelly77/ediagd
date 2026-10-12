@@ -427,9 +427,79 @@ async function main() {
    * scripts/trim-last-batch.ts carries the working construction to copy.
    * ---------------------------------------------------------------------------
    */
+  /*
+   * ---------------------------------------------------------------------------
+   * THE UNTRIMMED UPLOAD IS RECORDED BEFORE THE TRIMMED ASSET TAKES OVER.
+   * ---------------------------------------------------------------------------
+   * Carried in from PR #59, which is where the cost showed up. A reshoot
+   * replaced as v2 and trimmed inline recorded only the TRIMMED asset: the one
+   * swap at step 5 put the superseded v1 asset into archived_asset_id and the
+   * clip into mux_asset_id, so the untrimmed v2 upload was referenced from
+   * nowhere. When the trim batch then needed to re-cut three of those films
+   * there was nothing to cut from — clipping a clip makes Mux resolve back to
+   * the underlying source and land before the clip's zero, which is the hazard
+   * note below, and the archive that note says to clip instead held the wrong
+   * generation.
+   *
+   * The fix is ORDER, not new SQL, and that is why there is no migration with
+   * it. replace_master_asset already copies whatever mux_asset_id currently is
+   * into archived_asset_id, so swapping twice — upload first, clip second —
+   * leaves exactly the right thing behind:
+   *
+   *   before          archived = (whatever)   master = v1
+   *   swap 1 (upload) archived = v1           master = v2 untrimmed   <- version + name move here
+   *   swap 2 (clip)   archived = v2 untrimmed master = v2 trimmed
+   *
+   * and `archived_asset_id` is then the generation a later --trim-only must cut
+   * from. 0107 already drew this line: a trim is the same take cut differently
+   * and must not bump the version, so the version and the canonical name ride
+   * the FIRST swap and the second passes null for both.
+   *
+   * WHAT THIS COSTS, said plainly: the row stops pointing at the superseded v1
+   * asset. That is a real loss and it is the lesser one — v1's master is still
+   * on the shelf (0107 renames it "(superseded by vN)" and moves it to
+   * 04 - Archive), whereas the untrimmed v2 upload exists ONLY as a Mux asset
+   * and had no other record at all. One of the two had to be the pointer; the
+   * one with no other copy wins.
+   *
+   * Only on the path where a file was uploaded AND a trim is being applied. A
+   * --trim-only run has no new upload to record and is untouched by this.
+   */
+  const trimmingAFreshUpload =
+    (trimStart != null || trimEnd != null) && !trimOnly && !assetOnly && !!newAssetId;
+
+  /*
+   * The untrimmed upload, held until the clip is ready — see the swap pair
+   * just before step 5. The id is captured HERE because `newAssetId` is about
+   * to be overwritten by the clip.
+   *
+   * WHY NOT SWAP IT IN RIGHT NOW, which was this change's first shape: the
+   * clip takes minutes, and a swap before it would leave the published row
+   * serving the UNTRIMMED take — slate and all — for every one of them. The
+   * old behaviour kept v1 live until a single swap at the end, and a fix for a
+   * bookkeeping gap must not put a spoken slate in front of an advisor's
+   * morning to get it. Holding the id costs nothing and closes the window to
+   * the gap between two back-to-back RPCs.
+   */
+  const untrimmed = trimmingAFreshUpload
+    ? {
+        assetId: newAssetId!,
+        playbackId: asset!.playback_ids?.find((p) => p.policy === "signed")?.id,
+        duration: asset!.duration ? Math.round(asset!.duration) : null,
+        canonical: path.basename(file!),
+      }
+    : null;
+  if (untrimmed && !untrimmed.playbackId) {
+    throw new Error("the uploaded asset has no signed playback id");
+  }
+
   if (trimStart != null || trimEnd != null) {
     console.log(`\n  Trimming…`);
-    if (row.archived_asset_id) {
+    /* After the swap above, a fresh upload's archived_asset_id is the untrimmed
+       asset we just put there — which is the thing this clip is being cut from
+       anyway, so the hazard does not apply. Warn only when the master really is
+       a clip of something else. */
+    if (row.archived_asset_id && !trimmingAFreshUpload) {
       console.log(
         `    NOTE: this row already has an archived asset, so its master is itself a clip.\n` +
         `          Clipping a clip shifts the result — see the hazard note in this file.\n` +
@@ -459,14 +529,46 @@ async function main() {
 
   /* ---- 5. Swap ------------------------------------------------------------ */
   /*
+   * TWO SWAPS, BACK TO BACK, WHEN A FRESH UPLOAD WAS TRIMMED. The first puts
+   * the untrimmed upload on the row so the second leaves it in
+   * `archived_asset_id`; see the long note at step 4. Both happen after the
+   * clip is ready, so the row is only briefly untrimmed rather than untrimmed
+   * for the length of a transcode.
+   */
+  if (untrimmed) {
+    const uploadVersion = Number(
+      untrimmed.canonical.match(/—\s*v(\d+)\.[a-z0-9]+$/i)?.[1] ?? row.version + 1
+    );
+    const { data: first, error: firstErr } = await sb.rpc("replace_master_asset", {
+      _content_id: contentId,
+      _new_asset_id: untrimmed.assetId,
+      _new_playback_id: untrimmed.playbackId!,
+      _new_duration: untrimmed.duration,
+      _new_version: uploadVersion,
+      _new_canonical: untrimmed.canonical,
+    });
+    if (firstErr) throw new Error(firstErr.message);
+    console.log(`\n  Untrimmed upload recorded first: ${JSON.stringify(first)}`);
+  }
+
+  /*
    * The version and the name move with the asset — but only for a real
    * replacement. A --trim-only run is the SAME take cut differently, and
    * bumping it would invent a take that was never shot. See 0107, which was
    * written after fifty-four reshoots left their rows claiming v1 of a file
    * that had already been archived under another name.
    */
-  const newCanonical = trimOnly || assetOnly ? null : path.basename(file!);
-  const newVersion = trimOnly || assetOnly
+  /*
+   * `trimmingAFreshUpload` joins trimOnly and assetOnly here, and for 0107's
+   * own reason rather than a new one: on that path the version and the name
+   * already moved with the FIRST swap, and this second one is a trim — the
+   * same take cut differently. Passing them again would be harmless today
+   * (coalesce would write the same values) and wrong in principle, and the
+   * principle is the thing 0107 exists to state.
+   */
+  const sameTake = trimOnly || assetOnly || trimmingAFreshUpload;
+  const newCanonical = sameTake ? null : path.basename(file!);
+  const newVersion = sameTake
     ? null
     : Number(newCanonical!.match(/—\s*v(\d+)\.[a-z0-9]+$/i)?.[1] ?? row.version + 1);
 
