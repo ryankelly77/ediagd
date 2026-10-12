@@ -203,7 +203,7 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
      * outbox_policy.cadence.
      */
     title: "Welcome to EDIAGD",
-    body: "Your first morning is three minutes — a mindset video and one idea for the drive.",
+    body: "Your first morning is about five minutes — a mindset video and one idea for the drive.",
     deepLink: "/today?opened_via=start",
     tokens: [],
     why:

@@ -1,9 +1,9 @@
--- 0148_site_lead.sql
+-- 0150_site_lead.sql
 --
--- REFERENCE COPY. This file lives in the ediagd-site repo so the site's
--- /api/lead function ships next to the schema it depends on. It is NOT applied
--- from here. Copy it into the app repo's supabase/migrations/ chain (it is the
--- same Supabase project) and apply it there, keeping the numbering.
+-- Applied from here, on 2026-10-01. The ediagd-site repo keeps a copy under
+-- supabase/ so the site's /api/lead function ships next to the schema it
+-- depends on; the SQL below is identical, only the headers differ. That copy is
+-- never applied. Change the two together.
 --
 -- Book a Call submissions from ediagd.ai. Written only by the marketing site's
 -- serverless function, which holds the service role key. RLS is on and no
