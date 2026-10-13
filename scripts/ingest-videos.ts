@@ -64,7 +64,7 @@ import {
   resolveStage,
   routeFor,
   splitPrefix,
-  type Route as RoutingRoute,
+  type Route,
   type RoutingTables,
 } from "../lib/video/ingest-routing";
 
@@ -180,27 +180,20 @@ function requireDir(): string {
  * so it rides in `subcategory`: a label a later lesson-assignment pass can
  * group on, and which is visibly a tag rather than pretending to be a link.
  */
-type Route = {
-  placement:
-    | "daily_lifestyle"
-    | "daily_pitch"
-    | "onboarding_intro"
-    | "technician_daily"
-    | "reference"
-    | null;
-  /** The shelf. Was `series` until 0063 replaced it. */
-  collection: string | null;
-  craftSeries: string | null;
-  /**
-   * The content type, when it is not the advisor default.
-   *
-   * COLLECTION IS A SHELF; TYPE IS THE ACCESS RULE. content_entitled_read
-   * resolves roles_for_content_type(content.type) and has never looked at
-   * collection, so a technician video filed as advisor_video would be a
-   * technician video every advisor can see. See 0091.
-   */
-  contentType?: "advisor_video" | "technician_video";
-};
+/*
+ * ---- ONE Route TYPE, AND THIS FILE USED TO CARRY A SECOND ------------------
+ *
+ * There was a local `Route` here alongside the imported one, and it had already
+ * gone stale exactly the way 0131 predicted: its `placement` was a literal
+ * union of five values that never gained `daily_craft`, which 0131 added a
+ * month ago. The migration's own comment names three TypeScript sites that
+ * enumerate placements and "are already stale by two"; this was a fourth.
+ *
+ * Deleted rather than extended. lib/video/ingest-routing.ts owns the shape,
+ * routeFor() returns it, and ROUTES below is typed by it — so a new placement
+ * or a new content type is one edit, in the file that defines the enum's
+ * TypeScript mirror, and this script cannot disagree with the router it calls.
+ */
 
 const ROUTES: Record<string, Route> = {
   // Live in the daily loop's lifestyle slot, in the mindset rotation.
@@ -240,6 +233,39 @@ const ROUTES: Record<string, Route> = {
     collection: "Technician Training",
     craftSeries: null,
     contentType: "technician_video",
+  },
+  /*
+   * The managers' own track (12 October, the Manager Bank Account series).
+   *
+   * THE TYPE IS THE WHOLE GATE, AND THE PLACEMENT IS DELIBERATELY NULL.
+   *
+   * `manager_video` already maps to the `manager_meetings` product — 0010 and
+   * 0091 both carry that arm — so content_entitled_read resolves it to the
+   * manager role and an advisor cannot read these at all. /meetings selects on
+   * `type = 'manager_video'` and `status`, and reads no placement.
+   *
+   * A null placement is normally the worst of both worlds — 0128's menu films
+   * were invisible to the shelf that selects the value AND not excluded by the
+   * gate that excludes it. It is safe HERE because nothing selects on it for
+   * this type and every picker that reads placement names a value this is not:
+   * mindset wants daily_lifestyle, the mileage shelf wants reference,
+   * technician wants technician_daily. The pitch slot does not read placement
+   * at all — it reads service_family_content, which needs an op code or a
+   * family tag, and these films have neither.
+   *
+   * So a manager film cannot reach an advisor's morning by construction rather
+   * than by a value somebody remembered to set. If that ever stops being true,
+   * the fix is a `manager_meeting` placement and a migration, not a comment.
+   *
+   * service_family is left null by the ingest, which is what /meetings wants:
+   * its general bucket is `service_family is null` and sorts first, and a
+   * leadership series belongs to no service.
+   */
+  MANAGER: {
+    placement: null,
+    collection: "Manager Meetings",
+    craftSeries: null,
+    contentType: "manager_video",
   },
 };
 
@@ -609,7 +635,7 @@ async function main() {
   /* A collection reached through an alias still needs a placement. These are
      the shelves the static routes already describe, keyed by collection name
      rather than by prefix. */
-  const collectionRoutes: Record<string, RoutingRoute> = {};
+  const collectionRoutes: Record<string, Route> = {};
   for (const r of Object.values(ROUTES)) {
     if (r.collection) collectionRoutes[r.collection] = r;
   }

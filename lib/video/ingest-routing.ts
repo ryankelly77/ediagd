@@ -46,7 +46,22 @@ export type Route = {
   placement: string | null;
   collection: string | null;
   craftSeries: string | null;
-  contentType?: "advisor_video" | "technician_video";
+  /**
+   * The content type, when it is not the advisor default.
+   *
+   * COLLECTION IS A SHELF; TYPE IS THE ACCESS RULE. content_entitled_read
+   * resolves roles_for_content_type(content.type) and has never looked at
+   * collection, so a technician video filed as advisor_video would be a
+   * technician video every advisor can see. See 0091.
+   *
+   * `manager_video` added 12 October for the Manager Bank Account series. It
+   * is the same shape as the technician case and for the same reason: 0010 and
+   * 0091 already map the type to the `manager_meetings` product, and
+   * /meetings selects on `type = 'manager_video'` and nothing else. The type
+   * is what keeps the series away from advisors — not the collection, and not
+   * the placement, which is null for these and reads nothing.
+   */
+  contentType?: "advisor_video" | "technician_video" | "manager_video";
   /** Set only for op-code films. `Pitches by Op Code` requires it — see 0063. */
   opCode?: string | null;
 };
