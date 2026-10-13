@@ -1,22 +1,32 @@
 /* ============================================================================
-   EDIAGD — the twice-daily Rollcall post to #ediagd
+   EDIAGD — the end-of-day Rollcall post to #ediagd
 
    Ryan, 6 October: the six facts per advisor, and "Slack it to #ediagd too".
 
    ---------------------------------------------------------------------------
    THE SCHEDULE, AND THE DST CAVEAT IT CARRIES
    ---------------------------------------------------------------------------
-   vercel.json: `30 12,22 * * *`. That is 07:30 and 17:30 CENTRAL DAYLIGHT time
-   (UTC-5). Vercel crons are UTC and do not observe DST, so from the first
-   Sunday in November to the second Sunday in March they fire at 06:30 and
-   16:30 Central.
+   vercel.json: `30 22 * * *`. That is 17:30 CENTRAL DAYLIGHT time (UTC-5).
+   Vercel crons are UTC and do not observe DST, so from the first Sunday in
+   November to the second Sunday in March it fires at 16:30 Central.
+
+   ONCE A DAY, AT THE END OF IT. It was 07:30 and 17:30 when this shipped;
+   Ryan, 13 October: "we don't need a roll call slack message at 7am. the one
+   at 530p is fine." The morning post said the same thing as the previous
+   evening's in almost every case — nobody onboards between midnight and
+   half past seven — so it cost a notification to repeat yesterday.
+
+   THE "WHAT CHANGED" WINDOW WIDENS TO MATCH, and nothing had to change for
+   that: the diff is keyed on the last SUCCESSFUL post, held in the heartbeat's
+   detail, not on a fixed interval. Dropping a post makes the next one cover
+   twenty-four hours instead of twelve, automatically.
 
    ACCEPTED RATHER THAN WORKED AROUND, and the comparison is the argument:
    streak-saver runs HOURLY and asks every rooftop what time it is there,
    because a notification promised at 7pm is wrong at any other hour. This is a
-   status post into a team channel. An hour's winter drift costs nothing, and a
-   second hourly cron to avoid it would be twenty-four invocations a day for a
-   message sent twice. There is no note in vercel.json itself because Vercel
+   status post into a team channel. An hour's winter drift costs nothing, and
+   an hourly cron to avoid it would be twenty-four invocations a day for a
+   message sent once. There is no note in vercel.json itself because Vercel
    validates that file against its schema and rejects keys it does not know.
 
    If it ever does need to be exact, the fix is the streak-saver shape — run
@@ -29,7 +39,7 @@
    loadRollcall, once, for both. A hand-rolled aggregation for the message
    would be a second answer to the same question — and the one nobody opens is
    the one that drifts, which is how a confident wrong number gets into a
-   channel twice a day with nobody checking it against the screen.
+   channel every evening with nobody checking it against the screen.
 
    ---------------------------------------------------------------------------
    THE SERVICE CLIENT, AND WHY THAT IS NOT A HOLE
