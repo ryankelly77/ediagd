@@ -12195,6 +12195,40 @@
    "headHeard": "Tires on the drive part two. Aloha. You've read the tire, you shared the color. Maybe you even read all four. Now the part that matters most. Safety. Look, tread is the only thing between a customer and the road",
    "tailHeard": "once you've measured and you see some red give that information to them and let them do their gig. Remember what we want to do measure the tires get ready and go give them some options at the kiosk. Mahalo!",
    "error": null
+  },
+  {
+   "id": "95e92303-b68b-48f2-afe1-6d7b1a48feb5",
+   "title": "Bank Account 02, Deposit 1, Keeping Your Word",
+   "collection": "Manager Meetings",
+   "placement": null,
+   "assetDuration": 120.77,
+   "durationSec": 121,
+   "alohaAt": 6.44,
+   "mahaloEnd": 119.12,
+   "head": 6.44,
+   "tail": 1.6499999999999915,
+   "headMeasuredBy": "whisper word timestamps on the untrimmed master, 14 October",
+   "tailMeasuredBy": "whisper word timestamps on the untrimmed master, 14 October",
+   "note": "over-cut at pad 0.3 — trim:verify read 0.061s of air before Aloha, under the 0.15s floor. Re-cut from the archive at pad 0.6.",
+   "proposedStart": 6.14,
+   "proposedEnd": 119.82
+  },
+  {
+   "id": "d935f1e3-ab13-4c96-8d8d-0ddf1107260c",
+   "title": "Bank Account 05, Withdrawal 2, Taking Credit",
+   "collection": "Manager Meetings",
+   "placement": null,
+   "assetDuration": 133.63,
+   "durationSec": 134,
+   "alohaAt": 5.96,
+   "mahaloEnd": 131.74,
+   "head": 5.96,
+   "tail": 1.8899999999999864,
+   "headMeasuredBy": "whisper word timestamps on the untrimmed master, 14 October",
+   "tailMeasuredBy": "whisper word timestamps on the untrimmed master, 14 October",
+   "note": "over-cut at pad 0.3 — trim:verify read 0.137s of air before Aloha, under the 0.15s floor. Re-cut from the archive at pad 0.6.",
+   "proposedStart": 5.66,
+   "proposedEnd": 132.44
   }
  ]
 }
