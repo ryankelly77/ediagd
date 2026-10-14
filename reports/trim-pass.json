@@ -4806,5 +4806,311 @@
    "tail": null,
    "ok": true
   }
+ },
+ "BjDI5YCcAS4w02sA026jKufOMjseUlg9201ylCTCMtCacE": {
+  "contentId": "0bed2876-a481-49a0-bdb5-ecee2ade6d44",
+  "title": "Bank Account 01, Introduction",
+  "newAssetId": "eSANUQhhZD5CphT21Pp5a0102Fyyi00V013HDxY4X02CzSwA",
+  "trimStart": 7.6,
+  "trimEnd": 101.16,
+  "oldDuration": 102,
+  "newDuration": 94,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 93.56,
+  "durationOk": true,
+  "verified": {
+   "head": 0.625,
+   "tail": 0.488,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "KRNTjYHsRHcxAgcfV9YbepOpTdY01cUB6Vs7cPUEIjww": {
+  "contentId": "95e92303-b68b-48f2-afe1-6d7b1a48feb5",
+  "title": "Bank Account 02, Deposit 1, Keeping Your Word",
+  "newAssetId": "EsJLs2dPYQe02c02J69thSa76NWcRmSunWJ01ToJHQrb1o",
+  "trimStart": 6.14,
+  "trimEnd": 119.82,
+  "oldDuration": 121,
+  "newDuration": 113,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 113.68,
+  "durationOk": true,
+  "verified": {
+   "head": 0.299,
+   "tail": 0.52,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "gNjudtbCilo57500N5DWf9peKANAfWEQhzoXWUGCH9Z8": {
+  "contentId": "8c8b88cd-ab7a-43b5-a213-6dbb5da90778",
+  "title": "Bank Account 03, Withdrawal 1, Breaking Promises",
+  "newAssetId": "HPRqH4TJQ211K17E2kNcdcP8ubxIQnc7sqCN9riRvow",
+  "trimStart": 5.98,
+  "trimEnd": 109.44,
+  "oldDuration": 110,
+  "newDuration": 103,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 103.46,
+  "durationOk": true,
+  "verified": {
+   "head": 0.246,
+   "tail": 0.519,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "tpmTLvrQM8wEz5N9kPUsz75XQnz8WJCN00PPTPS4KEXM": {
+  "contentId": "f7467325-5acd-4b4c-a438-09f554ac3c0a",
+  "title": "Bank Account 04, Deposit 2, Giving Credit",
+  "newAssetId": "c02uvVl009hugZS8D5GPnnw4B3GUEJm5seyqMHBypwfXI",
+  "trimStart": 6.44,
+  "trimEnd": 124.58,
+  "oldDuration": 125,
+  "newDuration": 118,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 118.14,
+  "durationOk": true,
+  "verified": {
+   "head": 0.548,
+   "tail": 0.506,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "yO8W4SovxE7WMURMBNGYziWelpbO6x8H4wsahOFRIVQ": {
+  "contentId": "d935f1e3-ab13-4c96-8d8d-0ddf1107260c",
+  "title": "Bank Account 05, Withdrawal 2, Taking Credit",
+  "newAssetId": "oeQr6QPxqyE11qji00Z02FnzAo1bZCsa48qbkdwj2NMGw",
+  "trimStart": 5.66,
+  "trimEnd": 132.44,
+  "oldDuration": 134,
+  "newDuration": 127,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 126.78,
+  "durationOk": true,
+  "verified": {
+   "head": 0.435,
+   "tail": 0.624,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "sENpGNpEBGJk5lDK46tBsEhh6kzaPhmfciMjActoYbk": {
+  "contentId": "6834bcb8-60cf-49d8-a7eb-3f2c0961a914",
+  "title": "Bank Account 06, Deposit 3, Communicating Honestly",
+  "newAssetId": "c4Cccz6lxa1LQv97wfiVS2XCx5lWzH4Bk02ZUZgx02blM",
+  "trimStart": 6.74,
+  "trimEnd": 138.16,
+  "oldDuration": 139,
+  "newDuration": 131,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 131.42,
+  "durationOk": true,
+  "verified": {
+   "head": 0.485,
+   "tail": 0.541,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "ph5N7c602IZaVRKUrPZjPwrBU00THy00OYOQ5Du5PV4zoI": {
+  "contentId": "64a29122-615f-43f4-8dc5-8fb56c38f971",
+  "title": "Bank Account 07, Withdrawal 3, Avoiding Hard Conversations",
+  "newAssetId": "72ABkX2LTzfjM9402802K6VZacvYWs0100smlWzGAaFNKSY",
+  "trimStart": 7.18,
+  "trimEnd": 133.2,
+  "oldDuration": 134,
+  "newDuration": 126,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 126.02,
+  "durationOk": true,
+  "verified": {
+   "head": 0.324,
+   "tail": 0.54,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "bPcVPkhRLswvKNHVO3qcY00PeYwdK9bsKmBMBJTqLz00Y": {
+  "contentId": "9da7038d-ebdc-4291-8ec7-0346b1c009b3",
+  "title": "Bank Account 08, Deposit 4, Having Someone's Back",
+  "newAssetId": "Dnf9p4Mjg5DL01Mwt00RqMB02nvZnPyRoKNBOczVJmP7cM",
+  "trimStart": 5.5,
+  "trimEnd": 124.96,
+  "oldDuration": 126,
+  "newDuration": 119,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 119.46,
+  "durationOk": true,
+  "verified": {
+   "head": 0.277,
+   "tail": 0.591,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "02hcNAzclBVEOEa8jPks6eX8x016EsD4027AH1eT6nVHg00": {
+  "contentId": "cfda7d49-29de-469f-ac5c-55aef69f2524",
+  "title": "Bank Account 09, Withdrawal 4, Making People Afraid to Make Mistakes",
+  "newAssetId": "IevWp22aOoSfjfuiOo01DUEW2ufvQOrybTWsWYyJrpEQ",
+  "trimStart": 7.84,
+  "trimEnd": 139.9,
+  "oldDuration": 140,
+  "newDuration": 132,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 132.06,
+  "durationOk": true,
+  "verified": {
+   "head": 0.52,
+   "tail": 0.542,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "N00nJDLeKa1E897oLn00o74100a5RGyZpiM1p6sNcwC8oY": {
+  "contentId": "ff9152f3-4603-484e-918d-94c82b5b05a7",
+  "title": "Bank Account 10, Deposit 5, Giving Feedback With Respect",
+  "newAssetId": "v021W6qZSDoNvC025mQ6eU5BKBEN3vt5XR1FzYCpkThUA",
+  "trimStart": 6.28,
+  "trimEnd": 154.16,
+  "oldDuration": 155,
+  "newDuration": 148,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 147.88,
+  "durationOk": true,
+  "verified": {
+   "head": 0.651,
+   "tail": 0.581,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "O2IWrnVNzMNsIabkmqTmQ6jPHQC5XkImjacG13E2lXA": {
+  "contentId": "21dd926b-193f-4eda-ab0e-f401d2717b8f",
+  "title": "Bank Account 11, Withdrawal 5, Changing Expectations Without Explanation",
+  "newAssetId": "hFkHNiA2NsQKgQhfhQmdz01oryS7XrJoTYAW00c9Js98Y",
+  "trimStart": 9.28,
+  "trimEnd": 150.98,
+  "oldDuration": 152,
+  "newDuration": 142,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 141.7,
+  "durationOk": true,
+  "verified": {
+   "head": 0.468,
+   "tail": 0.553,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "lD00loTZRuQ6dx02oHQh5LT3y1QRxaOmXippNKgUuYYys": {
+  "contentId": "4847165c-d197-42a5-86f0-d28791bef06f",
+  "title": "Bank Account 12, Deposit 6, Admitting When You're Wrong",
+  "newAssetId": "voL6GALhfpySpbETBFBw6X601rWN3jLgSe02du8PuJm7k",
+  "trimStart": 6,
+  "trimEnd": 157.34,
+  "oldDuration": 159,
+  "newDuration": 151,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 151.34,
+  "durationOk": true,
+  "verified": {
+   "head": 0.399,
+   "tail": 0.575,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "dcv84029cq4jJLLPJW01Yw02LNiGYbBu5WBEIJ3TD4cg1k": {
+  "contentId": "84a28a1b-3399-439d-842b-8c300921dbd5",
+  "title": "Bank Account 13, Withdrawal 6, Asking for Trust You Haven't Earned",
+  "newAssetId": "TzmKCYitBqATyVMKuepE7CnYxyl007agpmZES01uLQrl00",
+  "trimStart": 8.62,
+  "trimEnd": 159.58,
+  "oldDuration": 160,
+  "newDuration": 151,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 150.96,
+  "durationOk": true,
+  "verified": {
+   "head": 0.506,
+   "tail": 0.573,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "Y02HKJ01H00JBtpcWmc2thE02km01W1kt4jJqBTTsHCmIFaw": {
+  "contentId": "2f6bf362-db6e-4f1a-85fb-74082fadb4ff",
+  "title": "Bank Account 14, Deposit 7, Listening Before Reacting",
+  "newAssetId": "3G4j144fkfU01odPXkPiBJxMUegHCc7F1IzyyPaYwZyA",
+  "trimStart": 6.38,
+  "trimEnd": 161.94,
+  "oldDuration": 163,
+  "newDuration": 156,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 155.56,
+  "durationOk": true,
+  "verified": {
+   "head": 0.724,
+   "tail": 0.555,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "Auc1nCj00SzSq3y7Qoe01vQl00BXEtcHNjnuvR4jyQsjAY": {
+  "contentId": "ed09c4bb-bedc-456a-ae3b-0d25272bbe0f",
+  "title": "Bank Account 15, Withdrawal 7, Leading Differently Depending on Who's Watching",
+  "newAssetId": "XFX01feNdmb800M02tChDOVmtLpBDgIx9l1Rsec7UfIWMk",
+  "trimStart": 8.74,
+  "trimEnd": 151.96,
+  "oldDuration": 153,
+  "newDuration": 143,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 143.22,
+  "durationOk": true,
+  "verified": {
+   "head": 0.641,
+   "tail": 0.58,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "7S0144uYS8rObnIq2uWm7g00qbqPyoZsUuFQY4AO01l1Sw": {
+  "contentId": "ac66361f-732a-4281-a281-858690b288b8",
+  "title": "Bank Account 16, Deposit 8, Showing Up When It Matters",
+  "newAssetId": "9d3UxaXK01j3uhZJhIQF52JU02BBxmN2PyoZbPINke2T8",
+  "trimStart": 6.24,
+  "trimEnd": 130.96,
+  "oldDuration": 132,
+  "newDuration": 125,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 124.72,
+  "durationOk": true,
+  "verified": {
+   "head": 0.626,
+   "tail": 0.563,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "RAHaBGJMxlpoa5vRQVNYbE2Mf00VUfAfJ2wFtKxQzT02o": {
+  "contentId": "7e5b8694-90e8-4c54-bd98-7142232ff134",
+  "title": "Bank Account 17, Outro",
+  "newAssetId": "6Kj01bQ3NbVtk1nw5bEnQm2ASMSsGzYyOufzwyXr8i4E",
+  "trimStart": 6.32,
+  "trimEnd": 82.56,
+  "oldDuration": 83,
+  "newDuration": 76,
+  "cutAt": "2026-10-14T17:09:52.772Z",
+  "expectedDuration": 76.24,
+  "durationOk": true,
+  "verified": {
+   "head": 0.677,
+   "tail": 0.532,
+   "ok": true
+  },
+  "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
  }
 }

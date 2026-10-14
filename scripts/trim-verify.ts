@@ -88,17 +88,44 @@ async function main() {
 
   type Film = { contentId: string; title: string; archived: string };
   let entries: Film[];
+  /*
+   * EVERY FILM TYPE, NOT JUST THE ADVISOR ONE.
+   *
+   * This read `.eq("type", "advisor_video")`, and on 14 October it was asked to
+   * verify seventeen freshly trimmed `manager_video` films. It selected NONE of
+   * them and printed:
+   *
+   *     verified 0   pass 0   FAIL 0
+   *     opens INSIDE the greeting (< 0.15s of air): 0
+   *
+   * — which reads exactly like seventeen passes. A check that enumerates one
+   * value of an enum says nothing at all about the others, and "says nothing"
+   * on a terminal is indistinguishable from "all clear". That is the same fault
+   * check:nav had three times over, and the same fault the local Route type in
+   * ingest-videos.ts had with `daily_craft`.
+   *
+   * So the list is derived from what a FILM is — anything with a video format —
+   * rather than from a hand-kept list of the types that existed when this was
+   * written. `manager_video` needed no edit here under that rule, and neither
+   * will the next one.
+   */
   if (ALL) {
-    const rows: { id: string; title: string }[] = [];
+    const rows: { id: string; title: string; type: string }[] = [];
     for (let page = 0; ; page++) {
-      const { data, error } = await db().from("content").select("id, title")
-        .eq("type", "advisor_video").eq("status", "published").is("retired_at", null)
+      const { data, error } = await db().from("content").select("id, title, type")
+        .eq("format", "video").eq("status", "published").is("retired_at", null)
         .order("id").range(page * 1000, page * 1000 + 999);
       if (error) throw new Error(error.message);
       if (!data?.length) break;
-      rows.push(...(data as { id: string; title: string }[]));
+      rows.push(...(data as { id: string; title: string; type: string }[]));
       if (data.length < 1000) break;
     }
+    const byType = new Map<string, number>();
+    for (const r of rows) byType.set(r.type, (byType.get(r.type) ?? 0) + 1);
+    console.log(
+      `\n  population: ${rows.length} published film(s) — ` +
+        [...byType].map(([t, n]) => `${t} ${n}`).join(", ")
+    );
     entries = rows.map((r) => ({ contentId: r.id, title: r.title, archived: archivedOf.get(r.id) ?? "" }));
   } else {
     entries = Object.entries(ledger).map(([archived, v]) => ({ archived, contentId: v.contentId, title: v.title }));
