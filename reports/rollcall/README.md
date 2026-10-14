@@ -154,11 +154,17 @@ without anybody hard-coding its name, capped at 8 with the overflow stated.
 `app/api/cron/rollcall/route.ts`, protected exactly as `streak-saver` is
 (`CRON_SECRET`; a missing secret is a refusal, not a default-open).
 
-**Schedule** — `vercel.json`: `30 12,22 * * *`.
+**Schedule** — `vercel.json`: `30 22 * * *`.
 
-> That is **07:30 and 17:30 Central Daylight** (UTC−5). Vercel crons are UTC and
-> do not observe DST, so from the first Sunday in November to the second Sunday
-> in March they fire at **06:30 and 16:30 Central**. Accepted rather than worked
+*Amended 13 October: it was `30 12,22` — two posts a day — until Ryan ruled
+"we don't need a roll call slack message at 7am. the one at 530p is fine." The
+morning post repeated the previous evening's in almost every case. The
+"what changed" window needed no change: it is keyed on the last successful
+post, so dropping one simply makes the next cover twenty-four hours.*
+
+> That is **17:30 Central Daylight** (UTC−5). Vercel crons are UTC and do not
+> observe DST, so from the first Sunday in November to the second Sunday in
+> March it fires at **16:30 Central**. Accepted rather than worked
 > around: `streak-saver` runs hourly and checks each rooftop's clock because a
 > 7pm notification at the wrong hour is wrong; an hour's winter drift on a
 > status post is not worth 24 invocations a day for two messages. There is no
@@ -201,7 +207,7 @@ people who did nothing the hardest to spot. Over 40 advisors the list is capped
 
 **Ryan sets two env vars on Vercel**: `SLACK_ROLLCALL_WEBHOOK` (the #ediagd
 incoming webhook) and `ROLLCALL_ROOFTOP_ID` (Beaumont's rooftop uuid). Until
-both are set the cron returns 503/502 twice a day — deliberately, so an
+both are set the cron returns 503/502 once a day — deliberately, so an
 unconfigured job does not report success. The webhook URL appears nowhere in
 the repo or in this report.
 

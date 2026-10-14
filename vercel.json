@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/cron/rollcall",
-      "schedule": "30 12,22 * * *"
+      "schedule": "30 22 * * *"
     }
   ]
 }
