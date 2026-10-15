@@ -5112,5 +5112,59 @@
    "ok": true
   },
   "backfilledBy": "ingest 14 October, Manager Bank Account — replace:video --trim-only writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "n01XTJdqgZGikw0002GAnuC5h5spse6KESDVrbJo4aNXS4": {
+  "contentId": "66d633b5-8d4d-409a-a51a-8245ffb4d35b",
+  "title": "Create the Life You Can't Wait to Wake Up To",
+  "newAssetId": "aUaHnfdVqgAyHW65g201huWsxW13cPbjtkplvbMM016SU",
+  "trimStart": 8.7,
+  "trimEnd": 54.86,
+  "oldDuration": 55.8,
+  "newDuration": 46,
+  "cutAt": "2026-10-14T23:40:32.258Z",
+  "expectedDuration": 46.16,
+  "durationOk": true,
+  "verified": {
+   "head": 0.613,
+   "tail": 0.571,
+   "ok": true
+  },
+  "backfilledBy": "14 October — one of the three PR #59 left alone. Re-cut from the LOCAL MASTER, not from archived_asset_id: for two of the three the archive is a DIFFERENT TAKE (trim-last-batch reconciled it as too short to contain the master at the prior offset) and the third lost its Mahalo when #59 cut from the archive. replace:video --file writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "xP7yW9MLIN85CjoO8jmzHGPDq79FJNgQU102HX3Nv01HI": {
+  "contentId": "c95e46ba-22d7-414e-8284-76cf924ae7ab",
+  "title": "Four Things You Can Stop Doing",
+  "newAssetId": "BcMd02V5lIqx2Sw00pXPu3Si00ZKt2l702WVPU7vWAwB6SY",
+  "trimStart": 5.9,
+  "trimEnd": 84.24,
+  "oldDuration": 85.07,
+  "newDuration": 78,
+  "cutAt": "2026-10-14T23:40:32.258Z",
+  "expectedDuration": 78.34,
+  "durationOk": true,
+  "verified": {
+   "head": 0.304,
+   "tail": 0.545,
+   "ok": true
+  },
+  "backfilledBy": "14 October — one of the three PR #59 left alone. Re-cut from the LOCAL MASTER, not from archived_asset_id: for two of the three the archive is a DIFFERENT TAKE (trim-last-batch reconciled it as too short to contain the master at the prior offset) and the third lost its Mahalo when #59 cut from the archive. replace:video --file writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "c7uEMa4iUExnA4BbhH3W00kVyYlwN7CPmkMer9jNMGvI": {
+  "contentId": "ad521817-19fb-4bea-bf9b-1b137f609380",
+  "title": "Promise Yourself",
+  "newAssetId": "k7nJ01xTGlNugWLTsCgSU1nEKKh2VpbNY00JqGLkbwJpo",
+  "trimStart": 5.02,
+  "trimEnd": 125.06,
+  "oldDuration": 125.83,
+  "newDuration": 120,
+  "cutAt": "2026-10-14T23:40:32.258Z",
+  "expectedDuration": 120.04,
+  "durationOk": true,
+  "verified": {
+   "head": 0.638,
+   "tail": 0.515,
+   "ok": true
+  },
+  "backfilledBy": "14 October — one of the three PR #59 left alone. Re-cut from the LOCAL MASTER, not from archived_asset_id: for two of the three the archive is a DIFFERENT TAKE (trim-last-batch reconciled it as too short to contain the master at the prior offset) and the third lost its Mahalo when #59 cut from the archive. replace:video --file writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap. THE VERTICAL WAS REFUSED and the row is left stale — the crop read \"Nothing\" three times where the master reads \"Aloha\" at 3s and 10s windows. Phones letterbox the verified master. On t29s list."
  }
 }

@@ -230,3 +230,66 @@ run.
 
 `tsc`, `eslint` (0 errors) and `check:nav` clean. No migration beyond 0164,
 which was already applied.
+
+---
+
+## Addendum, 14 October — the three PR #59 left alone
+
+Finished in the same session. These are the Mindset films whose clip #59
+refused before the swap.
+
+**They were cut from the LOCAL MASTER, not from `archived_asset_id`**, and that
+is the whole reason they had been outstanding. For two of the three the archive
+is a **different take** — `trim-last-batch`'s own reconciler said so: *"the
+archive is too short to contain this master at the prior offset… The archive is
+a different take, not this one untrimmed."* The third, Promise Yourself, had its
+archive cut from in #59 and the clip came back missing its Mahalo. The local
+masters reconcile with the live rows to within 0.15 s of content length, which
+is what makes them the safe source.
+
+| film | was | cut | now | air before Aloha | air after Mahalo |
+|---|---:|---|---:|---:|---:|
+| Create the Life You Can't Wait to Wake Up To | 47 s | 8.70 → 54.86 | **46 s** | 0.613 | 0.571 |
+| Four Things You Can Stop Doing | 79 s | 5.90 → 84.24 | **78 s** | 0.304 | 0.545 |
+| Promise Yourself | 121 s | 5.02 → 125.06 | **120 s** | 0.638 | 0.515 |
+
+`trim:verify` — **3 verified, 3 pass, 0 FAIL.** Three ledger rows backfilled
+(301 → 304).
+
+**The breath lesson was applied before cutting, not after.** Energy was read in
+the two seconds before each Aloha: clean for Create the Life; only the
+greeting's own onset for Four Things; and for Promise Yourself a run of sound at
+3.32–4.12 s that turns out to be the spoken attribution *"E. Larson."*, ending
+nearly a second before the cut. All three standard pads were therefore safe —
+checked rather than assumed.
+
+### One vertical refused, and it is left refused
+
+`Promise Yourself`'s 9:16 crop reads **"Nothing"** as its first word, three
+times, where the master reads **"Aloha"** at both a 3-second and a 10-second
+window. So it is not the narrow-window misread it first looked like — the
+landscape and the crop genuinely disagree, and `derive:vertical` refused to
+write it.
+
+Left refused. `vertical_status` stays `stale`, which means a phone letterboxes
+the **master** — and the master is the thing that was just verified correct. The
+refused asset is in Mux for inspection. Library-wide stale crops: **66 → 67**.
+This is t29's, and forcing a crop the gate refused would be the one move that
+turns a safe state into an unsafe one.
+
+### `replace:video` was borrowed from PR #61 for this run
+
+PR #61 is still open, so `main`'s `replace:video` does a single swap and would
+have discarded the untrimmed upload — the exact defect that left #59 with
+nothing to re-cut from. The fixed file was checked out into the working tree for
+these three runs and then restored; `scripts/replace-video.ts` on this branch is
+byte-identical to `main`. The read-backs show it worked:
+
+```
+Untrimmed upload recorded first: {"archived":"78syfaiE…"}   <- the superseded v2 asset
+Swapped.                         {"archived":"n01XTJdq…"}   <- the untrimmed upload
+```
+
+So all three now hold their untrimmed generation, and a future re-cut has a
+first-generation source. **That benefit disappears for the next film until #61
+merges.**
