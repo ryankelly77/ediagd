@@ -21,6 +21,7 @@ import {
   loadPushPref,
   shouldOfferSoftAsk,
 } from "@/lib/notifications/push-prefs";
+import { OPENED_VIA_KIND } from "@/lib/notifications/push-copy";
 import { loadBadgeRewards } from "@/lib/badge-rewards";
 import { DailyFlow } from "@/components/daily/DailyFlow";
 import { TechnicianDay } from "@/components/daily/TechnicianDay";
@@ -303,11 +304,27 @@ export default async function TodayPage({
      * this render, and making the screen wait for it bought nothing.
      */
     (() => {
-      const OPENED_VIA: Record<string, "streak_keeper" | "streak_last_call"> = {
-        streak_saver: "streak_keeper",
-        streak_last_call: "streak_last_call",
-      };
-      const kind = params.opened_via ? OPENED_VIA[params.opened_via] : undefined;
+      /*
+       * ---- THE MAP IS DERIVED, AND IT USED NOT TO BE ---------------------
+       *
+       * This was a two-entry literal — streak_saver and streak_last_call —
+       * written when those were the only two kinds with a deep link. 0152
+       * added /today?opened_via=return and ?opened_via=start, and the literal
+       * was never widened: a return tap looked itself up, found undefined, and
+       * SILENTLY STAMPED NOTHING. No error, no log. Every `return` and `start`
+       * push ever sent is unattributable, and `opened_at` is null on all of
+       * them.
+       *
+       * OPENED_VIA_KIND is now built from PUSH_COPY's own deep links, so a
+       * kind that gains a link gains its stamp with nothing for anybody to
+       * remember — and `lintPushCopy` refuses a /today link with no tag. A
+       * convention closes a case; this closes the class.
+       *
+       * An unrecognised tag is still a no-op rather than a throw, because this
+       * is in the wave and gates nothing: a stranger's hand-typed query
+       * parameter must not take the morning down.
+       */
+      const kind = params.opened_via ? OPENED_VIA_KIND[params.opened_via] : undefined;
       return kind
         ? supabase.rpc("mark_push_opened", { _kind: kind })
         : Promise.resolve(null);

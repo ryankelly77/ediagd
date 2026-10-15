@@ -41,7 +41,14 @@
 
 import { Card } from "@/components/brand/Card";
 import { flagLine } from "@/lib/schedule-flags";
-import { loopCompletionMismatches, type RollcallRow, type Rollcall, type Tally } from "@/lib/rollcall";
+import {
+  loopCompletionMismatches,
+  type LastPush,
+  type Reachability,
+  type RollcallRow,
+  type Rollcall,
+  type Tally,
+} from "@/lib/rollcall";
 
 /** "12 Mar" — a date somebody reads across a row, not a timestamp. */
 function shortDate(iso: string | null): string {
@@ -54,6 +61,75 @@ function shortDate(iso: string | null): string {
 function tallyLine(t: Tally): string {
   if (t.count === 0) return "Never";
   return t.lastOn ? `${t.count} · last ${shortDate(t.lastOn)}` : String(t.count);
+}
+
+const PLATFORM_LABEL = { ios: "iOS", android: "Android", web: "Web" } as const;
+
+/**
+ * "Yes · iOS, 12 Oct", or why not.
+ *
+ * ---------------------------------------------------------------------------
+ * THE TWO WAYS OF BEING UNREACHABLE ARE DIFFERENT PROBLEMS
+ * ---------------------------------------------------------------------------
+ * "never registered" is somebody who has not been asked for notification
+ * permission, or who declined — a conversation. "token retired" is somebody
+ * whose phone Apple has told us is gone, usually a reinstall — they need to
+ * open the app again. A plain "No" would send whoever reads this screen after
+ * the wrong one, so the reason is on the value and not in a footnote.
+ *
+ * `reach` null means the view returned no row, which happens only when nobody
+ * has ever registered a device for them. That is a fact and is rendered as
+ * "No", not as a dash: a dash says "we do not know", and here we do.
+ */
+function reachableLine(reach: Reachability | null): string {
+  if (!reach || (!reach.reachable && reach.retiredTokens === 0)) {
+    return "No — never registered";
+  }
+  if (!reach.reachable) {
+    return `No — ${reach.retiredTokens === 1 ? "token" : "all tokens"} retired${
+      reach.lastRetiredReason ? `: ${reach.lastRetiredReason}` : ""
+    }`;
+  }
+  const platforms = reach.livePlatforms.map((p) => PLATFORM_LABEL[p]).join(" · ");
+  return `Yes · ${platforms || "platform unrecorded"}${
+    reach.firstRegisteredOn ? `, ${shortDate(reach.firstRegisteredOn)}` : ""
+  }`;
+}
+
+/** "52 min", "3 h 10 min", "2 d 4 h". */
+function gapLabel(mins: number): string {
+  if (mins < 90) return `${mins} min`;
+  if (mins < 60 * 48) return `${Math.floor(mins / 60)} h ${mins % 60} min`;
+  return `${Math.floor(mins / 1440)} d ${Math.floor((mins % 1440) / 60)} h`;
+}
+
+/**
+ * "return 15 Oct · back in 52 min", or what happened instead.
+ *
+ * THE FAILURE CASE IS NAMED WITH APPLE'S OWN WORD. "failed" alone would send
+ * somebody looking at the app; "failed: BadDeviceToken" points at the device,
+ * and "failed: TooManyProviderTokenUpdates" points at us. Apple already
+ * distinguishes them and throwing that away would be a choice to know less.
+ *
+ * "no return yet" rather than "no return": the window is 24 hours and a push
+ * sent an hour ago has not failed to bring anybody back. The word `yet` is
+ * doing real work — without it this column would quietly convert "too early to
+ * say" into "it did not work".
+ */
+function lastPushLine(p: LastPush | null): string {
+  if (!p) return "None sent";
+  const when = shortDate(p.storeDate);
+  if (!p.deliveredOk) {
+    return `${p.kind} ${when} · failed: ${p.apnsReason ?? "no reason recorded"}`;
+  }
+  if (p.returnGapMinutes === null) {
+    return `${p.kind} ${when} · no return yet`;
+  }
+  /* Delivered, and something happened — but outside 24 hours, so it is shown
+     as the gap it was rather than counted as a return. The number is the
+     honest thing to print; the band is the judgement and it stays in `returned`. */
+  const gap = gapLabel(p.returnGapMinutes);
+  return `${p.kind} ${when} · back in ${gap}${p.returned ? "" : " (over 24 h)"}`;
 }
 
 export type RooftopChip = { id: string; name: string; accounts: number; href: string };
@@ -278,6 +354,22 @@ export function RollcallSection({
         </p>
       )}
 
+      {/* ---- PUSHES, for the rooftop and the period ----------------------
+          Ryan, 14 October: "I need to make sure the push notifications are
+          going out and if it is working to get users back in."
+
+          THE PERIOD IS STATED ON THE LINE. A count over "the period" with no
+          period named is a scoped measurement reported as a general one, and
+          a reader would take it for all time.
+
+          THE THREE WORDS ARE DEFINED HERE because they are not the same
+          number: sent is messages we attempted, delivered is messages Apple
+          accepted, back is delivered messages followed by a sign-in, an
+          activity row or a completion inside 24 hours. Adding them would
+          answer the question optimistically, which is the direction a false
+          pass always takes. */}
+      <PushesLine rollcall={rollcall} />
+
       {/* ---- The two things that would mean these numbers are wrong ------
           Printed only when non-zero, and loud when they are. Both should be
           impossible; "should be impossible" is why they are printed rather
@@ -306,6 +398,117 @@ export function RollcallSection({
         ))}
       </div>
     </section>
+  );
+}
+
+/**
+ * The push line. One sentence of counts, then the caveats that make them
+ * readable — and the caveats are not optional furniture.
+ *
+ * ZERO IS THE INTERESTING CASE AND IT IS NOT SILENT. On rollout week this line
+ * reads "0 sent", and "0 sent" has two completely different causes: nobody was
+ * eligible, or nobody was reachable. A line that printed only the counts would
+ * send somebody looking for a bug in the generator when the answer is that no
+ * advisor has allowed notifications. So when there is nothing to report, this
+ * says WHY there is nothing to report.
+ */
+function PushesLine({ rollcall }: { rollcall: Rollcall }) {
+  const p = rollcall.pushes;
+  const reachable = rollcall.total - rollcall.unreachable;
+
+  return (
+    <div className="mt-4 rounded-xl border border-line bg-cream-card p-4">
+      <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+        Pushes · last {p.days} days
+      </p>
+
+      <p className="mt-1 text-base font-extrabold text-navy">
+        {p.sent.toLocaleString()} sent
+        <span className="text-ink-soft"> · </span>
+        {p.delivered.toLocaleString()} delivered
+        <span className="text-ink-soft"> · </span>
+        {p.returned.toLocaleString()} back within 24 h
+        {p.rate !== null && (
+          <>
+            <span className="text-ink-soft"> · </span>
+            {Math.round(p.rate * 100)}% return rate
+          </>
+        )}
+      </p>
+
+      {/* The denominator, said out loud. A percentage with no stated base is a
+          number somebody will quote at a dealer. */}
+      {p.rate !== null && (
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+          {p.returned} of {p.delivered} delivered{" "}
+          {p.delivered === 1 ? "message was" : "messages were"} followed by a
+          sign-in, an activity record or a completed morning within 24 hours.
+          {p.firstOn && p.lastOn && (
+            <>
+              {" "}
+              Sends run {shortDate(p.firstOn)}
+              {p.firstOn !== p.lastOn && <> to {shortDate(p.lastOn)}</>}.
+            </>
+          )}
+        </p>
+      )}
+
+      {/* NO RATE RATHER THAN 0%. 0/0 is not 0%, and "0% return rate" on a
+          rollout week would read as "we asked them and they ignored us". */}
+      {p.rate === null && (
+        <p className="mt-1 max-w-prose text-xs leading-relaxed text-ink-soft">
+          {p.sent === 0 ? (
+            <>
+              Nothing has been sent, so there is no return rate — 0 of 0 is not
+              0%.{" "}
+              {rollcall.unreachable === rollcall.total && rollcall.total > 0 ? (
+                <span className="font-bold text-clay">
+                  No advisor here has a device registered, so the generator never
+                  queues one: a push needs somewhere to go before anything else
+                  about it matters.
+                </span>
+              ) : (
+                <>
+                  {reachable} of {rollcall.total} can be reached. A push is only
+                  queued for somebody who is scheduled, not yet done for the day,
+                  and lapsed or streaking — so a quiet period is the expected
+                  state and not a fault.
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {p.sent} {p.sent === 1 ? "message was" : "messages were"} attempted
+              and Apple accepted none of them, so there is no return rate to
+              report. The failures are on the rows below with Apple&apos;s own
+              reason.
+            </>
+          )}
+        </p>
+      )}
+
+      {p.failedDeliveries > 0 && (
+        <p className="mt-1 text-xs font-bold leading-relaxed text-clay">
+          {p.failedDeliveries} device{" "}
+          {p.failedDeliveries === 1 ? "delivery" : "deliveries"} refused by
+          Apple. A person carrying two handsets can have one refused and still
+          have received the push — the reason is on their row.
+        </p>
+      )}
+
+      {/* The caveat that stops this being over-read. All three return records
+          are per-day, so a null return is "no first touch of a store-day after
+          the push", never "never opened the app". */}
+      {p.delivered > 0 && (
+        <p className="mt-1 max-w-prose text-xs leading-relaxed text-ink-soft">
+          &ldquo;Back&rdquo; is the first sign-in, activity record or completed
+          morning after the delivery. All three are recorded once per store-day,
+          so somebody who had already opened the app that morning writes no new
+          row and reads as no return — this number never overstates returns and
+          can understate them.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -418,6 +621,25 @@ function Row({ row, showRooftop }: { row: RollcallRow; showRooftop: boolean }) {
           label="Lessons outside the morning"
           value={tallyLine(row.lessonsOutsideLoop)}
         />
+        {/* ---- The two push columns, Ryan's 14 October ask ---------------
+            REACHABLE COMES FIRST, because it is the question that decides
+            whether the second one means anything. "No push arrived" and "no
+            push was ever possible" are different sentences, and reading the
+            second as the first is how somebody ends up debugging a generator
+            that is working.
+
+            The missing styling is on Reachable and NOT on Last push: no device
+            is somebody's job this week, whereas "None sent" is often the
+            correct and expected state for a reachable advisor who is neither
+            lapsed nor streaking. Colouring the second would make the loop
+            working look like a fault. */}
+        <Field
+          label="Reachable"
+          value={reachableLine(row.reach)}
+          missing={!row.reach?.reachable}
+          wrap
+        />
+        <Field label="Last push" value={lastPushLine(row.lastPush)} wrap />
       </dl>
 
       {/* The tracks behind the count, where they still resolve. A shorter list
@@ -453,10 +675,26 @@ function Field({
   label,
   value,
   missing = false,
+  wrap = false,
 }: {
   label: string;
   value: string;
   missing?: boolean;
+  /**
+   * Let the value run onto a second line instead of being clipped.
+   *
+   * ---------------------------------------------------------------------------
+   * TRUNCATION IS FINE FOR A DATE AND WRONG FOR A REASON
+   * ---------------------------------------------------------------------------
+   * Every original field on this grid is a date or a word — "12 Oct", "Linked",
+   * "Never" — and `truncate` never bites. The two push fields carry sentences
+   * whose END is the informative part: "No — token retired: Unregistered" and
+   * "return 15 Oct · back in 52 min". Clipped at phone width those become "No —
+   * token retir…" and "return 15 Oct · ba…", which is a label with its evidence
+   * cut off — and on a two-column mobile grid it would ALWAYS bite, so the
+   * screen would be wrong on the device it is most read on.
+   */
+  wrap?: boolean;
 }) {
   return (
     <div className="min-w-0">
@@ -464,7 +702,7 @@ function Field({
         {label}
       </dt>
       <dd
-        className={`mt-0.5 truncate text-sm ${
+        className={`mt-0.5 text-sm ${wrap ? "break-words" : "truncate"} ${
           missing ? "font-bold text-clay" : "text-ink"
         }`}
       >
