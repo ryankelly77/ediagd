@@ -123,6 +123,97 @@ export type RollcallRow = OnboardingRow & {
   lessonsUnattributed: Tally;
   /** Good News Stories filed. An edit is not a submission; see story-actions. */
   storiesSubmitted: Tally;
+
+  /**
+   * Can a push reach them at all — the first thing to know before asking why
+   * one did not arrive.
+   *
+   * From `advisor_reachable` (0165), which deliberately does NOT carry the
+   * token itself. Null means the view returned no row for them, which for a
+   * person who has never registered a device is the expected answer and is
+   * rendered as "no" rather than as a dash: "we have never had anywhere to
+   * send to" is a fact, not an absence of one.
+   */
+  reach: Reachability | null;
+
+  /**
+   * The most recent push they were sent, and whether they came back after it.
+   *
+   * Null means nothing has ever been queued AND delivered for them. On a
+   * rollout week that is almost everybody, and the screen says so in those
+   * words rather than leaving a blank somebody has to interpret.
+   */
+  lastPush: LastPush | null;
+};
+
+/**
+ * Whether there is anywhere to send a notification.
+ *
+ * `livePlatforms` is the platforms that can be reached NOW — a retired handset
+ * is not a way to reach anybody, and listing it would be a label with nothing
+ * behind it. `lastRetiredReason` is carried because "they had a token and Apple
+ * rejected it" and "they never had one" are different problems that read
+ * identically as a boolean false.
+ */
+export type Reachability = {
+  reachable: boolean;
+  livePlatforms: SignInPlatform[];
+  firstRegisteredOn: IsoDate | null;
+  retiredTokens: number;
+  lastRetiredReason: string | null;
+};
+
+/** One push, and what happened after it. */
+export type LastPush = {
+  kind: string;
+  /** The store-date the send belonged to. */
+  storeDate: IsoDate;
+  /**
+   * When Apple was spoken to about it — `push_delivery.at`, which is the only
+   * one of the four instants on the send that is an observation of the thing
+   * whose effect is being measured. See 0165's header.
+   */
+  attemptedAt: string;
+  deliveredOk: boolean;
+  /** Apple's machine-readable refusal, e.g. "BadDeviceToken". */
+  apnsReason: string | null;
+  /** Minutes to the first sign-in, activity row or completion. Null if none. */
+  returnGapMinutes: number | null;
+  returnSource: string | null;
+  /** That gap was inside 24 hours. False for a delivery Apple refused. */
+  returned: boolean;
+};
+
+/**
+ * The rooftop's pushes over the period, at MESSAGE grain.
+ *
+ * ---------------------------------------------------------------------------
+ * THREE WORDS THAT ARE NOT THE SAME NUMBER, SO THEY ARE THREE FIELDS
+ * ---------------------------------------------------------------------------
+ *   sent       messages we got as far as ATTEMPTING a delivery for
+ *   delivered  messages APPLE ACCEPTED for at least one device
+ *   returned   delivered messages followed by a return inside 24 hours
+ *
+ * All three count DISTINCT MESSAGES, not deliveries — a person carrying two
+ * handsets is one notification. `failedDeliveries` is the one device-grain
+ * number and is named for it, so the two grains can never be read as one.
+ *
+ * `rate` is null rather than 0 when nothing was delivered. A return rate over
+ * zero deliveries is undefined, and printing 0% would read as "we asked and
+ * they ignored us" — the most expensive wrong answer this screen could give on
+ * a rollout week.
+ */
+export type PushTally = {
+  sent: number;
+  delivered: number;
+  returned: number;
+  failedDeliveries: number;
+  rate: number | null;
+  /** How many store-days back the counts cover. Printed, never assumed. */
+  days: number;
+  /** The earliest and latest store-date actually seen, or null for neither. */
+  firstOn: IsoDate | null;
+  lastOn: IsoDate | null;
 };
 
 export type Rollcall = Omit<OnboardingStatus, "rows"> & {
@@ -169,7 +260,104 @@ export type Rollcall = Omit<OnboardingStatus, "rows"> & {
    * says in those words rather than naming a date it does not have.
    */
   recordingSince: IsoDate | null;
+  /**
+   * The pushes, for the whole scope over the period. The screen prints this
+   * above the per-person list for the same reason the other counts are there:
+   * on a rollout week the question is "is this reaching anybody", and the list
+   * is where you go when the answer is lower than expected.
+   */
+  pushes: PushTally;
+  /**
+   * The same counts for the rooftop's TODAY — what the 17:30 Slack post says.
+   *
+   * Null across several rooftops, like `completedToday` and for the same
+   * reason: there is no single today across timezones.
+   */
+  pushesToday: PushTally | null;
+  /**
+   * Advisors with no live token — the number that explains a zero in `pushes`
+   * without anybody having to scroll.
+   *
+   * SAID SEPARATELY FROM THE PUSH COUNTS ON PURPOSE. "0 sent" has two very
+   * different causes — nobody was eligible, or nobody was reachable — and a
+   * screen that showed only the first would send somebody looking for a bug in
+   * the generator. This is the second cause, counted.
+   */
+  unreachable: number;
 };
+
+/**
+ * How far back the push counts reach.
+ *
+ * NAMED AND PRINTED, never implied. A count over "the period" with no period
+ * stated is a scoped measurement reported as a general one, and this file's
+ * sibling report is a list of times that has cost us. Thirty days because the
+ * Return cadence itself stops thirty calendar days after the last completion
+ * (0152), so a shorter window could show an empty table while a live
+ * re-engagement sequence was running.
+ */
+export const PUSH_WINDOW_DAYS = 30;
+
+/** A row of push_return (0165). One per delivery attempt, per device. */
+type PushRow = {
+  outbox_id: string;
+  user_id: string;
+  rooftop_id: string;
+  kind: string;
+  store_date: string;
+  attempted_at: string;
+  delivered_ok: boolean;
+  apns_reason: string | null;
+  returned_at: string | null;
+  return_source: string | null;
+  return_gap_minutes: number | null;
+  returned: boolean;
+};
+
+/** A row of advisor_reachable (0165). Never carries the token. */
+type ReachRow = {
+  user_id: string;
+  reachable: boolean;
+  live_platforms: string[] | null;
+  first_registered_at: string | null;
+  last_seen_at: string | null;
+  retired_tokens: number;
+  last_retired_reason: string | null;
+};
+
+/**
+ * Count a set of push_return rows at MESSAGE grain.
+ *
+ * One definition, used for the thirty-day line on the screen and the one-day
+ * line in Slack. Two hand-rolled reductions over the same rows would be two
+ * answers to one question, and the one nobody checks is the one that drifts.
+ */
+function tallyPushes(rows: PushRow[], days: number): PushTally {
+  const messages = new Set(rows.map((r) => r.outbox_id));
+  const delivered = new Set(
+    rows.filter((r) => r.delivered_ok).map((r) => r.outbox_id)
+  );
+  /* `delivered_ok` is required as well as `returned`, even though the view can
+     only set returned on an accepted delivery. Belt to that braces: if the
+     view's lateral condition were ever relaxed, this would keep the screen's
+     definition of a return tied to a push that actually left. */
+  const returned = new Set(
+    rows.filter((r) => r.delivered_ok && r.returned).map((r) => r.outbox_id)
+  );
+  const dates = rows.map((r) => r.store_date as IsoDate).sort();
+
+  return {
+    sent: messages.size,
+    delivered: delivered.size,
+    returned: returned.size,
+    failedDeliveries: rows.filter((r) => !r.delivered_ok).length,
+    /* Null, not zero. See PushTally's comment — 0 of 0 is not 0%. */
+    rate: delivered.size > 0 ? returned.size / delivered.size : null,
+    days,
+    firstOn: dates[0] ?? null,
+    lastOn: dates[dates.length - 1] ?? null,
+  };
+}
 
 /** A row of app_event_rollcall. */
 type AggRow = {
@@ -361,6 +549,120 @@ export async function loadRollcall(
     bundles.set(row.user_id, b);
   }
 
+  /* ---- Reachability and the pushes -------------------------------------
+     Both read through the CALLER's client, like everything else here, so the
+     screen gets the policies' answer and the cron gets the service role's.
+     push_return is security_invoker and obeys push_delivery's policies;
+     advisor_reachable is deliberately definer with its own gate — see 0165. */
+  let reachRows: ReachRow[] = [];
+  let pushRows: PushRow[] = [];
+
+  if (userIds.length > 0) {
+    /* The window, computed from today rather than written down. A literal date
+       in a query is a filter that is true the week it is typed. */
+    const windowStart = new Date();
+    windowStart.setUTCDate(windowStart.getUTCDate() - PUSH_WINDOW_DAYS);
+    const since = windowStart.toISOString().slice(0, 10);
+
+    const reachQuery = client
+      .from("advisor_reachable")
+      .select(
+        "user_id, reachable, live_platforms, first_registered_at, last_seen_at, retired_tokens, last_retired_reason"
+      )
+      .in("user_id", userIds);
+
+    /* Scoped by ROOFTOP when there is one, because push_return carries it and
+       that is the cheaper, more precise filter; by user id otherwise. The user
+       filter is kept in both cases as belt to the policy's braces — an advisor
+       who moved stores keeps their delivery rows, and this screen is about the
+       people on it. */
+    let pushQuery = client
+      .from("push_return")
+      .select(
+        "outbox_id, user_id, rooftop_id, kind, store_date, attempted_at, delivered_ok, apns_reason, returned_at, return_source, return_gap_minutes, returned"
+      )
+      .in("user_id", userIds)
+      .gte("store_date", since);
+    if (rooftopId) pushQuery = pushQuery.eq("rooftop_id", rooftopId);
+
+    const [{ data: reachData }, { data: pushData }] = await Promise.all([
+      reachQuery,
+      pushQuery,
+    ]);
+    reachRows = (reachData ?? []) as ReachRow[];
+    pushRows = (pushData ?? []) as PushRow[];
+  }
+
+  /* Each person's own rooftop, so a registration instant is formatted as the
+     day it fell on AT THEIR STORE. Built once rather than searched per row. */
+  const rooftopOfUser = new Map(status.rows.map((r) => [r.userId, r.rooftopId]));
+
+  const reachOf = new Map<string, Reachability>();
+  for (const r of reachRows) {
+    const tz =
+      rooftopMeta.get(rooftopOfUser.get(r.user_id) ?? "")?.timezone ?? null;
+    reachOf.set(r.user_id, {
+      reachable: Boolean(r.reachable),
+      livePlatforms: ((r.live_platforms ?? []) as string[]).filter(
+        (p): p is SignInPlatform => p === "ios" || p === "android" || p === "web"
+      ),
+      firstRegisteredOn: r.first_registered_at
+        ? storeDate(r.first_registered_at, tz)
+        : null,
+      retiredTokens: Number(r.retired_tokens ?? 0),
+      lastRetiredReason: r.last_retired_reason,
+    });
+  }
+
+  /*
+   * ---- The last push per advisor ----------------------------------------
+   *
+   * ONE MESSAGE, THEN THE BEST NEWS ABOUT IT. The rows are per DEVICE, so a
+   * person with two handsets has two rows for one notification — and if one
+   * handset was accepted and the other refused, the honest summary is
+   * "delivered", because they received it. Picking the latest ROW instead would
+   * flip the column to "failed: BadDeviceToken" for somebody whose phone buzzed,
+   * which is the cron's own rule — "one device is enough" — and this has to
+   * agree with it or the screen contradicts the transport.
+   */
+  const lastPushOf = new Map<string, LastPush>();
+  const byUser = new Map<string, PushRow[]>();
+  for (const row of pushRows) {
+    const l = byUser.get(row.user_id) ?? [];
+    l.push(row);
+    byUser.set(row.user_id, l);
+  }
+  for (const [userId, rows] of byUser) {
+    /* The latest MESSAGE, by the latest attempt belonging to it. */
+    const latestOutboxId = rows.reduce((best, r) =>
+      r.attempted_at > best.attempted_at ? r : best
+    ).outbox_id;
+    const forMessage = rows.filter((r) => r.outbox_id === latestOutboxId);
+    const accepted = forMessage.filter((r) => r.delivered_ok);
+    /* An accepted delivery wins; among several, the one that came back soonest,
+       because that is the one the push plausibly caused. */
+    const chosen =
+      accepted.length > 0
+        ? accepted.reduce((best, r) =>
+            (r.return_gap_minutes ?? Number.POSITIVE_INFINITY) <
+            (best.return_gap_minutes ?? Number.POSITIVE_INFINITY)
+              ? r
+              : best
+          )
+        : forMessage[0];
+
+    lastPushOf.set(userId, {
+      kind: chosen.kind,
+      storeDate: chosen.store_date as IsoDate,
+      attemptedAt: chosen.attempted_at,
+      deliveredOk: chosen.delivered_ok,
+      apnsReason: chosen.apns_reason,
+      returnGapMinutes: chosen.return_gap_minutes,
+      returnSource: chosen.return_source,
+      returned: Boolean(chosen.returned),
+    });
+  }
+
   /* ---- Track names, best effort ---------------------------------------- */
   const allTrackIds = [...new Set(aggRows.flatMap((r) => (r.kind === "track_opened" ? (r.target_ids ?? []) : [])))];
   const trackNameOf = new Map<string, string>();
@@ -393,6 +695,8 @@ export async function loadRollcall(
       lessonsInLoop: b.lessonsInLoop,
       lessonsUnattributed: b.lessonsUnattributed,
       storiesSubmitted: b.storiesSubmitted,
+      reach: reachOf.get(r.userId) ?? null,
+      lastPush: lastPushOf.get(r.userId) ?? null,
     };
   });
 
@@ -437,10 +741,44 @@ export async function loadRollcall(
     recordingSince = earlier(recordingSince, storeDate(row.first_at, tz));
   }
 
+  /*
+   * ---- The push tally, counted from the rows rather than asserted ---------
+   *
+   * Every number here is derived from `pushRows`, which is the same array the
+   * per-person column reads. One source, so the line above the list and the
+   * lines in it cannot disagree — the mistake 0163 avoided by grouping in
+   * Postgres, taken the same way one level up.
+   */
+  const pushes = tallyPushes(pushRows, PUSH_WINDOW_DAYS);
+
+  /*
+   * ---- And the same tally for TODAY, for the Slack line -------------------
+   *
+   * COUNTED FROM THE SAME ROWS, not derived from the thirty-day summary and not
+   * read back with a second query. One array, two filters over it — so the
+   * evening post and the screen cannot disagree about a day they both cover.
+   *
+   * Null when the scope is more than one rooftop, exactly as `completedToday`
+   * is null and for the same reason: there is no single today across
+   * timezones, and quietly counting a Hawaii store against a Texas date is the
+   * confident wrong answer this screen's header already warns about.
+   */
+  const pushesToday = today
+    ? tallyPushes(
+        pushRows.filter((r) => r.store_date === today),
+        1
+      )
+    : null;
+
   return {
     ...status,
     rows,
     recordingSince,
+    pushes,
+    pushesToday,
+    /* Counted over the rows in scope, so it is the same population the list
+       shows — not a separate query that could drift from it. */
+    unreachable: rows.filter((r) => !r.reach?.reachable).length,
     nativeInstalled: rows.filter((r) => r.firstNativeSignInOn !== null).length,
     onboarded: rows.filter((r) => r.scheduleSetOn !== null).length,
     completedToday: today

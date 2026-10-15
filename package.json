@@ -124,7 +124,9 @@
     "audit:library": "rm -rf .tmp-la2 && tsc scripts/library-audit.ts --outDir .tmp-la2 --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-la2/library-audit.js",
     "report:hopper": "rm -rf .tmp-hop && tsc scripts/hopper.ts --outDir .tmp-hop --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-hop/hopper.js",
     "trim:last-batch": "rm -rf .tmp-tlb && tsc scripts/trim-last-batch.ts scripts/trim-check.ts --outDir .tmp-tlb --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlb/trim-last-batch.js",
-    "trim:last-batch-report": "rm -rf .tmp-tlbr && tsc scripts/trim-last-batch-report.ts --outDir .tmp-tlbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlbr/trim-last-batch-report.js"
+    "trim:last-batch-report": "rm -rf .tmp-tlbr && tsc scripts/trim-last-batch-report.ts --outDir .tmp-tlbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlbr/trim-last-batch-report.js",
+    "accept:push-return": "rm -rf .tmp-pr2 && tsc -p scripts/tsconfig.pushreturn.json && mkdir -p .tmp-pr2/node_modules/server-only && echo \"module.exports={};\" > .tmp-pr2/node_modules/server-only/index.js && ln -sfn .. .tmp-pr2/node_modules/@ && node .tmp-pr2/scripts/push-return-acceptance.js",
+    "audit:push-return": "rm -rf .tmp-pra && tsc scripts/push-return-audit.ts --outDir .tmp-pra --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-pra/push-return-audit.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
