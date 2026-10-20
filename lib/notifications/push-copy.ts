@@ -213,6 +213,44 @@ export const PUSH_COPY: Record<PushKind, PushCopy> = {
   },
 };
 
+/**
+ * `?opened_via=<tag>` → the kind that owns it, DERIVED FROM THE DEEP LINKS
+ * ABOVE rather than written out a second time.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS DERIVED, AND IT IS NOT TIDINESS
+ * ---------------------------------------------------------------------------
+ * /today stamped the open from a hand-written map of two entries:
+ *
+ *     const OPENED_VIA = { streak_saver: "streak_keeper",
+ *                          streak_last_call: "streak_last_call" };
+ *
+ * 0152 then added `return` and `start` with their own deep links, and nobody
+ * widened the map. A return tap therefore arrived carrying
+ * `?opened_via=return`, looked itself up, found undefined, and SILENTLY
+ * STAMPED NOTHING — no error, no log, `opened_at` null forever. Every `return`
+ * and `start` push this app has ever sent is unattributable, and a dashboard
+ * built on `opened_at` would have reported a 0% open rate as a fact about
+ * advisors.
+ *
+ * That is this codebase's most-repeated defect — a fixed list that is silent
+ * when it meets something it does not mention — and the rule is that the fix
+ * closes the CLASS. So the mapping is now a property of the copy table: a kind
+ * that gains a deep link gains its stamp, with nothing for anybody to
+ * remember. The unsafe state is not avoided, it is unrepresentable.
+ *
+ * `lintPushCopy` refuses a /today link with no tag, and refuses two kinds
+ * claiming one tag — the two ways this could still be wrong.
+ */
+export const OPENED_VIA_KIND: Record<string, PushKind> = Object.fromEntries(
+  Object.values(PUSH_COPY)
+    .map((c) => {
+      const query = c.deepLink.split("?")[1] ?? "";
+      return [new URLSearchParams(query).get("opened_via"), c.kind] as const;
+    })
+    .filter((pair): pair is readonly [string, PushKind] => pair[0] !== null)
+);
+
 /** Words that must never appear in a notification. Checked by the preview. */
 export const FORBIDDEN_TONE = [
   "behind", "missed", "last chance", "don't lose", "dont lose", "failing",
@@ -254,6 +292,42 @@ export function lintPushCopy(): string[] {
     if (c.body.toLowerCase() === c.title.toLowerCase()) {
       problems.push(`${c.kind}: body repeats the title`);
     }
+
+    /*
+     * ---- A /today LINK WITHOUT A TAG IS AN UNATTRIBUTABLE OPEN -------------
+     *
+     * mark_push_opened is what separates "they opened the app at 7:04" from
+     * "they opened the app because we asked them to", and it is keyed on
+     * ?opened_via. A /today deep link with no tag lands correctly, works
+     * perfectly, and is invisible to every measurement of whether push does
+     * anything. That is the shape of a defect nobody finds.
+     *
+     * Only /today is checked, because /advisor and /manager have no stamp to
+     * miss — mark_push_opened is called from the /today render alone.
+     */
+    const tag = new URLSearchParams(c.deepLink.split("?")[1] ?? "").get("opened_via");
+    if (c.deepLink.startsWith("/today") && !tag) {
+      problems.push(
+        `${c.kind}: deepLink "${c.deepLink}" lands on /today with no ?opened_via — the open can never be attributed`
+      );
+    }
   }
+
+  /* Two kinds claiming one tag. Object.fromEntries would silently keep the
+     last, so one kind's opens would be stamped onto the other's row — and the
+     number would look plausible. */
+  const tags = Object.values(PUSH_COPY)
+    .map((c) => new URLSearchParams(c.deepLink.split("?")[1] ?? "").get("opened_via"))
+    .filter((t): t is string => t !== null);
+  const seen = new Set<string>();
+  for (const t of tags) {
+    if (seen.has(t)) {
+      problems.push(
+        `two kinds share ?opened_via=${t} — one kind's opens would be stamped on the other`
+      );
+    }
+    seen.add(t);
+  }
+
   return problems;
 }
