@@ -338,3 +338,75 @@ understood: **Matthew Reck's own advisor membership** (the manager/advisor
 duplicate, still awaiting the Valerie ruling) and **Test Advisor**. Neither
 appears on `/manager` — no op code means no September volume means no roster row
 — but both are still counted as advisors by the Rollcall and the Slack post.
+
+---
+
+## Rulings applied, 20 October
+
+Ryan: *"get rid of both tiner and pinder"* and *"valerie keeps advisor AND
+manager."*
+
+### Tiner and Pinder — two records, both switched off, neither deleted
+
+They were handled separately on purpose. Whether *Tiner, Amanda (500573)* on the
+DMS roster and the *Amanda Pinder* app account are one person was never
+established, and treating them as two records is correct under either answer.
+
+| | What it was | What was done |
+|---|---|---|
+| `Tiner, Amanda (500573)` | a DMS operator, no app account | `departed_on = 2026-09-03` |
+| `Amanda Pinder` | an app account, no op code | membership deactivated |
+
+**Nothing was deleted.** `retired_at`/`departed_on`/`active = false` is how this
+codebase says "gone", and deleting the auth user would have cascaded through
+`app_user` and taken her completion history with it — which would also have
+quietly changed September. Her one completed morning is still on the account.
+
+Refused by construction before the write: exactly one auth user for that email,
+exactly one active membership at that rooftop, and **a refusal if the membership
+held an op code** — deactivating a mapped membership releases a book, which is a
+different decision from switching off an account.
+
+**What she will see if she signs in.** Checked rather than assumed: the layout
+does not bounce her to `/onboarding` (she has a confirmed schedule), `/today`
+finds no active membership and sends her to `/advisor`, which renders
+`NoAdvisorProfile`. A dead end, not a redirect loop. Her login still works.
+
+### Valerie keeps both
+
+No change — she holds `manager` and `advisor` at Beaumont and keeps both, with
+op 500570 on the advisor row. Recording it because it stops being an accident:
+the Rollcall, the Slack post and the push generator all count her as an advisor,
+and that is now a decision rather than a side effect of a duplicate row.
+
+### Where Beaumont stands
+
+```
+ACTIVE (10)
+  Austin Abate        advisor   op 902050
+  Destiny Booker      advisor   op 274
+  Heather Sztaba      advisor   op 831000
+  Konner Upshaw       advisor   op 710
+  Lance Parish        admin     —
+  Matthew Reck        manager   —
+  Matthew Reck        advisor   —
+  Test Advisor        advisor   —
+  Valerie Patterson   manager   —
+  Valerie Patterson   advisor   op 500570
+
+SWITCHED OFF (2)   Mathew Martin · Amanda Pinder      (history kept)
+
+/manager roster   5 shown, 2 hidden and named
+Rollcall/Slack    7 advisors — the five, plus Reck's advisor row and Test Advisor
+```
+
+### One gap this exposed, recorded rather than fixed
+
+**Deactivating a membership leaves no reason anywhere in the database.**
+`set_advisor_departed` writes `departed_by` and `departed_note` on the roster
+row; `membership` has no equivalent, so "why is this account off" lives only in
+a commit message and this file. Same shape as `content.retired_at` existing
+alone for fourteen retires until 0134 added `retired_reason`.
+
+Not fixed here — it is a schema change, and it wants doing once for every
+deactivation path rather than bolted onto this one.
