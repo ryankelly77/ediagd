@@ -50,6 +50,7 @@ import {
 } from "@/lib/admin-onboarding";
 import type { IsoDate } from "@/lib/gamification/streak";
 import type { SignInPlatform } from "@/lib/events/kinds";
+import { storeDateOf } from "@/lib/store-day";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Client = { from: (table: string) => any };
@@ -187,22 +188,23 @@ type AggRow = {
 /**
  * Format an instant as the date it fell on AT THE STORE.
  *
- * en-CA gives ISO ordering, which is the same trick lib/mapping/epoch.ts uses.
- * An unknown zone falls back to UTC rather than throwing — a date one day out
- * is a smaller lie than a 500 on the rollout screen.
+ * ---------------------------------------------------------------------------
+ * THE BODY MOVED TO lib/store-day.ts, AND THAT IS NOT TIDYING
+ * ---------------------------------------------------------------------------
+ * The Rollcall cron now has to answer the same question — which day is it at
+ * the store, so it can decide whether to post at all — and a second copy of
+ * this formatter is a second DEFINITION of the store's day. They would agree
+ * until the moment one of them was changed, and then one screen would group a
+ * 7pm Hawaii sign-in onto a different date from the one the post was skipped
+ * for, with nothing erroring.
+ *
+ * The empty-string guard stays HERE rather than moving, because it is a fact
+ * about these callers — an absent `first_at`/`last_at` from the aggregate —
+ * and not about dates. storeDateOf has no business having an opinion on it.
  */
 function storeDate(instant: string, timezone: string | null): IsoDate | null {
   if (!instant) return null;
-  try {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: timezone ?? "UTC",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(instant)) as IsoDate;
-  } catch {
-    return instant.slice(0, 10) as IsoDate;
-  }
+  return storeDateOf(instant, timezone);
 }
 
 const later = (a: IsoDate | null, b: IsoDate | null): IsoDate | null =>

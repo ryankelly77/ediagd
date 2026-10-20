@@ -34,6 +34,36 @@
    which would mean two sources of truth about when the post goes out.
 
    ---------------------------------------------------------------------------
+   IT FIRES EVERY DAY AND DECIDES WHETHER TO POST — Ryan, 19 October
+   ---------------------------------------------------------------------------
+   "roll call slack message should only be sent on weekdays and honor the
+   location's days off, so you don't send on holidays either."
+
+   The schedule stays `30 22 * * *` and the rule lives in lib/rollcall-schedule.ts,
+   for the reason the paragraph above already gives: `30 22 * * 1-5` would put
+   the weekday half in the cron and leave the holiday half here, which is two
+   sources of truth about when the post goes out. A cron expression also cannot
+   know about Thanksgiving, and Vercel's days-of-week are UTC — right for
+   Central by coincidence, wrong the day ROLLCALL_ROOFTOP_ID names a store east
+   of Greenwich.
+
+   So: weekday AND not a confirmed closure, judged on the STORE's date. Both
+   outcomes write a heartbeat, because 0108 was paid for once already and a
+   silent Saturday is the same ambiguity it was built to remove. A skip returns
+   200 — the job ran and correctly declined — and leaves `posted_at` alone, so
+   MONDAY'S POST COVERS THE WEEKEND without a line of new code.
+
+   `?preview_at=<iso>` reports what it would decide at some other instant and
+   posts nothing, so a holiday can be checked in October instead of discovered
+   in November.
+
+   THE HOLE, NAMED: only CONFIRMED closures suppress a post, because a proposal
+   is a question and not a decision. A store whose calendar nobody has ruled on
+   therefore gets a post on Thanksgiving, and this route looks like it prevents
+   that. Every such day is recorded on the heartbeat as `unruled_closure` so
+   the gap is visible rather than assumed away.
+
+   ---------------------------------------------------------------------------
    THE SCREEN AND THIS MESSAGE READ THE SAME LOADER
    ---------------------------------------------------------------------------
    loadRollcall, once, for both. A hand-rolled aggregation for the message
@@ -81,6 +111,8 @@ import { postToSlack } from "@/lib/slack/send";
 import { loadRollcall, loadRollcallChanges } from "@/lib/rollcall";
 import { buildRollcallMessage } from "@/lib/rollcall-message";
 import { isUuid } from "@/lib/events/kinds";
+import { storeDateOf } from "@/lib/store-day";
+import { rollcallPostDue } from "@/lib/rollcall-schedule";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -138,6 +170,75 @@ export async function GET(request: Request) {
     return NextResponse.json(detail, { status: 503 });
   }
 
+  /* ======================================================================
+     IS THE STORE OPEN TODAY?
+
+     Ryan, 19 October: "only be sent on weekdays and honor the location's days
+     off, so you don't send on holidays either."
+
+     THE DATE IS THE STORE'S, NOT THE SERVER'S. This cron fires at 22:30 UTC,
+     which is the same calendar day as Central and would be TOMORROW for a
+     store east of Greenwich. ROLLCALL_ROOFTOP_ID is a variable, so "it happens
+     to work for Beaumont" is not a property anybody should rely on.
+
+     `?preview_at=<iso>` answers "what would this decide then" WITHOUT posting
+     and WITHOUT writing a heartbeat — so a holiday can be checked in October
+     rather than discovered in November. It cannot corrupt the "what changed"
+     window because it never touches the row that holds it. CRON_SECRET still
+     guards it; this is below the authorisation check.
+     ====================================================================== */
+  const previewAt = url.searchParams.get("preview_at");
+  const at = previewAt ? new Date(previewAt) : new Date();
+  if (Number.isNaN(at.getTime())) {
+    /* No heartbeat: a malformed parameter is the caller's mistake and not a
+       run of the job, and recording it would overwrite a real run's detail. */
+    return NextResponse.json(
+      { posted: false, reason: `?preview_at=${previewAt} is not a date` },
+      { status: 400 }
+    );
+  }
+
+  const localDate = storeDateOf(at, (rooftop.timezone as string | null) ?? null);
+
+  /*
+   * The closure row for that date, if any. Unique on (rooftop_id, closed_on)
+   * by 0101, so maybeSingle is safe rather than hopeful.
+   *
+   * `dismissed_at is null` IS THE LOAD-BEARING FILTER. 0101 keeps a dismissed
+   * proposal as a row — status stays 'proposed', dismissed_at is stamped — so
+   * that the annual seeder cannot resurrect it. Without this clause a store
+   * that said "no, we are open on Columbus Day" would show up here as an
+   * unruled proposal forever, and the warning about it would never stop.
+   */
+  const { data: closureRow } = await supabase
+    .from("rooftop_closed_day")
+    .select("label, status, dismissed_at")
+    .eq("rooftop_id", rooftopId)
+    .eq("closed_on", localDate)
+    .is("dismissed_at", null)
+    .maybeSingle();
+
+  const closure = closureRow
+    ? {
+        label: closureRow.label as string,
+        status: closureRow.status as "proposed" | "confirmed",
+      }
+    : null;
+
+  const decision = rollcallPostDue({ localDate, closure });
+
+  /* ---- The preview answers and stops. It changes nothing. --------------- */
+  if (previewAt) {
+    return NextResponse.json({
+      preview: true,
+      at: at.toISOString(),
+      rooftop: rooftop.name,
+      timezone: rooftop.timezone,
+      ...decision,
+      note: "preview only — nothing was posted and no heartbeat was written",
+    });
+  }
+
   /* ---- The last successful post, from the heartbeat's detail ------------- */
   const { data: heartbeat } = await supabase
     .from("cron_heartbeat")
@@ -152,6 +253,51 @@ export async function GET(request: Request) {
   const since =
     previousPostedAt && !Number.isNaN(previousPostedAt.getTime()) ? previousPostedAt : null;
 
+  /* ======================================================================
+     THE SKIP
+
+     Placed AFTER the heartbeat read, deliberately, because the one thing a
+     skip must not do is lose the window.
+
+     `posted_at` is carried forward UNCHANGED. It is the instant the last
+     successful post went out, and "what changed since" is keyed on it rather
+     than on ran_at precisely so a run that did not post cannot swallow the
+     period it did not report. That machinery already existed for a failed
+     Slack call; a weekend is the same shape, and the consequence is the one
+     Ryan would want: MONDAY'S POST COVERS THE WEEKEND. An advisor who did
+     their five minutes on Saturday is in Monday's "new:" list rather than
+     lost, with no extra code — the window simply widens to fill the gap.
+
+     A HEARTBEAT IS STILL WRITTEN. 0108 exists because "the cron ran and
+     correctly did nothing" and "the cron did not run" produce identical
+     evidence, and that was expensive to establish once already. A Saturday
+     with no post and no heartbeat is exactly that ambiguity, every weekend,
+     for as long as this feature lives.
+
+     200, NOT 502. The route's closing comment argues for a failure status when
+     the deliverable did not go — and that is about Slack REFUSING, where the
+     message was due and did not arrive. Here it was not due. A job that
+     correctly declined to run is a success, and returning 502 every Saturday
+     would train everybody to ignore the alert that matters on Tuesday.
+     ====================================================================== */
+  if (!decision.due) {
+    const detail = {
+      posted: false,
+      skipped: decision.skip,
+      reason: decision.reason,
+      rooftop_id: rooftopId,
+      rooftop: rooftop.name,
+      local_date: decision.localDate,
+      weekday: decision.weekday,
+      closure: decision.closure,
+      /* Unchanged. The next real post reports this skipped period too. */
+      since: since?.toISOString() ?? null,
+      posted_at: previousPostedAt?.toISOString() ?? null,
+    };
+    await supabase.rpc("note_cron_run", { _job: "rollcall", _detail: detail });
+    return NextResponse.json(detail);
+  }
+
   // ---- The roll ------------------------------------------------------------
   const rollcall = await loadRollcall(supabase, rooftopId);
 
@@ -164,7 +310,10 @@ export async function GET(request: Request) {
       )
     : new Map();
 
-  const now = new Date();
+  /* ONE CLOCK FOR THE RUN. `at` is the same instant the open/closed decision
+     was made from, so the message's header stamp and the day it was judged
+     against can never be a minute either side of midnight apart. */
+  const now = at;
   const message = buildRollcallMessage({
     rollcall,
     rooftopName: rooftop.name as string,
@@ -203,6 +352,18 @@ export async function GET(request: Request) {
     listed: message.listed,
     dropped: message.dropped,
     changed: message.changed,
+    local_date: decision.localDate,
+    weekday: decision.weekday,
+    /*
+     * A closure proposal nobody has ruled on, on a day we posted anyway.
+     *
+     * RECORDED EVERY TIME IT HAPPENS, because this is the one state where the
+     * weekday/closure rule looks like it is working and is not: an exclusion
+     * keyed on `status = 'confirmed'` exempts every row that never got
+     * confirmed. Null on the overwhelming majority of days, and a label on the
+     * handful where somebody needs to go and rule.
+     */
+    unruled_closure: decision.unruledClosure ? decision.closure : null,
     since: since?.toISOString() ?? null,
     posted_at: slack.posted
       ? now.toISOString()
