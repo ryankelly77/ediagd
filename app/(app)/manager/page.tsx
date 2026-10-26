@@ -4,6 +4,7 @@ import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRoByAdvisor } from "@/lib/family-labor";
 import { loadCredentialPills } from "@/lib/certifications";
 import { loadLightUsers } from "@/lib/service-family";
+import { loadTeamToday } from "@/lib/team-today";
 import { Card } from "@/components/brand/Card";
 import Link from "next/link";
 import { TeamRoster } from "@/components/manager/TeamRoster";
@@ -183,12 +184,16 @@ export default async function ManagerPage() {
     userIdByOpCode.set(row.op_code_id as string, row.user_id as string);
   }
   const teamUserIds = [...new Set(userIdByOpCode.values())];
-  const [credentialByUser, lightUsers] = await Promise.all([
+  const [credentialByUser, lightUsers, teamToday] = await Promise.all([
     loadCredentialPills(supabase, teamUserIds),
     /* The light track (0147): marked so a two-slot morning reads as designed,
        never as a broken account. The MANAGER'S client — the managed_users()
        arm of the focus-family policy is what decides these rows come back. */
     loadLightUsers(supabase, teamUserIds),
+    /* Today's five minutes, per person — Reck's ask. Anchored on the ROOFTOP's
+       today, not this server's: see lib/team-today.ts. Read with the manager's
+       own client so completion_team_read is what scopes it. */
+    loadTeamToday(supabase, teamUserIds, rooftopId),
   ]);
 
   const rosterByOpCode = new Map<string, string | null>();
@@ -226,6 +231,13 @@ export default async function ManagerPage() {
       laborPerRoByFamily: laborByAdvisor.get(opId),
       credential: credentialByUser.get(userIdByOpCode.get(opId) ?? "") ?? null,
       light: lightUsers.has(userIdByOpCode.get(opId) ?? ""),
+      /* NULL WHEN THERE IS NO ACCOUNT BEHIND THE OP CODE, which is a real case
+         and not an error: the roster is keyed by op code, and an advisor can
+         appear in the DMS performance data with no membership and no login.
+         `?? null` rather than a default status, so the screen can say "no
+         account" instead of reporting a miss against somebody who was never
+         given the product. */
+      today: teamToday.byUserId.get(userIdByOpCode.get(opId) ?? "") ?? null,
     });
   });
 
@@ -395,7 +407,10 @@ export default async function ManagerPage() {
         </h2>
         {roster.length > 0 ? (
           <Card className="mt-2 px-4 py-1">
-            <TeamRoster advisors={roster} />
+            {/* storeToday, not the server's date — the drill-in names the day
+                it is reporting, and naming the wrong one is worse than naming
+                none. See lib/team-today.ts. */}
+            <TeamRoster advisors={roster} storeToday={teamToday.today} />
           </Card>
         ) : (
           <Card className="mt-2 p-5">
