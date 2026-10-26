@@ -14,6 +14,7 @@ import {
   type ServiceFamily,
   type Tier,
 } from "./advisor";
+import type { TeamToday } from "./team-today";
 
 export type AdvisorSummary = {
   /** Movement against the same worked days last period. Null when new. */
@@ -45,6 +46,18 @@ export type AdvisorSummary = {
    * first period that clears the floor.
    */
   light?: boolean;
+  /**
+   * Today's five minutes — done, part-done, not yet, or never theirs.
+   *
+   * Reck asked for this on the drill-in: "show if they watched today and if
+   * they had not". Null when the roster row has no app account behind it at
+   * all, which is a real case — the roster is keyed by op code and an advisor
+   * can appear in the DMS performance data with no membership and no login.
+   * NULL IS NOT "they did not do it": it is "there is nobody here to ask", and
+   * the screen says so in those words rather than reporting a miss against
+   * somebody who was never given the product.
+   */
+  today?: TeamToday | null;
 };
 
 export type AdvisorTrend = {
@@ -130,6 +143,8 @@ export function summarizeAdvisor(input: {
   credential?: "Certified" | "Master Certified" | null;
   /** See AdvisorSummary.light. */
   light?: boolean;
+  /** See AdvisorSummary.today. Null means no app account, not a missed day. */
+  today?: TeamToday | null;
 }): AdvisorSummary {
   const families = buildServiceFamilies(
     input.attach,
@@ -152,6 +167,7 @@ export function summarizeAdvisor(input: {
     families,
     credential: input.credential ?? null,
     light: input.light ?? false,
+    today: input.today ?? null,
   };
 }
 

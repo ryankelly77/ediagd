@@ -28,6 +28,8 @@
     "test:streak-chip": "rm -rf .tmp-skc && tsc -p scripts/tsconfig.streakchip.json && mkdir -p .tmp-skc/node_modules && ln -sfn .. .tmp-skc/node_modules/@ && node .tmp-skc/scripts/streak-chip-scenarios.js",
     "test:watch": "rm -rf .tmp-w && tsc scripts/watch-scenarios.ts --outDir .tmp-w --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-w/scripts/watch-scenarios.js",
     "test:manager-roster": "rm -rf .tmp-mrs && tsc -p scripts/tsconfig.managerroster.json && mkdir -p .tmp-mrs/node_modules && ln -sfn .. .tmp-mrs/node_modules/@ && node .tmp-mrs/scripts/manager-roster-scenarios.js",
+    "accept:rollcall-cron": "rm -rf .tmp-rcc && tsc -p scripts/tsconfig.rollcallcron.json && mkdir -p .tmp-rcc/node_modules && ln -sfn .. .tmp-rcc/node_modules/@ && node .tmp-rcc/scripts/rollcall-cron-acceptance.js",
+    "test:rollcall-schedule": "rm -rf .tmp-rsc && tsc -p scripts/tsconfig.rollcallschedule.json && mkdir -p .tmp-rsc/node_modules && ln -sfn .. .tmp-rsc/node_modules/@ && node .tmp-rsc/scripts/rollcall-schedule-scenarios.js",
     "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js",
     "rebuild:periods": "rm -rf .tmp-rp && tsc scripts/rebuild-periods.ts --outDir .tmp-rp --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-rp/rebuild-periods.js",
     "snapshot:metrics": "rm -rf .tmp-sn && tsc scripts/metric-snapshot.ts --outDir .tmp-sn --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-sn/metric-snapshot.js",
@@ -125,7 +127,9 @@
     "audit:library": "rm -rf .tmp-la2 && tsc scripts/library-audit.ts --outDir .tmp-la2 --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-la2/library-audit.js",
     "report:hopper": "rm -rf .tmp-hop && tsc scripts/hopper.ts --outDir .tmp-hop --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-hop/hopper.js",
     "trim:last-batch": "rm -rf .tmp-tlb && tsc scripts/trim-last-batch.ts scripts/trim-check.ts --outDir .tmp-tlb --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlb/trim-last-batch.js",
-    "trim:last-batch-report": "rm -rf .tmp-tlbr && tsc scripts/trim-last-batch-report.ts --outDir .tmp-tlbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlbr/trim-last-batch-report.js"
+    "trim:last-batch-report": "rm -rf .tmp-tlbr && tsc scripts/trim-last-batch-report.ts --outDir .tmp-tlbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlbr/trim-last-batch-report.js",
+    "accept:push-return": "rm -rf .tmp-pr2 && tsc -p scripts/tsconfig.pushreturn.json && mkdir -p .tmp-pr2/node_modules/server-only && echo \"module.exports={};\" > .tmp-pr2/node_modules/server-only/index.js && ln -sfn .. .tmp-pr2/node_modules/@ && node .tmp-pr2/scripts/push-return-acceptance.js",
+    "audit:push-return": "rm -rf .tmp-pra && tsc scripts/push-return-audit.ts --outDir .tmp-pra --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-pra/push-return-audit.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

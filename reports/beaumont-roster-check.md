@@ -1,5 +1,62 @@
 # Beaumont roster, checked against what is provisioned
 
+> ## SUPERSEDED IN ONE PLACE — read this first, 26 October 2026
+>
+> **The open question at the end of this report has been answered, and the answer
+> reverses one of its outcomes.**
+>
+> This report asked: *"is Amanda Pinder the same person as Tiner, Amanda
+> (500573)?"* and said it could not decide. **Ryan ruled on 26 October: Pinder
+> was the maiden name, Tiner is the name now, one person.**
+>
+> So **op 500573 has been un-departed and Amanda is back on the roster.** Every
+> line below that lists her as departed or hidden — including the `HIDDEN (2)`
+> block and the departure table — describes the state on **20 October** and is
+> no longer true of production.
+>
+> | | 20 October (below) | now |
+> |---|---|---|
+> | op 500573 `departed_on` | 2026-09-03 | **null** |
+> | her membership | none at all | **active, mapped to 500573** |
+> | `app_user.full_name` | "Amanda Pinder" | **"Amanda Tiner"** |
+> | `dms_advisor.linked_user_id` | null | **her app account** |
+> | the roster shows | SHOWN 5, HIDDEN 2 | **SHOWN 6, HIDDEN 1 — Mathew Martin only** |
+>
+> Mathew Martin (op 747) is unaffected and stays departed.
+>
+> **Verified against production on 26 October**, by rebuilding `splitDeparted`'s
+> own two inputs — `advisor_period_totals` for the September period and
+> `dms_advisor.departed_on` — rather than by reasoning about the change:
+>
+> ```
+> SHOWN (6)   Austin Abate 87 · Destiny Booker 108 · Valerie Patterson 33
+>             Heather Sztaba 48 · Amanda Tiner 1 · Konner Upshaw 60
+> HIDDEN (1)  Mathew Martin op 747 (40 ROs, departed 30 Sep)
+> ```
+>
+> **IF RECK LOOKS AT THIS AND COUNTS SIX, THAT IS NOT THE CLEANUP FAILING.** He
+> asked for a list of five and will now see six, because the sixth is the advisor
+> he himself asked to have put back. Worth saying to him in those words — a
+> manager who reads "I asked you to clean this and it grew" has every reason to
+> distrust the screen.
+>
+> Her **1 RO** in September is also why she will show the `Light` chip and a
+> two-slot morning: one family at `fam_ros = 1` against a floor of 5. By design,
+> not a broken account.
+>
+> **The `splitDeparted` code needed no change** — it keys on `departed_on`, so
+> clearing that column put her back by itself. That is the construction working:
+> the rule reads the column rather than carrying a list of names somebody has to
+> remember to edit.
+>
+> **One thing this report's own evidence got right and should be credited:** it
+> refused to merge the two records on a name match and escalated instead. Had it
+> guessed, it would have had a 50/50 chance of pointing an app account at a
+> stranger's DMS book — the failure `membership.op_code_id` already produced four
+> times.
+>
+> Full account: `reports/beaumont-reinstate-2026-10-26.md`.
+
 **Ryan, 20 October.** His list, verbatim:
 
 > Valerie — Drive manager

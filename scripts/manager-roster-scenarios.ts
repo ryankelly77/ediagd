@@ -67,9 +67,21 @@ section("1. With no departures, the whole team is shown");
 }
 
 /* ======================================================================
-   2. THE REAL CASE
+   2. THE REAL CASE — as it stood on 20 October
+
+   THE NAMES HERE ARE A FIXTURE, NOT A CLAIM ABOUT BEAUMONT TODAY. On
+   26 October op 500573 was UN-DEPARTED: Pinder was a maiden name and
+   Tiner is the same person, so she is back on the roster and this suite
+   would be wrong to assert otherwise about production. What it tests is
+   unchanged and still worth testing — given a departures map, does
+   splitDeparted hide exactly those two and keep exactly the other five.
+
+   See reports/beaumont-reinstate-2026-10-26.md. The fixture is kept
+   rather than rewritten because the SHAPE it covers (two gone, five
+   staying, one of the five with no app account) is the case that nearly
+   went wrong, and renaming it to today's roster would lose that.
    ====================================================================== */
-section("2. Beaumont: Amanda Tiner and Mathew Martin come off");
+section("2. Two come off and five survive (the 20 October roster, as a fixture)");
 
 {
   const departures = new Map<string, string | null>([

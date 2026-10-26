@@ -4,6 +4,11 @@ import { useState } from "react";
 import { ServiceList } from "@/components/advisor/ServiceList";
 import { Modal } from "@/components/brand/Modal";
 import { formatCurrency } from "@/lib/advisor";
+/* formatDayLabel, not a local formatter: `new Date("2026-10-26")` is UTC
+   midnight, so toLocaleDateString in any negative-offset zone renders the day
+   BEFORE. That one is already written to parse and format in UTC. */
+import { formatDayLabel } from "@/lib/work-schedule";
+import type { IsoDate } from "@/lib/gamification/streak";
 import type { AdvisorSummary } from "@/lib/manager";
 
 /**
@@ -44,11 +49,114 @@ function TrendChip({
 }
 
 /**
+ * Today's five minutes, on the drill-in. Reck's ask, in his words: "show if
+ * they watched today and if they had not".
+ *
+ * ---------------------------------------------------------------------------
+ * THE WORDS ARE THE DESIGN HERE, NOT THE COLOUR
+ * ---------------------------------------------------------------------------
+ * "NOT YET TODAY", NEVER "DIDN'T WATCH". This is a morning product: at 8am the
+ * honest reading of an empty record is "the day has not happened yet", and the
+ * whole team reads not-yet for the first part of every morning. A red "missed"
+ * would be wrong before lunch and would turn the one screen a manager opens
+ * daily into a list of people to tell off. Clay is reserved for a number that
+ * is genuinely behind; this is ink-soft and factual.
+ *
+ * A REST DAY IS NOT A GAP AND MUST NEVER RENDER AS ONE. A day off, a booked
+ * absence or a shut store reads as exactly that, because the alternative is a
+ * manager chasing somebody who was never due in — the same defect as quoting a
+ * streak that a missed work day has already ended.
+ *
+ * NO ACCOUNT IS ITS OWN STATE. An advisor can sit in the DMS performance data
+ * with no membership and no login. Reporting that as "not yet" would blame a
+ * person for not using something nobody gave them.
+ */
+function TodayChip({ today }: { today: AdvisorSummary["today"] }) {
+  /* No app account behind this op code — see AdvisorSummary.today. */
+  if (!today) {
+    return (
+      <span
+        title="This advisor appears in the dealership's performance data but has no EDIAGD account yet."
+        className="rounded-pill border border-line px-2.5 py-1 text-xs font-bold text-ink-soft"
+      >
+        No account yet
+      </span>
+    );
+  }
+
+  const look = {
+    completed: {
+      text: "Finished today",
+      c: "rgb(var(--ediagd-palm))",
+      t: 18,
+      title: "They finished the daily loop today.",
+    },
+    "logged-in": {
+      text: "Opened, not finished",
+      c: "rgb(var(--ediagd-gold))",
+      t: 22,
+      title: "They opened the app today but have not finished the loop.",
+    },
+    missed: {
+      text: "Not yet today",
+      c: "rgb(var(--ediagd-ink-soft))",
+      t: 12,
+      title: "Nothing recorded today. A morning that has not happened yet reads the same way.",
+    },
+    island: {
+      text: "Island Time",
+      c: "rgb(var(--ediagd-ink-soft))",
+      t: 12,
+      title: "Booked absence. Not a missed day.",
+    },
+    off: {
+      text: today.closureLabel ?? "Day off",
+      c: "rgb(var(--ediagd-ink-soft))",
+      t: 12,
+      title: today.closureLabel
+        ? `The store is closed today: ${today.closureLabel}. Not a missed day.`
+        : "Not a work day for them. Not a missed day.",
+    },
+  }[today.status];
+
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span
+        title={look.title}
+        className="rounded-pill px-2.5 py-1 text-xs font-extrabold"
+        style={{
+          background: `color-mix(in srgb, ${look.c} ${look.t}%, transparent)`,
+          color: look.c,
+        }}
+      >
+        {look.text}
+      </span>
+      {/* WITHOUT A SCHEDULE THE ENGINE COUNTS EVERY DAY AS A WORK DAY, so
+          "not yet" is a ceiling rather than a fact. Said out loud instead of
+          quietly implying a gap — and only on the status where it changes the
+          reading. */}
+      {!today.scheduleKnown && today.status === "missed" && (
+        <span className="text-[0.7rem] text-ink-soft">
+          no schedule set — every day counts as a work day until they set one
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
  * The team roster plus the manager's drill-in. Tapping an advisor opens that
  * advisor's own service list — the same component the advisor sees, so the two
  * screens can never tell different stories about the same numbers.
  */
-export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
+export function TeamRoster({
+  advisors,
+  storeToday,
+}: {
+  advisors: AdvisorSummary[];
+  /** The ROOFTOP's today, so the drill-in names the day it is reporting. */
+  storeToday?: string;
+}) {
   const [selected, setSelected] = useState<AdvisorSummary | null>(null);
 
   return (
@@ -132,6 +240,23 @@ export function TeamRoster({ advisors }: { advisors: AdvisorSummary[] }) {
               <p className="mt-0.5 text-xs text-ink-soft">
                 {selected.totalRos} ROs · {formatCurrency(selected.totalLaborSales)}
               </p>
+            </div>
+
+            {/* TODAY, DIRECTLY UNDER THE NAME — the spot Reck asked for. It
+                sits above the service list on purpose: the numbers below are
+                last month's period and this is the only thing on the card
+                about right now. The day is NAMED rather than called "today",
+                because a manager reading this at 7am on a phone that thinks it
+                is tomorrow deserves to see which day the answer is about. */}
+            <div className="mt-3 rounded-xl border border-line p-3">
+              <p className="text-[0.7rem] font-extrabold uppercase tracking-wide text-ink-soft">
+                {storeToday
+                  ? `Today — ${formatDayLabel(storeToday as IsoDate, storeToday as IsoDate)}`
+                  : "Today"}
+              </p>
+              <div className="mt-1.5">
+                <TodayChip today={selected.today} />
+              </div>
             </div>
 
             {selected.hasVolume ? (

@@ -120,7 +120,24 @@ function advisorLine(row: RollcallRow): string {
     }`,
   ];
 
-  return `• *${row.name}* — ${facts.join(" · ")}`;
+  /*
+   * ---- A FAILED PUSH IS MARKED, AND IT IS NOT A SEVENTH FACT -------------
+   *
+   * The header's one hard requirement is that all six facts appear in the same
+   * order on every line, so a reader can run down a position rather than read
+   * the words. Appending a seventh for the few advisors with a failure would
+   * break exactly that — and only for them, so the lines that differ would be
+   * the hardest ones to scan.
+   *
+   * So the marker goes BEFORE the facts, between the name and the dash, where
+   * it changes nothing about where the six sit. The reason itself goes on a
+   * continuation line beside the existing `new:` and `tracks:` ones, because
+   * "BadDeviceToken" is the actionable half and a bare warning glyph would send
+   * somebody to the screen to find out what it meant.
+   */
+  const failed = row.lastPush && !row.lastPush.deliveredOk;
+
+  return `• *${row.name}*${failed ? " :warning:" : ""} — ${facts.join(" · ")}`;
 }
 
 export type RollcallMessage = {
@@ -167,6 +184,44 @@ export function buildRollcallMessage({
   ];
   if (rollcall.today) header.push(`${rollcall.completedToday} completed today`);
   lines.push(header.join(" · "));
+
+  /* ---- ONE LINE ABOUT PUSHES, UNDER THE COUNTS ------------------------
+     Ryan, 14 October: is the push going out, and is it getting people back in.
+
+     TODAY'S NUMBERS, NOT THE PERIOD'S — this is an end-of-day post and the
+     counts above it are today's. Mixing a thirty-day push total into a line of
+     daily figures would be two measurements wearing one label, which is the
+     mistake that cost eighteen files a profiling run.
+
+     IT PRINTS EVEN AT ZERO, and that is the whole argument for its existence:
+     "0 sent" is the expected output on most days and silence cannot be told
+     apart from the cron not running — 0108 established that at the cost of
+     five queries. So the line says zero, and says why it is zero. */
+  if (rollcall.pushesToday) {
+    const p = rollcall.pushesToday;
+    if (p.sent === 0) {
+      lines.push(
+        rollcall.unreachable === rollcall.total && rollcall.total > 0
+          ? `Pushes today: none — no advisor here has a device registered, so none can be queued.`
+          : `Pushes today: 0 sent. ${rollcall.total - rollcall.unreachable} of ${rollcall.total} reachable.`
+      );
+    } else {
+      /* The rate is omitted rather than printed as 0% when nothing was
+         delivered — 0 of 0 is not 0%, and in a channel that number would be
+         quoted back as an advisor's indifference. */
+      const rate = p.rate !== null ? ` (${Math.round(p.rate * 100)}%)` : "";
+      lines.push(
+        `Pushes today: ${p.sent} sent, ${p.delivered} delivered, ${p.returned} back within 24 h${rate}.`
+      );
+    }
+    if (p.failedDeliveries > 0) {
+      lines.push(
+        `:warning: ${p.failedDeliveries} device ${
+          p.failedDeliveries === 1 ? "delivery" : "deliveries"
+        } refused by Apple today — marked on the rows below.`
+      );
+    }
+  }
 
   const unprovisioned = Math.max(0, rollcall.rosterSeats - rollcall.total);
   if (unprovisioned > 0) {
@@ -217,6 +272,14 @@ export function buildRollcallMessage({
     const facts = [...(changes.get(row.userId) ?? [])];
     if (facts.length > 0) {
       lines.push(`      ↳ new: ${facts.map((f) => FACT_LABEL[f]).join(", ")}`);
+    }
+    /* The reason behind the warning glyph on the bullet above. Apple's own
+       word, because "failed" sends somebody to the app and "BadDeviceToken"
+       sends them to the device. */
+    if (row.lastPush && !row.lastPush.deliveredOk) {
+      lines.push(
+        `      ↳ push failed: ${row.lastPush.apnsReason ?? "no reason recorded"} (${row.lastPush.kind}, ${shortDate(row.lastPush.storeDate)})`
+      );
     }
     if (row.trackNames.length > 0) {
       lines.push(`      ↳ tracks: ${row.trackNames.join(", ")}`);
