@@ -49,6 +49,45 @@ function TrendChip({
 }
 
 /**
+ * The one line Reck asked for on the LIST: "something simple like 'videos
+ * completed today' or 'no videos completed today'".
+ *
+ * ---------------------------------------------------------------------------
+ * A REST DAY SAYS SO INSTEAD OF SAYING ZERO
+ * ---------------------------------------------------------------------------
+ * "No videos today" is TRUE of somebody on their day off and is the wrong
+ * thing to tell their manager, because the list is scanned for who to talk to.
+ * On a rest day the row says why — the same rule as the chip below, applied to
+ * the one surface a manager actually reads every morning.
+ *
+ * NOT A COUNT WHEN THERE IS NOBODY TO COUNT. An advisor with no app account
+ * gets no number at all; "0 videos" about somebody who was never given the
+ * product is a measurement of us, not of them.
+ */
+function TodayLine({ today }: { today: AdvisorSummary["today"] }) {
+  if (!today) {
+    return <span className="text-ink-soft">No EDIAGD account</span>;
+  }
+  if (today.status === "island") {
+    return <span className="text-ink-soft">Island Time</span>;
+  }
+  if (today.status === "off") {
+    return <span className="text-ink-soft">{today.closureLabel ?? "Day off"}</span>;
+  }
+  if (today.videoCount > 0) {
+    return (
+      <span className="font-bold" style={{ color: "rgb(var(--ediagd-palm))" }}>
+        {today.videoCount} video{today.videoCount === 1 ? "" : "s"} completed today
+      </span>
+    );
+  }
+  /* INK-SOFT, NOT CLAY. At 8am this is true of the whole team and means only
+     that the morning has not happened yet. A red list every morning teaches a
+     manager to stop reading it. */
+  return <span className="text-ink-soft">No videos completed today</span>;
+}
+
+/**
  * Today's five minutes, on the drill-in. Reck's ask, in his words: "show if
  * they watched today and if they had not".
  *
@@ -203,6 +242,13 @@ export function TeamRoster({
                   </span>
                   {advisor.trend && <TrendChip trend={advisor.trend} />}
                 </span>
+                {/* TODAY, ON ITS OWN LINE. The line above is last month's
+                    period; this is the only thing on the row about right now,
+                    so it does not share a line with figures from a different
+                    span of time. */}
+                <span className="mt-0.5 block text-xs">
+                  <TodayLine today={advisor.today} />
+                </span>
               </span>
 
               <span className="text-right">
@@ -257,6 +303,39 @@ export function TeamRoster({
               <div className="mt-1.5">
                 <TodayChip today={selected.today} />
               </div>
+
+              {/* WHICH ONES — the detail Reck asked for behind the count.
+                  Titles come from the SAME aggregate as the number on the
+                  list, so the two cannot disagree; a card that said "3
+                  videos" over a list of two would be worse than no detail. */}
+              {selected.today && selected.today.videoCount > 0 && (
+                <ul className="mt-2.5 space-y-1">
+                  {selected.today.videoTitles.map((title, i) => (
+                    <li
+                      key={`${title}-${i}`}
+                      className="flex gap-2 text-sm text-navy"
+                    >
+                      <span aria-hidden="true" className="text-ink-soft">
+                        ·
+                      </span>
+                      <span className="min-w-0">{title}</span>
+                    </li>
+                  ))}
+                  {/* The count is the measurement; the titles are a label on
+                      it. If they ever disagree, SAY SO rather than quietly
+                      showing the shorter list — a silent mismatch here is the
+                      kind that gets discovered in a coaching conversation. */}
+                  {selected.today.videoTitles.length !==
+                    selected.today.videoCount && (
+                    <li className="text-xs text-clay">
+                      {selected.today.videoCount} completed, but{" "}
+                      {selected.today.videoTitles.length} could be named — tell
+                      Ryan, the titles and the count came from one query and
+                      should never differ.
+                    </li>
+                  )}
+                </ul>
+              )}
             </div>
 
             {selected.hasVolume ? (

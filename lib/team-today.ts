@@ -86,6 +86,24 @@ export type TeamToday = {
    * than a fact, and the screen has to say so instead of implying a gap.
    */
   scheduleKnown: boolean;
+  /**
+   * Videos finished today, and which ones. Reck's ask: the count on the list,
+   * the titles on the drill-in.
+   *
+   * ONE SOURCE FOR BOTH, deliberately — `team_videos_completed` returns the
+   * count and the titles from the same aggregate, so the list can never say
+   * "3 videos" over a drill-in that names two. Two queries for one number is
+   * how a card disagrees with itself.
+   *
+   * This is NOT the same measurement as `status`. `status` is whether they
+   * finished the daily loop; this is how many films they completed, which
+   * includes films watched from the library outside the loop. Somebody can
+   * have watched three videos and not finished the loop, and both facts are
+   * true at once — the screen shows them as two separate statements rather
+   * than inventing a single verdict.
+   */
+  videoCount: number;
+  videoTitles: string[];
 };
 
 export type TeamTodayResult = {
@@ -127,7 +145,7 @@ export async function loadTeamToday(
   const ids = [...new Set(userIds)].filter(Boolean);
   if (!ids.length) return { today, byUserId: new Map() };
 
-  const [completion, activity, schedules, islands, closures] = await Promise.all([
+  const [completion, activity, schedules, islands, closures, videos] = await Promise.all([
     client
       .from("daily_completion")
       .select("user_id")
@@ -159,6 +177,15 @@ export async function loadTeamToday(
       .eq("rooftop_id", rooftopId)
       .eq("status", "confirmed")
       .eq("closed_on", today),
+    /* VIDEOS, AND WHY THIS IS AN RPC RATHER THAN A SELECT.
+       Counting videos means telling a video from a cue, which means reading
+       `content` — and content_entitled_read gates on the VIEWER'S ROLE:
+       roles_for_content_type('advisor_video') = {advisor}. A pure manager
+       reads ZERO content rows, so a join here would have returned no videos
+       and the screen would have said "No videos completed today" for every
+       advisor, every day, with no error. 0166 moves the join into a definer
+       that owns the content read and re-applies managed_rooftops() itself. */
+    client.rpc("team_videos_completed", { _rooftop: rooftopId, _day: today }),
   ]);
 
   const rows = (r: { data: unknown }) =>
@@ -183,6 +210,17 @@ export async function loadTeamToday(
     const list = islandByUser.get(uid) ?? [];
     list.push({ start: r.start_date as IsoDate, end: r.end_date as IsoDate });
     islandByUser.set(uid, list);
+  }
+
+  /* One aggregate per user, so the count and the titles cannot disagree. A
+     user with no videos simply has no row — absent means zero, which is the
+     honest reading here because the function returns only completions. */
+  const videosByUser = new Map<string, { count: number; titles: string[] }>();
+  for (const r of rows(videos)) {
+    videosByUser.set(String(r.user_id), {
+      count: Number(r.video_count ?? 0),
+      titles: Array.isArray(r.titles) ? (r.titles as string[]) : [],
+    });
   }
 
   const storeClosures: StoreClosure[] = rows(closures).map((r) => ({
@@ -221,11 +259,14 @@ export async function loadTeamToday(
       schedule != null &&
       isWorkDay(today, schedule);
 
+    const seen = videosByUser.get(userId);
     byUserId.set(userId, {
       userId,
       status,
       closureLabel: closedIsTheReason ? storeClosures[0].label : null,
       scheduleKnown: schedule != null,
+      videoCount: seen?.count ?? 0,
+      videoTitles: seen?.titles ?? [],
     });
   }
 
