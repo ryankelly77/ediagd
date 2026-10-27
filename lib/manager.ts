@@ -172,6 +172,70 @@ export function summarizeAdvisor(input: {
 }
 
 /**
+ * Split the roster into who is still here and who has left.
+ *
+ * Ryan, 20 October, after Matthew Reck wrote in: "I am going through some of
+ * the other parts of the App and noticed a few old advisors… Can you please
+ * clean the list."
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THE LIST HAD OLD ADVISORS ON IT AT ALL
+ * ---------------------------------------------------------------------------
+ * The manager roster is built from `advisor_period_totals` — whoever wrote ROs
+ * in the period — and NOT from who holds a membership. Leaving the company does
+ * not take you off last month's numbers, so a departure was invisible here.
+ *
+ * `dms_advisor.departed_on` has existed since 0053 and there is a proper
+ * transaction for setting it (`set_advisor_departed`, which also deactivates
+ * the membership). The rule for what a departure MEANS was written then too:
+ *
+ *     and (d.departed_on is null or d.departed_on >= p.starts_on)
+ *
+ * — and it was applied to `family_store_benchmark` ONLY. The fix went exactly
+ * where the bug was found and nobody asked who else reads the same list raw.
+ * Two years of this file is the answer: the roster reads it raw.
+ *
+ * ---------------------------------------------------------------------------
+ * THIS RULE IS DELIBERATELY STRICTER THAN THE BENCHMARK'S, AND THAT IS A
+ * DISAGREEMENT SOMEBODY HAS TO OWN RATHER THAN DISCOVER
+ * ---------------------------------------------------------------------------
+ * The benchmark keeps a departed advisor in the months they actually worked,
+ * because a store average IS a historical fact about those months. This hides
+ * them the moment they are marked gone, because the roster answers a different
+ * question — "who is on my team" — and a manager asked for it clean now, not
+ * next month.
+ *
+ * So the two WILL disagree for a period somebody worked and then left in:
+ * September's store average is computed over seven advisors and September's
+ * roster lists five. That is not a bug, but it is the kind of quiet
+ * contradiction that becomes one the first time a manager adds up the column
+ * and gets a different number. THE SCREEN SAYS SO — the caller renders the
+ * hidden count and the sentence explaining it, which is why this returns both
+ * halves rather than a filtered list.
+ *
+ * Pure, and returns `hidden` as well as `shown`, because a list that quietly
+ * stopped at five would read as a complete list of five.
+ */
+export function splitDeparted<T extends { advisorOpId: string }>(
+  summaries: readonly T[],
+  /** op code -> departed_on, for every roster row. Absent means still here. */
+  departedOn: ReadonlyMap<string, string | null | undefined>
+): { shown: T[]; hidden: T[] } {
+  const shown: T[] = [];
+  const hidden: T[] = [];
+  for (const s of summaries) {
+    /* An operator with NO roster row at all is shown. That is somebody who
+       appears in the performance data and in no roster — a real advisor the
+       DMS has not caught up with, not a departure. Hiding them would be the
+       exclusion-by-value mistake: a rule keyed on a column is only as strong
+       as the guarantee that the column is written, and this one is not. */
+    if (departedOn.get(s.advisorOpId)) hidden.push(s);
+    else shown.push(s);
+  }
+  return { shown, hidden };
+}
+
+/**
  * The roster, in a NEUTRAL order.
  *
  * It used to sort by pursueCount descending — most services below the store

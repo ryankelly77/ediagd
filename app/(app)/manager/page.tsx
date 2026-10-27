@@ -23,6 +23,7 @@ import {
   displayAdvisorName,
   rankRoster,
   summarizeAdvisor,
+  splitDeparted,
   teamPriorities,
   type AdvisorSummary,
 } from "@/lib/manager";
@@ -57,7 +58,8 @@ export default async function ManagerPage() {
   const rooftopId: string = viewerMembership.rooftop_id;
 
   // ---- Rooftop + current period -------------------------------------------
-  const [{ data: rooftop }, { data: period }, { data: dmsRoster }] = await Promise.all([
+  const [{ data: rooftop }, { data: period }, { data: dmsRoster, error: dmsRosterError }] =
+    await Promise.all([
     supabase.from("rooftop").select("name").eq("id", rooftopId).maybeSingle(),
     supabase
       .from("perf_period")
@@ -68,9 +70,14 @@ export default async function ManagerPage() {
       .maybeSingle(),
     // The names the dealership files people under. Covers advisors with no app
     // account, who otherwise rendered as their operator id.
+    /* departed_on joins the names query because it is the same row and the
+       same read — see splitDeparted in lib/manager.ts. The ERROR is kept: if
+       this read fails the roster cannot tell who has left, and showing
+       everybody while saying nothing is how an old advisor sat on this screen
+       in the first place. */
     supabase
       .from("dms_advisor")
-      .select("advisor_op_id, display_name")
+      .select("advisor_op_id, display_name, departed_on")
       .eq("rooftop_id", rooftopId),
   ]);
 
@@ -197,8 +204,10 @@ export default async function ManagerPage() {
   ]);
 
   const rosterByOpCode = new Map<string, string | null>();
+  const departedByOpCode = new Map<string, string | null | undefined>();
   for (const r of (dmsRoster ?? []) as Record<string, unknown>[]) {
     rosterByOpCode.set(r.advisor_op_id as string, (r.display_name as string) ?? null);
+    departedByOpCode.set(r.advisor_op_id as string, (r.departed_on as string) ?? null);
   }
 
   const attachByAdvisor = new Map<string, FamilyAttach[]>();
@@ -277,8 +286,24 @@ export default async function ManagerPage() {
   }
   for (const s of summaries) s.trend = trendByOp.get(s.advisorOpId) ?? null;
 
-  const roster = rankRoster(summaries);
-  const priorities = teamPriorities(summaries, benchmarks);
+  /*
+   * ---- WHO IS STILL HERE -------------------------------------------------
+   *
+   * Applied AFTER the trend is attached, so a departed advisor is hidden
+   * rather than half-built, and BEFORE teamPriorities, so "N advisors are
+   * pursuing this" counts the people a manager can actually coach.
+   *
+   * That last choice is the one that makes the store average and the roster
+   * disagree for a month somebody worked and then left in — deliberately, and
+   * said out loud under the roster heading. See splitDeparted.
+   */
+  const { shown: present, hidden: departed } = splitDeparted(
+    summaries,
+    departedByOpCode
+  );
+
+  const roster = rankRoster(present);
+  const priorities = teamPriorities(present, benchmarks);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -405,6 +430,42 @@ export default async function ManagerPage() {
         <h2 className="px-1 text-sm font-bold uppercase tracking-[0.18em] text-ink-soft">
           Your team
         </h2>
+        {/*
+          ---- WHO IS NOT ON THIS LIST, AND WHY --------------------------
+          NEVER SILENT. A roster that quietly dropped two names would read as
+          a complete list of five, and the whole reason this filter exists is
+          that a manager could not tell why the list had people on it.
+
+          It also names the disagreement it creates rather than leaving it to
+          be discovered: departed advisors are hidden here the moment they are
+          marked gone, while the store average still counts the months they
+          actually worked. Both are right for the question they answer, and a
+          manager adding up the column deserves to know before the numbers
+          fail to reconcile.
+        */}
+        {departed.length > 0 && (
+          <p className="mt-1 max-w-prose text-xs leading-relaxed text-ink-soft">
+            {departed.length}{" "}
+            {departed.length === 1 ? "advisor who has" : "advisors who have"}{" "}
+            left {departed.length === 1 ? "is" : "are"} not shown
+            {" "}({departed.map((d) => d.name).join(", ")}). The store average
+            above still includes the months they worked — that is what the
+            store did, and removing it would rewrite a finished month.
+          </p>
+        )}
+
+        {/*
+          THE READ FAILED, WHICH IS NOT THE SAME AS NOBODY HAVING LEFT.
+          Without this line the roster would show everyone and look correct,
+          which is exactly the state Matthew Reck wrote in about.
+        */}
+        {dmsRosterError && (
+          <p className="mt-1 max-w-prose text-xs font-bold leading-relaxed text-clay">
+            The roster could not be read, so this list may still include
+            advisors who have left.
+          </p>
+        )}
+
         {roster.length > 0 ? (
           <Card className="mt-2 px-4 py-1">
             {/* storeToday, not the server's date — the drill-in names the day

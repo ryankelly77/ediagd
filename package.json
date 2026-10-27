@@ -27,6 +27,7 @@
     "test:sand-format": "rm -rf .tmp-sdf && tsc -p scripts/tsconfig.sandformat.json && mkdir -p .tmp-sdf/node_modules && ln -sfn .. .tmp-sdf/node_modules/@ && node .tmp-sdf/scripts/sand-dollar-format-scenarios.js",
     "test:streak-chip": "rm -rf .tmp-skc && tsc -p scripts/tsconfig.streakchip.json && mkdir -p .tmp-skc/node_modules && ln -sfn .. .tmp-skc/node_modules/@ && node .tmp-skc/scripts/streak-chip-scenarios.js",
     "test:watch": "rm -rf .tmp-w && tsc scripts/watch-scenarios.ts --outDir .tmp-w --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-w/scripts/watch-scenarios.js",
+    "test:manager-roster": "rm -rf .tmp-mrs && tsc -p scripts/tsconfig.managerroster.json && mkdir -p .tmp-mrs/node_modules && ln -sfn .. .tmp-mrs/node_modules/@ && node .tmp-mrs/scripts/manager-roster-scenarios.js",
     "accept:rollcall-cron": "rm -rf .tmp-rcc && tsc -p scripts/tsconfig.rollcallcron.json && mkdir -p .tmp-rcc/node_modules && ln -sfn .. .tmp-rcc/node_modules/@ && node .tmp-rcc/scripts/rollcall-cron-acceptance.js",
     "test:rollcall-schedule": "rm -rf .tmp-rsc && tsc -p scripts/tsconfig.rollcallschedule.json && mkdir -p .tmp-rsc/node_modules && ln -sfn .. .tmp-rsc/node_modules/@ && node .tmp-rsc/scripts/rollcall-schedule-scenarios.js",
     "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js",
