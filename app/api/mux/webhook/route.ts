@@ -159,6 +159,28 @@ export async function POST(req: NextRequest) {
       .select("id")
       .maybeSingle();
 
+    /* ---- Manager Meetings: the op code goes in its OWN table --------------
+       NOT content.op_code. service_family_content's second arm is
+           c.op_code IS NOT NULL AND coalesce(c.placement,'') <> 'reference'
+       — one placement excluded by name — so a manager film carrying op_code
+       would enter the view the advisor pitch slot reads. 0168 gives it a
+       table the loop does not join to.
+
+       A FAILURE HERE DOES NOT FAIL THE INGEST. The film is already created
+       and correct; only the coaching association is missing, and that is a
+       hold for a person, not a reason to lose the upload. It is logged so the
+       silence is not mistaken for success. */
+    const managerOpCode = (draft.manager_op_code as string | null) ?? null;
+    if (managerOpCode && content?.id) {
+      const { error: mmErr } = await service
+        .from("manager_meeting_op_code")
+        .upsert({ content_id: content.id, op_code: managerOpCode, origin: "manifest" },
+                { onConflict: "content_id" });
+      if (mmErr) {
+        console.error(`[mux webhook] manager_meeting_op_code ${content.id} -> ${managerOpCode}: ${mmErr.message}`);
+      }
+    }
+
     await service
       .from("mux_upload")
       .update({

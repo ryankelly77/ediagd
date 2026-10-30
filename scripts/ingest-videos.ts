@@ -262,7 +262,32 @@ const ROUTES: Record<string, Route> = {
    * leadership series belongs to no service.
    */
   MANAGER: {
-    placement: null,
+    /*
+     * NAMED, not null — changed for Vol 4 (the Op Code Boost Meetings).
+     *
+     * The Bank Account films were ingested with placement NULL. 0128 wrote
+     * down why that is the worst of both: invisible to anything selecting a
+     * value, and not excluded by anything excluding one. They are safe today
+     * only because their service_family and op_code both happen to be null,
+     * and nothing enforces that.
+     *
+     * A named placement makes these films excluded from the daily loop BY
+     * CONSTRUCTION. Every picker in lib/ selects with positive equality —
+     * .eq("placement", "daily_lifestyle" | "technician_daily" |
+     * "onboarding_intro" | REFERENCE) — so a value none of them names cannot
+     * be drawn by any of them. /meetings is unaffected: it selects on
+     * `type = 'manager_video'` and has never read placement.
+     *
+     * NO opCode HERE, DELIBERATELY. Vol 4's op code arrives from the manifest
+     * and is NOT written to content.op_code, because
+     * service_family_content's second arm is
+     *     c.op_code IS NOT NULL AND coalesce(c.placement,'') <> 'reference'
+     * — one placement excluded BY NAME. A manager film carrying op_code would
+     * satisfy that and enter the view the advisor pitch slot reads: the menu
+     * film in the pitch slot, again, with a different prefix. The code lives
+     * in manager_meeting_op_code, a table the loop does not read.
+     */
+    placement: "manager_meeting",
     collection: "Manager Meetings",
     craftSeries: null,
     contentType: "manager_video",
@@ -421,6 +446,56 @@ function identityOf(canonical: string): string {
  * enhancement to this script, not a dependency of it.
  */
 const SLATE_PLAN = "reports/slate-plan.json";
+
+/* ---------------------------------------------------------------------------
+   THE MANAGER MEETINGS OP-CODE MANIFEST
+   ---------------------------------------------------------------------------
+   Vol 4 is one film per op code, but the op code is NOT in the filename: the
+   prefix is MANAGER, because the prefix decides the shelf and an op-code
+   prefix would route the film into Pitches by Op Code as a stageless advisor
+   draft. So the code comes from a manifest keyed on the exact title.
+
+   EXACT MATCH ONLY, AND NEVER ANYTHING ELSE. A near-match between a title and
+   an op code is the slate-vs-curriculum failure with the stakes raised: the
+   wrong code here attaches a boost meeting to the wrong service for a whole
+   store. A title that does not match EXACTLY ingests with op_code null and is
+   listed as a hold for a person to resolve — the same posture as every other
+   refusal in this script.
+--------------------------------------------------------------------------- */
+const MANAGER_MANIFEST = "data/manager-meetings-vol4.csv";
+
+/** title (verbatim) -> op code. Empty when the manifest is absent. */
+async function loadManagerManifest(): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  let text: string;
+  try {
+    text = await readFile(MANAGER_MANIFEST, "utf8");
+  } catch {
+    return out;                       // absent is not an error; every film holds
+  }
+  const lines = text.split(/\r?\n/).filter((l) => l.trim());
+  if (!lines.length) return out;
+  /* A header is optional; detect it rather than assume either way. */
+  const first = lines[0].toLowerCase();
+  const body = /op_?code/.test(first) && /title/.test(first) ? lines.slice(1) : lines;
+  for (const line of body) {
+    /* Titles contain commas ("Bank Account 02, Deposit 1"), so split on the
+       FIRST comma only — the op code never contains one. */
+    const i = line.indexOf(",");
+    if (i === -1) continue;
+    const code = line.slice(0, i).trim().toUpperCase();
+    let title = line.slice(i + 1).trim();
+    if (title.startsWith('"') && title.endsWith('"')) title = title.slice(1, -1).trim();
+    if (!code || !title) continue;
+    if (out.has(title) && out.get(title) !== code) {
+      console.log(`  MANIFEST CONFLICT — "${title}" maps to both ${out.get(title)} and ${code}; refusing both`);
+      out.set(title, "__CONFLICT__");
+      continue;
+    }
+    out.set(title, code);
+  }
+  return out;
+}
 let trims: Map<string, number> | null = null;
 
 function trimFor(canonicalFile: string): number | null {
@@ -642,6 +717,12 @@ async function main() {
 
   const tables: RoutingTables = { staticRoutes: ROUTES, collectionAliases, opCodes, collectionRoutes };
   const routeOf = (prefix: string) => routeFor(prefix, tables);
+  const managerManifest = await loadManagerManifest();
+  /** Exact title match only — see MANAGER_MANIFEST. */
+  const opCodeForManager = (title: string): string | null => {
+    const hit = managerManifest.get(title.trim());
+    return hit && hit !== "__CONFLICT__" ? hit : null;
+  };
 
   console.log(
     `  routing:  ${opCodes.size} op codes · ${collectionAliases.size} collection aliases · ` +
@@ -685,6 +766,34 @@ async function main() {
         (r.opCode ? `  op_code=${r.opCode}` : "") +
         (r.craftSeries ? `  cert=${r.craftSeries}` : "")
     );
+  }
+
+  /* ---- 1b. Manager Meetings, per file ------------------------------------
+     The same columns the advisor table shows — route, collection, op code,
+     disposition — because a manager film is ingested by the same script and
+     deserves the same scrutiny before anything is uploaded. */
+  const managerFilms = parsed.filter((p) => routeOf(p.collection)?.collection === "Manager Meetings");
+  if (managerFilms.length) {
+    const r0 = routeOf(managerFilms[0].collection)!;
+    console.log(`\n  MANAGER MEETINGS — ${managerFilms.length} file(s)`);
+    console.log(`    manifest: ${MANAGER_MANIFEST} (${managerManifest.size} title(s))`);
+    console.log(
+      `    ${"route".padEnd(8)}${"collection".padEnd(18)}${"op code".padEnd(10)}${"disposition".padEnd(14)}title`
+    );
+    for (const p of managerFilms) {
+      const code = opCodeForManager(p.title);
+      const conflict = managerManifest.get(p.title.trim()) === "__CONFLICT__";
+      const disposition = conflict ? "HOLD conflict" : code ? "draft" : "HOLD no match";
+      console.log(
+        `    ${"MANAGER".padEnd(8)}${String(r0.collection).padEnd(18)}${(code ?? "null").padEnd(10)}${disposition.padEnd(14)}${p.title}`
+      );
+    }
+    const holds = managerFilms.filter((p) => !opCodeForManager(p.title));
+    if (holds.length) {
+      console.log(`\n    HOLDS — ${holds.length} manager film(s) have no exact manifest title.`);
+      console.log(`    They ingest as DRAFT with op_code null. Never fuzzy-matched.`);
+      holds.forEach((p) => console.log(`      ${p.title}`));
+    }
   }
 
   /* ---- 2. Anything the filename did not explain -------------------------- */
@@ -926,6 +1035,14 @@ async function main() {
           // is what a re-drop is matched against.
           source_filename: p.file,
           canonical_filename: canonicalName(p, route.opCode ?? route.collection ?? p.collection),
+          /* MANAGER MEETINGS ONLY, AND NOT content.op_code.
+             Carried here so the webhook can write manager_meeting_op_code once
+             the content row exists. It is deliberately a DIFFERENT key from
+             `op_code` above: writing the code to content.op_code would put the
+             film into service_family_content, which the advisor pitch slot
+             reads. Null for every other route. See 0168. */
+          manager_op_code:
+            route.collection === "Manager Meetings" ? opCodeForManager(p.title) : null,
         },
       });
       if (error) throw new Error(`mux_upload insert: ${error.message}`);
