@@ -405,6 +405,13 @@ async function main() {
       }
       if (ledger[cur.mux_asset_id]) throw new Error("asset is already in the ledger");
 
+      /* THE SYNC GATE IS INHERITED, NOT RE-IMPLEMENTED. This does not swap
+         the asset itself — replace:video does, and replace:video now refuses
+         any swap whose finished asset does not measure within ±40 ms of its
+         disk master (lib/video/sync-gate.ts). A second copy of the gate here
+         would be a second chance to get it wrong, and the wrong copy is the
+         one nobody reads. If replace:video refuses, run() throws and this
+         film is left exactly as it was. */
       const args = ["run", "replace:video", "--", `--id=${r.id}`, "--trim-only"];
       if (r.proposedStart != null) args.push(`--trim-start=${r.proposedStart}`);
       if (r.proposedEnd != null) args.push(`--trim-end=${r.proposedEnd}`);

@@ -1,0 +1,6891 @@
+{
+ "f9f0edc7-cf89-4c06-83cd-07e3d7081d51": {
+  "title": "30 Second Walk-Around, Part 5, Step 4, Wheels to the Left",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.545,
+   136.545
+  ],
+  "before": {
+   "offset_ms": -265.3,
+   "audio_corr": 0.734,
+   "picture_votes": 37
+  },
+  "oldAssetId": "tfylaC1NLmLE01BjwxeVfVFlNTYegOLcPY3AY2eCFRRQ",
+  "newAssetId": "dFg7RGcZItoiWicKOJI1UiJPx014bxzUhT9Lmq7P028uU",
+  "startedAt": "2026-10-29T06:23:31.301Z",
+  "after": {
+   "offset_ms": -23,
+   "audio_corr": 0.725,
+   "picture_votes": 34,
+   "spread": 1
+  },
+  "newDuration": 124.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T06:28:24.069Z"
+ },
+ "4fe0f497-9572-408f-a7ee-445770e5f7fa": {
+  "title": "30 Second Walk-Around, Part 8, Step 6 and 7, Miles, Shut It Off and Tires",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.632,
+   163.632
+  ],
+  "before": {
+   "offset_ms": -232,
+   "audio_corr": 0.692,
+   "picture_votes": 46
+  },
+  "oldAssetId": "02piAjJJRVaPTfGCp5uP9XbzReztEyACb2nm7QBvjoPw",
+  "newAssetId": "M3zYEKiYQaHWZ2v3Z7jmZ1R00oil1n01425qfaZW2KwTo",
+  "startedAt": "2026-10-29T06:33:58.565Z",
+  "after": {
+   "offset_ms": 8.2,
+   "audio_corr": 0.691,
+   "picture_votes": 43,
+   "spread": 0
+  },
+  "newDuration": 151.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T06:40:02.343Z"
+ },
+ "2649e577-c010-4044-add6-25f4c30943bd": {
+  "title": "30 Second Walk-Around, Part 1, Before You Go Outside",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.756,
+   216.756
+  ],
+  "before": {
+   "offset_ms": -236,
+   "audio_corr": 0.79,
+   "picture_votes": 73
+  },
+  "oldAssetId": "G3uFeJnOx6tpwWQNUw01b5eJW3c7geG00t9R9BJql01tBY",
+  "newAssetId": "hbbD01VymWrt00wJZp02E02003RNVCO0133DuYe9tLdlM9Fe8",
+  "startedAt": "2026-10-29T06:44:55.882Z",
+  "after": {
+   "offset_ms": 5.1,
+   "audio_corr": 0.786,
+   "picture_votes": 69,
+   "spread": 0
+  },
+  "newDuration": 205.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T06:53:04.868Z"
+ },
+ "248b1fd4-b0a9-4e52-9655-cd5e05c3ef86": {
+  "title": "30 Second Walk-Around, Part 9, 42 seconds",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.118,
+   116.118
+  ],
+  "before": {
+   "offset_ms": -238,
+   "audio_corr": 0.766,
+   "picture_votes": 17
+  },
+  "oldAssetId": "h9Ce215bBF7OHwLVLtGwxlEIyAlwKMGDFBPIFbXAf01s",
+  "newAssetId": "GaIDbSfavhlPKaPY6aU4NP98csgg5a9T6bHFHaZ00UXE",
+  "startedAt": "2026-10-29T06:57:50.168Z",
+  "after": {
+   "offset_ms": 3.9,
+   "audio_corr": 0.762,
+   "picture_votes": 22,
+   "spread": 0
+  },
+  "newDuration": 104.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T07:02:01.661Z"
+ },
+ "4a7b6ae9-df0e-4563-8d5d-6c259d0aede8": {
+  "title": "30 Second Walk-Around, Part 3, Steps 1 and 2, Are You Here to See Anyone",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.274,
+   133.274
+  ],
+  "before": {
+   "offset_ms": -193.6,
+   "audio_corr": 0.704,
+   "picture_votes": 27
+  },
+  "oldAssetId": "GlAx1xZHECnUx8aBldp2pFqRvypOEEagfUceaNPR01eI",
+  "newAssetId": "7vSsGMKR01V5Y00KjiXiXvdAU78czy5es4eBmLYrY9JfI",
+  "startedAt": "2026-10-29T07:06:36.480Z",
+  "after": {
+   "offset_ms": 7.1,
+   "audio_corr": 0.701,
+   "picture_votes": 18,
+   "spread": 0
+  },
+  "newDuration": 119.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T07:11:02.769Z"
+ },
+ "76dfe519-6c42-4eee-a1d3-e5122a6aae9c": {
+  "title": "30 Second Walk-Around, Part 6, Step 5, Washer Fluid",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.348,
+   120.348
+  ],
+  "before": {
+   "offset_ms": -228.3,
+   "audio_corr": 0.742,
+   "picture_votes": 33
+  },
+  "oldAssetId": "OrAeDvIDpcKMar02q02MjXigh02u00spsNSmRM01a3i6piP00",
+  "newAssetId": "Znw02g01aE8mq3BCu8yB9MoSO6yQPViofd802saB01v5Apc",
+  "startedAt": "2026-10-29T07:14:58.285Z",
+  "after": {
+   "offset_ms": -26.9,
+   "audio_corr": 0.739,
+   "picture_votes": 17,
+   "spread": 0
+  },
+  "newDuration": 110.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T07:19:04.899Z"
+ },
+ "50364c6c-ad8c-4785-a564-b595333f2d71": {
+  "title": "MPI Setup — Charge Port Cleaner",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.418,
+   99.418
+  ],
+  "before": {
+   "offset_ms": -217.6,
+   "audio_corr": 0.821,
+   "picture_votes": 24
+  },
+  "oldAssetId": "x7t6Lm6PaURZdbl2EFEW6cuuMlfFybk6GXS8uC2baZ4",
+  "newAssetId": "8C009npTVUYbqK900xKz2tTQb1009jSdBNcL02Wk9ckOeeQ",
+  "startedAt": "2026-10-29T07:27:36.255Z",
+  "after": {
+   "offset_ms": -13.2,
+   "audio_corr": 0.845,
+   "picture_votes": 21,
+   "spread": 0
+  },
+  "newDuration": 94.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T07:32:02.978Z"
+ },
+ "215e08e5-3cde-4c4e-928a-bf77bc79df3e": {
+  "title": "MPI Setup — Coolant Hoses",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.886,
+   123.886
+  ],
+  "before": {
+   "offset_ms": -206.4,
+   "audio_corr": 0.866,
+   "picture_votes": 154
+  },
+  "oldAssetId": "9yCzsbS9jmbi7LgDsPMySb8AKpxMbq4Lj01lDErbNvgg",
+  "newAssetId": "rVSVafe1TgCBj0100QKMz02JyLeG919woucE3MbX00vm48U",
+  "startedAt": "2026-10-29T07:39:21.682Z",
+  "after": {
+   "offset_ms": 37.7,
+   "audio_corr": 0.88,
+   "picture_votes": 134,
+   "spread": 0
+  },
+  "newDuration": 118.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T07:44:34.085Z"
+ },
+ "19a689c4-faea-49d0-9a0f-1234e095ae4a": {
+  "title": "MPI Setup — Serpentine Belt",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.549,
+   139.549
+  ],
+  "before": {
+   "offset_ms": -228.7,
+   "audio_corr": 0.84,
+   "picture_votes": 61
+  },
+  "oldAssetId": "ZKoeGLDKQ9D93uf6ziAV00z02oYDXMSTbOPjxnOgVY2yM",
+  "newAssetId": "9yNCyQmBfOHBRQyxcLLnCeP9Mrxuz3Wl6JwPIgmdEFo",
+  "startedAt": "2026-10-29T07:49:59.627Z",
+  "after": {
+   "offset_ms": -28.2,
+   "audio_corr": 0.838,
+   "picture_votes": 26,
+   "spread": 1
+  },
+  "newDuration": 134.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T07:56:19.432Z"
+ },
+ "d8fe0772-213c-47b2-acbb-48882abdea8e": {
+  "title": "MPI Setup — Spark Plugs",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.814,
+   89.814
+  ],
+  "before": {
+   "offset_ms": -214.4,
+   "audio_corr": 0.78,
+   "picture_votes": 30
+  },
+  "oldAssetId": "X5gH102Azu91bpnDMGvPn641kdBLUGswsI7gsg1OLEXA",
+  "newAssetId": "Z8zIniUx1V7if3ZSWQrnjIMmcGqD4mPGE3N5vd296oI",
+  "startedAt": "2026-10-29T08:00:37.342Z",
+  "after": {
+   "offset_ms": -9.1,
+   "audio_corr": 0.806,
+   "picture_votes": 31,
+   "spread": 0
+  },
+  "newDuration": 79.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T08:04:00.062Z"
+ },
+ "b8248253-c45d-4202-9876-429ceaede341": {
+  "title": "MPI Setup — Timing Belt",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.272,
+   79.272
+  ],
+  "before": {
+   "offset_ms": -191.5,
+   "audio_corr": 0.871,
+   "picture_votes": 115
+  },
+  "oldAssetId": "dPE2mUD5WfEXZjypP5yVh7Wfh9dYBGGoWg2jHc005iz00",
+  "newAssetId": "5tkT00UYOu02007EyQE9BkdYbymR1QU11Ak6L4RqnyGBKw",
+  "startedAt": "2026-10-29T08:07:09.316Z",
+  "after": {
+   "offset_ms": 8.6,
+   "audio_corr": 0.87,
+   "picture_votes": 92,
+   "spread": 0
+  },
+  "newDuration": 74.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T08:11:10.354Z"
+ },
+ "019ed8cd-116a-4ccb-af93-c36cac46ca33": {
+  "title": "Four Step Close, Part 8",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.204,
+   106.204
+  ],
+  "before": {
+   "offset_ms": -203.7,
+   "audio_corr": 0.729,
+   "picture_votes": 12
+  },
+  "oldAssetId": "00x4CnMOoFzVrtzClDd6L7S81Zy3024eDMpeg023Oa01Dpk",
+  "newAssetId": "GZMjviXCreANPI3uLi01301YhJ9EGk4jXDYuXuqN01QjDc",
+  "startedAt": "2026-10-29T08:14:08.585Z",
+  "after": {
+   "offset_ms": -0.7,
+   "audio_corr": 0.734,
+   "picture_votes": 12,
+   "spread": 0
+  },
+  "newDuration": 93.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T08:17:54.625Z"
+ },
+ "84f0d456-5971-4318-91b5-7d498831b278": {
+  "title": "Success Cycle, Part 5, The 6 Stages",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.453,
+   195.453
+  ],
+  "before": {
+   "offset_ms": -213.5,
+   "audio_corr": 0.718,
+   "picture_votes": 30
+  },
+  "oldAssetId": "xnP9x9x42WYkQLDwbjMTKbXCpzvLSFyJFzWwz02BrB900",
+  "newAssetId": "PIvoVQ800kwm3t7pCvr1fnEwrQZ9HDL5hLw3FhQSYlMo",
+  "startedAt": "2026-10-29T08:20:26.783Z",
+  "after": {
+   "offset_ms": 32.7,
+   "audio_corr": 0.741,
+   "picture_votes": 30,
+   "spread": 0
+  },
+  "newDuration": 184.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T08:27:17.312Z"
+ },
+ "8170b494-6529-479b-8d62-e8b2c21d8f74": {
+  "title": "Success Cycle, Part 11, The Repair Call",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.898,
+   204.898
+  ],
+  "before": {
+   "offset_ms": -218.3,
+   "audio_corr": 0.707,
+   "picture_votes": 55
+  },
+  "oldAssetId": "84Z9W01r8021D01w7NMfiLfC9qsli2MFgE402f003z2CCsVw",
+  "newAssetId": "ztP24ySG57XhcOoTR1gTA2hZahr5HeZ7puUnJ8BZU5w",
+  "startedAt": "2026-10-29T08:31:48.793Z",
+  "after": {
+   "offset_ms": 26.2,
+   "audio_corr": 0.73,
+   "picture_votes": 60,
+   "spread": 0
+  },
+  "newDuration": 195.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T08:39:27.436Z"
+ },
+ "386c63f5-23e5-4507-9570-f71f5f920ad4": {
+  "title": "Selling Skills, The Steer Objection",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.922,
+   99.922
+  ],
+  "before": {
+   "offset_ms": -241.9,
+   "audio_corr": 0.793,
+   "picture_votes": 26
+  },
+  "oldAssetId": "1CJjPohh02pEp8I9f31acfOO015rvn01uLq1o78yRvPco00",
+  "newAssetId": "75DATqxvVDk9B3eCK2KhWIYzGReWInpOQijC4YhXqQA",
+  "startedAt": "2026-10-29T08:47:54.135Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.793,
+   "picture_votes": 25,
+   "spread": 1
+  },
+  "newDuration": 89.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T08:51:34.031Z"
+ },
+ "2c1248e3-e06f-4344-9c30-4869b9b7dcb9": {
+  "title": "Name Tag, Part 7",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.438,
+   172.438
+  ],
+  "before": {
+   "offset_ms": -237.9,
+   "audio_corr": 0.792,
+   "picture_votes": 29
+  },
+  "oldAssetId": "rBin5o9R015YqjBaAkIFAnTOBhfBeD0101flmHOOOzYLH4",
+  "newAssetId": "qx7QqtfCQC2rS8VpoJf00qTXu02ODwU3AzJzXUmYnXrBo",
+  "startedAt": "2026-10-29T09:00:09.209Z",
+  "after": {
+   "offset_ms": 3.8,
+   "audio_corr": 0.788,
+   "picture_votes": 32,
+   "spread": 0
+  },
+  "newDuration": 160.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T09:06:03.763Z"
+ },
+ "1fecaeec-2747-409d-a574-948e87b6e615": {
+  "title": "Name Tag, Part 9",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.886,
+   158.886
+  ],
+  "before": {
+   "offset_ms": -206.3,
+   "audio_corr": 0.746,
+   "picture_votes": 61
+  },
+  "oldAssetId": "XN8gFSrtM602qKK9P8CIR6wAm8rWEtUJdu1M5Uf411hw",
+  "newAssetId": "e01Ui9IJ9GelVL4M0263Guso02aHdKom01APsItSNXGRvc8",
+  "startedAt": "2026-10-29T09:07:02.530Z",
+  "after": {
+   "offset_ms": 37.6,
+   "audio_corr": 0.755,
+   "picture_votes": 54,
+   "spread": 0
+  },
+  "newDuration": 145.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T09:12:45.906Z"
+ },
+ "7f3f25d1-429d-4ea0-979d-7b0674c1ab13": {
+  "title": "120,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   18.729,
+   178.729
+  ],
+  "before": {
+   "offset_ms": -248.8,
+   "audio_corr": 0.587,
+   "picture_votes": 12
+  },
+  "oldAssetId": "PDgj9KaT02JHuRkIIWOsoaOTL00T2DwP0100RPzevKVyCww",
+  "newAssetId": "W5XRCZMs02TbIm027Nox5wOELjnu1EhvI02TcW01800iFmG4",
+  "startedAt": "2026-10-29T09:17:35.577Z",
+  "after": {
+   "offset_ms": -4.9,
+   "audio_corr": 0.597,
+   "picture_votes": 17,
+   "spread": 1
+  },
+  "newDuration": 160.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T09:23:09.765Z"
+ },
+ "c561b924-5d78-43fe-af79-89381567cdb2": {
+  "title": "Seasonal Menus, Part 5",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.062,
+   225.062
+  ],
+  "before": {
+   "offset_ms": -222.4,
+   "audio_corr": 0.64,
+   "picture_votes": 32
+  },
+  "oldAssetId": "8DONIfeVkYH3DJfMxV7zr027400WEpVzatDjlJUiy027AA",
+  "newAssetId": "ktNYlttogUqA7bP6ukob2k92j8kQZhjOMNtY8t8prL00",
+  "startedAt": "2026-10-29T09:27:41.626Z",
+  "after": {
+   "offset_ms": 20.9,
+   "audio_corr": 0.634,
+   "picture_votes": 32,
+   "spread": 0
+  },
+  "newDuration": 210.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T09:36:40.206Z"
+ },
+ "5e08224b-3aeb-4d22-bfb2-acdbc537667e": {
+  "title": "55,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.851,
+   206.851
+  ],
+  "before": {
+   "offset_ms": -211.1,
+   "audio_corr": 0.627,
+   "picture_votes": 30
+  },
+  "oldAssetId": "Xb2FjLQ3GhPM2WCpuhT01vye01022joIy9dP7I7WYdcZDM",
+  "newAssetId": "Yjm3WYYJ01PCMWQKL3SnEXrXhJbZv9cTjb377iuSg2DI",
+  "startedAt": "2026-10-29T09:42:56.740Z",
+  "after": {
+   "offset_ms": -6.2,
+   "audio_corr": 0.64,
+   "picture_votes": 22,
+   "spread": 1
+  },
+  "newDuration": 190.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T09:49:37.399Z"
+ },
+ "2feff211-2775-49ce-8021-0e6e1670a7bd": {
+  "title": "Menu Wrap-Up, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.438,
+   205.438
+  ],
+  "before": {
+   "offset_ms": -237.9,
+   "audio_corr": 0.751,
+   "picture_votes": 17
+  },
+  "oldAssetId": "ihArgueRIQlpa3BT018t02Thw501xOmEItniCVkWkUocz4",
+  "newAssetId": "4E8WcMEv00aqwk7VazC7j5B5AQ7cLqFV5KV6be02o84TY",
+  "startedAt": "2026-10-29T09:53:10.793Z",
+  "after": {
+   "offset_ms": 3.8,
+   "audio_corr": 0.75,
+   "picture_votes": 17,
+   "spread": 0
+  },
+  "newDuration": 193.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T09:59:41.149Z"
+ },
+ "30ba8555-3be7-4bee-bd00-11700b81562b": {
+  "title": "100,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.446,
+   190.446
+  ],
+  "before": {
+   "offset_ms": -206.5,
+   "audio_corr": 0.677,
+   "picture_votes": 29
+  },
+  "oldAssetId": "9l96OzPKkerAflzqzQlI4SFxIOffDUP9kqTYmIhMG6Y",
+  "newAssetId": "7t9yho22ungswJQboUXYteFbkhe5OUVqH82DNyzO02BA",
+  "startedAt": "2026-10-29T10:04:42.447Z",
+  "after": {
+   "offset_ms": -2.4,
+   "audio_corr": 0.685,
+   "picture_votes": 27,
+   "spread": 0
+  },
+  "newDuration": 174.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:11:12.145Z"
+ },
+ "f7303616-faee-4836-be6e-eae8c2433da6": {
+  "title": "95,000 Mile Dealer Upsell Menu",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.194,
+   131.194
+  ],
+  "before": {
+   "offset_ms": -233.7,
+   "audio_corr": 0.644,
+   "picture_votes": 34
+  },
+  "oldAssetId": "TpF01Q3ubf2i3tKHKrH5jQnSsfuYeCIqdv8aBy2GOLv8",
+  "newAssetId": "gJXs66lSZr5KyESeKpVJLl02tKev5qeTKm4obP5moCOY",
+  "startedAt": "2026-10-29T10:14:40.843Z",
+  "after": {
+   "offset_ms": 7,
+   "audio_corr": 0.64,
+   "picture_votes": 33,
+   "spread": 0
+  },
+  "newDuration": 115.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:19:16.838Z"
+ },
+ "a676439e-0c22-4c62-bcd9-6153bf93425c": {
+  "title": "150,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   19.031,
+   159.031
+  ],
+  "before": {
+   "offset_ms": -231.2,
+   "audio_corr": 0.567,
+   "picture_votes": 25
+  },
+  "oldAssetId": "ATbgLQCg9nfqKPQXZXnAWMrZSyLqkQEdJ4fK01S5yQy8",
+  "newAssetId": "yRKXGS1EsVlQezcmf5mEAdNEZ0000FJHjWkudW76Sjuv00",
+  "startedAt": "2026-10-29T10:23:55.234Z",
+  "after": {
+   "offset_ms": 9.8,
+   "audio_corr": 0.566,
+   "picture_votes": 22,
+   "spread": 1
+  },
+  "newDuration": 140.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:28:54.862Z"
+ },
+ "97e0e1d6-7df1-4664-8356-b2e43e71a576": {
+  "title": "50,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.426,
+   58.426
+  ],
+  "before": {
+   "offset_ms": -225.8,
+   "audio_corr": 0.677,
+   "picture_votes": 12
+  },
+  "oldAssetId": "b4xZQdR5DCQDh7yh029PLffVPgAGZO4NKCXbjHbM027lk",
+  "newAssetId": "axOdVAiXytUSgufnj00nY2cOV0001oUsHH2Mab7DptBf01Q",
+  "startedAt": "2026-10-29T10:29:56.228Z",
+  "after": {
+   "offset_ms": 15.1,
+   "audio_corr": 0.676,
+   "picture_votes": 13,
+   "spread": 0
+  },
+  "newDuration": 43.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:31:50.931Z"
+ },
+ "f4222417-e03a-49c7-90e7-c8d16d72d45e": {
+  "title": "30,000 Mile Dealer Upsell Menu (2760)",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.705,
+   152.705
+  ],
+  "before": {
+   "offset_ms": -225.5,
+   "audio_corr": 0.664,
+   "picture_votes": 17
+  },
+  "oldAssetId": "mjbXTU401vzxE5N1jTHnlWnd01xW1851cHuNg1V7gEVSc",
+  "newAssetId": "uZ54DFqwnBP63bjepd01l20002jx9fwsmJ4XEp2T2F7j8g",
+  "startedAt": "2026-10-29T10:36:52.360Z",
+  "after": {
+   "offset_ms": 16.8,
+   "audio_corr": 0.655,
+   "picture_votes": 22,
+   "spread": 0
+  },
+  "newDuration": 136.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:42:01.652Z"
+ },
+ "6a53c1f3-cc3d-4eed-9ed1-21725417e4df": {
+  "title": "120,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.062,
+   153.062
+  ],
+  "before": {
+   "offset_ms": -222.2,
+   "audio_corr": 0.653,
+   "picture_votes": 35
+  },
+  "oldAssetId": "01F2CoktE9jIpVRep2026T8b35X01WXtEVAn92CLCVhAEw",
+  "newAssetId": "bxL9ovodDAnr9A12a02vjh4SmnLnGY7QJI1Y3BCvWmoI",
+  "startedAt": "2026-10-29T10:44:54.172Z",
+  "after": {
+   "offset_ms": 20.9,
+   "audio_corr": 0.649,
+   "picture_votes": 33,
+   "spread": 0
+  },
+  "newDuration": 138.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:50:07.424Z"
+ },
+ "4a84c86c-def1-4692-bc5e-5864f69a58fc": {
+  "title": "105,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.342,
+   89.342
+  ],
+  "before": {
+   "offset_ms": -221.5,
+   "audio_corr": 0.674,
+   "picture_votes": 27
+  },
+  "oldAssetId": "FfJnvgDRa7U3yYPaUXqC84ZOvzn9OS2xZ02KgFkPzM008",
+  "newAssetId": "401Cz8a9t4zR1giIg00hYiHFfu3CYKSb3IsZlwaNrBmzo",
+  "startedAt": "2026-10-29T10:56:02.681Z",
+  "after": {
+   "offset_ms": -18.1,
+   "audio_corr": 0.673,
+   "picture_votes": 17,
+   "spread": 1
+  },
+  "newDuration": 73.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T10:59:00.208Z"
+ },
+ "8d736820-45c1-4cc2-b434-d98dbc47368a": {
+  "title": "65,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.575,
+   159.575
+  ],
+  "before": {
+   "offset_ms": -214.9,
+   "audio_corr": 0.631,
+   "picture_votes": 57
+  },
+  "oldAssetId": "mMzMrj7wTedjxzIGGmuZvk8QquVtMe028DPGEnwZ00x78",
+  "newAssetId": "JVNy00W00J29f5pW4WryYfzTCS4DIYcv4vKJop7SbqjAg",
+  "startedAt": "2026-10-29T11:07:42.196Z",
+  "after": {
+   "offset_ms": -10.5,
+   "audio_corr": 0.644,
+   "picture_votes": 53,
+   "spread": 0
+  },
+  "newDuration": 143.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T11:13:25.141Z"
+ },
+ "da1adb1a-40f2-464f-87d5-a111069c2359": {
+  "title": "100,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   18.494,
+   182.494
+  ],
+  "before": {
+   "offset_ms": -214.4,
+   "audio_corr": 0.621,
+   "picture_votes": 42
+  },
+  "oldAssetId": "tBVsrVxic3277ECKgcGR4vUMfzVL4rnE7af3QpLbHYQ",
+  "newAssetId": "VcjdS00pNjM3SP7R02hNp38Div2jKCZosNFLwVLQ3M029M",
+  "startedAt": "2026-10-29T11:18:50.547Z",
+  "after": {
+   "offset_ms": 30.8,
+   "audio_corr": 0.636,
+   "picture_votes": 29,
+   "spread": 0
+  },
+  "newDuration": 164.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T11:25:35.272Z"
+ },
+ "cc56bdc0-b4ae-411f-9bdc-1d4948b976fb": {
+  "title": "65,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   18.173,
+   178.173
+  ],
+  "before": {
+   "offset_ms": -213.4,
+   "audio_corr": 0.636,
+   "picture_votes": 15
+  },
+  "oldAssetId": "Q4YaPWOGaZ00OIqhgU9LzF01C702qI2k91GnaUgXj6tEgI",
+  "newAssetId": "EL3afa5GU01pFX8KzpeoAz7PH9yIDdGkloGIDuUx82Zs",
+  "startedAt": "2026-10-29T11:29:18.932Z",
+  "after": {
+   "offset_ms": -7.6,
+   "audio_corr": 0.652,
+   "picture_votes": 17,
+   "spread": 0
+  },
+  "newDuration": 160.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T11:35:14.753Z"
+ },
+ "ad3bd915-9e95-4b58-b6bb-5fa234fe91ab": {
+  "title": "55,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.211,
+   116.211
+  ],
+  "before": {
+   "offset_ms": -211.3,
+   "audio_corr": 0.677,
+   "picture_votes": 39
+  },
+  "oldAssetId": "JKbURp7U1rRSRIyOSnJTaOlVTdFlkoYUUoDao57RlU00",
+  "newAssetId": "t5mPKQhdlBaUnMyZlyI9RPbk02EuuiJp026xm8oc26Opw",
+  "startedAt": "2026-10-29T11:36:14.291Z",
+  "after": {
+   "offset_ms": -6.4,
+   "audio_corr": 0.692,
+   "picture_votes": 30,
+   "spread": 0
+  },
+  "newDuration": 100.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T11:40:04.469Z"
+ },
+ "1e3b8e57-2fde-4af0-8f49-253572d8adf3": {
+  "title": "Seasonal Menus, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.874,
+   189.874
+  ],
+  "before": {
+   "offset_ms": -194.1,
+   "audio_corr": 0.671,
+   "picture_votes": 26
+  },
+  "oldAssetId": "6Fv502wt81Ef8wa01PKomA024SJtkRx2FhHW01k7lrPOXBg",
+  "newAssetId": "S8IT1vdd8Mzq7GWvDNnJOfU802Qg016VL8yo01CtOFyQ018",
+  "startedAt": "2026-10-29T11:45:27.923Z",
+  "after": {
+   "offset_ms": 6.5,
+   "audio_corr": 0.671,
+   "picture_votes": 25,
+   "spread": 0
+  },
+  "newDuration": 174.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T11:52:22.771Z"
+ },
+ "7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e": {
+  "title": "110,000 Mile Dealer Upsell Menu",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.684,
+   193.684
+  ],
+  "before": {
+   "offset_ms": -203.8,
+   "audio_corr": 0.607,
+   "picture_votes": 31
+  },
+  "oldAssetId": "ZrVVCwQ9Ahrw1Fm3pdwhc02HtTlsoPRKIkRCakM7dhfI",
+  "newAssetId": "irXxgRdE202uGM01zbnJb1CgwXqMv2oNUs1DoCi3Mmf9Q",
+  "startedAt": "2026-10-29T11:57:04.487Z",
+  "after": {
+   "offset_ms": -0.8,
+   "audio_corr": 0.608,
+   "picture_votes": 26,
+   "spread": 0
+  },
+  "newDuration": 176.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T12:03:08.453Z"
+ },
+ "69be19f1-afde-4349-9ba8-c5eed6f60b39": {
+  "title": "60,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.44,
+   110.44
+  ],
+  "before": {
+   "offset_ms": -199.9,
+   "audio_corr": 0.707,
+   "picture_votes": 32
+  },
+  "oldAssetId": "7m1gmu3dNVqi7AtAzcpZqRKfr4FHPDUS0067e3uFqNOI",
+  "newAssetId": "gXAKBBab6CsBLOVXeGHy6B8O2G5f2JMYUt2i8C00gQcc",
+  "startedAt": "2026-10-29T12:06:10.864Z",
+  "after": {
+   "offset_ms": 2.5,
+   "audio_corr": 0.737,
+   "picture_votes": 24,
+   "spread": 0
+  },
+  "newDuration": 97.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T12:09:47.771Z"
+ },
+ "bfe2d90b-487c-4347-b8cc-f43d188df825": {
+  "title": "60,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.236,
+   200.236
+  ],
+  "before": {
+   "offset_ms": -236,
+   "audio_corr": 0.685,
+   "picture_votes": 17
+  },
+  "oldAssetId": "vKianrZFMAB02djKq003h007b502R5ei02v3D6Vr7hqdsAg4",
+  "newAssetId": "x9yHJ8zGgj02hkVxtmrQQ9E97og8JMiExeWiFzr1G7Mk",
+  "startedAt": "2026-10-29T12:11:55.246Z",
+  "after": {
+   "offset_ms": 5.2,
+   "audio_corr": 0.683,
+   "picture_votes": 15,
+   "spread": 0
+  },
+  "newDuration": 184.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T12:18:39.040Z"
+ },
+ "53e3fa52-1c1d-42a0-a1c4-6ea64e905279": {
+  "title": "60,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.663,
+   183.663
+  ],
+  "before": {
+   "offset_ms": -182.8,
+   "audio_corr": 0.694,
+   "picture_votes": 31
+  },
+  "oldAssetId": "l7i00KBlKmjUPXaw6yoTqIVAuDe24qgNZUDHDo01x01ODs",
+  "newAssetId": "mrEGfken8xgk45WdyJ01Km0100emDgC56DA4502L02QVc7F4",
+  "startedAt": "2026-10-29T12:23:29.205Z",
+  "after": {
+   "offset_ms": 18.9,
+   "audio_corr": 0.688,
+   "picture_votes": 27,
+   "spread": 0
+  },
+  "newDuration": 167.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T12:29:54.535Z"
+ },
+ "6ac8ff68-b979-43f3-8a72-e32c0feb0e89": {
+  "title": "Wall Street",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   63.951
+  ],
+  "before": {
+   "offset_ms": 1288.6,
+   "audio_corr": 0.863,
+   "picture_votes": 168
+  },
+  "oldAssetId": "mxIG6Nc00qGjkhzTBTgp802y00AKyenSKlG01VZtKVVARwg",
+  "newAssetId": "tDC3JKb01tFw31EqrA1i9PwNXGvfy9R6P33OYv5yTWW00",
+  "startedAt": "2026-10-29T12:36:25.616Z",
+  "after": {
+   "offset_ms": 9.8,
+   "audio_corr": 0.866,
+   "picture_votes": 125,
+   "spread": 0
+  },
+  "newDuration": 59.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T12:39:48.978Z"
+ },
+ "249b3f98-c658-4145-939e-a212a35977ab": {
+  "title": "On the Drive, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.522,
+   128.522
+  ],
+  "before": {
+   "offset_ms": -242.1,
+   "audio_corr": 0.896,
+   "picture_votes": 117
+  },
+  "oldAssetId": "fmLhGV2YlGK02CpIMkaxtl6hVQkFmLVJNghifxB5hyNk",
+  "newAssetId": "deGGDMok5AF46rI3GTTNQG00a9ZWDhT3PLNxx34goASs",
+  "startedAt": "2026-10-29T12:52:01.144Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.899,
+   "picture_votes": 102,
+   "spread": 0
+  },
+  "newDuration": 124.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T12:58:20.954Z"
+ },
+ "0791e6ee-cbfe-45db-8119-c9c904c4699a": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.306,
+   130.306
+  ],
+  "before": {
+   "offset_ms": -225.8,
+   "audio_corr": 0.742,
+   "picture_votes": 17
+  },
+  "oldAssetId": "on8osBlGuZsfnlNxCopRYrjPiwQfVH0202ZtXN5oCZYLU",
+  "newAssetId": "Ci00XtonpoccbI502Kq5ZPHmR6dad02nflMWhbQkFQ7CSc",
+  "startedAt": "2026-10-29T13:02:44.019Z",
+  "after": {
+   "offset_ms": 15.1,
+   "audio_corr": 0.773,
+   "picture_votes": 15,
+   "spread": 0
+  },
+  "newDuration": 120.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T13:07:29.948Z"
+ },
+ "0017852c-1251-4a48-8f8b-5024d1dd32b7": {
+  "title": "On the Drive",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.011,
+   115.011
+  ],
+  "before": {
+   "offset_ms": -211.4,
+   "audio_corr": 0.845,
+   "picture_votes": 126
+  },
+  "oldAssetId": "VT00ugtlbV87vh9lKvRfr02y54IkhFas02Gdjv028o8kPL8",
+  "newAssetId": "eUREXSASJ6R9PP7GDIEalOqLT01702ac02bCDqmaOJHXew",
+  "startedAt": "2026-10-29T13:08:32.231Z",
+  "after": {
+   "offset_ms": -6.5,
+   "audio_corr": 0.87,
+   "picture_votes": 121,
+   "spread": 0
+  },
+  "newDuration": 110.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T13:14:10.465Z"
+ },
+ "7cb3dd9a-9693-4548-b45d-947795082d49": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.204,
+   68.204
+  ],
+  "before": {
+   "offset_ms": -204,
+   "audio_corr": 0.88,
+   "picture_votes": 57
+  },
+  "oldAssetId": "P008y7R02C00BGa2l2Nwasut0101Xa7bZC3in486yDCPP9xM",
+  "newAssetId": "afYCijD5zHe5C3tqfleUcuH01ce73LtuyPmISfttuPtE",
+  "startedAt": "2026-10-29T13:15:16.781Z",
+  "after": {
+   "offset_ms": -0.9,
+   "audio_corr": 0.886,
+   "picture_votes": 65,
+   "spread": 0
+  },
+  "newDuration": 62.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T13:18:58.223Z"
+ },
+ "0cb74364-c30f-4b29-837f-a7adea1651b7": {
+  "title": "On the Drive, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.606,
+   186.606
+  ],
+  "before": {
+   "offset_ms": -206.3,
+   "audio_corr": 0.885,
+   "picture_votes": 50
+  },
+  "oldAssetId": "7QJwB2X2M5OTdcs5b00GPkckSIugoWXrnoxx3j3Fr9aY",
+  "newAssetId": "buqK02d6P8200S502BzSyDTdf4w8wwV01GCxOmIIn02yxWso",
+  "startedAt": "2026-10-29T13:25:48.106Z",
+  "after": {
+   "offset_ms": -2.3,
+   "audio_corr": 0.9,
+   "picture_votes": 42,
+   "spread": 0
+  },
+  "newDuration": 181.854667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T13:34:09.119Z"
+ },
+ "4a5cf641-c4ec-41ac-ba0b-fbac1c4d2f48": {
+  "title": "Diesel, Part 6",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.142,
+   200.142
+  ],
+  "before": {
+   "offset_ms": -261.8,
+   "audio_corr": 0.669,
+   "picture_votes": 20
+  },
+  "oldAssetId": "LQnu8XgMPPSBkEyvRxtXBRNzK9xUExRmOllaSxnGHzI",
+  "newAssetId": "yPibTvi3QrvENC7aU8tEOKO00AsQCWNBQt6BvTWgOWVE",
+  "startedAt": "2026-10-29T13:38:17.898Z",
+  "after": {
+   "offset_ms": -18.6,
+   "audio_corr": 0.667,
+   "picture_votes": 20,
+   "spread": 0
+  },
+  "newDuration": 187.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T13:45:23.541Z"
+ },
+ "8a61375b-7ee7-4b4a-b504-1446f9e77827": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.783,
+   158.783
+  ],
+  "before": {
+   "offset_ms": -223.1,
+   "audio_corr": 0.774,
+   "picture_votes": 116
+  },
+  "oldAssetId": "017uqfas0215BTQLC3Q0001iTCRcganUIDrnMw02XRznx6Og",
+  "newAssetId": "CQDuY8abxd9Z856h7HTT9i00la4krIJ3mpwCIx3FwIXg",
+  "startedAt": "2026-10-29T13:48:27.576Z",
+  "after": {
+   "offset_ms": -21.6,
+   "audio_corr": 0.768,
+   "picture_votes": 103,
+   "spread": 0
+  },
+  "newDuration": 152.854667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T13:56:09.172Z"
+ },
+ "8abe28de-8bf1-490e-8d53-8a26dab908f3": {
+  "title": "Phones and Tones, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.669,
+   85.669
+  ],
+  "before": {
+   "offset_ms": -228.8,
+   "audio_corr": 0.779,
+   "picture_votes": 18
+  },
+  "oldAssetId": "Yr5Hlowk100IaH635nlmi5jJ5dGaf019HQzd19hrPYk24",
+  "newAssetId": "w4Mx00BR7hS6xUnKzISyULPc9iyKKcDP9hUPshrGHjzw",
+  "startedAt": "2026-10-29T13:57:12.056Z",
+  "after": {
+   "offset_ms": 11.6,
+   "audio_corr": 0.777,
+   "picture_votes": 17,
+   "spread": 0
+  },
+  "newDuration": 75.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:00:26.297Z"
+ },
+ "0c737a9a-bf64-4b60-956f-d592de40b50d": {
+  "title": "Diesel, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.929,
+   110.929
+  ],
+  "before": {
+   "offset_ms": -248.9,
+   "audio_corr": 0.684,
+   "picture_votes": 16
+  },
+  "oldAssetId": "47keAbrvYOozri009p2cUw2ggub01qw01Vl00Q401200wP01xQ",
+  "newAssetId": "dYiIadSBdeyYtI2RrshpRsp00dHFvp02bqFHM01Goi00btg",
+  "startedAt": "2026-10-29T14:01:28.446Z",
+  "after": {
+   "offset_ms": 35.2,
+   "audio_corr": 0.698,
+   "picture_votes": 14,
+   "spread": 1
+  },
+  "newDuration": 97.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:05:36.331Z"
+ },
+ "92c0137c-751e-4e7b-8f0d-ffe9ca23970d": {
+  "title": "Choices",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.254,
+   58.254
+  ],
+  "before": {
+   "offset_ms": -214.4,
+   "audio_corr": 0.813,
+   "picture_votes": 14
+  },
+  "oldAssetId": "6HLsUYbr1gNpXzuMPjldblkAu5PAjsfylK4ubRihDuY",
+  "newAssetId": "wJf1dVlNH0101gK8bnSQAmRr1Ika1RbFQYnTwwUeYKOms",
+  "startedAt": "2026-10-29T14:15:14.740Z",
+  "after": {
+   "offset_ms": 30.5,
+   "audio_corr": 0.833,
+   "picture_votes": 13,
+   "spread": 0
+  },
+  "newDuration": 50.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:17:22.020Z"
+ },
+ "eac42e00-5aa1-4368-8dc5-fef14ca95b70": {
+  "title": "Diesel, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.653,
+   165.653
+  ],
+  "before": {
+   "offset_ms": -213.5,
+   "audio_corr": 0.611,
+   "picture_votes": 20
+  },
+  "oldAssetId": "CDoXv5tWGoOGiMOfe402qd5EEq2MmNqy02U2IplgpMJ5U",
+  "newAssetId": "GsMuKp00rAbSWPXgfDQaCfTEL1WNToyLSs00xdR58R00eA",
+  "startedAt": "2026-10-29T14:20:00.762Z",
+  "after": {
+   "offset_ms": 32,
+   "audio_corr": 0.632,
+   "picture_votes": 22,
+   "spread": 0
+  },
+  "newDuration": 151.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:25:54.250Z"
+ },
+ "ee1e7814-8762-40f5-b967-4c6557bc4f6f": {
+  "title": "Selling Skills, Part 8",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.646,
+   72.646
+  ],
+  "before": {
+   "offset_ms": -206.1,
+   "audio_corr": 0.77,
+   "picture_votes": 23
+  },
+  "oldAssetId": "F2E01YI6dW1TVYAXvD9qJXakv0200M02qa3Quw01c701Y5VIk",
+  "newAssetId": "Yi01UCLUtViX013LCyqCyyF8bnqA1dzFIG02huJP4rknJM",
+  "startedAt": "2026-10-29T14:43:47.046Z",
+  "after": {
+   "offset_ms": -2.2,
+   "audio_corr": 0.778,
+   "picture_votes": 19,
+   "spread": 0
+  },
+  "newDuration": 61.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:46:35.721Z"
+ },
+ "1b8eae3a-dec9-451c-9aae-d76d7dedb719": {
+  "title": "Phones and Tones, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.116,
+   100.116
+  ],
+  "before": {
+   "offset_ms": -235.9,
+   "audio_corr": 0.74,
+   "picture_votes": 20
+  },
+  "oldAssetId": "xuGN8G1HL7MmOUQWPsg2zHXArM6RwJL8Sr5ahPx2Gj00",
+  "newAssetId": "x8LL4iv6O1e28010002rKmymdFx7JW7wX8K700ZPf4g2Lsg",
+  "startedAt": "2026-10-29T14:48:31.694Z",
+  "after": {
+   "offset_ms": 5.3,
+   "audio_corr": 0.737,
+   "picture_votes": 33,
+   "spread": 0
+  },
+  "newDuration": 89.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:51:59.872Z"
+ },
+ "4847165c-d197-42a5-86f0-d28791bef06f": {
+  "title": "Bank Account 12, Deposit 6, Admitting When You're Wrong",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.954,
+   156.954
+  ],
+  "before": {
+   "offset_ms": -234.1,
+   "audio_corr": 0.865,
+   "picture_votes": 17
+  },
+  "oldAssetId": "voL6GALhfpySpbETBFBw6X601rWN3jLgSe02du8PuJm7k",
+  "newAssetId": "wv6O1ZTz4gc89bvqla8F01HXPRgelr4fouLIYHCaDXyo",
+  "startedAt": "2026-10-29T14:53:09.031Z",
+  "after": {
+   "offset_ms": 6.5,
+   "audio_corr": 0.864,
+   "picture_votes": 13,
+   "spread": 0
+  },
+  "newDuration": 151.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T14:59:04.690Z"
+ },
+ "818eb449-fb61-4357-9c0d-7446adac041b": {
+  "title": "Start Today",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.482,
+   36.482
+  ],
+  "before": {
+   "offset_ms": -242.1,
+   "audio_corr": 0.846,
+   "picture_votes": 15
+  },
+  "oldAssetId": "SaDXPDK024pgP01C00ZUuJGu5vrvsnxVuKppw00Z4ah6PjI",
+  "newAssetId": "3q00RdCpetMgKdCz101IBDQ7uweE00w101SQJrOZB55a2jA",
+  "startedAt": "2026-10-29T15:07:04.579Z",
+  "after": {
+   "offset_ms": 0.5,
+   "audio_corr": 0.844,
+   "picture_votes": 17,
+   "spread": 0
+  },
+  "newDuration": 31.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T15:09:36.669Z"
+ },
+ "a69d69ed-4c08-49ee-91c2-a6acdeb0fc4c": {
+  "title": "On the Drive",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.229,
+   266.229
+  ],
+  "before": {
+   "offset_ms": -228.6,
+   "audio_corr": 0.847,
+   "picture_votes": 42
+  },
+  "oldAssetId": "TmCwQzb01g602LP3vb9Edm68NABYsdr7YXtwx5tY9aLFY",
+  "newAssetId": "CXwHJ8yychtGcicVsyFk4g005IG01xU800aZlgBW7oOdFM",
+  "startedAt": "2026-10-29T15:41:35.675Z",
+  "after": {
+   "offset_ms": 11.8,
+   "audio_corr": 0.845,
+   "picture_votes": 30,
+   "spread": 0
+  },
+  "newDuration": 261.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T15:56:09.574Z"
+ },
+ "995686c1-4a3f-45c6-bf30-1b5f71c27888": {
+  "title": "The Lowest Point Is the Doorway",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.228,
+   45.228
+  ],
+  "before": {
+   "offset_ms": -228.4,
+   "audio_corr": 0.843,
+   "picture_votes": 24
+  },
+  "oldAssetId": "2t1K9w1KBAE7aFMHAGOKxi8mYAIfkw6DxMHbOnQh3pk",
+  "newAssetId": "5BXRDXq9cLjWFdclemRGZaIwQtAaTHONXevI0000cJiRw",
+  "startedAt": "2026-10-29T15:57:14.676Z",
+  "after": {
+   "offset_ms": 13.2,
+   "audio_corr": 0.836,
+   "picture_votes": 21,
+   "spread": 0
+  },
+  "newDuration": 39.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T15:59:34.408Z"
+ },
+ "d935f1e3-ab13-4c96-8d8d-0ddf1107260c": {
+  "title": "Bank Account 05, Withdrawal 2, Taking Credit",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.314,
+   132.314
+  ],
+  "before": {
+   "offset_ms": -234.1,
+   "audio_corr": 0.873,
+   "picture_votes": 25
+  },
+  "oldAssetId": "HkotaFwQVFD7e0284qE6mHmln33q296FKmW88U01JSqOs",
+  "newAssetId": "W02gyYgTxharnD2bdxwcHnI016roF01W0001WiDwSigURYCw",
+  "startedAt": "2026-10-29T16:00:46.762Z",
+  "after": {
+   "offset_ms": 6.6,
+   "audio_corr": 0.871,
+   "picture_votes": 35,
+   "spread": 0
+  },
+  "newDuration": 127.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T16:06:24.752Z"
+ },
+ "21904d07-e87d-40c4-a265-31a3540dccaa": {
+  "title": "Problems or Solutions",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.246,
+   102.246
+  ],
+  "before": {
+   "offset_ms": -206.4,
+   "audio_corr": 0.856,
+   "picture_votes": 28
+  },
+  "oldAssetId": "i9JCYtqlqNhv5g8LzHdn2EklzfAeYZCZOHPHT98PZgo",
+  "newAssetId": "Da18SulnVX9yjSXz8Qmj98KTd02OzhID7p9X4O4Qr902A",
+  "startedAt": "2026-10-29T16:10:24.562Z",
+  "after": {
+   "offset_ms": -2.3,
+   "audio_corr": 0.866,
+   "picture_votes": 20,
+   "spread": 0
+  },
+  "newDuration": 96.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T16:15:51.262Z"
+ },
+ "6d1f58bf-e840-4674-bb49-9a40d3a8a511": {
+  "title": "Language of Gratitude",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.226,
+   100.226
+  ],
+  "before": {
+   "offset_ms": -225.7,
+   "audio_corr": 0.841,
+   "picture_votes": 22
+  },
+  "oldAssetId": "rr7jHA3JquuD2K2SjYEP7w6UcJ4sPdK66WxF8wxbjSQ",
+  "newAssetId": "00qYVRT7I3pZ9jTQybvjN01y3IpDDdOZyrApaCWrqzbfI",
+  "startedAt": "2026-10-29T16:26:15.537Z",
+  "after": {
+   "offset_ms": 15.3,
+   "audio_corr": 0.885,
+   "picture_votes": 20,
+   "spread": 0
+  },
+  "newDuration": 95.888,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T16:32:01.093Z"
+ },
+ "7d39c83f-581d-4bd5-97cd-07725e79f173": {
+  "title": "Confidence",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.84,
+   71.84
+  ],
+  "before": {
+   "offset_ms": -199.9,
+   "audio_corr": 0.935,
+   "picture_votes": 29
+  },
+  "oldAssetId": "zMlKc3YaGbvaAWZ3ecfQnDIg02Yd5mR016scH502Y02yevo",
+  "newAssetId": "6D02Zjd7UsRWSrDC1w02pDn7bONnZBtyMv006hVcSqrv2w",
+  "startedAt": "2026-10-29T16:37:08.969Z",
+  "after": {
+   "offset_ms": 2.3,
+   "audio_corr": 0.933,
+   "picture_votes": 31,
+   "spread": 0
+  },
+  "newDuration": 68.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T16:41:06.669Z"
+ },
+ "c6bedfd2-252f-4623-a00b-40f347760de4": {
+  "title": "EV Series, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.128,
+   192.128
+  ],
+  "before": {
+   "offset_ms": -247.8,
+   "audio_corr": 0.695,
+   "picture_votes": 21
+  },
+  "oldAssetId": "kyRn2hsfw027vzh702kRr7PP00Kq99E8Q8OubdwELGNabw",
+  "newAssetId": "5EnjCEvvG901ltOhMUEDwfoPw28oICYDep02fcU2kRSRY",
+  "startedAt": "2026-10-29T16:42:28.949Z",
+  "after": {
+   "offset_ms": 36.5,
+   "audio_corr": 0.704,
+   "picture_votes": 19,
+   "spread": 1
+  },
+  "newDuration": 175.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T16:50:49.938Z"
+ },
+ "8a5a2225-da50-4e8a-935c-916e423443d0": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.844,
+   128.844
+  ],
+  "before": {
+   "offset_ms": -204.1,
+   "audio_corr": 0.882,
+   "picture_votes": 137
+  },
+  "oldAssetId": "301XMm9rqmaDUMvpkJJDE33VdaVS9naOzddCtk1XgDMU",
+  "newAssetId": "wZBYOT4UZYQi3YMD5mlWyDC4rK00QHFV4iHD3htRJokw",
+  "startedAt": "2026-10-29T16:57:30.840Z",
+  "after": {
+   "offset_ms": -0.8,
+   "audio_corr": 0.89,
+   "picture_votes": 127,
+   "spread": 0
+  },
+  "newDuration": 122.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T17:05:15.932Z"
+ },
+ "0bed2876-a481-49a0-bdb5-ecee2ade6d44": {
+  "title": "Bank Account 01, Introduction",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.554,
+   101.554
+  ],
+  "before": {
+   "offset_ms": -233.6,
+   "audio_corr": 0.824,
+   "picture_votes": 36
+  },
+  "oldAssetId": "eSANUQhhZD5CphT21Pp5a0102Fyyi00V013HDxY4X02CzSwA",
+  "newAssetId": "ns5eelExYoOGYKfIINarEZGtmoOg4ZpWVA4oL3QJeYQ",
+  "startedAt": "2026-10-29T17:10:59.673Z",
+  "after": {
+   "offset_ms": 7.2,
+   "audio_corr": 0.822,
+   "picture_votes": 36,
+   "spread": 0
+  },
+  "newDuration": 94.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T17:15:18.345Z"
+ },
+ "525d7fbf-dee7-4071-8f6a-b0674bba568f": {
+  "title": "Don't Tell Me You Can't",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.817,
+   54.817
+  ],
+  "before": {
+   "offset_ms": -217.4,
+   "audio_corr": 0.854,
+   "picture_votes": 15
+  },
+  "oldAssetId": "d92JJTuXNifPSnjKFDYw73lONq3PR01vL2Aq4w016cT01w",
+  "newAssetId": "mt55FkOmNRn69y00Oe4PNtAYISUOS00uYZ01h6PxnjXi2Q",
+  "startedAt": "2026-10-29T17:19:51.427Z",
+  "after": {
+   "offset_ms": -11.6,
+   "audio_corr": 0.902,
+   "picture_votes": 15,
+   "spread": 0
+  },
+  "newDuration": 51.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T17:22:26.707Z"
+ },
+ "28a76251-df96-482e-8159-233cb79bfc45": {
+  "title": "Selling Skills, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.28,
+   73.28
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.855,
+   "picture_votes": 29
+  },
+  "oldAssetId": "mZ48pzCd8ZG5ExO017UtWQWj1EE4HOkza2t00Dc6ihsV00",
+  "newAssetId": "6f5iCuusku2veV8PM1mVy01rBNhShmjpIj5YcXpBfbEI",
+  "startedAt": "2026-10-29T17:28:19.366Z",
+  "after": {
+   "offset_ms": 2,
+   "audio_corr": 0.852,
+   "picture_votes": 28,
+   "spread": 0
+  },
+  "newDuration": 64.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T17:31:02.998Z"
+ },
+ "ba0e07ad-f0b3-4d54-858b-4c4bbc422135": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.714,
+   156.714
+  ],
+  "before": {
+   "offset_ms": -194,
+   "audio_corr": 0.896,
+   "picture_votes": 41
+  },
+  "oldAssetId": "59SKvd4x8FDuHIVWW02prSoSheSqwDGoKlHvtnQ5Z7b00",
+  "newAssetId": "bu1sKtRmo5n00025wstAmcxxnNlqi02PHxB01MwfL700fmnw",
+  "startedAt": "2026-10-29T17:37:12.846Z",
+  "after": {
+   "offset_ms": 6.8,
+   "audio_corr": 0.893,
+   "picture_votes": 67,
+   "spread": 0
+  },
+  "newDuration": 153.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T17:45:14.282Z"
+ },
+ "48f897e0-87e3-4a38-9bcf-11a6ea980f36": {
+  "title": "Piggyback",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.414,
+   183.414
+  ],
+  "before": {
+   "offset_ms": -213.9,
+   "audio_corr": 0.864,
+   "picture_votes": 82
+  },
+  "oldAssetId": "Xnr93A9MTeg7Ouy4bWkfjwDZ8DTVq2IQ3OZcrVmdnv4",
+  "newAssetId": "XLx00dbqNU44b01CQzCX00c7zp5RuVTCRtw1M7Y5ZNvXjI",
+  "startedAt": "2026-10-29T17:50:24.018Z",
+  "after": {
+   "offset_ms": -8.8,
+   "audio_corr": 0.89,
+   "picture_votes": 75,
+   "spread": 0
+  },
+  "newDuration": 179.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T17:59:09.530Z"
+ },
+ "ed09c4bb-bedc-456a-ae3b-0d25272bbe0f": {
+  "title": "Bank Account 15, Withdrawal 7, Leading Differently Depending on Who's Watching",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.682,
+   151.682
+  ],
+  "before": {
+   "offset_ms": -201.8,
+   "audio_corr": 0.776,
+   "picture_votes": 30
+  },
+  "oldAssetId": "XFX01feNdmb800M02tChDOVmtLpBDgIx9l1Rsec7UfIWMk",
+  "newAssetId": "m00wRgBe3oTQ02neZAhDE7lcCEQKnVIP6qSl5XP4Ko01fw",
+  "startedAt": "2026-10-29T18:05:19.037Z",
+  "after": {
+   "offset_ms": 0.7,
+   "audio_corr": 0.777,
+   "picture_votes": 15,
+   "spread": 0
+  },
+  "newDuration": 143.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T18:10:53.338Z"
+ },
+ "1fa69385-ce6b-490e-b5f0-0e582e9fe828": {
+  "title": "Fearful When Others Are Greedy",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.118,
+   34.118
+  ],
+  "before": {
+   "offset_ms": -197.8,
+   "audio_corr": 0.882,
+   "picture_votes": 154
+  },
+  "oldAssetId": "g8zFnc6eQAd1spoCMnP025Rtl00es79d8oUq76sDY9DLY",
+  "newAssetId": "98piQB5rBAKbaiA4kqb3IVnVn4S7bT01xRBN52uI7ghE",
+  "startedAt": "2026-10-29T18:11:49.422Z",
+  "after": {
+   "offset_ms": 4,
+   "audio_corr": 0.874,
+   "picture_votes": 136,
+   "spread": 0.5
+  },
+  "newDuration": 30.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T18:13:45.093Z"
+ },
+ "14de6c76-1336-4e4f-ae73-8549c686696a": {
+  "title": "Phones and Tones, Part 6",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.812,
+   102.812
+  ],
+  "before": {
+   "offset_ms": -211.8,
+   "audio_corr": 0.774,
+   "picture_votes": 22
+  },
+  "oldAssetId": "NhpaV9cTa01eF02Z5YDSMGsDkbUzfSgM2bRl2MVVYrFgw",
+  "newAssetId": "1rE2p02ag4UfP01EHKqxpoUEwwMAcw501xWe5sqTQHx4fU",
+  "startedAt": "2026-10-29T18:14:46.416Z",
+  "after": {
+   "offset_ms": -7.5,
+   "audio_corr": 0.793,
+   "picture_votes": 21,
+   "spread": 0
+  },
+  "newDuration": 93.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T18:18:22.715Z"
+ },
+ "20290192-36ae-4d72-9e70-626b38dd83f1": {
+  "title": "Don't Quit, Someone Needs Who You're Becoming",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.208,
+   57.208
+  ],
+  "before": {
+   "offset_ms": -208.4,
+   "audio_corr": 0.815,
+   "picture_votes": 35
+  },
+  "oldAssetId": "eaFUG49lkRZ3eo5kjFEbs7xxNQ7EaEsx7v43dv12IFI",
+  "newAssetId": "3c02QJ00SFmuh9HkgAkfOV01lWkfDwh014ifhVzAlgQQ5ZI",
+  "startedAt": "2026-10-29T18:26:53.741Z",
+  "after": {
+   "offset_ms": -3.8,
+   "audio_corr": 0.829,
+   "picture_votes": 25,
+   "spread": 0
+  },
+  "newDuration": 50.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T18:29:16.263Z"
+ },
+ "683053cb-980e-4386-b007-bd5c3d1e362f": {
+  "title": "EV Series, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.166,
+   241.166
+  ],
+  "before": {
+   "offset_ms": -206.1,
+   "audio_corr": 0.631,
+   "picture_votes": 22
+  },
+  "oldAssetId": "QcPXxFP13xG2RGlKm46yET6D00mofqHOgDI5YJUopqpM",
+  "newAssetId": "vluVuw3e8018Ir9hFk56CMhEaD300CsP8fNFRTTkeZOig",
+  "startedAt": "2026-10-29T18:42:17.730Z",
+  "after": {
+   "offset_ms": -2.2,
+   "audio_corr": 0.638,
+   "picture_votes": 21,
+   "spread": 0
+  },
+  "newDuration": 226.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T18:50:59.148Z"
+ },
+ "07c70b0d-ae3a-438a-8c99-4dbdc54917c8": {
+  "title": "After-MPI, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.718,
+   203.718
+  ],
+  "before": {
+   "offset_ms": -238,
+   "audio_corr": 0.861,
+   "picture_votes": 76
+  },
+  "oldAssetId": "9QLO00M01a8EvEWhoWiufJHAE01qHvOUjgGgoP00V8EzSEs",
+  "newAssetId": "uX2UQ2LAi12trnx6VMBpXxKBo3iLMx5dm9EQDTFkdvI",
+  "startedAt": "2026-10-29T19:01:29.949Z",
+  "after": {
+   "offset_ms": 3.4,
+   "audio_corr": 0.859,
+   "picture_votes": 79,
+   "spread": 0
+  },
+  "newDuration": 197.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:11:22.940Z"
+ },
+ "6700b936-9943-4d70-96b7-0d1ed655abf1": {
+  "title": "Coverage is Key, Part 7",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.594,
+   103.594
+  ],
+  "before": {
+   "offset_ms": -234,
+   "audio_corr": 0.685,
+   "picture_votes": 13
+  },
+  "oldAssetId": "f7KPVzohF00dabd3Nv77br3hi9MTr8ZpW3k7aSbt01VX00",
+  "newAssetId": "EFLGdWmWREPAwnFr3InZ1Jq3SLrL4NLsGTDyDE00qyTY",
+  "startedAt": "2026-10-29T19:12:28.089Z",
+  "after": {
+   "offset_ms": 6.6,
+   "audio_corr": 0.683,
+   "picture_votes": 14,
+   "spread": 1
+  },
+  "newDuration": 89.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:16:04.078Z"
+ },
+ "f6466f9e-c720-4b5a-960d-e1cb95538327": {
+  "title": "After-MPI, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.398,
+   90.398
+  ],
+  "before": {
+   "offset_ms": -237.9,
+   "audio_corr": 0.913,
+   "picture_votes": 55
+  },
+  "oldAssetId": "amFUqKRd8Xw2tvGUj3Fea53HQUVbZghCDwcn01mksPas",
+  "newAssetId": "VF9lArlxomSH7zpKIJ01houwscFx001ObEqec8RP8kR01M",
+  "startedAt": "2026-10-29T19:17:14.771Z",
+  "after": {
+   "offset_ms": 3.7,
+   "audio_corr": 0.909,
+   "picture_votes": 43,
+   "spread": 0
+  },
+  "newDuration": 85.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:21:35.051Z"
+ },
+ "aa5ec8bb-26f2-4018-9df0-32c0887ba392": {
+  "title": "Phones and Tones, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.2,
+   89.2
+  ],
+  "before": {
+   "offset_ms": -199.9,
+   "audio_corr": 0.792,
+   "picture_votes": 36
+  },
+  "oldAssetId": "th91YEcizV8Vx1UtG5tSrcFcHwkjppGXINdfI6ooHmE",
+  "newAssetId": "rA02RAgGp3n3F00DIsIHSMorywimXS02pGADrDygtHVabw",
+  "startedAt": "2026-10-29T19:24:22.942Z",
+  "after": {
+   "offset_ms": 2.3,
+   "audio_corr": 0.789,
+   "picture_votes": 25,
+   "spread": 0
+  },
+  "newDuration": 78.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:27:27.660Z"
+ },
+ "bd6628e4-f5cb-4df7-a9df-32ee7355164a": {
+  "title": "Phones and Tones, Part 9",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.602,
+   153.602
+  ],
+  "before": {
+   "offset_ms": -201.8,
+   "audio_corr": 0.829,
+   "picture_votes": 55
+  },
+  "oldAssetId": "Hf6XPC85Llhbug1SuXWpNTfOlQNsabnv7GnLI00007Nfk",
+  "newAssetId": "U5TFy48u00Gi00ucz9YW5bmDejLGelhvV5rv00ml3O00Sqk",
+  "startedAt": "2026-10-29T19:28:29.243Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.83,
+   "picture_votes": 49,
+   "spread": 0
+  },
+  "newDuration": 143.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:33:52.891Z"
+ },
+ "4a130419-7898-4eac-9370-f088916d75e3": {
+  "title": "On the Drive, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.994,
+   137.994
+  ],
+  "before": {
+   "offset_ms": -233.7,
+   "audio_corr": 0.873,
+   "picture_votes": 110
+  },
+  "oldAssetId": "uJjYttA3CV2QpKkSQVTlFrKVTMIr2i29n6rFZnbmMhA",
+  "newAssetId": "Dkr00XOX00301YYxt00uqGF8eA8gi01A02Dfw8eHwtQl9011900",
+  "startedAt": "2026-10-29T19:35:04.911Z",
+  "after": {
+   "offset_ms": 7,
+   "audio_corr": 0.87,
+   "picture_votes": 92,
+   "spread": 0
+  },
+  "newDuration": 132.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:41:54.962Z"
+ },
+ "7935a5c5-c341-4fa4-80a9-e2f565a38a28": {
+  "title": "On the Drive",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.28,
+   173.28
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.88,
+   "picture_votes": 15
+  },
+  "oldAssetId": "eTPd01TZa003IeO02Z02TMFx1rrhk7zSjA3vVXPkb00uffEM",
+  "newAssetId": "WbU2evXdSpN2wDuMJrJrdy1uzQKGasZy78AOCrbaXPM",
+  "startedAt": "2026-10-29T19:47:03.703Z",
+  "after": {
+   "offset_ms": 2.1,
+   "audio_corr": 0.877,
+   "picture_votes": 16,
+   "spread": 0
+  },
+  "newDuration": 164.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T19:54:34.992Z"
+ },
+ "2c520ac0-44dd-4bcf-b927-eb63523dd32c": {
+  "title": "Three Things in a Teammate, Dependable, Skilled, Selfless",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.103,
+   59.103
+  ],
+  "before": {
+   "offset_ms": -222.5,
+   "audio_corr": 0.837,
+   "picture_votes": 17
+  },
+  "oldAssetId": "CpSnDXKT2s016Ly02DNDLnPpqFVz602mO023pSsCEzv01D0000",
+  "newAssetId": "lic7yq400fwMftUSLKaLaD6X2qgm25iMytHI7hXkjID00",
+  "startedAt": "2026-10-29T19:59:36.228Z",
+  "after": {
+   "offset_ms": 19.4,
+   "audio_corr": 0.83,
+   "picture_votes": 18,
+   "spread": 0
+  },
+  "newDuration": 52.788,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T20:02:51.169Z"
+ },
+ "f9bb2922-5ea1-45d2-97ff-ce7930ef2677": {
+  "title": "Solving Difficult Problems",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.585,
+   41.585
+  ],
+  "before": {
+   "offset_ms": -225,
+   "audio_corr": 0.823,
+   "picture_votes": 113
+  },
+  "oldAssetId": "7KXZ01WCtAc2M1jGBNwoh01jGtulx54SAXCBQYFfxKfJs",
+  "newAssetId": "ogqFzswrpTN3HGA00hscyWb00rtgC01i8pxdYPm02jMd20100",
+  "startedAt": "2026-10-29T20:04:56.426Z",
+  "after": {
+   "offset_ms": 16.7,
+   "audio_corr": 0.819,
+   "picture_votes": 103,
+   "spread": 0
+  },
+  "newDuration": 36.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T20:07:40.986Z"
+ },
+ "b156aeef-ca2e-4f47-8216-487c7a91b2ab": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.908,
+   196.908
+  ],
+  "before": {
+   "offset_ms": -227.6,
+   "audio_corr": 0.827,
+   "picture_votes": 12
+  },
+  "oldAssetId": "domvnTHh9im00USH8Y5wHzZ023R5gNpD00DBS9FyppcKg00",
+  "newAssetId": "LrzkubOZVNHFvNZ5DA00Aj2fmTeQp02ivIEdqndjWPHJw",
+  "startedAt": "2026-10-29T20:08:58.106Z",
+  "after": {
+   "offset_ms": 13.9,
+   "audio_corr": 0.821,
+   "picture_votes": 32,
+   "spread": 0
+  },
+  "newDuration": 191.888,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T20:19:56.828Z"
+ },
+ "9dff627a-9fb2-4e4c-a96c-10d2ae9b44a9": {
+  "title": "Phones and Tones, Part 7",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.578,
+   99.578
+  ],
+  "before": {
+   "offset_ms": -257.7,
+   "audio_corr": 0.787,
+   "picture_votes": 14
+  },
+  "oldAssetId": "q9k4LVb01fKI9T9a8sA01nM1WKdsRHJzlcdnTbpAPuVTg",
+  "newAssetId": "6boErYTHIdCC7uRLKbCiAfr6TLuFyz5jBRjEb4K2oeA",
+  "startedAt": "2026-10-29T20:27:49.894Z",
+  "after": {
+   "offset_ms": -13.4,
+   "audio_corr": 0.803,
+   "picture_votes": 13,
+   "spread": 0
+  },
+  "newDuration": 90.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T20:32:35.439Z"
+ },
+ "b5ce203f-4539-4faa-9744-b7823ac112a9": {
+  "title": "The Will to Win",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.774,
+   76.774
+  ],
+  "before": {
+   "offset_ms": -213.9,
+   "audio_corr": 0.888,
+   "picture_votes": 14
+  },
+  "oldAssetId": "P1KbVuAnG3XYztHVV7zej1Msaa5BbNjQevetnD6V3Bk",
+  "newAssetId": "01Nxaj702DnHvnurH7preWLeczQVKGCqqVNklJ2ekBAzQ",
+  "startedAt": "2026-10-29T20:38:30.864Z",
+  "after": {
+   "offset_ms": -8.8,
+   "audio_corr": 0.908,
+   "picture_votes": 12,
+   "spread": 0
+  },
+  "newDuration": 73.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T20:43:16.936Z"
+ },
+ "db0f13a0-2671-4582-b5a6-0b45233ff349": {
+  "title": "Phones and Tones, Part 5",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.774,
+   88.774
+  ],
+  "before": {
+   "offset_ms": -214,
+   "audio_corr": 0.773,
+   "picture_votes": 23
+  },
+  "oldAssetId": "CYwPtI9uuG01sZSxJlvvZWuAzcZNPonJhgPy2r01mo68g",
+  "newAssetId": "NYZ01kzzqykoiUywtYSFUehNVK7EDZC4qpq31BpjZcGk",
+  "startedAt": "2026-10-29T20:45:31.394Z",
+  "after": {
+   "offset_ms": -9,
+   "audio_corr": 0.787,
+   "picture_votes": 21,
+   "spread": 0
+  },
+  "newDuration": 77.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T20:50:20.509Z"
+ },
+ "7ef0a9de-0abe-469f-b64e-76cbe4f34c81": {
+  "title": "Build the Habits You Admire",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.162,
+   38.162
+  ],
+  "before": {
+   "offset_ms": -241.8,
+   "audio_corr": 0.866,
+   "picture_votes": 81
+  },
+  "oldAssetId": "01QlSbEYcjBYVwYZS9Up7bydkaQtIGzv9gfmOPeBhpMc",
+  "newAssetId": "BAw5NRvKXeTeie5e2iEjA64iw6wO6sAC3gxE8D02fARg",
+  "startedAt": "2026-10-29T21:01:14.466Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.861,
+   "picture_votes": 76,
+   "spread": 0
+  },
+  "newDuration": 33.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T21:04:06.622Z"
+ },
+ "6c2182dc-4b42-4bc0-b739-2c80876279c3": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.078,
+   213.078
+  ],
+  "before": {
+   "offset_ms": -197.8,
+   "audio_corr": 0.872,
+   "picture_votes": 44
+  },
+  "oldAssetId": "WYktqeV73cKyXsN801TsqlNZld01cIVl523xo28p5tG3U",
+  "newAssetId": "xlqEUWtkMBOA4LtOvRVcdSov022emUrWgTsI1m2in5gw",
+  "startedAt": "2026-10-29T21:08:50.570Z",
+  "after": {
+   "offset_ms": 4,
+   "audio_corr": 0.867,
+   "picture_votes": 32,
+   "spread": 0
+  },
+  "newDuration": 208.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T21:21:37.761Z"
+ },
+ "5b01f6eb-e9d1-4379-aa51-d28be5f19501": {
+  "title": "The Four F's",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.865,
+   78.865
+  ],
+  "before": {
+   "offset_ms": -185.4,
+   "audio_corr": 0.828,
+   "picture_votes": 16
+  },
+  "oldAssetId": "e7geMygQv9EsNu1pZ6rT02NWZ01kxPtSTw9raW00Syr9aw",
+  "newAssetId": "ICAKZbjQxB52enWptt5GrUPMzGHJ33xmMBFZjCXEGZI",
+  "startedAt": "2026-10-29T21:27:54.044Z",
+  "after": {
+   "offset_ms": 16.9,
+   "audio_corr": 0.842,
+   "picture_votes": 19,
+   "spread": 0
+  },
+  "newDuration": 74.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T21:32:19.668Z"
+ },
+ "f02792f9-31a4-4cb9-af8d-6978e0a61b0d": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.343,
+   98.343
+  ],
+  "before": {
+   "offset_ms": -62.6,
+   "audio_corr": 0.791,
+   "picture_votes": 34
+  },
+  "oldAssetId": "pUCPZPi0001F016olUgnfErXVWtk1WNlgB5shtIeb02qAK00",
+  "newAssetId": "TVa00ErxjJTfMyVd0001oVTg00KpWrvSCZDGvDyR2poejQs",
+  "startedAt": "2026-10-29T21:43:10.483Z",
+  "after": {
+   "offset_ms": -20.9,
+   "audio_corr": 0.783,
+   "picture_votes": 19,
+   "spread": 1
+  },
+  "newDuration": 90.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T21:47:06.797Z"
+ },
+ "e119d101-da7a-4fd3-a51d-c971e83acd4c": {
+  "title": "The Four Minute Walk-Around, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.419,
+   314.826
+  ],
+  "before": {
+   "offset_ms": -218.8,
+   "audio_corr": 0.818,
+   "picture_votes": 266
+  },
+  "oldAssetId": "o5GwkKU01PjJsx5ojYitcIPxmapjIx1msWbnyQYziqWY",
+  "newAssetId": "5tQTy2UKDYPoK8RmDLyn02tX1aMONSPl01ogrkpPwzdf8",
+  "startedAt": "2026-10-29T22:51:56.064Z",
+  "after": {
+   "offset_ms": 24.7,
+   "audio_corr": 0.835,
+   "picture_votes": 237,
+   "spread": 0
+  },
+  "newDuration": 309.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:10:57.316Z"
+ },
+ "6ce14ce1-e330-4b60-a67b-bbdd8d5e886a": {
+  "title": "The Four Minute Walk-Around, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.288,
+   303.848
+  ],
+  "before": {
+   "offset_ms": -208.1,
+   "audio_corr": 0.855,
+   "picture_votes": 76
+  },
+  "oldAssetId": "K00a3wmO28vd8IURNSTyoobW8bzJOzZTlEL3sfdfjfeY",
+  "newAssetId": "wu00nk9tFHUqtzQqXEjOxFRAaHyVAI7GKJLNgKf00OCfg",
+  "startedAt": "2026-10-29T23:11:38.661Z",
+  "after": {
+   "offset_ms": 36.5,
+   "audio_corr": 0.868,
+   "picture_votes": 68,
+   "spread": 0
+  },
+  "newDuration": 298.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:26:01.959Z"
+ },
+ "b3d690cd-f9d1-4a5d-be33-c234d2c74fce": {
+  "title": "Two Minute Walk-Around, Part 2, 4 things under the hood",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.564,
+   180.994
+  ],
+  "before": {
+   "offset_ms": -244,
+   "audio_corr": 0.785,
+   "picture_votes": 67
+  },
+  "oldAssetId": "zDhenuMKezj56ePSFBZb5L5mbW018BpQV02mj6GSJfS00I",
+  "newAssetId": "v9JaeJGx9IxMiCZV6AlAZTqSiaIMx5owrOJah1G5TBw",
+  "startedAt": "2026-10-29T23:26:31.380Z",
+  "after": {
+   "offset_ms": -0.8,
+   "audio_corr": 0.789,
+   "picture_votes": 62,
+   "spread": 1
+  },
+  "newDuration": 168.454667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:33:06.001Z"
+ },
+ "2d1b4feb-c002-4aa9-8b10-c01a2cfb992e": {
+  "title": "30 Second Walk-Around, Part 4, Step 3, Start It",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.506,
+   151.896
+  ],
+  "before": {
+   "offset_ms": -226.2,
+   "audio_corr": 0.73,
+   "picture_votes": 163
+  },
+  "oldAssetId": "xkABwvrDQzFjwTzKgD7GXRLIS14JvvfjxrYePu2gFuI",
+  "newAssetId": "KetVDHkTYfvv7t00Y6gQ5X00Kl482QY4Zp353TjwzBZG8",
+  "startedAt": "2026-10-29T23:33:38.636Z",
+  "after": {
+   "offset_ms": 14.8,
+   "audio_corr": 0.726,
+   "picture_votes": 165,
+   "spread": 0
+  },
+  "newDuration": 138.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:39:37.484Z"
+ },
+ "2b05500d-4be0-474c-9879-90d7cd7ce9ec": {
+  "title": "30 Second Walk-Around, Part 2, Four Goals, Two Words",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.014,
+   141.594
+  ],
+  "before": {
+   "offset_ms": -253.8,
+   "audio_corr": 0.846,
+   "picture_votes": 76
+  },
+  "oldAssetId": "KKWMMPlz74agVKPCh1RxV8sDrSeNFTCci007wMh029mVY",
+  "newAssetId": "GDNZBzXbWIYjscA00pUVoen00ViB00fjkXDrW00wKo83524",
+  "startedAt": "2026-10-29T23:40:12.449Z",
+  "after": {
+   "offset_ms": -8.8,
+   "audio_corr": 0.87,
+   "picture_votes": 69,
+   "spread": 0
+  },
+  "newDuration": 135.621333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:45:42.623Z"
+ },
+ "ee8551f3-c0af-4345-8dc1-5c2e7d092a65": {
+  "title": "Two Minute Walk-Around, Part 1, Pop the Hood",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.611,
+   150.631
+  ],
+  "before": {
+   "offset_ms": -211.2,
+   "audio_corr": 0.842,
+   "picture_votes": 200
+  },
+  "oldAssetId": "Oli3rO2H202DhtGtPZFGBoQQID00Mop01VIr2KHKv3vWII",
+  "newAssetId": "K4tBQyMQHjR5vHCj00MymAa02xDGh5lL00321GEVozJnws",
+  "startedAt": "2026-10-29T23:46:09.449Z",
+  "after": {
+   "offset_ms": -6.3,
+   "audio_corr": 0.863,
+   "picture_votes": 139,
+   "spread": 0
+  },
+  "newDuration": 144.054667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:52:05.962Z"
+ },
+ "fe74e7f0-ae86-40c4-9550-fe3cbd0435e7": {
+  "title": "30 Second Walk-Around, Part 7, The Four Step Close",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.602,
+   123.182
+  ],
+  "before": {
+   "offset_ms": -202,
+   "audio_corr": 0.778,
+   "picture_votes": 129
+  },
+  "oldAssetId": "wXr01QlrFfMb9WqbY75JzMWNaX6ILgUPTUjYHrIZkfKA",
+  "newAssetId": "NDc007XGw4FbLeQkOhmlcjtiUqkml4ezU00Sa2X9JHKuc",
+  "startedAt": "2026-10-29T23:52:43.232Z",
+  "after": {
+   "offset_ms": 0.7,
+   "audio_corr": 0.779,
+   "picture_votes": 100,
+   "spread": 0
+  },
+  "newDuration": 112.621333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-29T23:57:30.323Z"
+ },
+ "42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05": {
+  "title": "The Four Minute Walk-Around, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.246,
+   217.676
+  ],
+  "before": {
+   "offset_ms": -246,
+   "audio_corr": 0.893,
+   "picture_votes": 117
+  },
+  "oldAssetId": "o6KWAN6wIoFmq02YMuRvlNYa5TEOtHE1vem8dkCRhlQA",
+  "newAssetId": "4pus007z15BVOaoicBSSh8hw2MO2xkfI02e7jbErQhq028",
+  "startedAt": "2026-10-29T23:58:05.974Z",
+  "after": {
+   "offset_ms": -2.3,
+   "audio_corr": 0.902,
+   "picture_votes": 109,
+   "spread": 0
+  },
+  "newDuration": 212.454667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:09:29.446Z"
+ },
+ "f4bd7ac1-3d3a-4f03-9900-d768ec85bf45": {
+  "title": "MPI Setup — AC Recharge",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.014,
+   187.884
+  ],
+  "before": {
+   "offset_ms": -214.4,
+   "audio_corr": 0.801,
+   "picture_votes": 318
+  },
+  "oldAssetId": "AAP6IQWlXYcD011802Hwr5flgQ8gzfof6p7fFo02ossvY00",
+  "newAssetId": "02njHd5HMSZLuwk2JU7m4GH00NX3hkJ7yQU02P00nTA9yXQ",
+  "startedAt": "2026-10-30T00:10:16.080Z",
+  "after": {
+   "offset_ms": -9,
+   "audio_corr": 0.83,
+   "picture_votes": 276,
+   "spread": 0
+  },
+  "newDuration": 181.888,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:20:04.505Z"
+ },
+ "e639f19b-77d5-4a08-bfc6-f6cb7e07d5e9": {
+  "title": "MPI Setup — Rodent Deterrent",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.869,
+   156.877
+  ],
+  "before": {
+   "offset_ms": -229,
+   "audio_corr": 0.843,
+   "picture_votes": 95
+  },
+  "oldAssetId": "khYe73cfyb6HVrORiLnAr5OSIV4ZXDEiySIDuFVVdKs",
+  "newAssetId": "gMsXr101EP2YBbOh9vIgX2ngIG2jhIvijdpWFpnjWwG00",
+  "startedAt": "2026-10-30T00:20:45.176Z",
+  "after": {
+   "offset_ms": 11.5,
+   "audio_corr": 0.841,
+   "picture_votes": 74,
+   "spread": 0
+  },
+  "newDuration": 151.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:27:55.413Z"
+ },
+ "8e19a2f0-925e-46ec-bda3-833ea67eee22": {
+  "title": "MPI Setup — Front Wiper Blades",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.271,
+   110.413
+  ],
+  "before": {
+   "offset_ms": -231.4,
+   "audio_corr": 0.822,
+   "picture_votes": 190
+  },
+  "oldAssetId": "hRS9f8bdgyog00b1ZJM00nXziMG00HKBkGJgkxWbdrNQTQ",
+  "newAssetId": "MYk72X5VbfdXoVFO75YMF201vbncB5aGBTYCQ96ox9D8",
+  "startedAt": "2026-10-30T00:28:27.167Z",
+  "after": {
+   "offset_ms": 9.7,
+   "audio_corr": 0.846,
+   "picture_votes": 152,
+   "spread": 0
+  },
+  "newDuration": 105.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:33:48.063Z"
+ },
+ "56b90a62-eb24-46dc-bc5c-0b238fd342b4": {
+  "title": "MPI Setup — Fuel System Cleaner",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.948,
+   99.328
+  ],
+  "before": {
+   "offset_ms": -228.3,
+   "audio_corr": 0.738,
+   "picture_votes": 85
+  },
+  "oldAssetId": "4lIw7OADbJoskWA8SAbWH8sbwMdlqCqVTgTEJQWm5Dg",
+  "newAssetId": "021LzOuJiA8TtWKaDIqatPip02WHAG8aOcupF00HIiuSN4",
+  "startedAt": "2026-10-30T00:34:25.673Z",
+  "after": {
+   "offset_ms": -26.7,
+   "audio_corr": 0.732,
+   "picture_votes": 90,
+   "spread": 1
+  },
+  "newDuration": 87.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:38:13.793Z"
+ },
+ "9d1370c9-3e0b-46cc-af02-41b49399e6f2": {
+  "title": "Four Step Close, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.545,
+   90.855
+  ],
+  "before": {
+   "offset_ms": -225.3,
+   "audio_corr": 0.647,
+   "picture_votes": 75
+  },
+  "oldAssetId": "aF4nAKhFqCGZNjsCz6TDbhqxdRFTjG4cXoCnuxyWbas",
+  "newAssetId": "8GP1EGDuvU3ewZoY3Quz6TdXY9CLFn5O66tnDffLg4c",
+  "startedAt": "2026-10-30T00:38:43.356Z",
+  "after": {
+   "offset_ms": -23.2,
+   "audio_corr": 0.695,
+   "picture_votes": 65,
+   "spread": 1
+  },
+  "newDuration": 78.354667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:42:27.031Z"
+ },
+ "ed2ecea0-660e-4a35-9813-31e9e21e5079": {
+  "title": "Four Step Close, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.44,
+   76.6
+  ],
+  "before": {
+   "offset_ms": -239.9,
+   "audio_corr": 0.664,
+   "picture_votes": 65
+  },
+  "oldAssetId": "7PzNAScycpAFo01jwamFxzMCdbTD7v00CSQbP2V0259qRo",
+  "newAssetId": "i15xX02L00Oe9J6jQf7779DSljOLQPza17E8W4WHCIIK00",
+  "startedAt": "2026-10-30T00:43:14.122Z",
+  "after": {
+   "offset_ms": 2,
+   "audio_corr": 0.698,
+   "picture_votes": 45,
+   "spread": 0
+  },
+  "newDuration": 63.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:46:06.901Z"
+ },
+ "6f720ea2-c2f4-409e-857c-08c1976784d5": {
+  "title": "Success Cycle, Part 4, Green Yellow Red",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.836,
+   147.366
+  ],
+  "before": {
+   "offset_ms": -235.6,
+   "audio_corr": 0.74,
+   "picture_votes": 199
+  },
+  "oldAssetId": "w3SBLhcRCz02sgsVL5xC3RXOwsElUE9f2UZDGtjHbt9A",
+  "newAssetId": "zKZLrAKFXmID027rNUKNmzDKK6X014x6jU2CfK7dhfLZo",
+  "startedAt": "2026-10-30T00:46:47.068Z",
+  "after": {
+   "offset_ms": 5.6,
+   "audio_corr": 0.756,
+   "picture_votes": 174,
+   "spread": 0
+  },
+  "newDuration": 137.554667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T00:52:24.993Z"
+ },
+ "123cfea7-62e6-467e-836f-27c7f0bc3e66": {
+  "title": "Success Cycle, Part 12, Your song, Go Sing It",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.074,
+   225.874
+  ],
+  "before": {
+   "offset_ms": -193.7,
+   "audio_corr": 0.71,
+   "picture_votes": 197
+  },
+  "oldAssetId": "A01DVlf00IkFOJHnMnyzfFDC8SIOLv9R1BpM6N7WT9KD4",
+  "newAssetId": "zIbyiSfkF9VR4z6krYY631P23cMPtLdmglLeUvSfTx4",
+  "startedAt": "2026-10-30T00:52:53.052Z",
+  "after": {
+   "offset_ms": 6.9,
+   "audio_corr": 0.736,
+   "picture_votes": 203,
+   "spread": 0
+  },
+  "newDuration": 214.821333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T01:01:15.052Z"
+ },
+ "a593edb7-4609-442e-a224-63c5f8128379": {
+  "title": "Objections",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   5.204,
+   161.327
+  ],
+  "before": {
+   "offset_ms": -243.8,
+   "audio_corr": 0.917,
+   "picture_votes": 5
+  },
+  "oldAssetId": "FPbh41IVY7P4RGLlErWTOcZclHR79s1IpsZZa78aoCQ",
+  "newAssetId": "02DXD5Zs9uGxdJHJVlfnTuW3ljAWqaVegMPsCp9pcp02c",
+  "startedAt": "2026-10-30T01:01:50.021Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 39.1,
+   "rejected_offset_ms": null,
+   "picture_votes": 5,
+   "picture_spread_frames": 1,
+   "audio_corr": 0.929,
+   "picture_lag_s": -5.2,
+   "audio_lag_s": -5.161
+  },
+  "lengthAsked": 156.123,
+  "lengthGot": 156.121333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "ca2d353d-0957-48e6-8dd5-b72ef0d0fab0": {
+  "title": "Objections",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.634,
+   254.784
+  ],
+  "before": {
+   "offset_ms": -233.7,
+   "audio_corr": 0.905,
+   "picture_votes": 45
+  },
+  "oldAssetId": "jpqSd602SOZNfWFRg8UWLRrxs2Hm01004zljv3dgr33c9Q",
+  "newAssetId": "vfVUp01QNsUqe02CBaGH9t01OatdtVsStkbFRQrVSbcxmA",
+  "startedAt": "2026-10-30T01:12:13.265Z",
+  "after": {
+   "offset_ms": 6.9,
+   "audio_corr": 0.903,
+   "picture_votes": 34,
+   "spread": 0
+  },
+  "newDuration": 249.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T01:27:13.022Z"
+ },
+ "83300585-9cd6-44c6-83dd-d1bed3f4ff0d": {
+  "title": "Overcoming Objections, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.844,
+   209.661
+  ],
+  "before": {
+   "offset_ms": -243.8,
+   "audio_corr": 0.882,
+   "picture_votes": 8
+  },
+  "oldAssetId": "jpunJYobe01WjMuEySbjXjpcn9ZKSao4aBcLcuVZ5En4",
+  "newAssetId": "ze02P02kpLQGygmSnPnJbOpurrSYxi2BwUPyXahrbG02vw",
+  "startedAt": "2026-10-30T01:27:50.538Z",
+  "after": {
+   "offset_ms": -0.8,
+   "audio_corr": 0.887,
+   "picture_votes": 22,
+   "spread": 0
+  },
+  "newDuration": 203.821333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T01:37:13.734Z"
+ },
+ "c30a9a18-6e78-4088-9b73-1e1ddfd5cfc4": {
+  "title": "Overcoming Objections, Part 2 — How to Take a No",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": -217.9,
+   "picture_votes": 2,
+   "picture_spread_frames": 0.5,
+   "audio_corr": 0.868,
+   "picture_lag_s": -6.14,
+   "audio_lag_s": -6.358
+  }
+ },
+ "4b977923-5f60-4c4d-b517-84acffbb76c8": {
+  "title": "Objections",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.334,
+   191.317
+  ],
+  "before": {
+   "offset_ms": -213.7,
+   "audio_corr": 0.828,
+   "picture_votes": 108
+  },
+  "oldAssetId": "008HP3bq6eGZMeVgFROLzzMIyv5w9eyN6lnHKsgmZzO00",
+  "newAssetId": "fBLWF1Zqi7A23EmZI027bgiljZqmA2MJJ0128501dEBYxU",
+  "startedAt": "2026-10-30T01:38:37.767Z",
+  "after": {
+   "offset_ms": -8.6,
+   "audio_corr": 0.855,
+   "picture_votes": 75,
+   "spread": 0
+  },
+  "newDuration": 184.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T01:49:16.307Z"
+ },
+ "448b7461-eb29-450b-b8cc-dfebb3fb5969": {
+  "title": "Objections",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   5.398,
+   185.655
+  ],
+  "before": {
+   "offset_ms": -237.9,
+   "audio_corr": 0.914,
+   "picture_votes": 5
+  },
+  "oldAssetId": "jl2vEHRvHGmE02tpWKh2Gnoklp01qMrKEyG8L2z4NHAh8",
+  "newAssetId": "1bCvsD9SkhWR0200x6cTALlBWBLMWYhFgOkBvwuovW00h8",
+  "startedAt": "2026-10-30T01:54:18.256Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 3.8,
+   "rejected_offset_ms": null,
+   "picture_votes": 7,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.91,
+   "picture_lag_s": -5.36,
+   "audio_lag_s": -5.356
+  },
+  "lengthAsked": 180.257,
+  "lengthGot": 180.254667,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "d0b6f376-0510-4b16-8324-25921a4f2149": {
+  "title": "Objections",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.718,
+   190.321
+  ],
+  "before": {
+   "offset_ms": -238.2,
+   "audio_corr": 0.884,
+   "picture_votes": 180
+  },
+  "oldAssetId": "1EBFGU7rvoyiqrnbM9H5Z7WJ1VkdGJPb7jhZBdbumKw",
+  "newAssetId": "CR3QF3akYiJ1BEUZOWNSiAEj02rg2kf267hWkh8jxJ5E",
+  "startedAt": "2026-10-30T02:03:31.551Z",
+  "after": {
+   "offset_ms": 3.6,
+   "audio_corr": 0.881,
+   "picture_votes": 152,
+   "spread": 0
+  },
+  "newDuration": 184.621333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T02:14:56.196Z"
+ },
+ "248e91c6-68ba-4040-893f-6f19a4e159d5": {
+  "title": "Objections",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   5.162,
+   128.424
+  ],
+  "before": {
+   "offset_ms": -241.8,
+   "audio_corr": 0.848,
+   "picture_votes": 14
+  },
+  "oldAssetId": "DqHm91qzHZHHoyr4KdyKFJvhvq016ASX76501xxsAko2k",
+  "newAssetId": "u2om3acApnLtm5bKk00tevwe01EmquPt00Re8Ei3BzUpyA",
+  "startedAt": "2026-10-30T02:15:34.418Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 20.5,
+   "rejected_offset_ms": null,
+   "picture_votes": 4,
+   "picture_spread_frames": 0.5,
+   "audio_corr": 0.857,
+   "picture_lag_s": -5.14,
+   "audio_lag_s": -5.119
+  },
+  "lengthAsked": 123.262,
+  "lengthGot": 123.254667,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "a3560d82-2b7f-42ee-b717-6ff8cb880138": {
+  "title": "Name Tag, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.324,
+   113.864
+  ],
+  "before": {
+   "offset_ms": -244.1,
+   "audio_corr": 0.816,
+   "picture_votes": 39
+  },
+  "oldAssetId": "U015WRL4v4oJLmMyOnyKvRJXA8t00A9LyaUWNerKv8PW00",
+  "newAssetId": "rauLN1ikDau2D4VKRxZbCZb2RgUEnuprn43sDsC6w9I",
+  "startedAt": "2026-10-30T02:21:59.009Z",
+  "after": {
+   "offset_ms": -0.7,
+   "audio_corr": 0.82,
+   "picture_votes": 43,
+   "spread": 1
+  },
+  "newDuration": 103.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T02:26:46.418Z"
+ },
+ "949ad465-baf2-4043-a8a9-f9d241fa2c9e": {
+  "title": "Name Tag, Part 8",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.095,
+   128.815
+  ],
+  "before": {
+   "offset_ms": -214.9,
+   "audio_corr": 0.746,
+   "picture_votes": 79
+  },
+  "oldAssetId": "mXgis01PsDBX9DL9gCOEPZDV4dtN7Y4CkEMrP2f7RYj4",
+  "newAssetId": "NW8XAST62fnS1fLpCfbyxNI00GS022t01nMk01RjluN9yxY",
+  "startedAt": "2026-10-30T02:27:43.253Z",
+  "after": {
+   "offset_ms": 29.3,
+   "audio_corr": 0.761,
+   "picture_votes": 60,
+   "spread": 0
+  },
+  "newDuration": 116.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T02:36:33.021Z"
+ },
+ "7574149a-5477-4959-adbf-e34a09c02479": {
+  "title": "The OE Approach — The Maintenance Menu",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   172.301
+  ],
+  "before": {
+   "offset_ms": 929.3,
+   "audio_corr": 0.844,
+   "picture_votes": 50
+  },
+  "oldAssetId": "rjBJa026qj01OAzysa98EX017xUjIjR9SZGK6xe7UjKmEk",
+  "newAssetId": "9YOJVjY0100L01dUTZDeQXUimrceWKmBsfWxa56JUfdynE",
+  "startedAt": "2026-10-30T02:37:13.444Z",
+  "after": {
+   "offset_ms": 10.4,
+   "audio_corr": 0.84,
+   "picture_votes": 23,
+   "spread": 0
+  },
+  "newDuration": 167.388,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T02:45:12.824Z"
+ },
+ "2a52f994-74a7-4ab5-9595-c584500662d2": {
+  "title": "25,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.078,
+   152.038
+  ],
+  "before": {
+   "offset_ms": -238,
+   "audio_corr": 0.714,
+   "picture_votes": 16
+  },
+  "oldAssetId": "prb12vCjajh902rWKrdOklgnT9Tz02TNPh9z9G3leGM44",
+  "newAssetId": "UaYtYrUVKYog45ShGLZUEeBB7tQlyPMaGF00Y4ObQ102U",
+  "startedAt": "2026-10-30T02:45:55.113Z",
+  "after": {
+   "offset_ms": 3.7,
+   "audio_corr": 0.71,
+   "picture_votes": 18,
+   "spread": 0
+  },
+  "newDuration": 138.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T02:52:31.872Z"
+ },
+ "ee3849c1-9708-4ee7-b20e-8879f5a4606b": {
+  "title": "90,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   18.729,
+   175.399
+  ],
+  "before": {
+   "offset_ms": -248.7,
+   "audio_corr": 0.629,
+   "picture_votes": 155
+  },
+  "oldAssetId": "KOhzLylXslbSgx7ifJPSXxrd6RBTlyKdnKfykWglCMc",
+  "newAssetId": "DE7700DRNUqrrKi00H9JpSrBBzfNK7SCJDG5eYwcMXJJo",
+  "startedAt": "2026-10-30T02:53:20.597Z",
+  "after": {
+   "offset_ms": -4.7,
+   "audio_corr": 0.64,
+   "picture_votes": 139,
+   "spread": 1
+  },
+  "newDuration": 156.688,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:00:23.848Z"
+ },
+ "c4c4e3dd-6fdc-405c-9a9e-b64e0e117572": {
+  "title": "40,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.254,
+   230.174
+  ],
+  "before": {
+   "offset_ms": -214.2,
+   "audio_corr": 0.624,
+   "picture_votes": 63
+  },
+  "oldAssetId": "bxkfK202cFcUx7gJBAIZ8cy101PJW1KYrcIv39e9K2VSU",
+  "newAssetId": "KGnqXMz2vmEhD9REim01lUkgbb01V1022dHEp00O3K78ARM",
+  "startedAt": "2026-10-30T03:01:17.520Z",
+  "after": {
+   "offset_ms": 30.9,
+   "audio_corr": 0.64,
+   "picture_votes": 67,
+   "spread": 0
+  },
+  "newDuration": 213.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:11:27.004Z"
+ },
+ "321bff34-33b1-4361-b355-36cf10801d8e": {
+  "title": "120,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.322,
+   132.482
+  ],
+  "before": {
+   "offset_ms": -242,
+   "audio_corr": 0.64,
+   "picture_votes": 150
+  },
+  "oldAssetId": "7sPCkqCJhDw2M7FLgVMfxDCjiXKK2JSX02bjRAfLV4wY",
+  "newAssetId": "8NOLi02W01NzDStl02beczmw6KQACDoDcByUJNuDhnlrBE",
+  "startedAt": "2026-10-30T03:11:59.421Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.64,
+   "picture_votes": 118,
+   "spread": 1
+  },
+  "newDuration": 115.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:17:08.992Z"
+ },
+ "dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3": {
+  "title": "Menu Wrap-Up, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.078,
+   155.378
+  ],
+  "before": {
+   "offset_ms": -237.8,
+   "audio_corr": 0.69,
+   "picture_votes": 144
+  },
+  "oldAssetId": "ujqmRJNx91KNwHYxDBQaVTY3y01OlAolQO6I5bjzr5Bc",
+  "newAssetId": "fYnzd6XPNpTOJHSmN85B99kXw6Iv4k9qouKN007uPaZ00",
+  "startedAt": "2026-10-30T03:17:40.533Z",
+  "after": {
+   "offset_ms": 4,
+   "audio_corr": 0.688,
+   "picture_votes": 127,
+   "spread": 0
+  },
+  "newDuration": 142.321333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:23:29.265Z"
+ },
+ "10254adf-a214-4066-b55c-f2bc6303bdb3": {
+  "title": "75,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   14.846,
+   125.466
+  ],
+  "before": {
+   "offset_ms": -205.7,
+   "audio_corr": 0.657,
+   "picture_votes": 5
+  },
+  "oldAssetId": "doYeg00lnRIKCcFR9ErTEebJjzzI75eMxfmSASEu7mZs",
+  "newAssetId": "MoKWcPneG3g1o7vuvm11Rd01v32KjmDbrofjZjm028844",
+  "startedAt": "2026-10-30T03:24:05.893Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": -2.1,
+   "rejected_offset_ms": null,
+   "picture_votes": 6,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.664,
+   "picture_lag_s": -14.8,
+   "audio_lag_s": -14.802
+  },
+  "lengthAsked": 110.62,
+  "lengthGot": 110.654667,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "396c64d9-5a6b-4b8e-a311-04c3253c15a9": {
+  "title": "25,000 Mile Dealer Upsell Menu (2749)",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   17.044,
+   160.064
+  ],
+  "before": {
+   "offset_ms": -204,
+   "audio_corr": 0.577,
+   "picture_votes": 6
+  },
+  "oldAssetId": "Uq01W1OQ22P01XH2g9NXcL6JgudQ00mjabzDEAlCaTE7O00",
+  "newAssetId": "A9R4QFRl51qBDw01w0000ZsLsXf3a01W1F46UWhzBMBgRsE",
+  "startedAt": "2026-10-30T03:30:14.473Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": -0.8,
+   "rejected_offset_ms": null,
+   "picture_votes": 7,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.579,
+   "picture_lag_s": -17,
+   "audio_lag_s": -17.001
+  },
+  "lengthAsked": 143.02,
+  "lengthGot": 143.054667,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "251e9444-5ed3-448d-b71e-d8297efa22eb": {
+  "title": "10,000 Mile Dealer Upsell Menu",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.834,
+   122.954
+  ],
+  "before": {
+   "offset_ms": -234.1,
+   "audio_corr": 0.665,
+   "picture_votes": 96
+  },
+  "oldAssetId": "FOlb02nxXVenHIi02j826dBAPyQODmrmyKIpxwr00etsMc",
+  "newAssetId": "qffqLopuPqtXYIJKLghjgt3yPtG01IEctgtQW6IjW44o",
+  "startedAt": "2026-10-30T03:38:25.911Z",
+  "after": {
+   "offset_ms": 6.6,
+   "audio_corr": 0.663,
+   "picture_votes": 79,
+   "spread": 0
+  },
+  "newDuration": 106.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:43:43.290Z"
+ },
+ "35b9d042-3b65-4193-8426-6c0e5b9cb0ec": {
+  "title": "150,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.831,
+   183.201
+  ],
+  "before": {
+   "offset_ms": -231.4,
+   "audio_corr": 0.612,
+   "picture_votes": 221
+  },
+  "oldAssetId": "dVlQQ02SV2tTACVaI5AhM1IxE9yvw01gzZXZnFJn8CZkY",
+  "newAssetId": "mkIywBVylsktjpQaEjcL445blaypa183nbne02ueDT6c",
+  "startedAt": "2026-10-30T03:44:20.271Z",
+  "after": {
+   "offset_ms": 9.8,
+   "audio_corr": 0.608,
+   "picture_votes": 192,
+   "spread": 0
+  },
+  "newDuration": 167.388,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:51:32.506Z"
+ },
+ "effafbce-02e5-45cc-bcd8-f66d6559328c": {
+  "title": "75,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.428,
+   126.698
+  ],
+  "before": {
+   "offset_ms": -227.9,
+   "audio_corr": 0.664,
+   "picture_votes": 24
+  },
+  "oldAssetId": "01qbnzA02bI02g6bg6cj029qZyNeXKg5PdB8Yt8zM002Fnlo",
+  "newAssetId": "CepvhNvaM0101FKtN7tiqCpQgKy00xM8lKUfj6HcKcvKkI",
+  "startedAt": "2026-10-30T03:52:03.481Z",
+  "after": {
+   "offset_ms": 13.8,
+   "audio_corr": 0.656,
+   "picture_votes": 25,
+   "spread": 0
+  },
+  "newDuration": 110.288,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T03:56:44.736Z"
+ },
+ "beb63665-496b-4f5e-bfc3-c494dc8d9508": {
+  "title": "40,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.426,
+   154.216
+  ],
+  "before": {
+   "offset_ms": -225.6,
+   "audio_corr": 0.698,
+   "picture_votes": 81
+  },
+  "oldAssetId": "EQeJEDNVnibXH01XikxhF014g9WOyxU444ViPAOJ2d4Sk",
+  "newAssetId": "J1N7Sj5p7A1mwtOmaw1J9I82ZErNeET7AX00UhhHcMKY",
+  "startedAt": "2026-10-30T03:57:20.656Z",
+  "after": {
+   "offset_ms": 15.3,
+   "audio_corr": 0.694,
+   "picture_votes": 66,
+   "spread": 0
+  },
+  "newDuration": 138.821333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:03:53.646Z"
+ },
+ "b497f293-eedb-4d07-9095-669cf5722b14": {
+  "title": "30,000 Mile Dealer Upsell Menu (2769)",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.025,
+   261.365
+  ],
+  "before": {
+   "offset_ms": -225.4,
+   "audio_corr": 0.648,
+   "picture_votes": 60
+  },
+  "oldAssetId": "00NA9UIiNO48ffksnyXXM2Pt00J9A00D6lP01NALbSuC02DU",
+  "newAssetId": "1ZtoRdjkAgY7rn600Szff9tF02qy6YahSaFoS01PLvoUJY",
+  "startedAt": "2026-10-30T04:04:27.857Z",
+  "after": {
+   "offset_ms": 16.8,
+   "audio_corr": 0.642,
+   "picture_votes": 59,
+   "spread": 0
+  },
+  "newDuration": 244.354667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:16:26.939Z"
+ },
+ "56697a80-7320-4765-b9ba-c8f8d04fe6c7": {
+  "title": "45,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.985,
+   95.965
+  ],
+  "before": {
+   "offset_ms": -225.5,
+   "audio_corr": 0.661,
+   "picture_votes": 48
+  },
+  "oldAssetId": "qXvWVxo2jbFBMAAuhEVSVdRQuZLv2ymB9wI335UCjIs",
+  "newAssetId": "Nqz7sgJCXY00XK8Opq8DknsGT0002deYYpvqTHB02CmJBzo",
+  "startedAt": "2026-10-30T04:17:01.960Z",
+  "after": {
+   "offset_ms": 16.9,
+   "audio_corr": 0.68,
+   "picture_votes": 40,
+   "spread": 0
+  },
+  "newDuration": 78.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:20:53.007Z"
+ },
+ "9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e": {
+  "title": "150,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.302,
+   213.222
+  ],
+  "before": {
+   "offset_ms": -222,
+   "audio_corr": 0.616,
+   "picture_votes": 99
+  },
+  "oldAssetId": "ezDa27FpgKFLoTiibEZr015zzQ003VxAJRSXuNsoEG3Qo",
+  "newAssetId": "5SRSBrZaE62s02l0101EACgTzLmgth9BVSotglcAlcE9GI",
+  "startedAt": "2026-10-30T04:21:23.240Z",
+  "after": {
+   "offset_ms": -18.3,
+   "audio_corr": 0.615,
+   "picture_votes": 97,
+   "spread": 1
+  },
+  "newDuration": 195.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:30:05.194Z"
+ },
+ "27557eb4-833b-470d-bb7b-6f57832257d7": {
+  "title": "5,000/7,500 Mile Dealer Upsell Menu (2714)",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.022,
+   138.902
+  ],
+  "before": {
+   "offset_ms": -221.9,
+   "audio_corr": 0.699,
+   "picture_votes": 33
+  },
+  "oldAssetId": "5XbVe4TbV2gZKzC8jy01lfQW8lWpMSqA027gQW5dXEJC00",
+  "newAssetId": "FmARgMdhPe02qDirR8H7YqjypWrEYkF02I1UaZcyF3RD8",
+  "startedAt": "2026-10-30T04:30:43.103Z",
+  "after": {
+   "offset_ms": 21.4,
+   "audio_corr": 0.698,
+   "picture_votes": 26,
+   "spread": 0
+  },
+  "newDuration": 122.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:36:27.340Z"
+ },
+ "354b725e-07cf-43a9-8b25-0f339bdfb2d9": {
+  "title": "25,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.618,
+   112.128
+  ],
+  "before": {
+   "offset_ms": -218.2,
+   "audio_corr": 0.648,
+   "picture_votes": 55
+  },
+  "oldAssetId": "O22qsuYA9jkykD5ODUpTuMqSdpDbJWPAi9sESSPJcpQ",
+  "newAssetId": "MLrCKVFqaXr9bJ7HDfBxJuSQCWtchNHZKeeQOfRWR4I",
+  "startedAt": "2026-10-30T04:37:06.814Z",
+  "after": {
+   "offset_ms": 6.2,
+   "audio_corr": 0.662,
+   "picture_votes": 48,
+   "spread": 0.5
+  },
+  "newDuration": 95.554667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:41:38.575Z"
+ },
+ "61532700-a504-4805-9e14-17fd4fa24897": {
+  "title": "75,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   16.618,
+   120.698
+  ],
+  "before": {
+   "offset_ms": -217.6,
+   "audio_corr": 0.591,
+   "picture_votes": 18
+  },
+  "oldAssetId": "8g4W5oyekiDgeqfoFMGVsLwcXwG6e4R4556Weh5j9Kk",
+  "newAssetId": "lzzUzIKh64a8R6iey2Y9h01tQgCp800Tg9VW3iKYhylFQ",
+  "startedAt": "2026-10-30T04:42:13.631Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": -13.1,
+   "rejected_offset_ms": null,
+   "picture_votes": 11,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.606,
+   "picture_lag_s": -16.56,
+   "audio_lag_s": -16.573
+  },
+  "lengthAsked": 104.08,
+  "lengthGot": 104.121333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "c7726af7-ea0c-4671-a0ec-41fc394e2e8d": {
+  "title": "35,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.697,
+   109.957
+  ],
+  "before": {
+   "offset_ms": -217.2,
+   "audio_corr": 0.728,
+   "picture_votes": 70
+  },
+  "oldAssetId": "rnKlxYcjIIQ00Yo1GY4cAIh01nvaZT2Ur7Lng28ZdgVA00",
+  "newAssetId": "WKIdoAtvTcFz0000OMB2LrZpQ01dt6yoJXn4vJytrHyr4g",
+  "startedAt": "2026-10-30T04:47:21.847Z",
+  "after": {
+   "offset_ms": 28.2,
+   "audio_corr": 0.746,
+   "picture_votes": 23,
+   "spread": 0
+  },
+  "newDuration": 95.288,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:51:18.904Z"
+ },
+ "5637821a-5061-4840-9ace-ac449ea5b49c": {
+  "title": "50,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.617,
+   123.267
+  ],
+  "before": {
+   "offset_ms": -216.8,
+   "audio_corr": 0.699,
+   "picture_votes": 71
+  },
+  "oldAssetId": "W2mAH9Qo8MFG8MOMtBlZmJNf3Pi013ja38dqLp0015uuk",
+  "newAssetId": "9wylDvDWRNds00NqXHBZqfGKyxoMQmzrJpgLKLnu9SVo",
+  "startedAt": "2026-10-30T04:51:47.232Z",
+  "after": {
+   "offset_ms": -11.6,
+   "audio_corr": 0.715,
+   "picture_votes": 69,
+   "spread": 0
+  },
+  "newDuration": 106.688,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T04:56:22.388Z"
+ },
+ "d220095f-5660-47fa-9bd8-6976b11a7e15": {
+  "title": "45,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.655,
+   202.195
+  ],
+  "before": {
+   "offset_ms": -214.5,
+   "audio_corr": 0.663,
+   "picture_votes": 75
+  },
+  "oldAssetId": "sAcspPjaDSeFmPvBt8rEZmFW02FAHwzytbm2QUa7Dd02s",
+  "newAssetId": "SlBhCC8IHe1c9JK5mbsElw1diny1SerTFVF9Cp1RBDw",
+  "startedAt": "2026-10-30T04:56:54.959Z",
+  "after": {
+   "offset_ms": 29.5,
+   "audio_corr": 0.677,
+   "picture_votes": 62,
+   "spread": 0
+  },
+  "newDuration": 187.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:04:30.709Z"
+ },
+ "fabd44aa-ee49-44b6-b016-10baad50b0db": {
+  "title": "20,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.334,
+   103.674
+  ],
+  "before": {
+   "offset_ms": -214.3,
+   "audio_corr": 0.699,
+   "picture_votes": 86
+  },
+  "oldAssetId": "lDNIOJsXML00Agjxeg202Ud5EM02xYVXCgLXU9cYq100Tgw",
+  "newAssetId": "lsmtvQd8MiJrvAfG00Lr00B01cUQbEISRjiLOOPl5nvCTw",
+  "startedAt": "2026-10-30T05:05:06.898Z",
+  "after": {
+   "offset_ms": -8.7,
+   "audio_corr": 0.718,
+   "picture_votes": 59,
+   "spread": 1
+  },
+  "newDuration": 89.388,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:09:12.516Z"
+ },
+ "28061ce2-d886-4a44-9c02-83130361cf08": {
+  "title": "30,000 Mile Dealer Upsell Menu, Part 5",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.614,
+   127.984
+  ],
+  "before": {
+   "offset_ms": -214.1,
+   "audio_corr": 0.685,
+   "picture_votes": 50
+  },
+  "oldAssetId": "gj6u7L1e1i6hbJt4FMk02u012sfptcK32oDDYW00FB6nL4",
+  "newAssetId": "m1YixShoo3vuIElTAW2mpuxw00ppQEFJmTT7SBJvGmUw",
+  "startedAt": "2026-10-30T05:09:42.981Z",
+  "after": {
+   "offset_ms": -9.2,
+   "audio_corr": 0.701,
+   "picture_votes": 45,
+   "spread": 0
+  },
+  "newDuration": 112.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:14:19.784Z"
+ },
+ "db297b0f-8a16-4984-a5b8-80c9379b285a": {
+  "title": "50,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.612,
+   163.232
+  ],
+  "before": {
+   "offset_ms": -211.7,
+   "audio_corr": 0.723,
+   "picture_votes": 41
+  },
+  "oldAssetId": "pA3LSHu5QY61eci2xgY8K00c2yPTZ4P402c00QSVggUc4w",
+  "newAssetId": "q2vBTGKtbavOwd01QUhJi4WF201RCS2myTGUPFz01tc2Ns",
+  "startedAt": "2026-10-30T05:14:52.706Z",
+  "after": {
+   "offset_ms": -7.5,
+   "audio_corr": 0.737,
+   "picture_votes": 48,
+   "spread": 0
+  },
+  "newDuration": 148.654667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:20:39.185Z"
+ },
+ "0b68e878-2113-4d74-ab96-5af80d3b544c": {
+  "title": "45,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.491,
+   199.581
+  ],
+  "before": {
+   "offset_ms": -211,
+   "audio_corr": 0.668,
+   "picture_votes": 81
+  },
+  "oldAssetId": "MtQgaqwCxptELhuKLhW4EeSl2XaOQAClXn00NBezW46Y",
+  "newAssetId": "56xqXTb9v3FTkFqWrKyAOyy73YkvdKXjfijqO02gnJO00",
+  "startedAt": "2026-10-30T05:21:07.774Z",
+  "after": {
+   "offset_ms": 33.7,
+   "audio_corr": 0.682,
+   "picture_votes": 74,
+   "spread": 1
+  },
+  "newDuration": 182.121333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:28:39.169Z"
+ },
+ "fa55abfe-1309-4be7-a282-3fa484144dc0": {
+  "title": "100,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   14.484,
+   170.944
+  ],
+  "before": {
+   "offset_ms": -204.1,
+   "audio_corr": 0.731,
+   "picture_votes": 99
+  },
+  "oldAssetId": "xHtseRujYXj5GUQiRd7400IHZYDj7h4aeqSULiQUJOcw",
+  "newAssetId": "eSzAOTuQvWm00N2CkWicHxFg02V51nytTTLRSBt6J9y9M",
+  "startedAt": "2026-10-30T05:29:10.056Z",
+  "after": {
+   "offset_ms": -0.7,
+   "audio_corr": 0.736,
+   "picture_votes": 68,
+   "spread": 0
+  },
+  "newDuration": 156.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:35:49.291Z"
+ },
+ "057afb81-0b1e-44d8-9d26-be5299990c28": {
+  "title": "55,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   15.402,
+   105.132
+  ],
+  "before": {
+   "offset_ms": -202,
+   "audio_corr": 0.756,
+   "picture_votes": 361
+  },
+  "oldAssetId": "foVFaLyMh8HOHhd6iPH01l5lHgcQlP004c7QwPxjG02Ti8",
+  "newAssetId": "ASCuvE02LbW7kzb3eWQ5EoNVrAzw00VvyNgzMr9OJpuOU",
+  "startedAt": "2026-10-30T05:36:25.541Z",
+  "after": {
+   "offset_ms": 0.7,
+   "audio_corr": 0.757,
+   "picture_votes": 326,
+   "spread": 0
+  },
+  "newDuration": 89.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:40:11.714Z"
+ },
+ "ab70fed9-b840-4df8-af45-d956f6e7360e": {
+  "title": "105,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.878,
+   68.508
+  ],
+  "before": {
+   "offset_ms": -197.8,
+   "audio_corr": 0.616,
+   "picture_votes": 71
+  },
+  "oldAssetId": "B43nTF2Og017J7Y0100M5OZeBZ02X00OXs7heXw3sOSu01M38",
+  "newAssetId": "YLpW6a9DnFnOJNkVAeAampgXxPlGvq02mdFKZyqjnXW8",
+  "startedAt": "2026-10-30T05:40:43.890Z",
+  "after": {
+   "offset_ms": 3.7,
+   "audio_corr": 0.614,
+   "picture_votes": 74,
+   "spread": 0
+  },
+  "newDuration": 50.654667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:43:01.029Z"
+ },
+ "f7ca4fac-2f1c-4154-81e5-cc82edbe9655": {
+  "title": "60,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.111,
+   180.111
+  ],
+  "before": {
+   "offset_ms": -231.5,
+   "audio_corr": 0.689,
+   "picture_votes": 149
+  },
+  "oldAssetId": "fRpzjl8Idjp38nBJoAFsyrKKkv9pYQG4r2NxyuUSufc",
+  "newAssetId": "oMNgoLiCVu2UIbLwKiUfzULmZyiGZURpGV6zCFZNwwY",
+  "startedAt": "2026-10-30T05:43:31.309Z",
+  "after": {
+   "offset_ms": 9.5,
+   "audio_corr": 0.685,
+   "picture_votes": 138,
+   "spread": 0
+  },
+  "newDuration": 163.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:50:24.501Z"
+ },
+ "b24b51a7-43eb-4400-8664-a601f9059500": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.04,
+   157.033
+  ],
+  "before": {
+   "offset_ms": 1760.1,
+   "audio_corr": 0.829,
+   "picture_votes": 312
+  },
+  "oldAssetId": "s302qzaMnt802piEOGOahOXUpbW3l729fKv00gwRJ1nZGk",
+  "newAssetId": "QZMrhWmX02s7X49uTLt6otfYTJK102EmVqVsBoqWHeyj8",
+  "startedAt": "2026-10-30T05:51:02.421Z",
+  "after": {
+   "offset_ms": 2.2,
+   "audio_corr": 0.827,
+   "picture_votes": 289,
+   "spread": 0
+  },
+  "newDuration": 150.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T05:57:58.606Z"
+ },
+ "b822e731-6522-4f55-930b-722ad575b965": {
+  "title": "The Most Dangerous Person",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.952,
+   112.412
+  ],
+  "before": {
+   "offset_ms": 1208.5,
+   "audio_corr": 0.87,
+   "picture_votes": 25
+  },
+  "oldAssetId": "301UM5symVs6gNC028RhnNMiRmFDVzfKyu1QaZTK1hwV8",
+  "newAssetId": "NVr6oykyd2pXlDW2uy02fUBRelNiTWPkTHFXTYeBFn00Q",
+  "startedAt": "2026-10-30T05:58:34.693Z",
+  "after": {
+   "offset_ms": 8.7,
+   "audio_corr": 0.87,
+   "picture_votes": 21,
+   "spread": 1
+  },
+  "newDuration": 107.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:03:51.584Z"
+ },
+ "14f20d45-178a-4cbc-9761-bb8a1d26f4f0": {
+  "title": "The OE Stagger — The Order and Why",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   258.491
+  ],
+  "before": {
+   "offset_ms": 848.7,
+   "audio_corr": 0.826,
+   "picture_votes": 3
+  },
+  "oldAssetId": "IgmNG30094XMS22x6Q026jib2LX3Z02ftursIXrP02pLg01k",
+  "newAssetId": "Ky411QKk028CjGpbu00JAZnqSmYqYfUROqK012cdqLZ7z00",
+  "startedAt": "2026-10-30T06:04:20.926Z",
+  "after": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": null,
+   "picture_votes": 0,
+   "picture_spread_frames": null,
+   "audio_corr": 0.822,
+   "picture_lag_s": null,
+   "audio_lag_s": -4.91
+  },
+  "lengthAsked": 253.54,
+  "lengthGot": 253.588,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "2f480703-8697-417c-8f0b-98750a99f3e2": {
+  "title": "The Man in the Glass",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   80.581
+  ],
+  "before": {
+   "offset_ms": 648.8,
+   "audio_corr": 0.883,
+   "picture_votes": 547
+  },
+  "oldAssetId": "RWyiIrGVVKtwejFGEaFwtmvSSaCvYOlYVcqWq4AKkSM",
+  "newAssetId": "SWZySN7mKad95rBf5ygu8SP2feMNb1juQcsTzwYKUhA",
+  "startedAt": "2026-10-30T06:13:58.689Z",
+  "after": {
+   "offset_ms": 9.9,
+   "audio_corr": 0.88,
+   "picture_votes": 495,
+   "spread": 0
+  },
+  "newDuration": 75.654667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:18:04.911Z"
+ },
+ "0f218884-1e78-48c2-9c85-9447de14f0d6": {
+  "title": "The OE Approach — Severe Conditions",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   207.811
+  ],
+  "before": {
+   "offset_ms": 568.7,
+   "audio_corr": 0.845,
+   "picture_votes": 18
+  },
+  "oldAssetId": "SNRfIhRv01FroPzxOqkzVDOeBJmVUiG7UmRGv2qHpvYU",
+  "newAssetId": "xX319Psf01e9sziWYTboiuv3Qb01101e00a02LOXc1fCi9DM",
+  "startedAt": "2026-10-30T06:18:33.199Z",
+  "after": {
+   "offset_ms": 9.9,
+   "audio_corr": 0.85,
+   "picture_votes": 19,
+   "spread": 1
+  },
+  "newDuration": 202.888,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:25:52.955Z"
+ },
+ "72788ac6-48ff-4da8-a599-17624bf8358f": {
+  "title": "The OE Approach — Lifetime Fluid",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   157.621
+  ],
+  "before": {
+   "offset_ms": 489.1,
+   "audio_corr": 0.857,
+   "picture_votes": 84
+  },
+  "oldAssetId": "y19DgLiTPF02OrJyg9lYW6vqs3lDk3aF15OPchkRoGvs",
+  "newAssetId": "cADyi402FtKLxo00YSWq2TlXUpM6sTMTHhwC2E72lFdKY",
+  "startedAt": "2026-10-30T06:26:19.705Z",
+  "after": {
+   "offset_ms": 10.3,
+   "audio_corr": 0.87,
+   "picture_votes": 66,
+   "spread": 0
+  },
+  "newDuration": 152.721333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:31:19.223Z"
+ },
+ "c420f15a-e640-4283-9054-47da0ff20b87": {
+  "title": "Diversification & Ignorance",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.246,
+   39.038
+  ],
+  "before": {
+   "offset_ms": -246.2,
+   "audio_corr": 0.834,
+   "picture_votes": 589
+  },
+  "oldAssetId": "Yb0293bRmLD1K59yIierU01YLStTnskI01IIQDF6cAJfGo",
+  "newAssetId": "rAr7ywNy7O3lDCh5ZFrgQ00oVMUX8OHbBQFSDZkvqEjo",
+  "startedAt": "2026-10-30T06:31:46.255Z",
+  "after": {
+   "offset_ms": -2.4,
+   "audio_corr": 0.848,
+   "picture_votes": 582,
+   "spread": 0
+  },
+  "newDuration": 33.821333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:33:54.857Z"
+ },
+ "64b35132-41ff-42e3-96a7-6a1f7975e2e3": {
+  "title": "Phones and Tones, Part 10",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.306,
+   129.686
+  ],
+  "before": {
+   "offset_ms": -226.3,
+   "audio_corr": 0.767,
+   "picture_votes": 114
+  },
+  "oldAssetId": "uQ4smpLINis63pcA4ow72KsS93i801SheoKMqZc8sHuY",
+  "newAssetId": "jUwr028pDUPeKP6WV3uBO01dxukm6vcZ71VWh021TBZky00",
+  "startedAt": "2026-10-30T06:34:24.539Z",
+  "after": {
+   "offset_ms": 14.7,
+   "audio_corr": 0.763,
+   "picture_votes": 82,
+   "spread": 1
+  },
+  "newDuration": 119.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:38:56.336Z"
+ },
+ "faa74440-38d8-4bf9-9c3c-2c5ce2e76438": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.706,
+   82.663
+  ],
+  "before": {
+   "offset_ms": -225.8,
+   "audio_corr": 0.789,
+   "picture_votes": 50
+  },
+  "oldAssetId": "wntXOUPK3XlPrdKuRPXr2rjc83lJ3dpoiTfE9P28yvw",
+  "newAssetId": "GuGa00I701C02h93bUwB7gxXkenmiEmfZpTynklHCR00wnI",
+  "startedAt": "2026-10-30T06:39:26.165Z",
+  "after": {
+   "offset_ms": 15.1,
+   "audio_corr": 0.786,
+   "picture_votes": 49,
+   "spread": 0
+  },
+  "newDuration": 73.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:43:07.954Z"
+ },
+ "2ff913f2-0a78-4f56-92ed-7ed02d9b20a4": {
+  "title": "On the Drive",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.612,
+   240.217
+  ],
+  "before": {
+   "offset_ms": -212,
+   "audio_corr": 0.812,
+   "picture_votes": 162
+  },
+  "oldAssetId": "0201K2ir00CLQaMKGTRbKRsdfQj01e7re02400009HWEx77Wu00",
+  "newAssetId": "mrAb8JsSLm9fx02N6BDMF400lrlG02UMuUoxXtIRG301wK8",
+  "startedAt": "2026-10-30T06:43:40.683Z",
+  "after": {
+   "offset_ms": -7.7,
+   "audio_corr": 0.83,
+   "picture_votes": 123,
+   "spread": 0
+  },
+  "newDuration": 233.621333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T06:54:39.421Z"
+ },
+ "f42e5e4f-4af4-4fdd-b00d-9e4b8be8c469": {
+  "title": "Brave Enough",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": null,
+   "picture_votes": 0,
+   "picture_spread_frames": null,
+   "audio_corr": 0.859,
+   "picture_lag_s": null,
+   "audio_lag_s": -5.011
+  }
+ },
+ "980b7d3d-5498-4756-ba1e-98226ee4ef7c": {
+  "title": "After-MPI, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.886,
+   151.374
+  ],
+  "before": {
+   "offset_ms": -205.8,
+   "audio_corr": 0.856,
+   "picture_votes": 835
+  },
+  "oldAssetId": "UhTagM00c02uF69YgBLEenGMrIlpY89lJicm3P01HVJ4og",
+  "newAssetId": "KZthycRBMwtYT1pUabFL91ITBlFZZs5nX4fmvIIkR9o",
+  "startedAt": "2026-10-30T06:55:45.964Z",
+  "after": {
+   "offset_ms": 37.8,
+   "audio_corr": 0.883,
+   "picture_votes": 748,
+   "spread": 0
+  },
+  "newDuration": 145.521333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:03:50.386Z"
+ },
+ "6c13d7a5-c927-44ae-9bff-3a5cebc182a4": {
+  "title": "The Money Mindset",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.291,
+   51.476
+  ],
+  "before": {
+   "offset_ms": -211.3,
+   "audio_corr": 0.825,
+   "picture_votes": 22
+  },
+  "oldAssetId": "ybNtsnXO6QFIFGRP19W02PZgSmBICMbf9qmr8oW9pb4A",
+  "newAssetId": "AH00V2dp4wVxT4zkEpfh8MfWcT6im5GaTEEfrRt3ZqHk",
+  "startedAt": "2026-10-30T07:04:21.556Z",
+  "after": {
+   "offset_ms": -6.4,
+   "audio_corr": 0.857,
+   "picture_votes": 18,
+   "spread": 1
+  },
+  "newDuration": 45.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:06:38.028Z"
+ },
+ "22bd773e-a2e7-47ea-9b9b-abaf4f54022e": {
+  "title": "Phones and Tones, Part 12",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.282,
+   101.252
+  ],
+  "before": {
+   "offset_ms": -201.9,
+   "audio_corr": 0.774,
+   "picture_votes": 145
+  },
+  "oldAssetId": "gazDgzNdYent7Qo8ZwTgQtpr0202lyofuwJrE3lcBDVEM",
+  "newAssetId": "a9IYlCei1hYpsriIdAiXXyo99Lu013iXQvkkOlBfhQkw",
+  "startedAt": "2026-10-30T07:07:05.143Z",
+  "after": {
+   "offset_ms": 0.8,
+   "audio_corr": 0.776,
+   "picture_votes": 121,
+   "spread": 0
+  },
+  "newDuration": 91.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:10:31.784Z"
+ },
+ "7dd07772-4e47-4513-924b-3f05ad399bae": {
+  "title": "Discipline, Addictive Discipline, Obsession",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.8,
+   118.155
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.933,
+   "picture_votes": 23
+  },
+  "oldAssetId": "kh23QadXZpwZWDKYi01lZmuoKxBHY2VlDOJ5dn00IvbAo",
+  "newAssetId": "Ex02fqAfAMbnnnuiKqtjXFl3zJxd8SQcbOJT2d4uDgdc",
+  "startedAt": "2026-10-30T07:11:02.696Z",
+  "after": {
+   "offset_ms": 2.1,
+   "audio_corr": 0.93,
+   "picture_votes": 19,
+   "spread": 0
+  },
+  "newDuration": 113.354667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:16:14.480Z"
+ },
+ "64b81c6c-8b20-4999-b17d-c2b75a177578": {
+  "title": "Phones and Tones, Part 11",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.674,
+   97.184
+  ],
+  "before": {
+   "offset_ms": -233.6,
+   "audio_corr": 0.74,
+   "picture_votes": 23
+  },
+  "oldAssetId": "JXdcUG291dVqWY02WXvZGbhhKTdNqsFG021g1eZOfwB5I",
+  "newAssetId": "BIgbcAQ2cuQcl02gNA4K8L01FEZH02JQ501Mf33unV6zQ3k",
+  "startedAt": "2026-10-30T07:16:41.747Z",
+  "after": {
+   "offset_ms": 7.1,
+   "audio_corr": 0.737,
+   "picture_votes": 34,
+   "spread": 0
+  },
+  "newDuration": 84.554667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:19:59.685Z"
+ },
+ "7e5b8694-90e8-4c54-bd98-7142232ff134": {
+  "title": "Bank Account 17, Outro",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.274,
+   82.514
+  ],
+  "before": {
+   "offset_ms": -233.8,
+   "audio_corr": 0.874,
+   "picture_votes": 66
+  },
+  "oldAssetId": "6Kj01bQ3NbVtk1nw5bEnQm2ASMSsGzYyOufzwyXr8i4E",
+  "newAssetId": "1O9YGDc01YWPcVG2E9rtSWilLBwUPSD6Jl00bZFmFmvYU",
+  "startedAt": "2026-10-30T07:20:27.319Z",
+  "after": {
+   "offset_ms": 6.9,
+   "audio_corr": 0.871,
+   "picture_votes": 64,
+   "spread": 0
+  },
+  "newDuration": 76.288,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:23:51.399Z"
+ },
+ "37e7e61c-e072-41df-ae20-09540301c89e": {
+  "title": "Every Step of the Road",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": null,
+   "picture_votes": 0,
+   "picture_spread_frames": null,
+   "audio_corr": 0.798,
+   "picture_lag_s": null,
+   "audio_lag_s": -5.782
+  }
+ },
+ "a118a9a8-b129-4dd6-86d0-5f9c21140efa": {
+  "title": "On the Drive",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   220.441
+  ],
+  "before": {
+   "offset_ms": 248.8,
+   "audio_corr": 0.838,
+   "picture_votes": 4
+  },
+  "oldAssetId": "p4sPkwe00VK6xE8D02XS41R5bkz72RIvA76T6ygr1ogUI",
+  "newAssetId": "MAuRPyqxG2B2Qk01Hk00z6BY9ihsocMKytz85r00JklUtg",
+  "startedAt": "2026-10-30T07:24:56.499Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 10.1,
+   "rejected_offset_ms": null,
+   "picture_votes": 3,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.835,
+   "picture_lag_s": -4.92,
+   "audio_lag_s": -4.91
+  },
+  "lengthAsked": 215.49,
+  "lengthGot": 215.521333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "b2765d66-555d-4e76-a6c9-66ed39fc141a": {
+  "title": "A Tree Grows in Two Directions",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   6.057,
+   83.649
+  ],
+  "before": {
+   "offset_ms": -217,
+   "audio_corr": 0.831,
+   "picture_votes": 6
+  },
+  "oldAssetId": "sDYXJ5H8NFgFSTQqE02l3XByc1QaY77Oz5SB8xvZTLOY",
+  "newAssetId": "ex29j1sWNrSKHxDnEGITY7ds4l83moXobvqucXTuvBo",
+  "startedAt": "2026-10-30T07:36:24.543Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": -31.4,
+   "rejected_offset_ms": null,
+   "picture_votes": 4,
+   "picture_spread_frames": 1,
+   "audio_corr": 0.856,
+   "picture_lag_s": -5.98,
+   "audio_lag_s": -6.011
+  },
+  "lengthAsked": 77.592,
+  "lengthGot": 77.588,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "e6e53adf-5bad-4afb-bd96-11a7f6052f14": {
+  "title": "The Invoice",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.455,
+   96.25
+  ],
+  "before": {
+   "offset_ms": -214.5,
+   "audio_corr": 0.836,
+   "picture_votes": 67
+  },
+  "oldAssetId": "r027IYWo6BjTq95TmJ5OJM2E3vYg6iUBwvYmC02AJvz64",
+  "newAssetId": "KRoMBZH00BW7KRuXuFoN5FFftbKucBNImxfLAUcdZxto",
+  "startedAt": "2026-10-30T07:40:24.143Z",
+  "after": {
+   "offset_ms": 29.7,
+   "audio_corr": 0.909,
+   "picture_votes": 57,
+   "spread": 0
+  },
+  "newDuration": 92.788,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:44:22.607Z"
+ },
+ "f7467325-5acd-4b4c-a438-09f554ac3c0a": {
+  "title": "Bank Account 04, Deposit 2, Giving Credit",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.377,
+   124.517
+  ],
+  "before": {
+   "offset_ms": -217.1,
+   "audio_corr": 0.819,
+   "picture_votes": 142
+  },
+  "oldAssetId": "c02uvVl009hugZS8D5GPnnw4B3GUEJm5seyqMHBypwfXI",
+  "newAssetId": "wvKcVHWhFMScNY8KBwi006C56H02Lj7IPINDXiZTHNKqg",
+  "startedAt": "2026-10-30T07:44:55.957Z",
+  "after": {
+   "offset_ms": -11.9,
+   "audio_corr": 0.843,
+   "picture_votes": 126,
+   "spread": 0
+  },
+  "newDuration": 118.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T07:50:20.003Z"
+ },
+ "5c85be76-4311-4a70-8f17-6d80988ea425": {
+  "title": "Greatness Is Inside",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": -214.7,
+   "picture_votes": 1,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.837,
+   "picture_lag_s": -5.16,
+   "audio_lag_s": -5.375
+  }
+ },
+ "ad521817-19fb-4bea-bf9b-1b137f609380": {
+  "title": "Promise Yourself",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": -228.3,
+   "picture_votes": 2,
+   "picture_spread_frames": 0.5,
+   "audio_corr": 0.878,
+   "picture_lag_s": -4.74,
+   "audio_lag_s": -4.968
+  }
+ },
+ "4a579f12-d22a-4b28-81a1-959409891b10": {
+  "title": "On the Drive",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.651,
+   191.479
+  ],
+  "before": {
+   "offset_ms": -211.2,
+   "audio_corr": 0.878,
+   "picture_votes": 38
+  },
+  "oldAssetId": "M9KHfvE49oVsN00IUSt01Q02pUTFwUjDJke02Relm01xBagQ",
+  "newAssetId": "kmTn3K4127rkO2f9xbnp5jAqyeoibzTyoq9dblUddYs",
+  "startedAt": "2026-10-30T07:51:53.343Z",
+  "after": {
+   "offset_ms": 33.9,
+   "audio_corr": 0.899,
+   "picture_votes": 32,
+   "spread": 0
+  },
+  "newDuration": 185.854667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:00:30.699Z"
+ },
+ "0797e142-a9ef-418b-91b2-8eeecc736902": {
+  "title": "More Life",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.649,
+   59.374
+  ],
+  "before": {
+   "offset_ms": -209,
+   "audio_corr": 0.867,
+   "picture_votes": 364
+  },
+  "oldAssetId": "ojHF1aQlqGZK6G802hL02Imewh3HIPokSJaO02I01vAV2Js",
+  "newAssetId": "mx0102xH9zHz1Fi9ik8TPkQtKt6Vv5iVCODEjSZOstjYE",
+  "startedAt": "2026-10-30T08:01:03.601Z",
+  "after": {
+   "offset_ms": -4.8,
+   "audio_corr": 0.893,
+   "picture_votes": 374,
+   "spread": 0
+  },
+  "newDuration": 54.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:04:09.270Z"
+ },
+ "434f020e-95bd-446e-9b53-d5ffd6c7961e": {
+  "title": "The Wolf Climbing the Hill",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.969,
+   77.276
+  ],
+  "before": {
+   "offset_ms": -208.5,
+   "audio_corr": 0.847,
+   "picture_votes": 86
+  },
+  "oldAssetId": "eh4PqYykpvSd5q4933li0200OM63rFjcHXInvViKsMdF00",
+  "newAssetId": "hzi00akqWJS3CJW7okk00arSdJp2kadJrTpbpJz3ybNZw",
+  "startedAt": "2026-10-30T08:04:46.306Z",
+  "after": {
+   "offset_ms": -4.8,
+   "audio_corr": 0.89,
+   "picture_votes": 70,
+   "spread": 0
+  },
+  "newDuration": 72.321333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:08:33.261Z"
+ },
+ "598719b0-ca42-4a93-8197-a8349938cc26": {
+  "title": "Sing It",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.369,
+   75.709
+  ],
+  "before": {
+   "offset_ms": -208.5,
+   "audio_corr": 0.927,
+   "picture_votes": 41
+  },
+  "oldAssetId": "AjTsrSNwwLxRnMhoZ48s9zKow1Q00pXcKM702VB8aL4q4",
+  "newAssetId": "D9Qmcx02nL01luFYiNQBfEVIF6CWJE1DO2GHa5XrzV6ug",
+  "startedAt": "2026-10-30T08:09:02.148Z",
+  "after": {
+   "offset_ms": -4.8,
+   "audio_corr": 0.94,
+   "picture_votes": 51,
+   "spread": 0
+  },
+  "newDuration": 72.354667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:12:16.574Z"
+ },
+ "c9526267-b08f-4a4e-803b-a364a5d4bc78": {
+  "title": "Coverage is Key, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.911,
+   96.941
+  ],
+  "before": {
+   "offset_ms": -230.6,
+   "audio_corr": 0.71,
+   "picture_votes": 28
+  },
+  "oldAssetId": "bXeW7MMjCJZgTMNKKZ2TgxSnDYOu8bxuvlj4myjb8UU",
+  "newAssetId": "k3b700600mlqq8x5bQZJ2LzTWDJ8C00B5NTelpGdA015Rfw",
+  "startedAt": "2026-10-30T08:12:47.724Z",
+  "after": {
+   "offset_ms": 10.5,
+   "audio_corr": 0.706,
+   "picture_votes": 31,
+   "spread": 0
+  },
+  "newDuration": 83.054667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:16:00.145Z"
+ },
+ "24fff230-f051-46f9-8f78-d44fe1a21560": {
+  "title": "The Big Ticket Visit, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.458,
+   168.621
+  ],
+  "before": {
+   "offset_ms": -218.1,
+   "audio_corr": 0.819,
+   "picture_votes": 37
+  },
+  "oldAssetId": "bWTdccTHAGV8c9H00mAgzbL02hg13ZhPp1oMlerKDCXBo",
+  "newAssetId": "2yvTi8nvB00tJ016yqkToeUYGxOLRJgmyZVn8f8ugmrh00",
+  "startedAt": "2026-10-30T08:16:33.546Z",
+  "after": {
+   "offset_ms": 26.5,
+   "audio_corr": 0.856,
+   "picture_votes": 31,
+   "spread": 0
+  },
+  "newDuration": 164.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:23:01.088Z"
+ },
+ "66bfaa74-9941-403d-924c-0f93c80d9e72": {
+  "title": "Welcome from Mitch",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.24,
+   127.698
+  ],
+  "before": {
+   "offset_ms": -239.9,
+   "audio_corr": 0.813,
+   "picture_votes": 34
+  },
+  "oldAssetId": "w02lr35YljOmkF9JT3lZwuStgBrL31bWMt7d75lCQtMg",
+  "newAssetId": "G6Q6D9kjURS5OmCntN00VWqSgAt01wBHf701JaPIkeGcJQ",
+  "startedAt": "2026-10-30T08:23:29.108Z",
+  "after": {
+   "offset_ms": 2.3,
+   "audio_corr": 0.811,
+   "picture_votes": 25,
+   "spread": 0
+  },
+  "newDuration": 117.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:28:21.538Z"
+ },
+ "2f6bf362-db6e-4f1a-85fb-74082fadb4ff": {
+  "title": "Bank Account 14, Deposit 7, Listening Before Reacting",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.335,
+   161.895
+  ],
+  "before": {
+   "offset_ms": -254.5,
+   "audio_corr": 0.815,
+   "picture_votes": 115
+  },
+  "oldAssetId": "3G4j144fkfU01odPXkPiBJxMUegHCc7F1IzyyPaYwZyA",
+  "newAssetId": "Zxlx2aOm00UF02Gdc9oCuD1ijCqftNJ02X43upBmqIYyiw",
+  "startedAt": "2026-10-30T08:28:50.583Z",
+  "after": {
+   "offset_ms": -10.2,
+   "audio_corr": 0.834,
+   "picture_votes": 88,
+   "spread": 1
+  },
+  "newDuration": 155.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:35:17.578Z"
+ },
+ "fc301267-fa6a-48f7-930c-1e36b9da58d6": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.244,
+   159.226
+  ],
+  "before": {
+   "offset_ms": -204.1,
+   "audio_corr": 0.92,
+   "picture_votes": 805
+  },
+  "oldAssetId": "QyJXJh4cLJe500HNe4lmddgIeIJol00XfW012c8iGv00XLQ",
+  "newAssetId": "FZHWuJcyNHP51orGcZXNGSW2p1ekiwb1cppUkQU00Zjg",
+  "startedAt": "2026-10-30T08:35:56.345Z",
+  "after": {
+   "offset_ms": -0.9,
+   "audio_corr": 0.927,
+   "picture_votes": 774,
+   "spread": 0
+  },
+  "newDuration": 154.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:44:00.511Z"
+ },
+ "21255996-7945-43df-bb4a-047bee505a10": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   12.052,
+   93.812
+  ],
+  "before": {
+   "offset_ms": -211.5,
+   "audio_corr": 0.713,
+   "picture_votes": 40
+  },
+  "oldAssetId": "Hu007S63XAsmDwqUVUgF2gtoOcBd4th02s6HUwQsfpEv4",
+  "newAssetId": "P1ntQxuAm02WarvOuVWNR9t702O00GmuVPas16D5PXK4XQ",
+  "startedAt": "2026-10-30T08:44:32.701Z",
+  "after": {
+   "offset_ms": 32.8,
+   "audio_corr": 0.733,
+   "picture_votes": 38,
+   "spread": 0
+  },
+  "newDuration": 81.788,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:48:04.522Z"
+ },
+ "0b630f0c-856f-43a8-8d5e-12e656ad0e2d": {
+  "title": "Where Are You Living?",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.444,
+   44.357
+  ],
+  "before": {
+   "offset_ms": -204,
+   "audio_corr": 0.802,
+   "picture_votes": 58
+  },
+  "oldAssetId": "HMqPmy8zEZdovdpSKTKVzI5wANuBhfqs00xHRHx01FXCg",
+  "newAssetId": "N00SRhxPtCVmVdmb01xpvBTIQmGgUqrw7zfZemj72ODMc",
+  "startedAt": "2026-10-30T08:48:33.249Z",
+  "after": {
+   "offset_ms": -0.8,
+   "audio_corr": 0.823,
+   "picture_votes": 54,
+   "spread": 0
+  },
+  "newDuration": 36.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:50:25.684Z"
+ },
+ "2dfb0041-137c-406d-a108-cab3e65f5fc9": {
+  "title": "On the Drive, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.634,
+   130.249
+  ],
+  "before": {
+   "offset_ms": -234.1,
+   "audio_corr": 0.873,
+   "picture_votes": 577
+  },
+  "oldAssetId": "KXVZq5Pb9te25uyPORUZqvX7k8zDpv02mSwBbuWwmFOI",
+  "newAssetId": "WXAHrFlMDbvr2tbW702ziPbU00TZ3Zbgg00QA8WqH66MyE",
+  "startedAt": "2026-10-30T08:51:01.971Z",
+  "after": {
+   "offset_ms": 6.7,
+   "audio_corr": 0.87,
+   "picture_votes": 500,
+   "spread": 0
+  },
+  "newDuration": 124.621333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T08:58:16.036Z"
+ },
+ "7ef36c38-802b-4254-bd55-039eea3da4eb": {
+  "title": "Phones and Tones, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.434,
+   79.184
+  ],
+  "before": {
+   "offset_ms": -233.6,
+   "audio_corr": 0.779,
+   "picture_votes": 280
+  },
+  "oldAssetId": "mxog3Gi23L7DwixaV01tx01r1l3CDSwq87XpPvu7mwTKE",
+  "newAssetId": "plckOmzgi9YKhjGKQmDICyGBknUeQLTojte6AHOrR2Q",
+  "startedAt": "2026-10-30T08:58:48.068Z",
+  "after": {
+   "offset_ms": 7.2,
+   "audio_corr": 0.797,
+   "picture_votes": 232,
+   "spread": 0
+  },
+  "newDuration": 68.788,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:01:39.703Z"
+ },
+ "26f68ccd-cdd9-4a7b-a547-76e0770e9ee9": {
+  "title": "The Biggest Mistake in Life",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.634,
+   48.381
+  ],
+  "before": {
+   "offset_ms": -233.7,
+   "audio_corr": 0.842,
+   "picture_votes": 38
+  },
+  "oldAssetId": "so7Ev9p2UevsWalVb9jf6rmUZjhgUO73J9qcAgyAr02g",
+  "newAssetId": "TFYIJ0135moLZUGub3ajaZUgE600vk01M6e9FkFr8hy2Sk",
+  "startedAt": "2026-10-30T09:02:08.480Z",
+  "after": {
+   "offset_ms": 7.1,
+   "audio_corr": 0.86,
+   "picture_votes": 43,
+   "spread": 0
+  },
+  "newDuration": 42.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:04:25.906Z"
+ },
+ "fec78df5-1a2d-4956-a1d6-3543193fe3fc": {
+  "title": "Coverage is Key, Part 5",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.433,
+   119.833
+  ],
+  "before": {
+   "offset_ms": -233.4,
+   "audio_corr": 0.796,
+   "picture_votes": 18
+  },
+  "oldAssetId": "oGmUCzZ8at502mqL7UsdfWo1LEZq9gItnPUW1ZbrTTeI",
+  "newAssetId": "9padEU9ke02KAzjF9dJTZDOIhItDrQaDXd6cPQmXyFHU",
+  "startedAt": "2026-10-30T09:04:55.542Z",
+  "after": {
+   "offset_ms": 8.2,
+   "audio_corr": 0.792,
+   "picture_votes": 18,
+   "spread": 0
+  },
+  "newDuration": 109.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:09:15.628Z"
+ },
+ "8c8b88cd-ab7a-43b5-a213-6dbb5da90778": {
+  "title": "Bank Account 03, Withdrawal 1, Breaking Promises",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.929,
+   109.389
+  ],
+  "before": {
+   "offset_ms": -248.5,
+   "audio_corr": 0.853,
+   "picture_votes": 64
+  },
+  "oldAssetId": "HPRqH4TJQ211K17E2kNcdcP8ubxIQnc7sqCN9riRvow",
+  "newAssetId": "Myw3X00N36Hg7X02V38NsIg6sZhG8RT1Sdy9HW52Gs3jI",
+  "startedAt": "2026-10-30T09:09:46.063Z",
+  "after": {
+   "offset_ms": -4.7,
+   "audio_corr": 0.87,
+   "picture_votes": 60,
+   "spread": 1
+  },
+  "newDuration": 103.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:14:08.833Z"
+ },
+ "879d053c-1537-4ca6-b75d-7898a888648a": {
+  "title": "Owning Portions of Businesses",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.842,
+   38.987
+  ],
+  "before": {
+   "offset_ms": -202.1,
+   "audio_corr": 0.885,
+   "picture_votes": 704
+  },
+  "oldAssetId": "d1rlxj01tHFPrxQPlOj7EoNEQY6xVf6bM9v3AHHWc101Q",
+  "newAssetId": "EbkngF00CLoaT2RgTe3K1OT8ATQXbo9QRsNqipi02yZ6M",
+  "startedAt": "2026-10-30T09:14:42.390Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.887,
+   "picture_votes": 686,
+   "spread": 0
+  },
+  "newDuration": 34.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:16:50.825Z"
+ },
+ "9eef4b4f-2fa2-46f2-95a7-dbedf4f5a8bc": {
+  "title": "Carpe Diem",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.038,
+   67.218
+  ],
+  "before": {
+   "offset_ms": -238,
+   "audio_corr": 0.894,
+   "picture_votes": 20
+  },
+  "oldAssetId": "iEeEGGJQ00FqczTx01yiUDw3pmlez6pbSREMVi3UTlJv4",
+  "newAssetId": "oEQKK005A5ZxhA45pL01qBybvKthyNvIL3S2DJF3EZiaQ",
+  "startedAt": "2026-10-30T09:17:24.626Z",
+  "after": {
+   "offset_ms": 3.7,
+   "audio_corr": 0.891,
+   "picture_votes": 19,
+   "spread": 0
+  },
+  "newDuration": 61.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:19:58.298Z"
+ },
+ "8dac1564-efea-40ec-a8b7-c5e1ddbe9c41": {
+  "title": "On the Drive, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.16,
+   162.19
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.912,
+   "picture_votes": 5
+  },
+  "oldAssetId": "01e9SFDXxZFqwXkfmDl6WznVoUeic02sbKP4MBvn00c91k",
+  "newAssetId": "yH3ZwzQBX02kS44Iyw2NTyT1gBJhHD7Dk5FbSy102W3Y8",
+  "startedAt": "2026-10-30T09:20:29.989Z",
+  "after": {
+   "offset_ms": 2.3,
+   "audio_corr": 0.921,
+   "picture_votes": 16,
+   "spread": 0.5
+  },
+  "newDuration": 158.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:27:18.080Z"
+ },
+ "66d633b5-8d4d-409a-a51a-8245ffb4d35b": {
+  "title": "Create the Life You Can't Wait to Wake Up To",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.64,
+   54.8
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.865,
+   "picture_votes": 62
+  },
+  "oldAssetId": "aUaHnfdVqgAyHW65g201huWsxW13cPbjtkplvbMM016SU",
+  "newAssetId": "JbOtgjdbMg00ZmjyamZ43pG00Vp3i02gmTFlDulXOMxyck",
+  "startedAt": "2026-10-30T09:27:49.769Z",
+  "after": {
+   "offset_ms": 2.4,
+   "audio_corr": 0.874,
+   "picture_votes": 62,
+   "spread": 0
+  },
+  "newDuration": 46.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:30:04.757Z"
+ },
+ "ff9152f3-4603-484e-918d-94c82b5b05a7": {
+  "title": "Bank Account 10, Deposit 5, Giving Feedback With Respect",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.232,
+   154.112
+  ],
+  "before": {
+   "offset_ms": -231.8,
+   "audio_corr": 0.861,
+   "picture_votes": 128
+  },
+  "oldAssetId": "v021W6qZSDoNvC025mQ6eU5BKBEN3vt5XR1FzYCpkThUA",
+  "newAssetId": "F02XI6H4HQ4x1mhxlOZjH9fZ5992bXFbIyUIMswzKahI",
+  "startedAt": "2026-10-30T09:30:41.487Z",
+  "after": {
+   "offset_ms": 8.2,
+   "audio_corr": 0.861,
+   "picture_votes": 124,
+   "spread": 0
+  },
+  "newDuration": 147.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:37:02.649Z"
+ },
+ "84b33595-e671-4e53-ba8e-45e0e3291b82": {
+  "title": "Always Keep Going",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.951,
+   40.076
+  ],
+  "before": {
+   "offset_ms": -231.3,
+   "audio_corr": 0.853,
+   "picture_votes": 15
+  },
+  "oldAssetId": "Wx02w6dYvHaAVx5ksZqAj5aX00Nc4stxRPMSAG99uBsGw",
+  "newAssetId": "ZazqL7auoc1I01Sk01uRp6i6602Vb9dyoCxDcccUiuyIgQ",
+  "startedAt": "2026-10-30T09:37:29.824Z",
+  "after": {
+   "offset_ms": -30.1,
+   "audio_corr": 0.854,
+   "picture_votes": 13,
+   "spread": 1
+  },
+  "newDuration": 35.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:39:21.664Z"
+ },
+ "09c724f6-0671-4f26-bad4-07bde027a268": {
+  "title": "Coverage is Key, Part 10",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.497,
+   158.937
+  ],
+  "before": {
+   "offset_ms": -217.1,
+   "audio_corr": 0.717,
+   "picture_votes": 21
+  },
+  "oldAssetId": "etS766n16Ydf5RCNAcLXQBar00PBqkSU01iIcEORPawaA",
+  "newAssetId": "Uh3jUc6XBFqftLbVax2zPYuKuAExwN44ZBO00zCwKauc",
+  "startedAt": "2026-10-30T09:39:47.998Z",
+  "after": {
+   "offset_ms": 27.9,
+   "audio_corr": 0.74,
+   "picture_votes": 22,
+   "spread": 1
+  },
+  "newDuration": 147.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:45:27.549Z"
+ },
+ "1a634b9a-40e8-4875-a4ab-4c622f94e096": {
+  "title": "Diesel, Part 3",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   16.127,
+   191.107
+  ],
+  "before": {
+   "offset_ms": -206.7,
+   "audio_corr": 0.702,
+   "picture_votes": 65
+  },
+  "oldAssetId": "qgItMvBivWst4tZoNvFw02qOnN22IiKyNMEUJTtsRtlU",
+  "newAssetId": "XhCyFzsXrfeW2TpW7JfO2gkKvUxa7sgRu1VSLC6A8wk",
+  "startedAt": "2026-10-30T09:46:00.415Z",
+  "after": {
+   "offset_ms": 36.7,
+   "audio_corr": 0.709,
+   "picture_votes": 77,
+   "spread": 0
+  },
+  "newDuration": 175.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T09:53:03.828Z"
+ },
+ "13560b2e-5367-4c22-af28-0c1edeed01aa": {
+  "title": "After-MPI",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   5.929,
+   176.179
+  ],
+  "before": {
+   "offset_ms": -248.7,
+   "audio_corr": 0.832,
+   "picture_votes": 10
+  },
+  "oldAssetId": "rV0229q01e4L102kYs1TeMEsNjVp6b700nRZV01g01dz4Ra78",
+  "newAssetId": "GlmNlfRItFLwP01JTHYXKRx1kLnVsXKssQxmWgyAeJqo",
+  "startedAt": "2026-10-30T09:53:42.742Z",
+  "after": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": -4.6,
+   "picture_votes": 2,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.849,
+   "picture_lag_s": -5.88,
+   "audio_lag_s": -5.885
+  },
+  "lengthAsked": 170.25,
+  "lengthGot": 170.254667,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "1109e7da-9678-4f7f-af0d-27c5e5b18738": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.694,
+   211.251
+  ],
+  "before": {
+   "offset_ms": -213.8,
+   "audio_corr": 0.842,
+   "picture_votes": 138
+  },
+  "oldAssetId": "F902tJiTpYWAf02clF6eJURBHpTTIxC1ARvt1Y6OIMQdA",
+  "newAssetId": "00GhFT1Bbne2t301T9ocz9sgvHUmUZHPbGmglJ2QK025fw",
+  "startedAt": "2026-10-30T10:02:06.027Z",
+  "after": {
+   "offset_ms": 31.4,
+   "audio_corr": 0.871,
+   "picture_votes": 109,
+   "spread": 0
+  },
+  "newDuration": 205.554667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:11:48.070Z"
+ },
+ "6c9f2411-0da6-4638-b356-1bfffda60134": {
+  "title": "Coverage is Key, Part 8",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.962,
+   139.79
+  ],
+  "before": {
+   "offset_ms": -241.8,
+   "audio_corr": 0.811,
+   "picture_votes": 16
+  },
+  "oldAssetId": "j4XbHYoMKeCPiXd02hB8UNKyF1aWHG02plpAcmrnCcw500",
+  "newAssetId": "1jf901cflmwjND4IuLUcBjrZF4gtsBgPQLxhFBeyyZRw",
+  "startedAt": "2026-10-30T10:12:23.982Z",
+  "after": {
+   "offset_ms": 0.5,
+   "audio_corr": 0.813,
+   "picture_votes": 16,
+   "spread": 1
+  },
+  "newDuration": 129.854667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:17:22.468Z"
+ },
+ "ca77cdaf-0605-4c16-acc4-455153d48feb": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.324,
+   149.304
+  ],
+  "before": {
+   "offset_ms": -244.1,
+   "audio_corr": 0.808,
+   "picture_votes": 128
+  },
+  "oldAssetId": "aq31RFUoyg4qTBGsTYFF96k00SoXJgOxqNNHLPzvUxZs",
+  "newAssetId": "ugvvwm8K00ci301ZgLXT3N9r1ztVqanneGrnv6yy4u5uQ",
+  "startedAt": "2026-10-30T10:17:53.622Z",
+  "after": {
+   "offset_ms": -1,
+   "audio_corr": 0.813,
+   "picture_votes": 92,
+   "spread": 1
+  },
+  "newDuration": 139.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:23:27.875Z"
+ },
+ "6834bcb8-60cf-49d8-a7eb-3f2c0961a914": {
+  "title": "Bank Account 06, Deposit 3, Communicating Honestly",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.678,
+   138.098
+  ],
+  "before": {
+   "offset_ms": -238,
+   "audio_corr": 0.889,
+   "picture_votes": 159
+  },
+  "oldAssetId": "c4Cccz6lxa1LQv97wfiVS2XCx5lWzH4Bk02ZUZgx02blM",
+  "newAssetId": "00xl1tjzTSGliRqZcADjgPdS0002AMJXfGlFBiSw9A4sZE",
+  "startedAt": "2026-10-30T10:23:58.493Z",
+  "after": {
+   "offset_ms": 3.7,
+   "audio_corr": 0.886,
+   "picture_votes": 160,
+   "spread": 0
+  },
+  "newDuration": 131.454667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:29:16.701Z"
+ },
+ "2c186b71-cb1f-48d2-af63-54894486f81f": {
+  "title": "Coverage is Key, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.331,
+   126.211
+  ],
+  "before": {
+   "offset_ms": -210.7,
+   "audio_corr": 0.713,
+   "picture_votes": 42
+  },
+  "oldAssetId": "Yi48TbLX9lEXqGmXvg9qyObMkNTnGuSvxF94dMwYElQ",
+  "newAssetId": "eAMeiqTkSmNqi6ZgQGzwNNRcx5VoLXyuCqc00M6Lme68",
+  "startedAt": "2026-10-30T10:29:45.784Z",
+  "after": {
+   "offset_ms": 34.2,
+   "audio_corr": 0.728,
+   "picture_votes": 36,
+   "spread": 1
+  },
+  "newDuration": 112.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:34:29.214Z"
+ },
+ "6574c4d9-adf4-49f4-b25f-5b0f5eb5f95f": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.758,
+   123.751
+  ],
+  "before": {
+   "offset_ms": -197.9,
+   "audio_corr": 0.887,
+   "picture_votes": 40
+  },
+  "oldAssetId": "DPwq01R02RTsQBY9A9W005B02DblnNd2KLG9JauvRL01lgko",
+  "newAssetId": "yNezj00eLCgA402rics01ZxjpFy5t9TCRLAhMGfQYTaE00w",
+  "startedAt": "2026-10-30T10:35:00.210Z",
+  "after": {
+   "offset_ms": 3.7,
+   "audio_corr": 0.905,
+   "picture_votes": 34,
+   "spread": 0
+  },
+  "newDuration": 118.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:40:38.594Z"
+ },
+ "9c901936-b900-4cd7-9ba2-a56c2f97daad": {
+  "title": "Selling Skills, Part 9",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.156,
+   91.276
+  ],
+  "before": {
+   "offset_ms": -236.1,
+   "audio_corr": 0.828,
+   "picture_votes": 139
+  },
+  "oldAssetId": "81Lots6s1fXwMKFY6h3EKfewhRviB5rWElWVmK3NXMg",
+  "newAssetId": "Yoy9eSgfxFF23jzOS4abVAm7Zdj5A91TzVX37BWUZqA",
+  "startedAt": "2026-10-30T10:41:08.343Z",
+  "after": {
+   "offset_ms": 5.1,
+   "audio_corr": 0.824,
+   "picture_votes": 93,
+   "spread": 0
+  },
+  "newDuration": 81.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:44:45.492Z"
+ },
+ "4a6946f1-9060-4bee-af53-9bea8e603c18": {
+  "title": "On the Drive, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.331,
+   93.509
+  ],
+  "before": {
+   "offset_ms": -251,
+   "audio_corr": 0.855,
+   "picture_votes": 38
+  },
+  "oldAssetId": "rdyyrWYnL4VST602fW301HFm01LZ71anPO753rqzDYkwpU",
+  "newAssetId": "56VA7AAvM8E02C7022nuZN9JCKMx6rlWhSLPsvXcQ6Xtc",
+  "startedAt": "2026-10-30T10:45:19.567Z",
+  "after": {
+   "offset_ms": -6.1,
+   "audio_corr": 0.876,
+   "picture_votes": 28,
+   "spread": 1
+  },
+  "newDuration": 88.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:49:22.121Z"
+ },
+ "85085368-78e0-499a-a1dc-d4e978d0ccf3": {
+  "title": "If You Have to Ask",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": null,
+   "picture_votes": 0,
+   "picture_spread_frames": null,
+   "audio_corr": 0.862,
+   "picture_lag_s": null,
+   "audio_lag_s": -5.228
+  }
+ },
+ "412e2cd0-75b9-4a8f-8a59-3c3a4c677523": {
+  "title": "The OE Stagger — Why We Spread Them Out",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.929,
+   172.729
+  ],
+  "before": {
+   "offset_ms": -208.6,
+   "audio_corr": 0.884,
+   "picture_votes": 16
+  },
+  "oldAssetId": "6rAv02BcdjSG026KtAlSJTWpCDK402UQ3ufUEdh4E01jmJg",
+  "newAssetId": "5rnahpmHkXRdzZ5vyJO62qyfC02eaw8yljAbIYHtYOKg",
+  "startedAt": "2026-10-30T10:50:24.458Z",
+  "after": {
+   "offset_ms": 35.4,
+   "audio_corr": 0.901,
+   "picture_votes": 15,
+   "spread": 1
+  },
+  "newDuration": 166.821333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T10:56:20.749Z"
+ },
+ "4bb67043-850a-471f-8b3c-982f1dd7f581": {
+  "title": "Compare Yourself to Yesterday",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.011,
+   118.146
+  ],
+  "before": {
+   "offset_ms": -211.2,
+   "audio_corr": 0.834,
+   "picture_votes": 53
+  },
+  "oldAssetId": "TF1G02JbslbggZ57gf2CDYuSe561ULBWCuBjJG27i1kc",
+  "newAssetId": "PXJ3YXCOfUOCD4om01tqhk8vuQGc7nCiriKyeZkEgiRs",
+  "startedAt": "2026-10-30T10:56:52.761Z",
+  "after": {
+   "offset_ms": -6.4,
+   "audio_corr": 0.856,
+   "picture_votes": 53,
+   "spread": 0
+  },
+  "newDuration": 113.154667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:01:26.791Z"
+ },
+ "c18f52fd-8e05-4113-9e7f-eaac21f92df6": {
+  "title": "Piggyback",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   4.522,
+   140.557
+  ],
+  "before": {
+   "offset_ms": -241.9,
+   "audio_corr": 0.897,
+   "picture_votes": 76
+  },
+  "oldAssetId": "2600V3ZlJ0201Lls5AAKhm9sZxJY100kD01vsdHGaNsiHkks",
+  "newAssetId": "PrlRBlG3635thEkAlF02L8Nuqddst8YtMIRj3wtnyu6Q",
+  "startedAt": "2026-10-30T11:01:57.736Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 40.6,
+   "rejected_offset_ms": null,
+   "picture_votes": 93,
+   "picture_spread_frames": 1,
+   "audio_corr": 0.898,
+   "picture_lag_s": -4.52,
+   "audio_lag_s": -4.479
+  },
+  "lengthAsked": 136.035,
+  "lengthGot": 136.021333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "b1ec44f5-de6b-473c-8895-df9533bcd400": {
+  "title": "Selling Skills, Part 10",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.815,
+   96.355
+  ],
+  "before": {
+   "offset_ms": -254.8,
+   "audio_corr": 0.725,
+   "picture_votes": 134
+  },
+  "oldAssetId": "FWZc3J49EK00DmjfH6w700Bc02S7l4HsoUjaw8a2pze02cs",
+  "newAssetId": "OKnv02WwkPQ00iDKzsDr1fnPLbNvAUDLNGTX9WAP8de500",
+  "startedAt": "2026-10-30T11:09:08.416Z",
+  "after": {
+   "offset_ms": -10.5,
+   "audio_corr": 0.743,
+   "picture_votes": 151,
+   "spread": 0
+  },
+  "newDuration": 85.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:12:35.831Z"
+ },
+ "e1821af0-65f7-46bd-9715-91c548d5d287": {
+  "title": "99% of People",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.145,
+   132.727
+  ],
+  "before": {
+   "offset_ms": -225.1,
+   "audio_corr": 0.837,
+   "picture_votes": 42
+  },
+  "oldAssetId": "pDhVSgX01vPuUtaqqO5qmewRUYgGGItp3Nh02EoXcmdHc",
+  "newAssetId": "w6MFt8LZCn2lwqurbmz4sHCCUgPvgBtMq4EtsDZELHg",
+  "startedAt": "2026-10-30T11:13:15.456Z",
+  "after": {
+   "offset_ms": 17.2,
+   "audio_corr": 0.827,
+   "picture_votes": 25,
+   "spread": 1
+  },
+  "newDuration": 126.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:18:45.593Z"
+ },
+ "44cfa330-24ab-4338-9667-705a35a27306": {
+  "title": "Coverage is Key, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.408,
+   95.558
+  ],
+  "before": {
+   "offset_ms": -248.2,
+   "audio_corr": 0.743,
+   "picture_votes": 18
+  },
+  "oldAssetId": "W80002C7sDKPn01N01AOZi00ES8EC8RTl9nofmnHuz1o8E4A",
+  "newAssetId": "8mMCIOac74YNYR00YT4BJ25aRm01lHZ2sUY00U5llWWAeU",
+  "startedAt": "2026-10-30T11:19:16.434Z",
+  "after": {
+   "offset_ms": -3.6,
+   "audio_corr": 0.76,
+   "picture_votes": 20,
+   "spread": 0
+  },
+  "newDuration": 85.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:22:42.709Z"
+ },
+ "6ca783a5-8a7e-4f0e-984b-d7c9559a2c05": {
+  "title": "The OE Approach — Use the Chart",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.926,
+   178.396
+  ],
+  "before": {
+   "offset_ms": -246.2,
+   "audio_corr": 0.9,
+   "picture_votes": 22
+  },
+  "oldAssetId": "ny014svbptsu00PGYdjPWQ6Pvaa1ViwbW2tzCsUfM4lGo",
+  "newAssetId": "SCV012bmwRqnX3RMIWaZqtZUKGuzvZmu3O005eAj4RzCs",
+  "startedAt": "2026-10-30T11:23:08.342Z",
+  "after": {
+   "offset_ms": 17.7,
+   "audio_corr": 0.909,
+   "picture_votes": 22,
+   "spread": 0.5
+  },
+  "newDuration": 173.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:29:14.372Z"
+ },
+ "51e9507b-092b-40a5-ba65-4fe8c5ce3f3f": {
+  "title": "Work Hard in the Dark, Shine in the Light",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.12,
+   32.118
+  ],
+  "before": {
+   "offset_ms": -240,
+   "audio_corr": 0.825,
+   "picture_votes": 18
+  },
+  "oldAssetId": "OTMiEiirGPA3TdR01XJrxaf1tDQGhWISLZ5vv00SMtyQ4",
+  "newAssetId": "4wjOhNJgltsXFi0101NfLWB3Asl3u9ePWBSoUf8vFsNyM",
+  "startedAt": "2026-10-30T11:29:36.006Z",
+  "after": {
+   "offset_ms": 2.2,
+   "audio_corr": 0.838,
+   "picture_votes": 22,
+   "spread": 0
+  },
+  "newDuration": 26.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:31:04.600Z"
+ },
+ "e488a2e5-504a-459e-ae51-85bfeb68775d": {
+  "title": "You Cannot Lose — unattributed",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.52,
+   58.987
+  ],
+  "before": {
+   "offset_ms": -239.9,
+   "audio_corr": 0.927,
+   "picture_votes": 161
+  },
+  "oldAssetId": "X00PsqYHylPvr91En02m6P7p6jQ2oVdEP9M8dGXi6aniA",
+  "newAssetId": "lZoB9rBVdKciCP02BSvka00TzAFlQHYJrAuC6NRzNe6zc",
+  "startedAt": "2026-10-30T11:31:34.385Z",
+  "after": {
+   "offset_ms": 2.2,
+   "audio_corr": 0.926,
+   "picture_votes": 134,
+   "spread": 0
+  },
+  "newDuration": 55.454667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:34:16.976Z"
+ },
+ "1273cf85-9aec-46de-878f-0193bbf2d841": {
+  "title": "On the Drive, Part 3",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   6.421,
+   188.824
+  ],
+  "before": {
+   "offset_ms": -221.5,
+   "audio_corr": 0.776,
+   "picture_votes": 9
+  },
+  "oldAssetId": "FvCWhqYRyW2YAk5CQLAXaOVRxyhNVuiNid1u7Y6EY5w",
+  "newAssetId": "3ugvbSA3qx02ubExMP1xQAmQ9hOEWgM43Go5BlOfIZEE",
+  "startedAt": "2026-10-30T11:34:47.047Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 23.2,
+   "rejected_offset_ms": null,
+   "picture_votes": 9,
+   "picture_spread_frames": 1,
+   "audio_corr": 0.783,
+   "picture_lag_s": -6.4,
+   "audio_lag_s": -6.377
+  },
+  "lengthAsked": 182.403,
+  "lengthGot": 182.421333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "81cfc654-8ce1-477a-868e-2930b442711a": {
+  "title": "If Your Life Was a Movie",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": null,
+   "picture_votes": 0,
+   "picture_spread_frames": null,
+   "audio_corr": 0.864,
+   "picture_lag_s": null,
+   "audio_lag_s": -6.526
+  }
+ },
+ "1e113952-a332-4284-862e-193ae05dbeb8": {
+  "title": "Happy Kid, Happier Manager",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.928,
+   38.506
+  ],
+  "before": {
+   "offset_ms": -247.9,
+   "audio_corr": 0.848,
+   "picture_votes": 80
+  },
+  "oldAssetId": "XkCGErAmQMzmqw0101sXuelyBzEb101s01p2noiFgqLiYAY",
+  "newAssetId": "6bAekQ3EJo4NRRLdGzrh2sf3z00DadPpaqektDueWur4",
+  "startedAt": "2026-10-30T11:43:22.574Z",
+  "after": {
+   "offset_ms": -3.5,
+   "audio_corr": 0.863,
+   "picture_votes": 90,
+   "spread": 1
+  },
+  "newDuration": 32.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:44:57.932Z"
+ },
+ "847b1738-99e2-4406-990a-e6cee1f6abcb": {
+  "title": "I'd Rather Be Tired Than Wondering",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.426,
+   87.458
+  ],
+  "before": {
+   "offset_ms": -225.8,
+   "audio_corr": 0.805,
+   "picture_votes": 39
+  },
+  "oldAssetId": "wtM13cIT01s025c9nKQEtPO472jloXk4DVdMLIhzXTl8s",
+  "newAssetId": "O1OnHkq10100QofLKFuMoyZ6qRVZ3ZoWKy02BNPOvknpTU",
+  "startedAt": "2026-10-30T11:45:32.004Z",
+  "after": {
+   "offset_ms": 15.5,
+   "audio_corr": 0.799,
+   "picture_votes": 40,
+   "spread": 0
+  },
+  "newDuration": 80.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:49:04.151Z"
+ },
+ "f0d826fa-784c-4559-81ea-55b6c213ad10": {
+  "title": "Diesel, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   13.419,
+   159.189
+  ],
+  "before": {
+   "offset_ms": -219,
+   "audio_corr": 0.673,
+   "picture_votes": 207
+  },
+  "oldAssetId": "w2zrFEif2x02aurl00bgUFa4hbuiPEljuQ02x8tpnRbEPw",
+  "newAssetId": "ZA7XABGOhF01PnxNrCamEa02EpSzF902JdZZDNjyxhAlQQ",
+  "startedAt": "2026-10-30T11:49:33.256Z",
+  "after": {
+   "offset_ms": 24.4,
+   "audio_corr": 0.686,
+   "picture_votes": 172,
+   "spread": 0
+  },
+  "newDuration": 145.821333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T11:55:33.313Z"
+ },
+ "9da7038d-ebdc-4291-8ec7-0346b1c009b3": {
+  "title": "Bank Account 08, Deposit 4, Having Someone's Back",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.44,
+   124.9
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.88,
+   "picture_votes": 60
+  },
+  "oldAssetId": "Dnf9p4Mjg5DL01Mwt00RqMB02nvZnPyRoKNBOczVJmP7cM",
+  "newAssetId": "gX5USnMuM7JHloNiEkuZrR2r5xJrftwA2bqUvtKA3xY",
+  "startedAt": "2026-10-30T11:56:05.072Z",
+  "after": {
+   "offset_ms": 1.8,
+   "audio_corr": 0.893,
+   "picture_votes": 72,
+   "spread": 0
+  },
+  "newDuration": 119.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:00:59.335Z"
+ },
+ "b79a1169-c060-4030-9daf-8bc8aa826ca0": {
+  "title": "The OE Stagger — Running It",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.122,
+   191.092
+  ],
+  "before": {
+   "offset_ms": -241.9,
+   "audio_corr": 0.895,
+   "picture_votes": 70
+  },
+  "oldAssetId": "TWirEq3YC36eHHsKvclem02HY2iRt601nNQo7cKlmLgC00",
+  "newAssetId": "mXqoM3KuVy5mSE012uO0201gO94FEypj7Y4zGqpKMuMJ5s",
+  "startedAt": "2026-10-30T12:01:27.219Z",
+  "after": {
+   "offset_ms": 20.6,
+   "audio_corr": 0.896,
+   "picture_votes": 20,
+   "spread": 0.5
+  },
+  "newDuration": 184.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:07:56.809Z"
+ },
+ "95e92303-b68b-48f2-afe1-6d7b1a48feb5": {
+  "title": "Bank Account 02, Deposit 1, Keeping Your Word",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.335,
+   119.755
+  ],
+  "before": {
+   "offset_ms": -215.2,
+   "audio_corr": 0.837,
+   "picture_votes": 86
+  },
+  "oldAssetId": "VcXdeojuXKarIGfQv01epKSw2tHP02o01yTgSiCkCDm5cY",
+  "newAssetId": "esnsqhwYPUEmQVHa2I5XzzUJZP1m00mHEY935yYXyoR8",
+  "startedAt": "2026-10-30T12:08:29.181Z",
+  "after": {
+   "offset_ms": 29.4,
+   "audio_corr": 0.858,
+   "picture_votes": 86,
+   "spread": 1
+  },
+  "newDuration": 113.454667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:13:10.618Z"
+ },
+ "f6d63862-a758-460c-881f-e3c92909150d": {
+  "title": "It Couldn't Be Done",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.44,
+   85.618
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.867,
+   "picture_votes": 32
+  },
+  "oldAssetId": "M02JnSHfc1022C02ZUdrI3O1El0001gDet6cxVsIw8xaeOd00",
+  "newAssetId": "o5Lylimd01kpt1iQ02rRTy9MwBmjyFNSjZWxIr7YMASEI",
+  "startedAt": "2026-10-30T12:13:43.888Z",
+  "after": {
+   "offset_ms": 2,
+   "audio_corr": 0.879,
+   "picture_votes": 31,
+   "spread": 1
+  },
+  "newDuration": 80.188,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:17:10.837Z"
+ },
+ "c51a6e82-2577-4c92-bd5b-8c64433b145c": {
+  "title": "Coverage is Key, Part 9",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.52,
+   96.98
+  ],
+  "before": {
+   "offset_ms": -200,
+   "audio_corr": 0.79,
+   "picture_votes": 38
+  },
+  "oldAssetId": "g02BCj5M9ZvkOH9DmpjU8402SMmUXhYnqplb6RCqkCRA4",
+  "newAssetId": "RK8TcDc7MUvt98aMI16AYM37FWO3XhJys8zGSyIPGoc",
+  "startedAt": "2026-10-30T12:17:42.178Z",
+  "after": {
+   "offset_ms": 1.8,
+   "audio_corr": 0.788,
+   "picture_votes": 30,
+   "spread": 0.5
+  },
+  "newDuration": 85.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:21:02.785Z"
+ },
+ "1ca0f20a-1e26-46ff-8d46-a3290c905f87": {
+  "title": "The Haves",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   4.414,
+   85.779
+  ],
+  "before": {
+   "offset_ms": -214.3,
+   "audio_corr": 0.882,
+   "picture_votes": 9
+  },
+  "oldAssetId": "kdXWDPyV2MHCb02Z005bhLztmsHZJzQq6OR501qRirUvqk",
+  "newAssetId": "ZsStPYvC2GTC700HO41BLP5Q4zdsIG8YNt01t4JqARROA",
+  "startedAt": "2026-10-30T12:21:40.465Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": -9.1,
+   "rejected_offset_ms": null,
+   "picture_votes": 5,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.905,
+   "picture_lag_s": -4.36,
+   "audio_lag_s": -4.369
+  },
+  "lengthAsked": 81.365,
+  "lengthGot": 81.388,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "21dd926b-193f-4eda-ab0e-f401d2717b8f": {
+  "title": "Bank Account 11, Withdrawal 5, Changing Expectations Without Explanation",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.214,
+   150.914
+  ],
+  "before": {
+   "offset_ms": -214.3,
+   "audio_corr": 0.773,
+   "picture_votes": 104
+  },
+  "oldAssetId": "hFkHNiA2NsQKgQhfhQmdz01oryS7XrJoTYAW00c9Js98Y",
+  "newAssetId": "6pI3xW2HQSD01ABsoyAp3t016AL02XnZGK77G01zojol18I",
+  "startedAt": "2026-10-30T12:26:35.875Z",
+  "after": {
+   "offset_ms": -9.4,
+   "audio_corr": 0.795,
+   "picture_votes": 97,
+   "spread": 0
+  },
+  "newDuration": 141.721333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:32:12.676Z"
+ },
+ "fefd521a-7bc3-4e4d-a9cc-bfdebb177d07": {
+  "title": "On the Drive, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.734,
+   178.584
+  ],
+  "before": {
+   "offset_ms": -213.8,
+   "audio_corr": 0.828,
+   "picture_votes": 277
+  },
+  "oldAssetId": "ffiyq7pyn2J7tssTg5Ss4ZprfIP4HTAd1Mz3yGG9nCI",
+  "newAssetId": "oQKx2EtyMJYNs54LPh26SaZErSE5kMBgViP02UL4NBSc",
+  "startedAt": "2026-10-30T12:32:49.727Z",
+  "after": {
+   "offset_ms": -8.7,
+   "audio_corr": 0.851,
+   "picture_votes": 213,
+   "spread": 1
+  },
+  "newDuration": 173.854667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:40:55.710Z"
+ },
+ "cf4336ad-e6f5-4e1b-a66c-a6c7833737a7": {
+  "title": "Day One or One Day",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.118,
+   47.016
+  ],
+  "before": {
+   "offset_ms": -238,
+   "audio_corr": 0.887,
+   "picture_votes": 46
+  },
+  "oldAssetId": "z6Dn00zVM018knUgoRsQPymMuuY7jbJYq100Y39h4dHzVA",
+  "newAssetId": "6hvffFMQSIZn7Ghxc5JcOYgg3xMIuGlLNx2t02dTj2W8",
+  "startedAt": "2026-10-30T12:41:32.267Z",
+  "after": {
+   "offset_ms": 3.9,
+   "audio_corr": 0.884,
+   "picture_votes": 33,
+   "spread": 0
+  },
+  "newDuration": 42.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:43:47.919Z"
+ },
+ "cb773ef0-9ae2-45a5-8a95-ff4bf2bdbed6": {
+  "title": "The Big Ticket Visit, Part 3",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   5.204,
+   94.057
+  ],
+  "before": {
+   "offset_ms": -244.2,
+   "audio_corr": 0.903,
+   "picture_votes": 18
+  },
+  "oldAssetId": "c01D3SbJsmAHfL5wyZULkNDGFx2aCE101iWl00yKWaGANQ",
+  "newAssetId": "Me02ufK00O3DcUsE02rEbJgfH8G6AwD00uxAHS5kBOGyZkU",
+  "startedAt": "2026-10-30T12:44:24.893Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": -0.8,
+   "rejected_offset_ms": null,
+   "picture_votes": 6,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.908,
+   "picture_lag_s": -5.16,
+   "audio_lag_s": -5.161
+  },
+  "lengthAsked": 88.853,
+  "lengthGot": 88.854667,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "adf42b80-2f57-4181-961b-ed15ebf30fa7": {
+  "title": "EV Series, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   17.811,
+   255.181
+  ],
+  "before": {
+   "offset_ms": -211.4,
+   "audio_corr": 0.6,
+   "picture_votes": 159
+  },
+  "oldAssetId": "yivWFK9BW01soLLbMxiRC6HmThW02iplkCIkaXH2wcOfk",
+  "newAssetId": "yCaXzHMjX4z6JSkVMXhftl3I00coVwUt6F02D00qYLncUI",
+  "startedAt": "2026-10-30T12:48:33.103Z",
+  "after": {
+   "offset_ms": -6.4,
+   "audio_corr": 0.613,
+   "picture_votes": 128,
+   "spread": 0
+  },
+  "newDuration": 237.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T12:58:01.861Z"
+ },
+ "4961a7af-948b-4896-92ec-8602059126c5": {
+  "title": "You Are Not Tired",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.311,
+   99.579
+  ],
+  "before": {
+   "offset_ms": -231.5,
+   "audio_corr": 0.87,
+   "picture_votes": 25
+  },
+  "oldAssetId": "2Tf5gkTzy5RK1d01y01V5XYKqLUDcIMjVd7ZxqI1ypWMc",
+  "newAssetId": "QBc9QtW00ADsigDF36ebhOGtgiR2Ohd1XVoTt2iY1wOE",
+  "startedAt": "2026-10-30T12:58:32.219Z",
+  "after": {
+   "offset_ms": 9.8,
+   "audio_corr": 0.903,
+   "picture_votes": 26,
+   "spread": 0
+  },
+  "newDuration": 95.288,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:02:43.850Z"
+ },
+ "6f69a096-6aef-453d-9784-e42faa9c15ba": {
+  "title": "At the Kiosk, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.12,
+   125.78
+  ],
+  "before": {
+   "offset_ms": -239.9,
+   "audio_corr": 0.879,
+   "picture_votes": 59
+  },
+  "oldAssetId": "u8O02l5m7DZA3se9QxX00k2YpYZNZbCXDAnh8QrKosgfo",
+  "newAssetId": "pYgtPnTm94KXspSgG7qG5MzuSJptLvZkYtOlUDm54zI",
+  "startedAt": "2026-10-30T13:03:28.680Z",
+  "after": {
+   "offset_ms": 2.1,
+   "audio_corr": 0.876,
+   "picture_votes": 27,
+   "spread": 0
+  },
+  "newDuration": 120.688,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:09:14.113Z"
+ },
+ "a3212d65-7489-45b9-90a0-da91eab2ec99": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.329,
+   123.569
+  ],
+  "before": {
+   "offset_ms": -208.5,
+   "audio_corr": 0.917,
+   "picture_votes": 1012
+  },
+  "oldAssetId": "WQSf8FGxOH01mBV518qn3xeI6jh00g56XL1HbyWdNqDc8",
+  "newAssetId": "i2LkBXVDQxiHqv5I02WXOmqxJPiVa6u0001OhafkexcJ3c",
+  "startedAt": "2026-10-30T13:10:00.941Z",
+  "after": {
+   "offset_ms": -4.7,
+   "audio_corr": 0.932,
+   "picture_votes": 920,
+   "spread": 0
+  },
+  "newDuration": 119.288,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:17:04.367Z"
+ },
+ "8457eb59-ec58-49fa-a770-0bc864efa634": {
+  "title": "Be Better Than That",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.606,
+   46.071
+  ],
+  "before": {
+   "offset_ms": -206.2,
+   "audio_corr": 0.886,
+   "picture_votes": 65
+  },
+  "oldAssetId": "u8xC02evr2kO020202PM26Li7UOaHI4DqpOxUuChuzJqewk",
+  "newAssetId": "iK4rJqQjY7NCYMbZoTrKivdilKmDJe9EOFdYkd1skLY",
+  "startedAt": "2026-10-30T13:17:33.258Z",
+  "after": {
+   "offset_ms": -2.3,
+   "audio_corr": 0.898,
+   "picture_votes": 47,
+   "spread": 0
+  },
+  "newDuration": 41.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:19:40.675Z"
+ },
+ "bfce4b81-4c82-4c7a-905c-da3e6db72b4e": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.598,
+   154.508
+  ],
+  "before": {
+   "offset_ms": -238.2,
+   "audio_corr": 0.844,
+   "picture_votes": 119
+  },
+  "oldAssetId": "2jH2P89PrWIHi01hllgeT4L6zbvwzPgqm37dLAKD1yvc",
+  "newAssetId": "UF9Hg6zYookVV5vrnj02uUxqEZ5oOxYWP6V3QOg3lvjo",
+  "startedAt": "2026-10-30T13:20:11.048Z",
+  "after": {
+   "offset_ms": 3.5,
+   "audio_corr": 0.842,
+   "picture_votes": 99,
+   "spread": 0
+  },
+  "newDuration": 145.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:25:48.915Z"
+ },
+ "a0d34297-be7b-4e9e-a4b4-dbad3625b29f": {
+  "title": "Print Money, Not Time",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.124,
+   49.057
+  ],
+  "before": {
+   "offset_ms": -203.8,
+   "audio_corr": 0.849,
+   "picture_votes": 16
+  },
+  "oldAssetId": "v802Bgreihmo2lXRV4QQkBvXRzj02YgMYMz8lYi4iE6Ng",
+  "newAssetId": "CvEAH3008db7UU4chrEBRulU6Wd4RrviNvMl2VsFckEI",
+  "startedAt": "2026-10-30T13:26:20.788Z",
+  "after": {
+   "offset_ms": 39.2,
+   "audio_corr": 0.853,
+   "picture_votes": 24,
+   "spread": 0.5
+  },
+  "newDuration": 41.921333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:28:19.857Z"
+ },
+ "ed7100c1-dbb6-47b7-97ee-cd70fda58649": {
+  "title": "You Fight Great, But I'm a Great Fighter",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   4.312,
+   34.112
+  ],
+  "before": {
+   "offset_ms": -191.6,
+   "audio_corr": 0.85,
+   "picture_votes": 9
+  },
+  "oldAssetId": "NyOhJBvp3QDaMjvWpGWoZXAyJYxiSFxFNxAGrYqa42U",
+  "newAssetId": "baZkmpEnjrGPaAMEXwvkaB7cYfJM1H5X5x8qrkinNEY",
+  "startedAt": "2026-10-30T13:28:43.463Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 8.7,
+   "rejected_offset_ms": null,
+   "picture_votes": 7,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.855,
+   "picture_lag_s": -4.28,
+   "audio_lag_s": -4.271
+  },
+  "lengthAsked": 29.8,
+  "lengthGot": 29.821333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "64a29122-615f-43f4-8dc5-8fb56c38f971": {
+  "title": "Bank Account 07, Withdrawal 3, Avoiding Hard Conversations",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.124,
+   133.144
+  ],
+  "before": {
+   "offset_ms": -204,
+   "audio_corr": 0.874,
+   "picture_votes": 78
+  },
+  "oldAssetId": "72ABkX2LTzfjM9402802K6VZacvYWs0100smlWzGAaFNKSY",
+  "newAssetId": "sHnKlRh3H5VWbGws7400H5vZ4ddSge2lU9QzV5OwW01F4",
+  "startedAt": "2026-10-30T13:30:46.468Z",
+  "after": {
+   "offset_ms": -0.9,
+   "audio_corr": 0.88,
+   "picture_votes": 73,
+   "spread": 0
+  },
+  "newDuration": 126.054667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:35:57.800Z"
+ },
+ "ac66361f-732a-4281-a281-858690b288b8": {
+  "title": "Bank Account 16, Deposit 8, Showing Up When It Matters",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.188,
+   130.908
+  ],
+  "before": {
+   "offset_ms": -228.3,
+   "audio_corr": 0.782,
+   "picture_votes": 97
+  },
+  "oldAssetId": "9d3UxaXK01j3uhZJhIQF52JU02BBxmN2PyoZbPINke2T8",
+  "newAssetId": "TH0000Wbkq6u6AC01b65Sh00g66mDQ01fM1kpwTmuc9LUdIc",
+  "startedAt": "2026-10-30T13:36:30.573Z",
+  "after": {
+   "offset_ms": 13.4,
+   "audio_corr": 0.832,
+   "picture_votes": 98,
+   "spread": 0
+  },
+  "newDuration": 124.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:41:38.267Z"
+ },
+ "7fe42abc-6d77-4e60-8e7a-1e3428a02403": {
+  "title": "You'll Never Feel Ready",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   6.316,
+   90.414
+  ],
+  "before": {
+   "offset_ms": -236,
+   "audio_corr": 0.852,
+   "picture_votes": 3
+  },
+  "oldAssetId": "KrlwynCAp7pQBhzYZfjuCK6U5MmKSPHzGCiCc8yWQgA",
+  "newAssetId": "SRzJyETsW4tKwl02KP9APuoccbGXw637FTwzTHTDqGW00",
+  "startedAt": "2026-10-30T13:42:11.716Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 5.3,
+   "rejected_offset_ms": null,
+   "picture_votes": 4,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.848,
+   "picture_lag_s": -6.28,
+   "audio_lag_s": -6.275
+  },
+  "lengthAsked": 84.098,
+  "lengthGot": 84.121333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "cfda7d49-29de-469f-ac5c-55aef69f2524": {
+  "title": "Bank Account 09, Withdrawal 4, Making People Afraid to Make Mistakes",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.788,
+   139.848
+  ],
+  "before": {
+   "offset_ms": -228.3,
+   "audio_corr": 0.786,
+   "picture_votes": 36
+  },
+  "oldAssetId": "IevWp22aOoSfjfuiOo01DUEW2ufvQOrybTWsWYyJrpEQ",
+  "newAssetId": "lEh3rAIgeU8mp8Sk00PwOeg0201NZS002eu7h00AZ3TF90200Y",
+  "startedAt": "2026-10-30T13:46:54.391Z",
+  "after": {
+   "offset_ms": 13.3,
+   "audio_corr": 0.813,
+   "picture_votes": 34,
+   "spread": 0
+  },
+  "newDuration": 132.088,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:52:07.544Z"
+ },
+ "7c6095bf-d8d8-40e8-920b-40bac2e141e8": {
+  "title": "Phones and Tones, Part 8",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.2,
+   82.11
+  ],
+  "before": {
+   "offset_ms": -239.6,
+   "audio_corr": 0.74,
+   "picture_votes": 272
+  },
+  "oldAssetId": "HWQwQtxOqAR00ij2SeRoYA01JV7lQocXnwaKyI5jpkol8",
+  "newAssetId": "sIkpw41cFf022eT3CkVcxKE8Eop7rwoCx95ZBAojeAxY",
+  "startedAt": "2026-10-30T13:52:46.101Z",
+  "after": {
+   "offset_ms": 2.7,
+   "audio_corr": 0.738,
+   "picture_votes": 220,
+   "spread": 0
+  },
+  "newDuration": 70.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T13:55:47.212Z"
+ },
+ "65acad0b-b780-4004-97ac-7f52c701047a": {
+  "title": "Strawberry Lemonade",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.311,
+   244.983
+  ],
+  "before": {
+   "offset_ms": -231.4,
+   "audio_corr": 0.872,
+   "picture_votes": 44
+  },
+  "oldAssetId": "FGzeZJiA32CUCCf6VbSnFuPa9AXwtjkmW8qRBOEmxbw",
+  "newAssetId": "Ob25BOuESsqoZfrd2bsZ8ysrnaneq4gXnZvnEa402Iko",
+  "startedAt": "2026-10-30T13:56:19.565Z",
+  "after": {
+   "offset_ms": 9.7,
+   "audio_corr": 0.884,
+   "picture_votes": 28,
+   "spread": 0
+  },
+  "newDuration": 240.688,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:06:19.829Z"
+ },
+ "5394e265-aac9-4f2d-90d1-03a2f620f2e5": {
+  "title": "Ideas, Events, People",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.316,
+   85.949
+  ],
+  "before": {
+   "offset_ms": -235.6,
+   "audio_corr": 0.875,
+   "picture_votes": 298
+  },
+  "oldAssetId": "rwN3D8TaB02k8NBgCN5fcjTaaqcXwrZokpn5vtMbfe6g",
+  "newAssetId": "4pS00iZbmOaTrDdETW00hLhwQkeIwy00Y8gkEaVPWc7lk00",
+  "startedAt": "2026-10-30T14:06:53.797Z",
+  "after": {
+   "offset_ms": 5.7,
+   "audio_corr": 0.875,
+   "picture_votes": 255,
+   "spread": 0
+  },
+  "newDuration": 79.654667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:11:12.600Z"
+ },
+ "8f6c5a6d-5ee1-4612-9946-816652a82d57": {
+  "title": "On the Drive, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.792,
+   131.862
+  ],
+  "before": {
+   "offset_ms": -231.6,
+   "audio_corr": 0.82,
+   "picture_votes": 72
+  },
+  "oldAssetId": "thbcSPFLi9rJhPo9ooYr7gBqkZtBezZZUaPEaoNfqQA",
+  "newAssetId": "I02aG7x9gQK8cnwPVgyOumrUmlFJlvVJx2Gp7nRyc02TI",
+  "startedAt": "2026-10-30T14:11:47.310Z",
+  "after": {
+   "offset_ms": 8.5,
+   "audio_corr": 0.819,
+   "picture_votes": 81,
+   "spread": 0
+  },
+  "newDuration": 123.088,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:16:46.664Z"
+ },
+ "5eaeaf5b-8b32-4f55-9f11-b5091f3f57bf": {
+  "title": "Results Happen Over Time",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.398,
+   88.816
+  ],
+  "before": {
+   "offset_ms": -237.8,
+   "audio_corr": 0.906,
+   "picture_votes": 31
+  },
+  "oldAssetId": "nXVr00lusRvGysTYBR6hjioHDW63klF6pMNT5pGL7GVQ",
+  "newAssetId": "boAMBfZ01bUMgUv01wP02ZhLYkY01tmFVOA8FNpfXyFV1LM",
+  "startedAt": "2026-10-30T14:17:27.946Z",
+  "after": {
+   "offset_ms": 3.8,
+   "audio_corr": 0.903,
+   "picture_votes": 16,
+   "spread": 0
+  },
+  "newDuration": 83.421333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:22:13.160Z"
+ },
+ "82e3496c-2c91-4451-b16f-2b1659f875a6": {
+  "title": "Selling Skills, Part 7",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.391,
+   104.951
+  ],
+  "before": {
+   "offset_ms": -231.1,
+   "audio_corr": 0.808,
+   "picture_votes": 208
+  },
+  "oldAssetId": "aDwT00liDYasK8E2vja9b8wfTt4hQ7exhfqSe9vGqBYI",
+  "newAssetId": "vYtyJQxSvC201GR1GUphUWoB5BDH02gCeoGWAfykLH1Xw",
+  "startedAt": "2026-10-30T14:22:48.707Z",
+  "after": {
+   "offset_ms": 10,
+   "audio_corr": 0.803,
+   "picture_votes": 195,
+   "spread": 0
+  },
+  "newDuration": 94.588,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:26:38.737Z"
+ },
+ "c27fc415-66f3-4d65-b3ce-6ebb30e9f4c4": {
+  "title": "Perish Attempting the Great and Impossible",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.911,
+   50.776
+  ],
+  "before": {
+   "offset_ms": -230.9,
+   "audio_corr": 0.875,
+   "picture_votes": 60
+  },
+  "oldAssetId": "cyRcmHENEU6BRfUiqWXqU187CG8CX5Sod6c01ipsOuqs",
+  "newAssetId": "Rz3f42pNjYl01uWzggH2Qs7zzt5JtZ5ZiA8xjw1Xgxp4",
+  "startedAt": "2026-10-30T14:27:13.575Z",
+  "after": {
+   "offset_ms": -29.8,
+   "audio_corr": 0.871,
+   "picture_votes": 62,
+   "spread": 1
+  },
+  "newDuration": 44.888,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:29:30.761Z"
+ },
+ "e77fed18-e04c-41ad-b6ed-6daeff39cb72": {
+  "title": "Get Better",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.589,
+   30.306
+  ],
+  "before": {
+   "offset_ms": -229.4,
+   "audio_corr": 0.82,
+   "picture_votes": 79
+  },
+  "oldAssetId": "EUwlT3GGeaUinPBEIqMQZoV8y8fcvwi7cx02p1JrAcbc",
+  "newAssetId": "8xXisPPk5cQyW4oZiW8QMLGgU7io26Xl33c4esk02FzA",
+  "startedAt": "2026-10-30T14:29:56.048Z",
+  "after": {
+   "offset_ms": 11,
+   "audio_corr": 0.824,
+   "picture_votes": 69,
+   "spread": 0
+  },
+  "newDuration": 25.721333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:31:26.078Z"
+ },
+ "5e111343-8126-41fe-ac5b-1234cebd5b4c": {
+  "title": "Perfect Practice Makes Perfect",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.906,
+   72.393
+  ],
+  "before": {
+   "offset_ms": -226.3,
+   "audio_corr": 0.858,
+   "picture_votes": 49
+  },
+  "oldAssetId": "JEuOZQasIcjKKy7n7QCrS01U2AGxdS6GcO4n3PIx2k01E",
+  "newAssetId": "RxyEHoDwQFazuX1Q02JBgxXbtMG6v012LT1cM02Ed88Ts8",
+  "startedAt": "2026-10-30T14:32:02.336Z",
+  "after": {
+   "offset_ms": 14.9,
+   "audio_corr": 0.853,
+   "picture_votes": 55,
+   "spread": 0
+  },
+  "newDuration": 68.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:35:20.305Z"
+ },
+ "4b9bc0d6-48fa-4e36-b4d7-cf00a023571f": {
+  "title": "The Moment You Feel Comfortable",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.502,
+   73.522
+  ],
+  "before": {
+   "offset_ms": -221.8,
+   "audio_corr": 0.808,
+   "picture_votes": 28
+  },
+  "oldAssetId": "8KjOo00JJCRYW8TcSRwxFkAoubGUH92KDbvmTAOT4AWE",
+  "newAssetId": "PmmMx2rVkdTFkBYRs01J00QWqHjNzO2gHz3yC73qh019Y8",
+  "startedAt": "2026-10-30T14:35:58.440Z",
+  "after": {
+   "offset_ms": -18.3,
+   "audio_corr": 0.808,
+   "picture_votes": 19,
+   "spread": 1
+  },
+  "newDuration": 69.021333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:39:13.740Z"
+ },
+ "84a28a1b-3399-439d-842b-8c300921dbd5": {
+  "title": "Bank Account 13, Withdrawal 6, Asking for Trust You Haven't Earned",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   8.575,
+   159.535
+  ],
+  "before": {
+   "offset_ms": -214.7,
+   "audio_corr": 0.789,
+   "picture_votes": 141
+  },
+  "oldAssetId": "TzmKCYitBqATyVMKuepE7CnYxyl007agpmZES01uLQrl00",
+  "newAssetId": "MAObFMRlLbg2chbJFRBzjfQ3IN2lAoPDMDfNOVL01ez00",
+  "startedAt": "2026-10-30T14:39:50.995Z",
+  "after": {
+   "offset_ms": -10.5,
+   "audio_corr": 0.804,
+   "picture_votes": 139,
+   "spread": 0
+  },
+  "newDuration": 150.988,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:46:01.677Z"
+ },
+ "799b05d7-f8c8-4972-b0ab-2c6028ad9813": {
+  "title": "Selling Skills, Part 6",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   11.177,
+   113.087
+  ],
+  "before": {
+   "offset_ms": -217.2,
+   "audio_corr": 0.698,
+   "picture_votes": 177
+  },
+  "oldAssetId": "B0001uQa35tsrezekiBq138Q62hC1Z1aAsIgFTTPjZDqM",
+  "newAssetId": "pXLdVawQYKhohxkRv7TJFQIx2BissTS4bGC3gpIjcqc",
+  "startedAt": "2026-10-30T14:46:35.619Z",
+  "after": {
+   "offset_ms": -11.9,
+   "audio_corr": 0.717,
+   "picture_votes": 143,
+   "spread": 0
+  },
+  "newDuration": 101.954667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:51:21.492Z"
+ },
+ "063f6315-5488-43f8-b91a-4ca18950be88": {
+  "title": "On the Drive, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.978,
+   143.486
+  ],
+  "before": {
+   "offset_ms": -217.7,
+   "audio_corr": 0.744,
+   "picture_votes": 39
+  },
+  "oldAssetId": "TySekOs9Mlqi3iD6484HU6X7amZ6h3MoBfGLkIcwpFk",
+  "newAssetId": "GnvNLmViOz5011aAFwCcXoMKnfiWX00u00SJ01sc2abPqfU",
+  "startedAt": "2026-10-30T14:52:06.801Z",
+  "after": {
+   "offset_ms": -13.2,
+   "audio_corr": 0.761,
+   "picture_votes": 20,
+   "spread": 0
+  },
+  "newDuration": 135.521333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T14:59:34.329Z"
+ },
+ "8b17978e-bef3-4cf3-a42e-a397230bb990": {
+  "title": "Coverage is Key, Part 4",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   10.771,
+   122.281
+  ],
+  "before": {
+   "offset_ms": -211.2,
+   "audio_corr": 0.785,
+   "picture_votes": 37
+  },
+  "oldAssetId": "00R700M2L6rPrzTCgjiUJRrza9Z55KCTLuSebXcKZ7Uj00",
+  "newAssetId": "Rqvj9uq39xZyYh9xq7Ihn8DwUHGtyEyGh601hSLwTays",
+  "startedAt": "2026-10-30T15:00:12.031Z",
+  "after": {
+   "offset_ms": -6.4,
+   "audio_corr": 0.805,
+   "picture_votes": 31,
+   "spread": 1
+  },
+  "newDuration": 111.554667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:05:34.388Z"
+ },
+ "77b96c74-274b-4aed-8fac-6240341a1453": {
+  "title": "On the Drive, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   9.769,
+   111.173
+  ],
+  "before": {
+   "offset_ms": -249.2,
+   "audio_corr": 0.8,
+   "picture_votes": 139
+  },
+  "oldAssetId": "NRU4S01Ir1sleCMFmIwL602yOWzf89302ovTqWb02hXoIQU",
+  "newAssetId": "wMAI9mCyq00IaI9NfSykzk6cTFZ601kdH023xb007OEyY1Y",
+  "startedAt": "2026-10-30T15:06:18.391Z",
+  "after": {
+   "offset_ms": -5.2,
+   "audio_corr": 0.826,
+   "picture_votes": 125,
+   "spread": 0
+  },
+  "newDuration": 101.454667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:11:27.988Z"
+ },
+ "3447a746-5f14-4ac0-b63b-af9749ca7a91": {
+  "title": "Amateur vs. Professional",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   7.891,
+   40.609
+  ],
+  "before": {
+   "offset_ms": -210.9,
+   "audio_corr": 0.765,
+   "picture_votes": 64
+  },
+  "oldAssetId": "GvGUVVBD00wvrqe8M9GiNwPEDxNTPMWaNb9bL694OHi4",
+  "newAssetId": "fWfW02wqVtOGfhuK4N00UWCQ401K01cnxK1ZA1800gX02A91A",
+  "startedAt": "2026-10-30T15:11:57.451Z",
+  "after": {
+   "offset_ms": -6,
+   "audio_corr": 0.786,
+   "picture_votes": 48,
+   "spread": 1
+  },
+  "newDuration": 32.721333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:13:53.546Z"
+ },
+ "e89f11a4-bd83-4551-bd85-2fc93f0e13a8": {
+  "title": "The More Things You Give",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": -211.2,
+   "picture_votes": 1,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.85,
+   "picture_lag_s": -4.48,
+   "audio_lag_s": -4.691
+  }
+ },
+ "11a5d2ac-7a08-442a-8525-50fcc5825ed2": {
+  "title": "After-MPI, Part 2",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   6.762,
+   174.525
+  ],
+  "before": {
+   "offset_ms": -242.2,
+   "audio_corr": 0.88,
+   "picture_votes": 471
+  },
+  "oldAssetId": "SFO8Vaoj1zue3W2TPhzMfFjnhuVNNJfh6MRSUmftOP8",
+  "newAssetId": "5gMsyf6hNxlKtLhKxqqzNk7zvpxOnNnJSXCcPjsJiVo",
+  "startedAt": "2026-10-30T15:15:03.873Z",
+  "after": {
+   "offset_ms": 0.8,
+   "audio_corr": 0.883,
+   "picture_votes": 424,
+   "spread": 0
+  },
+  "newDuration": 167.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:25:21.418Z"
+ },
+ "9fd634f3-82af-4e04-a250-a9ed85fec4bb": {
+  "title": "Buffalos and the Cows",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.162,
+   100.89
+  ],
+  "before": {
+   "offset_ms": -241.9,
+   "audio_corr": 0.884,
+   "picture_votes": 110
+  },
+  "oldAssetId": "UsWpMd7JJrm3yuo8p8JyzSxmpe01XNL01NzzRcwp2L8tg",
+  "newAssetId": "02ACOjq00tGeHOrXQKphY4MBKLOmMzrXzaC01TXZ01BkgTc",
+  "startedAt": "2026-10-30T15:26:00.963Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.912,
+   "picture_votes": 114,
+   "spread": 0
+  },
+  "newDuration": 95.721333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:30:41.762Z"
+ },
+ "8a8d48a6-a15d-4cac-8651-bb9a8e3c42ed": {
+  "title": "At the Kiosk, Part 1",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.162,
+   138.89
+  ],
+  "before": {
+   "offset_ms": -241.9,
+   "audio_corr": 0.854,
+   "picture_votes": 12
+  },
+  "oldAssetId": "cbFJeiMVl3QQCpZxv00wE3cP1CtAo2z8wj3QHkUidbUI",
+  "newAssetId": "FoWl5shZAQ01B2lpGRHeTl84v6uzN9L5502EhHBuWboVg",
+  "startedAt": "2026-10-30T15:31:27.877Z",
+  "after": {
+   "offset_ms": 0.6,
+   "audio_corr": 0.885,
+   "picture_votes": 17,
+   "spread": 1
+  },
+  "newDuration": 133.721333,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:37:48.745Z"
+ },
+ "2f87da72-f97c-4123-803a-e1c9fe8a99e9": {
+  "title": "Consistency Doesn't Guarantee Success",
+  "status": "refused",
+  "why": "before-measure unmeasurable",
+  "before": {
+   "status": "unmeasurable",
+   "offset_ms": null,
+   "rejected_offset_ms": null,
+   "picture_votes": 0,
+   "picture_spread_frames": null,
+   "audio_corr": 0.843,
+   "picture_lag_s": null,
+   "audio_lag_s": -6.484
+  }
+ },
+ "9ce47ebc-86f9-4ac6-a1c6-c44d537f49d9": {
+  "title": "Successful vs. Really Successful",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.078,
+   30.915
+  ],
+  "before": {
+   "offset_ms": -237.9,
+   "audio_corr": 0.845,
+   "picture_votes": 597
+  },
+  "oldAssetId": "FaRpjV5AwRG6ToUvX8mJeE7Q1UO8yFK01iozl7JK01OHI",
+  "newAssetId": "SnyxHYuuEs7AdmxS4uJuAWLSMP1hgiTII6BUg01AJxFk",
+  "startedAt": "2026-10-30T15:39:05.770Z",
+  "after": {
+   "offset_ms": 4.1,
+   "audio_corr": 0.843,
+   "picture_votes": 560,
+   "spread": 0
+  },
+  "newDuration": 25.854667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:41:08.516Z"
+ },
+ "fee52ad8-6e22-4a4e-94a8-fff710859299": {
+  "title": "If You Want Average",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.674,
+   85.412
+  ],
+  "before": {
+   "offset_ms": -233.7,
+   "audio_corr": 0.897,
+   "picture_votes": 53
+  },
+  "oldAssetId": "A01CifkSW8vBJNSkw2QD49CthCyHirqbnosLJUMVd4Gg",
+  "newAssetId": "8012hCDMccwjcfhbTj9fQBZdG4eeX011kGuknDj00OptL4",
+  "startedAt": "2026-10-30T15:41:48.071Z",
+  "after": {
+   "offset_ms": 6.9,
+   "audio_corr": 0.895,
+   "picture_votes": 46,
+   "spread": 0
+  },
+  "newDuration": 80.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T15:46:11.192Z"
+ },
+ "c06d008b-c607-4e0a-a49f-c76f231f878f": {
+  "title": "After-MPI",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   5.162,
+   227.927
+  ],
+  "before": {
+   "offset_ms": -241.9,
+   "audio_corr": 0.913,
+   "picture_votes": 811
+  },
+  "oldAssetId": "01RMO8sceuUOuuiifpuPIXZNU2DoKwwfSqKIhDTZVDTs",
+  "newAssetId": "M01OO7zQTRuavE8BxqZ3dsTJS00upUNrDFuaXHqnAjBaY",
+  "startedAt": "2026-10-30T15:46:51.024Z",
+  "after": {
+   "offset_ms": 0.8,
+   "audio_corr": 0.914,
+   "picture_votes": 731,
+   "spread": 0
+  },
+  "newDuration": 222.754667,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T16:03:41.970Z"
+ },
+ "b2d88174-b1b8-4cc3-b02f-1be41a345b3d": {
+  "title": "At the Kiosk",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   3.756,
+   97.251
+  ],
+  "before": {
+   "offset_ms": -235.7,
+   "audio_corr": 0.865,
+   "picture_votes": 898
+  },
+  "oldAssetId": "VKy01fyKL3ozOXhCAvJP38c1E24uEZHAD6T644sb00ziY",
+  "newAssetId": "nI00pPqzVidv02yv4MAXao402VDcvXSWXov6jAbuShSnE4",
+  "startedAt": "2026-10-30T16:04:33.742Z",
+  "after": {
+   "offset_ms": 5.6,
+   "audio_corr": 0.901,
+   "picture_votes": 816,
+   "spread": 0
+  },
+  "newDuration": 93.488,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T16:11:06.024Z"
+ },
+ "f080ab6a-b69f-4ae8-841a-4c1967fc5e05": {
+  "title": "The Big Ticket Visit, Part 2",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   4.865,
+   142.865
+  ],
+  "before": {
+   "offset_ms": -225.5,
+   "audio_corr": 0.859,
+   "picture_votes": 4
+  },
+  "oldAssetId": "bpChuZKLzlD00ZmmgxcVD9r6bU00gFvaiNGtfd3D9AwKQ",
+  "newAssetId": "zG3nlm00xgOEfoMjoEBimCIkfV00CXhtqfC1mFVmX4LLg",
+  "startedAt": "2026-10-30T16:11:50.221Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 16.9,
+   "rejected_offset_ms": null,
+   "picture_votes": 9,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.847,
+   "picture_lag_s": -4.84,
+   "audio_lag_s": -4.823
+  },
+  "lengthAsked": 138,
+  "lengthGot": 138.021333,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ },
+ "cb4c57bf-71b6-401c-bca7-8a664f1bb0cc": {
+  "title": "Read It Backwards",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.269,
+   103.564
+  ],
+  "before": {
+   "offset_ms": -228.6,
+   "audio_corr": 0.872,
+   "picture_votes": 67
+  },
+  "oldAssetId": "FGNHIhx2IkTKfTjax5HZBHQIdn4jj02RUkvjpT7ZW8bc",
+  "newAssetId": "s00qyH01k6oxxCZoYYBkc4UbhwVAlJkemfubgP3W3MSH4",
+  "startedAt": "2026-10-30T16:19:50.858Z",
+  "after": {
+   "offset_ms": 11.8,
+   "audio_corr": 0.87,
+   "picture_votes": 41,
+   "spread": 0
+  },
+  "newDuration": 99.288,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T16:25:41.661Z"
+ },
+ "4701a64c-61a5-40b1-b254-443dce8c5e8d": {
+  "title": "Four Things You Can't Get Back",
+  "status": "swapped",
+  "method": "disk-master-reencode",
+  "window": [
+   4.952,
+   71.712
+  ],
+  "before": {
+   "offset_ms": 88.4,
+   "audio_corr": 0.863,
+   "picture_votes": 38
+  },
+  "oldAssetId": "7hQzEGwQbhdMdnu5WFEz4JN5rTMngQNdlFol9eamAN8",
+  "newAssetId": "tu4PeXL2HcRg8MsyR9QlpGNamEnn4ntuS00Ig7l9wyz8",
+  "startedAt": "2026-10-30T16:26:16.828Z",
+  "after": {
+   "offset_ms": 8.8,
+   "audio_corr": 0.862,
+   "picture_votes": 34,
+   "spread": 1
+  },
+  "newDuration": 66.788,
+  "verticalMarkedStale": true,
+  "at": "2026-10-30T16:29:15.565Z"
+ },
+ "6aa81f6e-f060-45d5-aff6-b588ca4fb25c": {
+  "title": "On the Drive",
+  "status": "failed-gate",
+  "method": "disk-master-reencode",
+  "window": [
+   -0.042,
+   244.533
+  ],
+  "before": {
+   "offset_ms": -78,
+   "audio_corr": 0.997,
+   "picture_votes": 42
+  },
+  "oldAssetId": "801vVTmYduxDlXopHXUOeFXsUeq1008aYFYEpd5Fb9c1A",
+  "newAssetId": "lCX1YaHspaY500R900B9QmGdlQ8IdcnPOrkh2TSu9Zy9E",
+  "startedAt": "2026-10-30T16:29:54.484Z",
+  "after": {
+   "status": "ok",
+   "offset_ms": 65.8,
+   "rejected_offset_ms": null,
+   "picture_votes": 31,
+   "picture_spread_frames": 0,
+   "audio_corr": 0.945,
+   "picture_lag_s": 0,
+   "audio_lag_s": 0.066
+  },
+  "lengthAsked": 244.575,
+  "lengthGot": 244.5,
+  "note": "asset created but NOT swapped; the live row is untouched"
+ }
+}

@@ -42,11 +42,11 @@ name: derive-vertical
 # `workflow_dispatch` is deliberately left in place, so a sweep is one click
 # whenever it is wanted — the pause removes the automatic claim, not the ability.
 on:
-  # schedule:
+  schedule:
   #   # Every 30 minutes. Mux takes a few minutes per 4K master, so this picks up
   #   # a batch in waves rather than all at once — which is what we want, since
   #   # each derivation downloads a master and re-encodes it.
-  #   - cron: "*/30 * * * *"
+    - cron: "*/30 * * * *"
   # So a batch can be pushed along by hand without waiting for the next tick.
   workflow_dispatch:
 
