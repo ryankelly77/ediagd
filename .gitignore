@@ -154,3 +154,12 @@ reports/dropzone-transcripts.json
 # but neither should have to handle one that arrived over the network.
 reports/.trim-pass.lock
 reports/.trim-last-batch.lock
+
+# Live sync-repair artefacts. These are APPENDED TO WHILE A RUN IS IN FLIGHT,
+# so tracking them makes every `git checkout` fail mid-run and risks a forced
+# checkout truncating a log as it is written. A SNAPSHOT of a ledger is
+# committed once its run has FINISHED — never while it is being written.
+reports/sync-repair.log
+reports/sync-finish.json
+reports/.sync-finish.lock
+reports/.sync-repair.lock

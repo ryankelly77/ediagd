@@ -206,6 +206,51 @@ On Ryan's confirmation of the dry-run table: upload to Mux. New films land **dra
 - After any trim applied outside the ledger-writing path, **backfill the ledger row** so the next blanket run can't re-cut it.
 - Never run `trim:slates --apply` across a set without duration-verifying that set first.
 
+### The trim doctrine, v2 — a cut is not finished until it is measured
+
+**October's repair is the reason this section exists.** 226 of 462 published
+films were out of sync between picture and sound — some by a quarter of a
+second, the worst by 1.76 seconds — and every one of them had passed the
+checks in place at the time. Nothing raised an error. The films played.
+
+**Length is the one property that cannot detect this.** Mux returns exactly
+the length you ask for and content from somewhere else, so a duration check
+passes on a cut that is seconds wrong. The head-and-tail check passes too: it
+reads the audio, and the audio was fine. What was wrong was the picture
+relative to it.
+
+**So: no asset is swapped in, and no vertical is marked ready, without a
+measured sync pass on the FINISHED asset.** `lib/video/sync-gate.ts`, ±40 ms
+against the disk master, through the playback Mux actually serves.
+`replace:video` calls it; `trim:apply` inherits it by delegating the swap
+rather than carrying a second copy.
+
+- **`unmeasurable` is a refusal, not a pass.** The instrument declines when it
+  cannot align the picture confidently. A gate that waves those through passes
+  everything hard — and the hard cases here were the static menu screens,
+  which were out by a quarter second.
+- **Cut from the disk master in `02 - Published`. Never a Mux clip, never a
+  Mux archive.** A Mux clip of an already-clipped asset re-resolves to the
+  underlying source and lands on a keyframe before the clip's zero, by a
+  per-film amount, while returning the right length. Measured: the clip
+  method reproduced the defect on all three trial films (+1253, −214, −181 ms);
+  the local re-encode from disk fixed two of them to −20 and −26 ms.
+- **Full re-encode of both streams.** No stream copy anywhere in a cut.
+- **Take the cut window from the audio, not from the ledger.** The ledger's
+  points are in whatever asset they were measured against; aligning the live
+  audio to the master gives where the content actually begins. Reconcile the
+  two and refuse on a disagreement over 0.75 s.
+- **Use the asset's real duration, never `content.duration_sec`.** That column
+  is rounded to the second, which pushed 13 films past the end of their own
+  master and refused them for a fault in the arithmetic.
+- **A master can itself be out of sync.** When the residual survives a clean
+  re-encode, the master is the problem: re-cut with `-itsoffset` on the audio
+  input by the measured residual, and gate again.
+- **One judge.** The instrument decides whether a measurement is readable; the
+  caller decides only whether a readable measurement is good enough. A runner
+  that re-applies its own threshold on top will silently disagree with the
+  instrument — it refused 14 already-repaired films that way.
+
 MINDSET clips run the quote matcher; artifact links land as proposals in the review queue, inert until confirmed.
 
 ## Phase 6 — Move and settle

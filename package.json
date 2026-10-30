@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "sync:finish": "node scripts/sync-finish.mjs",
+    "sync:repair": "node scripts/sync-repair.mjs",
     "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js",
     "test:greeting": "rm -rf .tmp-grt && tsc scripts/greeting-scenarios.ts lib/brand.ts --outDir .tmp-grt --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && mkdir -p .tmp-grt/node_modules && ln -sfn .. .tmp-grt/node_modules/@ && node .tmp-grt/scripts/greeting-scenarios.js",
     "test:epoch": "rm -rf .tmp-ep && tsc scripts/epoch-scenarios.ts --outDir .tmp-ep --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-ep/scripts/epoch-scenarios.js",

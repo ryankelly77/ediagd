@@ -31,6 +31,26 @@
      npm run replace:video -- --id=… --file=… --dry
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
+import { checkSync } from "@/lib/video/sync-gate";
+import { readdirSync as __readdirSync } from "node:fs";
+
+/* The disk master for a row, matched on the name the file HAS on disk.
+   canonical first (published files were renamed to it), source as the
+   fallback for anything still in the Drop Zone. */
+function masterPathFor(row: { canonical_filename?: string | null; source_filename?: string | null }): string | null {
+  const rootDir = process.env.VIDEO_MASTERS_DIR;
+  if (!rootDir) return null;
+  const index = new Map<string, string>();
+  (function walk(d: string) {
+    for (const e of __readdirSync(d, { withFileTypes: true })) {
+      const f = `${d}/${e.name}`;
+      if (e.isDirectory()) walk(f); else index.set(e.name.toLowerCase(), f);
+    }
+  })(rootDir);
+  return (row.canonical_filename && index.get(row.canonical_filename.toLowerCase()))
+    || (row.source_filename && index.get(row.source_filename.toLowerCase()))
+    || null;
+}
 import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -469,6 +489,30 @@ async function main() {
   const newVersion = trimOnly || assetOnly
     ? null
     : Number(newCanonical!.match(/—\s*v(\d+)\.[a-z0-9]+$/i)?.[1] ?? row.version + 1);
+
+  /* ---- THE SYNC GATE. No asset is swapped in without a measured pass. ----
+     226 films reached production out of sync because the cut reported success
+     and nobody measured the result. A duration check cannot catch it: Mux
+     returns exactly the length asked for and the wrong content. Measured on
+     the FINISHED asset, against the disk master, through the playback Mux
+     actually serves. `unmeasurable` is a refusal, not a pass. */
+  {
+    const master = masterPathFor(row);
+    if (!master) {
+      throw new Error(
+        "sync gate: no disk master for this film, so the cut cannot be verified. " +
+        "Refusing the swap — the asset is in Mux and can be swapped by hand if that is really wanted."
+      );
+    }
+    const verdict = checkSync(master, playback.id, `replace-${String(contentId).slice(0, 8)}`);
+    console.log(`  sync gate: ${verdict.detail}`);
+    if (!verdict.pass) {
+      throw new Error(
+        `sync gate REFUSED the swap — ${verdict.detail}. The live row is untouched and the new ` +
+        `asset (${newAssetId}) is ready in Mux for a re-judge once the cut is corrected.`
+      );
+    }
+  }
 
   const { data: swapped, error: swapErr } = await sb.rpc("replace_master_asset", {
     _content_id: contentId,
