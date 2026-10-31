@@ -5,11 +5,14 @@
    Ryan's rulings, 30 October. Five phases, in order, one detached run:
 
      1  re-judge the 14 the old duplicated vote floor refused
-     2  re-cut Piggyback and On the Drive with the audio shifted by the
-        measured residual — their MASTERS are out of sync, not the method
-     3  master-alignment check for the films the correlator cannot read
+     2  re-cut Piggyback and On the Drive at their measured window with NO
+        shift — the first run shifted by the old asset's residual and landed
+        within 3 ms of its own shift, so the shift was the error
+     3  master-alignment for the films the correlator cannot read, AND the cut
+        each one needs — the first run diagnosed all 11 and cut none
      4  retire the ACR-047 duplicates and finish the MPI retitles
-     5  re-derive every stale vertical, gated the same way
+     5  re-derive every stale vertical at the LANDSCAPE'S window, gated in
+        crop mode against a master cropped the same 9:16
 
    ---------------------------------------------------------------------------
    ONE JUDGE
@@ -50,6 +53,20 @@ const PRIOR  = `${ROOT}/reports/sync-recut.json`;
 const GATE   = { offset: 40, lengthTol: 0.5 };
 const MAXBUF = 256 * 1024 * 1024;
 const APPLY  = process.argv.includes("--apply");
+
+/* --phase=5 and --only=<id,id> exist so the three proof films run through THIS
+   code, not a copy of it. A proof that exercises a separate script proves the
+   separate script. */
+const ONLY_PHASES = (() => {
+  const a = process.argv.find((x) => x.startsWith("--phase="));
+  return a ? new Set(a.slice(8).split(",").map(Number)) : null;
+})();
+const ONLY_IDS = (() => {
+  const a = process.argv.find((x) => x.startsWith("--only="));
+  return a ? new Set(a.slice(7).split(",").map((s) => s.trim()).filter(Boolean)) : null;
+})();
+const phaseWanted = (n) => !ONLY_PHASES || ONLY_PHASES.has(n);
+const idWanted = (id) => !ONLY_IDS || ONLY_IDS.has(id);
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
 const signed = (pid) => {
@@ -101,6 +118,11 @@ const masterFor = (c) => (c.canonical_filename && disk.get(c.canonical_filename.
 
 /* ---- measurement ------------------------------------------------------ */
 const signals = (src, tag) => execFileSync(`${ROOT}/scripts/sync-signals.sh`, [src, `${W}/${tag}`, "45"], { stdio: "pipe", maxBuffer: MAXBUF });
+/* The master side of a VERTICAL comparison, cropped the same 9:16 the
+   rendition is. Without this the instrument is handed two different pictures
+   and the picture lag it returns is noise — which is what refused all 70
+   verticals on 30 October while their audio agreed to 42 ms. */
+const signalsCropped = (src, tag) => execFileSync(`${ROOT}/scripts/sync-signals.sh`, [src, `${W}/${tag}`, "45", "9x16"], { stdio: "pipe", maxBuffer: MAXBUF });
 const fetchProxy = (pb, tag) => execFileSync("ffmpeg",
   ["-nostdin", "-v", "error", "-t", "45", "-i", signed(pb), "-c:v", "libx264", "-preset", "ultrafast", "-crf", "30", "-c:a", "aac", "-y", `${W}/${tag}.mp4`],
   { stdio: "pipe", maxBuffer: MAXBUF });
@@ -114,6 +136,48 @@ function measureWith(script, masterPath, pb, tag) {
 const measure       = (m, pb, tag) => measureWith("sync-instrument.py", m, pb, tag);
 const measureMaster = (m, pb, tag) => measureWith("sync-master-align.py", m, pb, tag);
 const passes = (r) => r.status === "ok" && Math.abs(r.offset_ms) <= GATE.offset;
+
+/* A vertical against its master: same instrument, same judge, master cropped
+   to match. The proxy is already 9:16 as Mux serves it, so only the master
+   side carries the crop flag. */
+function measureVertical(masterPath, pb, tag) {
+  const once = () => {
+    fetchProxy(pb, tag);
+    signalsCropped(masterPath, `${tag}_m`);
+    signals(`${W}/${tag}.mp4`, `${tag}_p`);
+    return runPy("sync-instrument.py", tag);
+  };
+  try { return once(); } catch (e) { say(`    retry: ${String(e.message).slice(0, 60)}`); return once(); }
+}
+
+/* ---- the cut window ---------------------------------------------------
+   A vertical must be cut at the SAME window as the landscape it accompanies,
+   or its length and every position_sec disagree with it.
+
+   The window is MEASURED, not looked up: aligning the served landscape's
+   audio to the disk master gives where the content actually begins, and the
+   served asset's real Mux duration gives how long it runs. The ledgers are
+   the cross-check, not the source — their points are in whatever asset they
+   were measured against.
+
+   NULL IS ABSENT, NOT ZERO. trim-pass.json carries trimStart: null for a
+   tail-only trim. Ten of the 143 films in both ledgers "disagreed" by 4.9 to
+   6.6 s purely because `window[0] - null` is `window[0] - 0` in JavaScript,
+   and reconciling against that would have refused ten good films for an
+   arithmetic artifact. */
+const trimByContent = new Map();
+for (const v of Object.values(JSON.parse(readFileSync(`${ROOT}/reports/trim-pass.json`, "utf8")))) {
+  if (v.contentId) trimByContent.set(v.contentId, v);
+}
+const finite = (x) => (typeof x === "number" && Number.isFinite(x) ? x : null);
+function ledgerWindow(id) {
+  const w = prior[id]?.window;
+  if (Array.isArray(w) && finite(w[0]) !== null) return { start: w[0], src: "sync-recut" };
+  const t = trimByContent.get(id);
+  if (t && finite(t.trimStart) !== null) return { start: t.trimStart, src: "trim-pass" };
+  return null;
+}
+const WINDOW_TOL = 0.75;   /* AGENTS.md: refuse on a ledger/measured disagreement over this */
 
 /* ---- the swap, and what must travel with it --------------------------- */
 async function swapIn(c, assetId, playbackId, duration, headCutSec) {
@@ -183,25 +247,36 @@ async function phase1() {
 /* ======================================================================= */
 /* PHASE 2 — the two whose MASTERS are out of sync                          */
 /* ======================================================================= */
-/* The method cuts faithfully from the master, so a master that is itself out
-   of sync produces a cut that is out of sync by the same amount. -itsoffset on
-   the AUDIO INPUT shifts the sound relative to the picture by the measured
-   residual before anything is cut. It is applied to a SECOND input of the same
-   file rather than to the file as a whole, so the picture keeps the master's
-   own timeline and only the sound moves. */
+/* THE SHIFT WAS THE ERROR, NOT THE CUT — corrected 30 October.
+
+   This phase shifted the audio by the OLD SERVED ASSET's residual, on the
+   theory that the master itself was out of sync. The numbers say otherwise.
+   Piggyback was shifted by -241.9 ms and came back at -240.7; On the Drive by
+   -78 ms and came back at -74.7. A correction that leaves the error exactly
+   where it was is not correcting anything: the fresh cut was already near
+   zero, and the shift put the old asset's fault back into it.
+
+   The uniformity is what should have been explained. Two films landing within
+   3 ms of their own applied shift is not two coincidences, it is one
+   systematic mistake — and a consistent difference is more dangerous than a
+   wild one because it reads as a finding.
+
+   So: re-cut at the measured window with NO shift and gate. Only if a
+   residual over 40 ms survives a clean re-encode is the master itself at
+   fault, and only then is it shifted — once, by THAT cut's own residual.
+
+   -itsoffset is applied to a SECOND input of the same file rather than to the
+   file as a whole, so the picture keeps the master's own timeline and only
+   the sound moves. */
 async function phase2() {
-  const TARGETS = [
-    { id: "c18f52fd-8e05-4113-9e7f-eaac21f92df6", residualMs: 40.6 },
-    { id: "6aa81f6e-7c00-4e6b-9c1f-000000000000", residualMs: 65.8 },
-  ];
-  /* The second id was read from the ledger rather than typed — resolve by the
-     recorded failure so a transcription slip cannot cut the wrong film. */
+  /* Resolved from the recorded failure rather than typed, so a transcription
+     slip cannot cut the wrong film. */
   const fromLedger = Object.entries(prior).filter(([, v]) => v.status === "failed-gate"
     && v.after?.status === "ok" && Math.abs(v.after.offset_ms) > GATE.offset);
-  logLine(`PHASE 2  re-cut ${fromLedger.length} film(s) with the audio shifted by the measured residual`);
+  logLine(`PHASE 2  re-cut ${fromLedger.length} film(s) at the measured window, no shift`);
   for (const [id, v] of fromLedger) {
     const key = `p2:${id}`;
-    if (ledger[key]?.done) continue;
+    if (ledger[key]?.done || !idWanted(id)) continue;
     try {
       const { data: c } = await sb.from("content")
         .select("id,title,duration_sec,mux_asset_id,canonical_filename,source_filename").eq("id", id).maybeSingle();
@@ -213,43 +288,74 @@ async function phase2() {
       const live = await mux(`/assets/${c.mux_asset_id}`);
       const dur = Number(live.duration);
       const start = -before.audio_lag_s;
-      /* The residual IS the correction. offset = picture lag - audio lag, so a
-         positive offset means sound leads picture and the audio must be
-         DELAYED; -itsoffset with a positive value does exactly that. */
-      const shiftSec = (before.offset_ms / 1000).toFixed(4);
-      if (!APPLY) { ledger[key] = { phase: 2, status: "dry", title: c.title, before, shiftSec }; save(); continue; }
-      ledger[key] = { phase: 2, status: "intent", title: c.title, before, shiftSec, oldAssetId: c.mux_asset_id }; save();
-
-      const out = `${W}/p2_cut.mp4`;
-      execFileSync("ffmpeg", ["-nostdin", "-v", "error",
-        "-ss", start.toFixed(3), "-i", m,
-        "-itsoffset", shiftSec, "-ss", start.toFixed(3), "-i", m,
-        "-map", "0:v:0", "-map", "1:a:0", "-t", dur.toFixed(3),
-        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out], { stdio: "pipe", maxBuffer: MAXBUF });
-
-      const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
-        new_asset_settings: { playback_policy: ["signed"], video_quality: "basic", passthrough: `sync-shift-${id}`,
-          generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }, cors_origin: "*" }) });
-      execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
-      let assetId = null;
-      for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { assetId = u.asset_id; break; } await sleep(3000); }
-      let asset = null;
-      for (let i = 0; i < 480 && assetId; i++) { const a = await mux(`/assets/${assetId}`); if (a.status === "ready") { asset = a; break; } if (a.status === "errored") break; await sleep(5000); }
-      if (!asset) { ledger[key] = { phase: 2, done: true, status: "refused", why: "asset not ready", title: c.title, before, newAssetId: assetId }; save();
-        logLine(`FAIL  ${c.title}  phase2 refused: asset not ready`); continue; }
-      const pb = (asset.playback_ids ?? [])[0]?.id;
-      const after = measure(m, pb, "p2a");
-      const lenOk = Math.abs(Number(asset.duration) - dur) <= GATE.lengthTol;
-      if (!(passes(after) && lenOk)) {
-        ledger[key] = { phase: 2, done: true, status: "failed-gate", title: c.title, before, after, shiftSec, newAssetId: assetId }; save();
-        logLine(`FAIL  ${c.title}  before ${before.offset_ms} ms  after ${after.offset_ms ?? after.rejected_offset_ms} ms  method=audio-shift ${shiftSec}s  (gate)`); continue;
+      const lw = ledgerWindow(id);
+      const gap = lw ? Math.abs(lw.start - start) : null;
+      if (lw && gap > WINDOW_TOL) {
+        ledger[key] = { phase: 2, done: true, status: "refused", title: c.title,
+          why: `window disagreement ${gap.toFixed(3)}s: measured ${start.toFixed(3)} vs ${lw.src} ${lw.start}`, before }; save();
+        logLine(`FAIL  ${c.title}  phase2 refused: window measured ${start.toFixed(3)}s vs ${lw.src} ${lw.start}s`); continue;
       }
-      ledger[key] = { phase: 2, status: "intent", title: c.title, newAssetId: assetId, oldAssetId: c.mux_asset_id }; save();
-      const shifted = await swapIn(c, assetId, pb, asset.duration, start);
-      ledger[key] = { phase: 2, done: true, status: "swapped", title: c.title, method: `audio-shift ${shiftSec}s`,
-        before, after: { offset_ms: after.offset_ms }, newAssetId: assetId, positionsShifted: shifted, at: new Date().toISOString() }; save();
-      logLine(`PASS  ${c.title}  before ${before.offset_ms} ms  after ${after.offset_ms} ms  method=audio-shift ${shiftSec}s  positions=${shifted}  vertical=stale`);
+      if (!APPLY) { ledger[key] = { phase: 2, status: "dry", title: c.title, before, start, dur, ledgerWindow: lw }; save(); continue; }
+
+      /* One attempt = cut, upload, wait, measure. shiftSec "0" is the honest
+         first attempt: cut faithfully and find out whether anything is wrong
+         with the master at all. */
+      const attempt = async (shiftSec, tag) => {
+        const out = `${W}/p2_cut.mp4`;
+        const args = ["-nostdin", "-v", "error", "-ss", start.toFixed(3), "-i", m];
+        if (shiftSec !== null) args.push("-itsoffset", shiftSec, "-ss", start.toFixed(3), "-i", m,
+          "-map", "0:v:0", "-map", "1:a:0");
+        args.push("-t", dur.toFixed(3),
+          "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+          "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out);
+        execFileSync("ffmpeg", args, { stdio: "pipe", maxBuffer: MAXBUF });
+
+        const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
+          new_asset_settings: { playback_policy: ["signed"], video_quality: "basic", passthrough: `sync-recut-${id}`,
+            generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }, cors_origin: "*" }) });
+        execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
+        let aid = null;
+        for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { aid = u.asset_id; break; } await sleep(3000); }
+        let a = null;
+        for (let i = 0; i < 480 && aid; i++) { const x = await mux(`/assets/${aid}`); if (x.status === "ready") { a = x; break; } if (x.status === "errored") break; await sleep(5000); }
+        if (!a) return { assetId: aid, asset: null };
+        const pb2 = (a.playback_ids ?? [])[0]?.id;
+        return { assetId: aid, asset: a, pb: pb2, after: measure(m, pb2, tag),
+          lenOk: Math.abs(Number(a.duration) - dur) <= GATE.lengthTol };
+      };
+
+      /* ---- attempt 1: no shift -------------------------------------------- */
+      ledger[key] = { phase: 2, status: "intent", title: c.title, before, method: "no-shift", oldAssetId: c.mux_asset_id }; save();
+      let t1 = await attempt(null, "p2a");
+      let chosen = null, method = null;
+      if (t1.asset && passes(t1.after) && t1.lenOk) { chosen = t1; method = "re-cut, no shift"; }
+
+      /* ---- attempt 2, only if a residual SURVIVED a clean re-encode ------- */
+      let t2 = null, shiftSec = null;
+      if (!chosen && t1.asset && t1.after.status === "ok" && Math.abs(t1.after.offset_ms) > GATE.offset) {
+        shiftSec = (t1.after.offset_ms / 1000).toFixed(4);
+        logLine(`      ${c.title}  clean re-cut left ${t1.after.offset_ms} ms — the master is out of sync; shifting by ${shiftSec}s`);
+        ledger[key] = { phase: 2, status: "intent", title: c.title, before, firstPass: t1.after,
+          method: `audio-shift ${shiftSec}s`, oldAssetId: c.mux_asset_id, strandedAssetId: t1.assetId }; save();
+        t2 = await attempt(shiftSec, "p2c");
+        if (t2.asset && passes(t2.after) && t2.lenOk) { chosen = t2; method = `audio-shift ${shiftSec}s`; }
+      }
+
+      if (!chosen) {
+        const last = t2 ?? t1;
+        ledger[key] = { phase: 2, done: true, status: "failed-gate", title: c.title, before,
+          firstPass: t1.after ?? null, after: last.after ?? null, shiftSec,
+          newAssetId: last.assetId, strandedAssetId: t2 ? t1.assetId : null }; save();
+        logLine(`FAIL  ${c.title}  before ${before.offset_ms} ms  no-shift ${t1.after?.offset_ms ?? t1.after?.rejected_offset_ms} ms${t2 ? `  shifted ${t2.after?.offset_ms ?? t2.after?.rejected_offset_ms} ms` : ""}  (gate)`); continue;
+      }
+
+      ledger[key] = { phase: 2, status: "intent", title: c.title, newAssetId: chosen.assetId, oldAssetId: c.mux_asset_id }; save();
+      const shifted = await swapIn(c, chosen.assetId, chosen.pb, chosen.asset.duration, start);
+      ledger[key] = { phase: 2, done: true, status: "swapped", title: c.title, method,
+        before, after: { offset_ms: chosen.after.offset_ms }, newAssetId: chosen.assetId,
+        strandedAssetId: chosen === t2 ? t1.assetId : null,
+        positionsShifted: shifted, at: new Date().toISOString() }; save();
+      logLine(`PASS  ${c.title}  before ${before.offset_ms} ms  after ${chosen.after.offset_ms} ms  method=${method}  positions=${shifted}  vertical=stale`);
     } catch (e) {
       ledger[key] = { phase: 2, done: true, status: "errored", title: v.title, error: String(e.message).slice(0, 160) }; save();
       logLine(`FAIL  ${v.title}  phase2 errored: ${String(e.message).slice(0, 70)}`);
@@ -260,26 +366,92 @@ async function phase2() {
 /* ======================================================================= */
 /* PHASE 3 — the films the correlator cannot read                           */
 /* ======================================================================= */
+/* MEASURING IS NOT FIXING — corrected 30 October. This phase measured all 11,
+   wrote "needs a cut" on every one of them, and cut none. The ledger recorded
+   a diagnosis as though it were an outcome, and the run reported the phase
+   complete. Eleven films stayed exactly as out of sync as they were found.
+
+   Now each one that needs a cut IS cut: from the disk master at its ledger
+   window, full re-encode, gated with the master-alignment instrument because
+   the correlator cannot read these films, swapped on pass.
+
+   The OE Stagger goes first — it is the worst at +1184 ms. */
 async function phase3() {
   const ids = [];
   for (const [id, v] of Object.entries(prior)) {
     if (v.status === "refused" && v.why === "before-measure unmeasurable") ids.push([id, v, "refused-9"]);
     if (v.status === "failed-gate" && v.after?.status === "unmeasurable") ids.push([id, v, "unmeasurable-gate"]);
   }
-  logLine(`PHASE 3  master-alignment on ${ids.length} film(s) the correlator could not read`);
+  ids.sort(([, a], [, b]) => (/oe stagger/i.test(b.title ?? "") ? 1 : 0) - (/oe stagger/i.test(a.title ?? "") ? 1 : 0));
+  logLine(`PHASE 3  master-alignment then cut on ${ids.length} film(s) the correlator could not read`);
   for (const [id, v, group] of ids) {
     const key = `p3:${id}`;
-    if (ledger[key]?.done) continue;
+    if (ledger[key]?.done || !idWanted(id)) continue;
     try {
       const { data: c } = await sb.from("content")
-        .select("id,title,mux_playback_id,canonical_filename,source_filename").eq("id", id).maybeSingle();
+        .select("id,title,duration_sec,mux_asset_id,mux_playback_id,canonical_filename,source_filename").eq("id", id).maybeSingle();
       const m = masterFor(c);
       if (!m) { ledger[key] = { phase: 3, done: true, status: "refused", why: "no master", title: c?.title }; save(); continue; }
       const r = measureMaster(m, c.mux_playback_id, "p3");
       const good = r.status === "ok" && r.within_40ms;
-      ledger[key] = { phase: 3, done: true, group, title: c.title, source: c.source_filename,
-        status: good ? "in-sync-leave-alone" : "needs-cut", align: r }; save();
-      logLine(`${good ? "PASS" : "FAIL"}  ${c.title}  master-alignment ${r.offset_ms ?? r.rejected_offset_ms} ms  audio ${r.audio_corr} picture ${r.picture_corr}  -> ${good ? "leave as is" : "needs a cut"}`);
+      if (good) {
+        ledger[key] = { phase: 3, done: true, group, title: c.title, source: c.source_filename,
+          status: "in-sync-leave-alone", align: r }; save();
+        logLine(`PASS  ${c.title}  master-alignment ${r.offset_ms} ms  -> leave as is`); continue;
+      }
+      if (r.status !== "ok") {
+        ledger[key] = { phase: 3, done: true, group, title: c.title, status: "refused",
+          why: "master-alignment unmeasurable — neither instrument can read it", align: r }; save();
+        logLine(`FAIL  ${c.title}  master-alignment unmeasurable  -> cannot cut what cannot be measured`); continue;
+      }
+
+      /* ---- it needs a cut, so cut it ------------------------------------- */
+      const lw = ledgerWindow(id);
+      if (!lw) {
+        ledger[key] = { phase: 3, done: true, group, title: c.title, status: "refused",
+          why: "needs a cut but no ledger window to cut at", align: r }; save();
+        logLine(`FAIL  ${c.title}  needs a cut, no ledger window  -> held`); continue;
+      }
+      const live = await mux(`/assets/${c.mux_asset_id}`);
+      const dur = Number(live.duration);
+      if (!APPLY) {
+        ledger[key] = { phase: 3, group, status: "dry", title: c.title, align: r, start: lw.start, dur, ledgerWindow: lw }; save(); continue;
+      }
+      ledger[key] = { phase: 3, group, status: "intent", title: c.title, align: r,
+        start: lw.start, oldAssetId: c.mux_asset_id }; save();
+
+      const out = `${W}/p3_cut.mp4`;
+      execFileSync("ffmpeg", ["-nostdin", "-v", "error",
+        "-ss", lw.start.toFixed(3), "-i", m, "-t", dur.toFixed(3),
+        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out], { stdio: "pipe", maxBuffer: MAXBUF });
+
+      const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
+        new_asset_settings: { playback_policy: ["signed"], video_quality: "basic", passthrough: `sync-p3-${id}`,
+          generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }, cors_origin: "*" }) });
+      execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
+      let assetId = null;
+      for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { assetId = u.asset_id; break; } await sleep(3000); }
+      let asset = null;
+      for (let i = 0; i < 480 && assetId; i++) { const a = await mux(`/assets/${assetId}`); if (a.status === "ready") { asset = a; break; } if (a.status === "errored") break; await sleep(5000); }
+      if (!asset) { ledger[key] = { phase: 3, done: true, group, status: "refused", why: "asset not ready", title: c.title, align: r, newAssetId: assetId }; save();
+        logLine(`FAIL  ${c.title}  phase3 refused: asset not ready`); continue; }
+      const pb = (asset.playback_ids ?? [])[0]?.id;
+      /* Gated by the SAME instrument that diagnosed it — the correlator still
+         cannot read these films after the cut any more than before it. */
+      const after = measureMaster(m, pb, "p3a");
+      const lenOk = Math.abs(Number(asset.duration) - dur) <= GATE.lengthTol;
+      if (!(after.status === "ok" && after.within_40ms && lenOk)) {
+        ledger[key] = { phase: 3, done: true, group, status: "failed-gate", title: c.title,
+          align: r, after, newAssetId: assetId, lenOk }; save();
+        logLine(`FAIL  ${c.title}  cut left ${after.offset_ms ?? after.rejected_offset_ms} ms${lenOk ? "" : " LENGTH"}  NOT swapped`); continue;
+      }
+      ledger[key] = { phase: 3, group, status: "intent", title: c.title, newAssetId: assetId, oldAssetId: c.mux_asset_id }; save();
+      const shifted = await swapIn(c, assetId, pb, asset.duration, lw.start);
+      ledger[key] = { phase: 3, done: true, group, status: "swapped", title: c.title, method: `cut at ${lw.src} window`,
+        align: r, after: { offset_ms: after.offset_ms }, newAssetId: assetId,
+        positionsShifted: shifted, at: new Date().toISOString() }; save();
+      logLine(`PASS  ${c.title}  master-alignment ${r.offset_ms} ms -> ${after.offset_ms} ms  method=cut at ${lw.src} window  positions=${shifted}  vertical=stale`);
     } catch (e) {
       ledger[key] = { phase: 3, done: true, status: "errored", title: v.title, error: String(e.message).slice(0, 160) }; save();
       logLine(`FAIL  ${v.title}  phase3 errored: ${String(e.message).slice(0, 70)}`);
@@ -352,7 +524,23 @@ async function phase4() {
 /* MASTER ONLY, NEVER HLS — lib/mux/derive.ts's rule, and the reason a
    recovered cut once produced a vertical of a different take. Each derived
    vertical is measured against the same disk master before it is marked
-   ready: a 9:16 crop of an out-of-sync landscape is still out of sync. */
+   ready: a 9:16 crop of an out-of-sync landscape is still out of sync.
+
+   TWO THINGS THIS GOT WRONG ON 30 OCTOBER, both of which passed silently.
+
+   It ran ffmpeg on the WHOLE master — no -ss, no -t — so every vertical
+   carried the slate its landscape had cut off. Nothing errored; the
+   renditions were simply a different film from the second they started, and
+   every stored position_sec was wrong by the length of a slate.
+
+   And it judged the 9:16 crop against the master's FULL frame, so the picture
+   lag was noise: 70 films refused with offsets from -42 s to +0.4 s while
+   their audio agreed to 42 ms. The audio agreeing that well on all 70 is what
+   should have been explained, rather than read as 70 bad cuts.
+
+   So now: the window is measured from the served landscape and reconciled
+   against the ledger, the cut is one pass from the disk master, and the gate
+   runs in crop mode with a length check beside it. */
 async function phase5() {
   const swappedNow = new Set([
     ...Object.entries(prior).filter(([, v]) => v.status === "swapped").map(([id]) => id),
@@ -368,17 +556,44 @@ async function phase5() {
   logLine(`PHASE 5  ${ordered.length} stale vertical(s); films swapped this run first, core tracks first within them`);
   for (const c of ordered) {
     const key = `p5:${c.id}`;
-    if (ledger[key]?.done) continue;
+    if (ledger[key]?.done || !idWanted(c.id)) continue;
     try {
       const m = masterFor(c);
       if (!m) { ledger[key] = { phase: 5, done: true, status: "refused", why: "no master on disk", title: c.title }; save();
         logLine(`FAIL  ${c.title}  vertical refused: no master`); continue; }
-      if (!APPLY) { ledger[key] = { phase: 5, status: "dry", title: c.title }; save(); continue; }
-      ledger[key] = { phase: 5, status: "intent", title: c.title }; save();
+      /* ---- WHERE THE LANDSCAPE WAS CUT, measured from the served asset ----
+         Without this the vertical is derived from the whole master, so it
+         carries the slate the landscape cut removed: its length and every
+         stored position_sec disagree with the film it accompanies. */
+      const live = await mux(`/assets/${c.mux_asset_id}`);
+      const landDur = Number(live.duration);          /* REAL duration, never content.duration_sec */
+      const land = measure(m, c.mux_playback_id, "p5l");
+      if (land.status !== "ok") {
+        ledger[key] = { phase: 5, done: true, status: "refused", title: c.title,
+          why: "landscape unmeasurable — cannot establish the cut window", landscape: land }; save();
+        logLine(`FAIL  ${c.title}  vertical refused: landscape unmeasurable, no window`); continue;
+      }
+      const start = -land.audio_lag_s;
+      const lw = ledgerWindow(c.id);
+      const disagreement = lw ? Math.abs(lw.start - start) : null;
+      if (lw && disagreement > WINDOW_TOL) {
+        ledger[key] = { phase: 5, done: true, status: "refused", title: c.title,
+          why: `window disagreement ${disagreement.toFixed(3)}s: measured ${start.toFixed(3)} vs ${lw.src} ${lw.start}`,
+          measuredStart: start, ledgerWindow: lw }; save();
+        logLine(`FAIL  ${c.title}  vertical refused: window measured ${start.toFixed(3)}s vs ${lw.src} ${lw.start}s`); continue;
+      }
+      if (!APPLY) {
+        ledger[key] = { phase: 5, status: "dry", title: c.title, start, landDur,
+          ledgerWindow: lw, windowAgreesWithin: disagreement }; save(); continue;
+      }
+      ledger[key] = { phase: 5, status: "intent", title: c.title, start, landDur }; save();
       const out = `${W}/p5_vert.mp4`;
       /* 9:16 centre crop from the MASTER, scaled to 1080x1920 and never
-         upscaled past it — scripts/derive-vertical.ts's geometry. */
-      execFileSync("ffmpeg", ["-nostdin", "-v", "error", "-i", m,
+         upscaled past it — scripts/derive-vertical.ts's geometry. Accurate
+         seek BEFORE -i, crop and full re-encode in the same pass, so the
+         vertical and the landscape are one cut and no stream is copied. */
+      execFileSync("ffmpeg", ["-nostdin", "-v", "error",
+        "-ss", start.toFixed(3), "-i", m, "-t", landDur.toFixed(3),
         "-vf", "crop=ih*9/16:ih,scale=1080:1920:flags=lanczos", "-c:v", "libx264", "-preset", "medium", "-crf", "20",
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out],
         { stdio: "pipe", maxBuffer: MAXBUF });
@@ -392,18 +607,25 @@ async function phase5() {
       if (!asset) { ledger[key] = { phase: 5, done: true, status: "refused", why: "vertical asset not ready", title: c.title }; save();
         logLine(`FAIL  ${c.title}  vertical refused: not ready`); continue; }
       const pb = (asset.playback_ids ?? [])[0]?.id;
-      /* THE SYNC GATE ON THE VERTICAL ITSELF, before it is marked ready. */
-      const r = measure(m, pb, "p5");
-      if (!passes(r)) {
-        ledger[key] = { phase: 5, done: true, status: "failed-gate", title: c.title, after: r, newAssetId: assetId }; save();
-        logLine(`FAIL  ${c.title}  vertical ${r.offset_ms ?? r.rejected_offset_ms} ms  NOT marked ready`); continue;
+      /* THE SYNC GATE ON THE VERTICAL ITSELF, before it is marked ready —
+         crop mode, so the master it is judged against is the same picture. */
+      const r = measureVertical(m, pb, "p5");
+      /* AND THE LENGTH AGAINST THE LANDSCAPE, which is the half a sync
+         measurement cannot see: Mux returns exactly the length asked for and
+         content from somewhere else. */
+      const vertDur = Number(asset.duration);
+      const lenOk = Math.abs(vertDur - landDur) <= GATE.lengthTol;
+      if (!(passes(r) && lenOk)) {
+        ledger[key] = { phase: 5, done: true, status: "failed-gate", title: c.title, after: r,
+          newAssetId: assetId, vertDur, landDur, lenOk }; save();
+        logLine(`FAIL  ${c.title}  vertical ${r.offset_ms ?? r.rejected_offset_ms} ms  len ${vertDur.toFixed(2)}/${landDur.toFixed(2)}s${lenOk ? "" : " LENGTH"}  NOT marked ready`); continue;
       }
       const { error } = await sb.from("content").update({
         vertical_playback_id: pb, vertical_asset_id: assetId, vertical_status: "ready",
       }).eq("id", c.id);
       ledger[key] = { phase: 5, done: true, status: error ? "errored" : "vertical-ready", title: c.title,
-        offset_ms: r.offset_ms, newAssetId: assetId, error: error?.message }; save();
-      logLine(`${error ? "FAIL" : "PASS"}  ${c.title}  vertical ${r.offset_ms} ms  -> ${error ? "update failed" : "ready"}`);
+        offset_ms: r.offset_ms, start, vertDur, landDur, newAssetId: assetId, error: error?.message }; save();
+      logLine(`${error ? "FAIL" : "PASS"}  ${c.title}  vertical ${r.offset_ms} ms  len ${vertDur.toFixed(2)}/${landDur.toFixed(2)}s  -> ${error ? "update failed" : "ready"}`);
       try { unlinkSync(out); } catch {}
     } catch (e) {
       ledger[key] = { phase: 5, done: true, status: "errored", title: c.title, error: String(e.message).slice(0, 160) }; save();
@@ -413,12 +635,14 @@ async function phase5() {
 }
 
 /* ---- run -------------------------------------------------------------- */
-logLine(`START  sync-finish pid ${process.pid}  apply=${APPLY}`);
-await phase1();
-await phase2();
-await phase3();
-await phase4();
-await phase5();
+logLine(`START  sync-finish pid ${process.pid}  apply=${APPLY}`
+  + (ONLY_PHASES ? `  phases=${[...ONLY_PHASES].join(",")}` : "")
+  + (ONLY_IDS ? `  only=${ONLY_IDS.size} film(s)` : ""));
+if (phaseWanted(1)) await phase1();
+if (phaseWanted(2)) await phase2();
+if (phaseWanted(3)) await phase3();
+if (phaseWanted(4) && !ONLY_IDS) await phase4();
+if (phaseWanted(5)) await phase5();
 const v = Object.values(ledger);
 logLine(`DONE   sync-finish — swapped ${v.filter(x => x.status === "swapped").length}, verticals ready ${v.filter(x => x.status === "vertical-ready").length}, failed ${v.filter(x => String(x.status).includes("fail")).length}, refused ${v.filter(x => x.status === "refused").length}`);
 dropLock();
