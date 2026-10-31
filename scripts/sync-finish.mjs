@@ -51,6 +51,7 @@ const LOCK   = `${ROOT}/reports/.sync-finish.lock`;
 const W      = `${ROOT}/.tmp-sync/work`;
 const PRIOR  = `${ROOT}/reports/sync-recut.json`;
 const GATE   = { offset: 40, lengthTol: 0.5 };
+const P5_WORKERS = 2;   /* two vertical derives at a time; swaps stay serial */
 const MAXBUF = 256 * 1024 * 1024;
 const APPLY  = process.argv.includes("--apply");
 
@@ -553,25 +554,48 @@ async function phase5() {
   const rank = (t) => { for (const [i, re] of CORE.entries()) if (re.test(t)) return i; return 90; };
   const ordered = (stale ?? []).sort((a, b) =>
     (swappedNow.has(b.id) ? 1 : 0) - (swappedNow.has(a.id) ? 1 : 0) || rank(a.title) - rank(b.title));
-  logLine(`PHASE 5  ${ordered.length} stale vertical(s); films swapped this run first, core tracks first within them`);
-  for (const c of ordered) {
+  const queue = ordered.filter((c) => !ledger[`p5:${c.id}`]?.done && idWanted(c.id));
+  logLine(`PHASE 5  ${ordered.length} stale vertical(s), ${queue.length} still to do; films swapped this run first, core tracks first within them; ${P5_WORKERS} derives at a time`);
+
+  /* TWO DERIVES AT A TIME, AND EVERY TEMP FILE CARRIES ITS SLOT.
+     The tags were fixed strings — p5, p5l, p5_vert.mp4 — which is harmless
+     while the loop is serial and silently destroys both measurements the
+     moment it is not: two workers would write one another's luma, pcm and
+     mp4 and each would be gated against the other's film. The slot number is
+     in every path below for that reason.
+
+     The ledger stays a single writer because save() is synchronous and node
+     is single-threaded: no await sits between mutating `ledger` and the
+     rename that commits it, so a half-written ledger cannot be observed. */
+  let next = 0;
+  const worker = async (slot) => {
+    for (;;) {
+      const i = next++;
+      if (i >= queue.length) return;
+      await deriveVertical(queue[i], slot);
+    }
+  };
+  await Promise.all(Array.from({ length: P5_WORKERS }, (_, s) => worker(s)));
+
+  async function deriveVertical(c, slot) {
     const key = `p5:${c.id}`;
-    if (ledger[key]?.done || !idWanted(c.id)) continue;
+    const tagL = `p5l${slot}`, tagV = `p5v${slot}`;
+    const out = `${W}/p5_vert_${slot}.mp4`;
     try {
       const m = masterFor(c);
       if (!m) { ledger[key] = { phase: 5, done: true, status: "refused", why: "no master on disk", title: c.title }; save();
-        logLine(`FAIL  ${c.title}  vertical refused: no master`); continue; }
+        logLine(`FAIL  ${c.title}  vertical refused: no master`); return; }
       /* ---- WHERE THE LANDSCAPE WAS CUT, measured from the served asset ----
          Without this the vertical is derived from the whole master, so it
          carries the slate the landscape cut removed: its length and every
          stored position_sec disagree with the film it accompanies. */
       const live = await mux(`/assets/${c.mux_asset_id}`);
       const landDur = Number(live.duration);          /* REAL duration, never content.duration_sec */
-      const land = measure(m, c.mux_playback_id, "p5l");
+      const land = measure(m, c.mux_playback_id, tagL);
       if (land.status !== "ok") {
         ledger[key] = { phase: 5, done: true, status: "refused", title: c.title,
           why: "landscape unmeasurable — cannot establish the cut window", landscape: land }; save();
-        logLine(`FAIL  ${c.title}  vertical refused: landscape unmeasurable, no window`); continue;
+        logLine(`FAIL  ${c.title}  vertical refused: landscape unmeasurable, no window`); return;
       }
       const start = -land.audio_lag_s;
       const lw = ledgerWindow(c.id);
@@ -580,14 +604,13 @@ async function phase5() {
         ledger[key] = { phase: 5, done: true, status: "refused", title: c.title,
           why: `window disagreement ${disagreement.toFixed(3)}s: measured ${start.toFixed(3)} vs ${lw.src} ${lw.start}`,
           measuredStart: start, ledgerWindow: lw }; save();
-        logLine(`FAIL  ${c.title}  vertical refused: window measured ${start.toFixed(3)}s vs ${lw.src} ${lw.start}s`); continue;
+        logLine(`FAIL  ${c.title}  vertical refused: window measured ${start.toFixed(3)}s vs ${lw.src} ${lw.start}s`); return;
       }
       if (!APPLY) {
         ledger[key] = { phase: 5, status: "dry", title: c.title, start, landDur,
-          ledgerWindow: lw, windowAgreesWithin: disagreement }; save(); continue;
+          ledgerWindow: lw, windowAgreesWithin: disagreement }; save(); return;
       }
       ledger[key] = { phase: 5, status: "intent", title: c.title, start, landDur }; save();
-      const out = `${W}/p5_vert.mp4`;
       /* 9:16 centre crop from the MASTER, scaled to 1080x1920 and never
          upscaled past it — scripts/derive-vertical.ts's geometry. Accurate
          seek BEFORE -i, crop and full re-encode in the same pass, so the
@@ -604,12 +627,12 @@ async function phase5() {
       for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { assetId = u.asset_id; break; } await sleep(3000); }
       let asset = null;
       for (let i = 0; i < 480 && assetId; i++) { const a = await mux(`/assets/${assetId}`); if (a.status === "ready") { asset = a; break; } if (a.status === "errored") break; await sleep(5000); }
-      if (!asset) { ledger[key] = { phase: 5, done: true, status: "refused", why: "vertical asset not ready", title: c.title }; save();
-        logLine(`FAIL  ${c.title}  vertical refused: not ready`); continue; }
+      if (!asset) { ledger[key] = { phase: 5, done: true, status: "refused", why: "vertical asset not ready", title: c.title, newAssetId: assetId }; save();
+        logLine(`FAIL  ${c.title}  vertical refused: not ready`); return; }
       const pb = (asset.playback_ids ?? [])[0]?.id;
       /* THE SYNC GATE ON THE VERTICAL ITSELF, before it is marked ready —
          crop mode, so the master it is judged against is the same picture. */
-      const r = measureVertical(m, pb, "p5");
+      const r = measureVertical(m, pb, tagV);
       /* AND THE LENGTH AGAINST THE LANDSCAPE, which is the half a sync
          measurement cannot see: Mux returns exactly the length asked for and
          content from somewhere else. */
@@ -617,8 +640,8 @@ async function phase5() {
       const lenOk = Math.abs(vertDur - landDur) <= GATE.lengthTol;
       if (!(passes(r) && lenOk)) {
         ledger[key] = { phase: 5, done: true, status: "failed-gate", title: c.title, after: r,
-          newAssetId: assetId, vertDur, landDur, lenOk }; save();
-        logLine(`FAIL  ${c.title}  vertical ${r.offset_ms ?? r.rejected_offset_ms} ms  len ${vertDur.toFixed(2)}/${landDur.toFixed(2)}s${lenOk ? "" : " LENGTH"}  NOT marked ready`); continue;
+          newAssetId: assetId, start, vertDur, landDur, lenOk }; save();
+        logLine(`FAIL  ${c.title}  vertical ${r.offset_ms ?? r.rejected_offset_ms} ms  len ${vertDur.toFixed(2)}/${landDur.toFixed(2)}s${lenOk ? "" : " LENGTH"}  NOT marked ready`); return;
       }
       const { error } = await sb.from("content").update({
         vertical_playback_id: pb, vertical_asset_id: assetId, vertical_status: "ready",
