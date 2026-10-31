@@ -24,8 +24,15 @@ weak correlation refuses rather than rounds.
 IT CAN STILL REFUSE, and that is the point. A film whose audio will not
 correlate with its own master's audio is not a film this can measure, and it
 says so rather than returning zero.
+
+GEOMETRY, for the same reason sync-instrument.py checks it. This instrument is
+only ever handed landscape against landscape today, so it never needed the
+guard — which is exactly why it gets one now. The picture half correlates a
+frame-difference signal, and a 9:16 crop against a full frame would produce a
+weak-but-present correlation rather than an obvious refusal: the failure would
+arrive as a plausible number, not an error.
 """
-import numpy as np, sys, json
+import numpy as np, sys, json, os
 
 RATE = 25.0
 MIN_AUDIO_Q = 0.50
@@ -74,7 +81,37 @@ def shift(ref, test, maxlag=int(RATE * 40)):
         d = 0.0
     return (i - maxlag + d), float(c[i] / len(a))
 
+GEOM_TOL = 0.02
+
+
+def geom(path):
+    f = path + ".geom"
+    if not os.path.exists(f):
+        return None
+    try:
+        return float(open(f).read().strip())
+    except ValueError:
+        return None
+
+
 m, p = sys.argv[1], sys.argv[2]
+
+# GEOMETRY BEFORE MEASUREMENT, so a mismatch cannot produce a number.
+_mg, _pg = geom(m), geom(p)
+if _mg is None or _pg is None or abs(_mg - _pg) > GEOM_TOL:
+    _why = ("no geometry sidecar — re-extract with scripts/sync-signals.sh"
+            if _mg is None or _pg is None
+            else f"geometry mismatch: master {_mg:.2f} vs probe {_pg:.2f}")
+    _out = {"method": "master-alignment", "status": "unmeasurable", "offset_ms": None,
+            "rejected_offset_ms": None, "audio_corr": None, "picture_corr": None,
+            "audio_lag_s": None, "picture_lag_s": None, "within_40ms": False, "why": _why}
+    if "--json" in sys.argv:
+        print(json.dumps(_out))
+    else:
+        for k, v in _out.items():
+            print(f"  {k:20} {v}")
+    sys.exit(0)
+
 alag, aq = shift(audio_signal(m + ".pcm"), audio_signal(p + ".pcm"))
 plag, pq = shift(picture_signal(m + ".luma"), picture_signal(p + ".luma"))
 
