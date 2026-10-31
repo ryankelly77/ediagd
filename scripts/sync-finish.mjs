@@ -48,6 +48,7 @@ const PRIV = Buffer.from(process.env.MUX_SIGNING_KEY_PRIVATE, "base64").toString
 const LEDGER = `${ROOT}/reports/sync-finish.json`;
 const LOG    = `${ROOT}/reports/sync-repair.log`;
 const LOCK   = `${ROOT}/reports/.sync-finish.lock`;
+const STOP   = `${ROOT}/reports/.sync-finish.stop`;
 const W      = `${ROOT}/.tmp-sync/work`;
 const PRIOR  = `${ROOT}/reports/sync-recut.json`;
 const GATE   = { offset: 40, lengthTol: 0.5 };
@@ -95,18 +96,67 @@ const mux = async (p, init, tries = 5) => {
   throw last;
 };
 
+/* ---- how this job is stopped -----------------------------------------
+   A SIGNAL IS NOT HOW YOU STOP THIS JOB, and the 30 October attempt is why.
+   The lock holds node's own pid, which is right — but the run is launched
+   under setsid and caffeinate, so node's PROCESS GROUP is the wrapper's, not
+   its own pid. `kill -- -$(cat lock)` therefore signals a group that does not
+   exist, falls through to killing node alone, and orphans a running ffmpeg.
+   Signalling the real group did kill ffmpeg and caffeinate, and node carried
+   straight on to the next film and started another encode. Only SIGKILL
+   stopped it, which is the one way that cannot unwind cleanly.
+
+   So stopping is a FILE, checked between films:
+
+       touch reports/.sync-finish.stop
+
+   The run finishes the film in hand, writes its ledger row, and exits 0. No
+   asset is left half-swapped, because the check sits between films and never
+   inside one.
+
+   A START REFUSES while that file exists, rather than deleting it. Consuming
+   the file silently would mean a stop could be undone by any later start,
+   including an automatic one — and "I asked it to stop and something started
+   it anyway" is not a state worth being able to represent. Removing it is one
+   command and it is the operator saying so out loud. */
+if (existsSync(STOP)) {
+  console.error(`reports/.sync-finish.stop exists — refusing to start.\n`
+    + `A previous run was asked to stop. Remove it when you mean to go again:\n`
+    + `  rm ${STOP}`);
+  logLine("REFUSED  start while .sync-finish.stop exists");
+  process.exit(2);
+}
+
 /* ---- one instance ---------------------------------------------------- */
 if (existsSync(LOCK)) {
   const old = readFileSync(LOCK, "utf8").trim();
   let alive = false; try { process.kill(Number(old), 0); alive = true; } catch {}
   if (alive) { console.error(`another run is alive (pid ${old}) — refusing`); process.exit(1); }
 }
-writeFileSync(LOCK, String(process.pid));
+writeFileSync(LOCK, String(process.pid));   /* node's OWN pid, never a group */
 const dropLock = () => { try { unlinkSync(LOCK); } catch {} };
 process.on("exit", dropLock);
 for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(sig, () => { dropLock(); process.exit(1); });
 
+/* Latched, so the file can be removed after the stop is seen without the run
+   changing its mind, and so the reason is logged exactly once. */
+let stopping = false;
+const stopRequested = () => {
+  if (stopping) return true;
+  if (existsSync(STOP)) {
+    stopping = true;
+    logLine("STOP   .sync-finish.stop seen — finishing the current film, then exiting cleanly");
+    say("stop file seen — finishing the current film, then exiting");
+  }
+  return stopping;
+};
+
 const ledger = existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, "utf8")) : {};
+/* What was already in the ledger before this run touched it, so the closing
+   line can count THIS RUN's work rather than the file's running total. A
+   summary that reports the whole ledger while claiming to report the run is
+   the same defect as a summary that prints regardless of what happened. */
+const keysAtStart = new Set(Object.keys(ledger));
 const save = () => { const t = LEDGER + ".tmp"; writeFileSync(t, JSON.stringify(ledger, null, 1)); renameSync(t, LEDGER); };
 const prior = JSON.parse(readFileSync(PRIOR, "utf8"));
 
@@ -214,6 +264,7 @@ async function phase1() {
     v.status === "failed-gate" && v.newAssetId && !(ledger[id] && ledger[id].phase === 1 && ledger[id].done));
   logLine(`PHASE 1  re-judge ${todo.length} film(s) whose assets already exist`);
   for (const [id, v] of todo) {
+    if (stopRequested()) return;
     try {
       const { data: c } = await sb.from("content")
         .select("id,title,mux_asset_id,canonical_filename,source_filename").eq("id", id).maybeSingle();
@@ -278,6 +329,7 @@ async function phase2() {
   for (const [id, v] of fromLedger) {
     const key = `p2:${id}`;
     if (ledger[key]?.done || !idWanted(id)) continue;
+    if (stopRequested()) return;
     try {
       const { data: c } = await sb.from("content")
         .select("id,title,duration_sec,mux_asset_id,canonical_filename,source_filename").eq("id", id).maybeSingle();
@@ -388,6 +440,7 @@ async function phase3() {
   for (const [id, v, group] of ids) {
     const key = `p3:${id}`;
     if (ledger[key]?.done || !idWanted(id)) continue;
+    if (stopRequested()) return;
     try {
       const { data: c } = await sb.from("content")
         .select("id,title,duration_sec,mux_asset_id,mux_playback_id,canonical_filename,source_filename").eq("id", id).maybeSingle();
@@ -471,6 +524,7 @@ async function phase4() {
   for (const title of ["At the Kiosk", "After-MPI", "On the Drive"]) {
     const key = `p4:acr:${title}`;
     if (ledger[key]?.done) continue;
+    if (stopRequested()) return;
     const { data } = await sb.from("content").select("id,title,duration_sec,source_filename,created_at")
       .eq("title", title).eq("status", "published").is("retired_at", null).like("source_filename", "ACR-047%");
     if ((data ?? []).length < 2) {
@@ -570,6 +624,7 @@ async function phase5() {
   let next = 0;
   const worker = async (slot) => {
     for (;;) {
+      if (stopRequested()) return;      /* between films, never inside one */
       const i = next++;
       if (i >= queue.length) return;
       await deriveVertical(queue[i], slot);
@@ -660,12 +715,34 @@ async function phase5() {
 /* ---- run -------------------------------------------------------------- */
 logLine(`START  sync-finish pid ${process.pid}  apply=${APPLY}`
   + (ONLY_PHASES ? `  phases=${[...ONLY_PHASES].join(",")}` : "")
-  + (ONLY_IDS ? `  only=${ONLY_IDS.size} film(s)` : ""));
-if (phaseWanted(1)) await phase1();
-if (phaseWanted(2)) await phase2();
-if (phaseWanted(3)) await phase3();
-if (phaseWanted(4) && !ONLY_IDS) await phase4();
-if (phaseWanted(5)) await phase5();
-const v = Object.values(ledger);
-logLine(`DONE   sync-finish — swapped ${v.filter(x => x.status === "swapped").length}, verticals ready ${v.filter(x => x.status === "vertical-ready").length}, failed ${v.filter(x => String(x.status).includes("fail")).length}, refused ${v.filter(x => x.status === "refused").length}`);
+  + (ONLY_IDS ? `  only=${ONLY_IDS.size} film(s)` : "")
+  + `  —  stop with: touch ${STOP}`);
+if (phaseWanted(1) && !stopRequested()) await phase1();
+if (phaseWanted(2) && !stopRequested()) await phase2();
+if (phaseWanted(3) && !stopRequested()) await phase3();
+if (phaseWanted(4) && !ONLY_IDS && !stopRequested()) await phase4();
+if (phaseWanted(5) && !stopRequested()) await phase5();
+
+/* The closing line is COMPUTED from what THIS RUN did — rows this run added,
+   not the ledger's running total — and the exit code is a function of it. */
+const v = Object.entries(ledger).filter(([k]) => !keysAtStart.has(k)).map(([, x]) => x);
+const counts = {
+  touched: v.length,
+  swapped: v.filter((x) => x.status === "swapped").length,
+  verticalsReady: v.filter((x) => x.status === "vertical-ready").length,
+  failedGate: v.filter((x) => x.status === "failed-gate").length,
+  refused: v.filter((x) => x.status === "refused").length,
+  errored: v.filter((x) => x.status === "errored").length,
+};
+if (stopping) {
+  logLine(`STOPPED  sync-finish stopped on request after the film in hand — `
+    + `${counts.touched} film(s) this run: swapped ${counts.swapped}, verticals ready ${counts.verticalsReady}, `
+    + `failed-gate ${counts.failedGate}, refused ${counts.refused}, errored ${counts.errored}. `
+    + `Ledger is complete to this point; remove ${STOP} and start again to resume.`);
+  dropLock();
+  process.exit(0);
+}
+logLine(`DONE   sync-finish — ${counts.touched} film(s) this run: swapped ${counts.swapped}, verticals ready ${counts.verticalsReady}, `
+  + `failed-gate ${counts.failedGate}, refused ${counts.refused}, errored ${counts.errored}`);
 dropLock();
+process.exit(counts.errored > 0 ? 1 : 0);
