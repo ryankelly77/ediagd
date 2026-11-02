@@ -1048,7 +1048,7 @@ async function main() {
 
   const summary = {
     generatedAt: new Date().toISOString(),
-    scope: ONLY || LIMIT ? `SCOPED: ${rows.length} of the published library` : "every published film",
+    scope: ONLY || LIMIT ? `SCOPED: ${rows.length} of the library` : "every published and draft film",
     publishedFilms: rows.length,
     measured,
     screenedIntoWordPass: flagged.length,
