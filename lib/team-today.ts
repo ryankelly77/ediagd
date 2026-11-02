@@ -54,6 +54,7 @@
    ============================================================================ */
 
 import { dayStatusFor, type DayStatus } from "@/lib/day-status";
+import { filmName } from "@/lib/film-name";
 import { SCHEDULE_COLUMNS, rowToSchedule, type ScheduleRow } from "@/lib/work-schedule";
 import {
   isWorkDay,
@@ -217,9 +218,24 @@ export async function loadTeamToday(
      honest reading here because the function returns only completions. */
   const videosByUser = new Map<string, { count: number; titles: string[] }>();
   for (const r of rows(videos)) {
+    /*
+     * ---- THE SHORT NAME, PAIRED BY INDEX ---------------------------------
+     *
+     * 0171 has the aggregate return short_titles in the SAME completion order
+     * with its nulls kept, precisely so the two arrays line up element by
+     * element. filmName() decides which to print — one rule, the same one the
+     * morning and the library use — rather than a coalesce in SQL that would
+     * disagree about an empty string.
+     *
+     * The short array is tolerated as missing or shorter than the titles: this
+     * reads a database function that may not have been migrated yet, and a
+     * manager's screen must not go blank over a deploy ordering.
+     */
+    const full = Array.isArray(r.titles) ? (r.titles as string[]) : [];
+    const short = Array.isArray(r.short_titles) ? (r.short_titles as (string | null)[]) : [];
     videosByUser.set(String(r.user_id), {
       count: Number(r.video_count ?? 0),
-      titles: Array.isArray(r.titles) ? (r.titles as string[]) : [],
+      titles: full.map((t, i) => filmName({ title: t, short_title: short[i] ?? null })),
     });
   }
 

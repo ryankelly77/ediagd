@@ -135,7 +135,9 @@ export async function drawFromPool<T extends { id: string }>(
 --------------------------------------------------------------------------- */
 
 const MINDSET_COLUMNS =
-  "id, title, collection, mux_playback_id, mux_playback_policy, " +
+  /* short_title (0171) travels with every film the loop serves — the slot that
+     forgets to select it is the slot that prints a fifteen-word title. */
+  "id, title, short_title, collection, mux_playback_id, mux_playback_policy, " +
   "vertical_playback_id, vertical_status, artifact_id";
 
 /**
@@ -333,7 +335,18 @@ export type LoopItem = {
    * published module item is a cue; the day one is a film, this already works.
    */
   format: "text" | "video";
+  /** THE SLATE, kept for admin and the scripts. */
   title: string;
+  /**
+   * What the item screen prints. 0171.
+   *
+   * For a craft film this is almost always the MODULE's name, because that is
+   * where the short name actually lives — "Washer Fluid", "42 Seconds", "Are You
+   * Here to See Anyone?" with the question mark the title does not have. The
+   * slate names the shoot and the module names the curriculum; this screen is a
+   * curriculum screen.
+   */
+  shortTitle: string | null;
   body: string | null;
   /** Present only when the item is a film. */
   video: LifestyleVideoData | null;
@@ -514,6 +527,7 @@ export async function pickItem(
         contentId: next.id,
         format: next.mux_playback_id ? "video" : "text",
         title: next.title,
+        shortTitle: next.short_title ?? null,
         body: next.body,
         video: next.mux_playback_id
           ? await shapeVideo(client, next as unknown as VideoRow, userId, today)
@@ -541,6 +555,7 @@ export async function pickItem(
 type ItemRow = {
   id: string;
   title: string;
+  short_title: string | null;
   body: string | null;
   module_id: string;
   module_order: number | null;
@@ -560,7 +575,7 @@ async function itemsForModules(client: Client, moduleIds: string[]): Promise<Ite
     const { data, error } = await client
       .from("content")
       .select(
-        "id, title, body, module_id, module_order, mux_playback_id, " +
+        "id, title, short_title, body, module_id, module_order, mux_playback_id, " +
           "mux_playback_policy, vertical_playback_id, vertical_status, artifact_id"
       )
       .in("module_id", moduleIds)
