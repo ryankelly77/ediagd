@@ -99,7 +99,7 @@ export type PreviewMorning = LoopMorning & {
 };
 
 const FILM_COLUMNS =
-  "id, title, collection, mux_playback_id, mux_playback_policy, " +
+  "id, title, short_title, collection, mux_playback_id, mux_playback_policy, " +
   "vertical_playback_id, vertical_status, artifact_id";
 
 /**

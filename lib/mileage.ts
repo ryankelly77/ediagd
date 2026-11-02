@@ -163,7 +163,7 @@ export async function loadMileageFilms(
   const { data, error } = await client
     .from("content")
     .select(
-      "id, title, duration_sec, mux_playback_id, mux_playback_policy, " +
+      "id, title, short_title, duration_sec, mux_playback_id, mux_playback_policy, " +
         "vertical_playback_id, vertical_status"
     )
     .eq("type", "advisor_video")

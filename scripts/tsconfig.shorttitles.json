@@ -1,0 +1,10 @@
+{
+  "//": "Standalone build for backfill-short-titles.ts. It imports the REAL lib/film-name.ts through the @/ alias so the script's idea of what a film is called is the same function every screen uses — a script with its own fallback is how the admin page and the morning come to print different names.",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs",
+    "moduleResolution": "node", "esModuleInterop": true, "skipLibCheck": true,
+    "outDir": "../.tmp-st", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./backfill-short-titles.ts", "../lib/film-name.ts"]
+}

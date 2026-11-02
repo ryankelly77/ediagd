@@ -590,7 +590,7 @@ export async function pickPitchVideo(
   const { data: rows } = await client
     .from("content")
     .select(
-      "id, title, stage, mux_playback_id, mux_playback_policy, " +
+      "id, title, short_title, stage, mux_playback_id, mux_playback_policy, " +
         "vertical_playback_id, vertical_status, artifact_id"
     )
     .eq("type", "advisor_video")
@@ -629,7 +629,7 @@ export async function pickPitchVideo(
   const { data: moduleRows } = await client
     .from("content")
     .select(
-      "id, title, stage, mux_playback_id, mux_playback_policy, " +
+      "id, title, short_title, stage, mux_playback_id, mux_playback_policy, " +
         "vertical_playback_id, vertical_status, artifact_id"
     )
     .eq("type", "advisor_video")
@@ -863,6 +863,8 @@ const LIFESTYLE_COLLECTIONS = ["Mindset", "Craft"] as const;
 export type VideoRow = {
   id: string;
   title: string;
+  /** 0171. The name a person reads; null until somebody has decided one. */
+  short_title?: string | null;
   stage?: string | null;
   collection?: string | null;
   mux_playback_id: string | null;
@@ -892,7 +894,7 @@ export async function pickLifestyleVideo(
   const { data: rows } = await client
     .from("content")
     .select(
-      "id, title, collection, mux_playback_id, mux_playback_policy, " +
+      "id, title, short_title, collection, mux_playback_id, mux_playback_policy, " +
         "vertical_playback_id, vertical_status, artifact_id"
     )
     .eq("type", "advisor_video")
@@ -1007,7 +1009,7 @@ export async function pickTechnicianVideo(
   const { data: rows } = await client
     .from("content")
     .select(
-      "id, title, collection, mux_playback_id, mux_playback_policy, " +
+      "id, title, short_title, collection, mux_playback_id, mux_playback_policy, " +
         "vertical_playback_id, vertical_status, artifact_id"
     )
     /* TYPE, not collection. Entitlement is keyed on type (0091), so this is the
@@ -1112,6 +1114,7 @@ export async function shapeVideo(
   return {
     contentId: row.id,
     title: row.title,
+    shortTitle: row.short_title ?? null,
     artifactId: row.artifact_id,
     quoteText,
     quoteVoice,
@@ -1124,7 +1127,13 @@ export async function shapeVideo(
 
 export type LifestyleVideoData = {
   contentId: string;
+  /** THE SLATE. Kept because admin, search and the scripts match on it. */
   title: string;
+  /**
+   * What the screen prints. Null when nobody has decided a short name, and the
+   * components fall back through filmNameOf() rather than each writing `??`.
+   */
+  shortTitle: string | null;
   /** The master and, when there is a usable one, the 9:16 cut. Both signed. */
   renditions: VideoRenditions;
   watchedPct: number;
