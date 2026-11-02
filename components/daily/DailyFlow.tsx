@@ -10,6 +10,7 @@ import type { RestDay } from "@/lib/work-schedule";
 import { RestingMark } from "@/components/brand/badges/RestingMark";
 import { TrackedVideo, WatchGateLine, type WatchState } from "@/components/video/TrackedVideo";
 import { WATCHED_PCT } from "@/lib/watch-coverage";
+import { filmNameOf } from "@/lib/film-name";
 import {
   completeDayAction,
   openWatchTicketAction,
@@ -73,9 +74,25 @@ type PitchVideo = LifestyleVideo & {
 type Item = {
   contentId: string;
   format: "text" | "video";
+  /** THE SLATE. Not printed on this screen any more — see ItemStep. */
   title: string;
+  /** What the screen prints, via filmNameOf(). 0171. */
+  shortTitle: string | null;
   body: string | null;
   video: LifestyleVideo | null;
+  /**
+   * STILL CARRIED, AND NO LONGER PRINTED.
+   *
+   * The module name was the third line of this screen and it was the SAME
+   * sentence as the title with a number on the front — "30 Second Walk-Around,
+   * Part 3, Steps 1 and 2, Are You Here to See Anyone" over "6. Steps 1 and 2 —
+   * Are You Here to See Anyone? · 29 of 48". Ryan's ruling removed it.
+   *
+   * It is kept on the type because it is now the SOURCE of shortTitle for craft
+   * films (the backfill reads module.name), so a reader of this shape can still
+   * see where the name came from, and because deleting it would be a schema
+   * change dressed as a copy change.
+   */
   moduleName: string;
   trackName: string;
   position: number;
@@ -959,7 +976,15 @@ function RestDayCard({
  */
 export type LifestyleVideo = {
   contentId: string;
+  /**
+   * THE SLATE. Still passed to the PLAYER as its `title`, deliberately: that
+   * string goes to Mux as `video_title` and is read by whoever is looking at
+   * playback analytics, which is an ops question about a film and not an advisor
+   * reading a name. The headings use filmNameOf().
+   */
   title: string;
+  /** What a heading prints. 0171. */
+  shortTitle: string | null;
   renditions: VideoRenditions;
   watchedPct: number;
   positionSec: number | null;
@@ -1020,7 +1045,7 @@ function MindsetStep({
         {greeting}, {greetingName}
       </p>
       <h1 className="mt-1 text-3xl font-extrabold text-navy">
-        {video?.title ?? "Coming soon"}
+        {video ? filmNameOf(video) : "Coming soon"}
       </h1>
 
       <div className="flex flex-1 flex-col justify-center py-6">
@@ -1162,20 +1187,24 @@ function ItemStep({
   return (
     <>
       <PhoneScreen.Body>
+        {/*
+          TWO LINES, AND RYAN WROTE THEM OUT:
+
+              WALK AROUND · 29 OF 48
+              Are You Here to See Anyone?
+
+          The track and the position are ONE eyebrow now. They used to be two
+          lines with the module name between them, and the module name was the
+          title again with a number on the front. The position moved up here
+          because it is orientation — where in the track they are — and it reads
+          as orientation beside the track and as a scoreboard under a heading.
+        */}
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
-          {item ? item.trackName : "Your curriculum"}
+          {item ? `${item.trackName} · ${item.position} of ${item.total}` : "Your curriculum"}
         </p>
         <h1 className="mt-1 text-3xl font-extrabold text-navy">
-          {item?.title ?? "Nothing left to work"}
+          {item ? filmNameOf(item) : "Nothing left to work"}
         </h1>
-        {item && (
-          /* The module, and where in the track they are. The advisor is never
-             asked to think about the credential — this is orientation, not a
-             scoreboard. */
-          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
-            {item.moduleName} · {item.position} of {item.total}
-          </p>
-        )}
 
         <div className="flex flex-1 flex-col justify-center py-6">
           {item && video ? (
@@ -1281,7 +1310,7 @@ function TrackFilmStep({
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
           Starting {trackName}
         </p>
-        <h1 className="mt-1 text-3xl font-extrabold text-navy">{video.title}</h1>
+        <h1 className="mt-1 text-3xl font-extrabold text-navy">{filmNameOf(video)}</h1>
 
         <div className="flex flex-1 flex-col justify-center py-6">
           <TrackedVideo
@@ -1433,7 +1462,7 @@ function PitchStep({
       <p className="text-sm font-bold uppercase tracking-[0.18em] text-ocean">
         {video.stage ?? "The pitch"}
       </p>
-      <h1 className="mt-1 text-3xl font-extrabold text-navy">{video.title}</h1>
+      <h1 className="mt-1 text-3xl font-extrabold text-navy">{filmNameOf(video)}</h1>
       {focus && (
         <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
           {focus.service}

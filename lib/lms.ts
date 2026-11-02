@@ -18,6 +18,7 @@
    ============================================================================ */
 
 import { isVideoType, type ContentType } from "@/lib/content";
+import { filmName } from "@/lib/film-name";
 import { renditionsFor, type VideoRenditions } from "@/lib/mux/playback";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -388,7 +389,7 @@ export async function loadModuleItems(
   const { data, count } = await client
     .from("content")
     .select(
-      "id, type, title, body, tier, duration_sec, video_url, module_order, created_at, source, " +
+      "id, type, title, short_title, body, tier, duration_sec, video_url, module_order, created_at, source, " +
         // What renditionsFor needs to sign both cuts — the same fields shapeVideo reads.
         "mux_playback_id, mux_playback_policy, vertical_playback_id, vertical_status",
       { count: "exact" }
@@ -432,7 +433,14 @@ export async function loadModuleItems(
         return {
           id: r.id as string,
           type,
-          title: (r.title as string) ?? "Untitled",
+          /* The name a person reads. One rule, lib/film-name.ts — the deck, the
+             morning and the manager's drill-in cannot print different names for
+             the same film. "Untitled" stays the last resort for a row with no
+             title at all, which the column forbids but a cast does not. */
+          title: filmName({
+            title: (r.title as string) ?? "Untitled",
+            short_title: (r.short_title as string | null) ?? null,
+          }),
           body: (r.body as string | null) ?? null,
           tier: (r.tier as string | null) ?? null,
           durationSec: r.duration_sec == null ? null : Number(r.duration_sec),
