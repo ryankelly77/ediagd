@@ -8,6 +8,10 @@
      npm run restore:day -- --user <uuid> --date YYYY-MM-DD --reason "..."
      npm run restore:day -- --user <uuid> --date YYYY-MM-DD --reason "..." --apply
 
+   --evidence=progress  accepts a film leg whose gate was refused for an expired
+                        ticket (the defect #83 removed), on content_progress.
+                        Narrow by arithmetic — see the note at the flag.
+
    Dry by default. It prints the evidence it found, the verdict, and exactly what
    it would write.
 
@@ -104,6 +108,17 @@ import {
   type IsoDate,
   type SwellState,
 } from "@/lib/gamification/streak";
+/* THE APP'S OWN LOADER, not a shape assembled here.
+   The first version hand-built `{ schedule, closures }` and cast it `as never`.
+   The cast hid two errors: ScheduleContext also carries `islandTime`, and the
+   closures live in `rooftop_closed_day` rather than a `store_closure` table
+   that the read found nothing in and said nothing about. The consequence was
+   not cosmetic — scheduledOn() returned `undefined`, so the streak replay was
+   computed against a calendar it could not read and came out at 14 against a
+   stored 5. The script then printed a reassuring note explaining the gap as
+   grace under earlier rules, which is a confident wrong answer over a bug in
+   itself. One loader, no cast. */
+import { loadScheduleContext } from "@/lib/work-schedule";
 
 const argv = process.argv.slice(2);
 const flag = (name: string): string | null => {
@@ -111,12 +126,55 @@ const flag = (name: string): string | null => {
   return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[i + 1] : null;
 };
 const APPLY = argv.includes("--apply");
+/*
+ * ---- THE ONE OVERRIDE, AND IT IS NARROW BY ARITHMETIC ---------------------
+ *
+ * --evidence=progress accepts a film leg that has NO watch_gate row, on
+ * content_progress, when the missing row is explained by the expired-ticket
+ * defect #83 fixed. It is not "accept a missing gate"; it is "accept the gate
+ * this server refused for a reason we have since removed".
+ *
+ * THREE CONDITIONS, ALL REQUIRED, and the third is what makes it specific:
+ *
+ *   1  NO gate row for that film on that store day. A row that EXISTS and
+ *      failed its bar — below threshold, or the failure valve — is a different
+ *      story and is still refused. This override fills a silence, never
+ *      contradicts a measurement.
+ *
+ *   2  content_progress shows the film reached its END inside that store day.
+ *      `completed_at` is NOT the test and cannot be: it is written by
+ *      completeDay, which is the thing that never ran, so requiring it would be
+ *      circular for every day this script exists to repair. watched_pct = 100
+ *      is the test — and it is FURTHEST-REACHED, which a scrub sets in under a
+ *      second. That weakness is precisely why this needs an override and a
+ *      reason rather than being the default bar.
+ *
+ *   3  THE PLAYER WAS OPEN LONGER THAN THE OLD TTL ALLOWED — longer than
+ *      3 x duration + 300s, the window #83 removed. This is the arithmetic
+ *      signature of the expiry: if the span fits inside the old window, the
+ *      gate's absence is NOT explained by an expired ticket and the override
+ *      declines. Measured on the case it was written for: 577s of player-open
+ *      against a 555s window on an 85-second film.
+ *
+ * AND IT LEAVES A TRACE THE OPERATOR CANNOT FORGET TO WRITE. An annotation adds
+ * evidence; an override removes a refusal. The script appends what it accepted,
+ * and why, to the reason it stores — so the row says a machine objected and
+ * what overruled it, rather than relying on the prose being thorough.
+ */
+const EVIDENCE_PROGRESS = argv.includes("--evidence=progress");
 const USER = flag("user");
 const DATE = flag("date");
 const REASON = flag("reason");
 
 const url = process.env.SB_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SB_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+/** The next calendar day, for the store day's half-open upper bound. */
+function nextDay(d: string): string {
+  const [y, m, day] = d.split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, day + 1));
+  return t.toISOString().slice(0, 10);
+}
 
 function fail(msg: string): never {
   console.error(`\n  REFUSING — ${msg}\n`);
@@ -233,6 +291,85 @@ async function main() {
     fail(`a leg was not watched to the gate threshold:\n             - ${bad.join("\n             - ")}`);
   }
 
+  /* ---- THE OVERRIDE, IF IT WAS ASKED FOR -------------------------------- */
+  const overrides: string[] = [];
+  if (EVIDENCE_PROGRESS) {
+    /* The store day's instants, in the ROOFTOP's timezone. Not ::date on a
+       timestamptz — a Texas evening lands on tomorrow in UTC, which is the
+       mistake 0166 records. */
+    /* THE REAL PARAMETER NAMES. They are `_d` and `_t`, not `_day` and `_at`:
+       PostgREST resolves an RPC by its argument NAMES, so a guessed name is a
+       404 from the schema cache rather than a type error. Read off pg_proc
+       rather than inferred from the call sites in SQL, which pass positionally
+       and so prove nothing about the names. */
+    const { data: boundsRows, error: bErr } = await sb.rpc("rooftop_local_at", {
+      _rooftop: rooftopId,
+      _d: storeDate,
+      _t: "00:00",
+    });
+    const { data: endRows } = await sb.rpc("rooftop_local_at", {
+      _rooftop: rooftopId,
+      _d: nextDay(storeDate),
+      _t: "00:00",
+    });
+    if (bErr || !boundsRows || !endRows) fail(`could not resolve the store day's bounds: ${bErr?.message ?? "no value"}`);
+    const dayStart = String(boundsRows);
+    const dayEnd = String(endRows);
+
+    const { data: progRows, error: pErr } = await sb
+      .from("content_progress")
+      .select("content_id, watched_pct, completed_at, created_at, updated_at")
+      .eq("user_id", userId)
+      .gte("updated_at", dayStart)
+      .lt("updated_at", dayEnd);
+    if (pErr) fail(`could not read content_progress: ${pErr.message}`);
+
+    const progIds = ((progRows ?? []) as { content_id: string }[]).map((r) => r.content_id);
+    const progContent = new Map<string, ContentRow>();
+    if (progIds.length) {
+      const { data: pc } = await sb
+        .from("content")
+        .select("id, title, placement, duration_sec")
+        .in("id", progIds);
+      for (const c of ((pc ?? []) as ContentRow[])) progContent.set(c.id, c);
+    }
+
+    console.log(`\n  --evidence=progress: examining content_progress inside the store day`);
+    console.log(`    store day runs ${dayStart} -> ${dayEnd}`);
+    for (const r of (progRows ?? []) as {
+      content_id: string; watched_pct: number | null; created_at: string; updated_at: string;
+    }[]) {
+      const c = progContent.get(r.content_id);
+      const placement = c?.placement ?? null;
+      if (!placement || slot[placement]) continue;               /* leg already proven by a gate */
+      if (gates.some((g) => g.content_id === r.content_id)) continue; /* a gate row exists: not a silence */
+      const dur = Number(c?.duration_sec ?? 0);
+      const spanSec = (new Date(r.updated_at).getTime() - new Date(r.created_at).getTime()) / 1000;
+      const oldTtl = dur > 0 ? dur * 3 + 300 : 300;
+      const reachedEnd = Number(r.watched_pct ?? 0) >= 100;
+      const expirySignature = spanSec > oldTtl;
+      const ok = reachedEnd && expirySignature;
+      console.log(
+        `    ${ok ? "ACCEPT" : "decline"}  ${placement.padEnd(16)} pct=${r.watched_pct} ` +
+          `span=${spanSec.toFixed(0)}s vs old TTL ${oldTtl.toFixed(0)}s (${dur}s film)  ${c?.title}`
+      );
+      if (!ok) {
+        console.log(
+          `              ${!reachedEnd ? "the film did not reach its end" : "the span fits inside the old TTL, so an expired ticket does not explain the missing gate"}`
+        );
+        continue;
+      }
+      slot[placement] = r.content_id;
+      overrides.push(
+        `--evidence=progress accepted the ${placement} leg ${r.content_id} ` +
+          `(content_progress 100%, player open ${spanSec.toFixed(0)}s against the ${oldTtl.toFixed(0)}s TTL removed by #83; no watch_gate row)`
+      );
+    }
+    if (overrides.length === 0) {
+      console.log(`    nothing accepted — the override changed nothing.`);
+    }
+  }
+
   /* ---- the morning's shape, inferred from the slots ---------------------- */
   const mindset = slot["daily_lifestyle"] ?? null;
   const pitch = slot["daily_pitch"] ?? null;
@@ -253,9 +390,8 @@ async function main() {
   console.log(`\n  VERDICT: every leg cleared its own bar. Morning reads as "${kind}".`);
 
   /* ---- the schedule, so the restored day is scored on the real calendar -- */
-  const [{ data: sched }, { data: closures }, { data: settingsRow }] = await Promise.all([
-    sb.from("work_schedule").select("*").eq("user_id", userId).maybeSingle(),
-    sb.from("store_closure").select("closed_on, label").eq("rooftop_id", rooftopId),
+  const [ctx, { data: settingsRow }] = await Promise.all([
+    loadScheduleContext(sb as never, userId, rooftopId),
     sb.from("game_settings").select("*").limit(1).maybeSingle(),
   ]);
   if (!settingsRow) fail("no game_settings row.");
@@ -270,17 +406,10 @@ async function main() {
     sandBadge: Number(settingsRow.sand_badge),
     sandCertification: Number(settingsRow.sand_certification),
   };
-  const scheduleContext = {
-    schedule: sched ?? null,
-    closures: ((closures ?? []) as { closed_on: string; label: string }[]).map((c) => ({
-      date: c.closed_on as IsoDate,
-      label: c.label,
-    })),
-  };
   console.log(
-    `  calendar: ${sched ? "work_schedule on file" : "no schedule on file (every day counts as scheduled)"}; ` +
-      `${scheduleContext.closures.length} store closure(s). ` +
-      `${storeDate} scheduled: ${String(scheduledOn(storeDate, scheduleContext as never))}`
+    `  calendar: ${ctx.schedule ? "work_schedule on file" : "no schedule on file (every day counts as scheduled)"}; ` +
+      `${ctx.closures?.length ?? 0} closure(s); ${ctx.islandTime?.length ?? 0} island-time range(s). ` +
+      `${storeDate} scheduled: ${String(scheduledOn(storeDate, ctx))}`
   );
 
   /* ---- THE SWELL, RECOMPUTED BY REPLAY ---------------------------------- */
@@ -303,7 +432,7 @@ async function main() {
       paddleOutLastGranted: null,
     };
     for (const d of dates) {
-      state = applyDailyCompletion(state, d as IsoDate, settings, scheduleContext as never).next;
+      state = applyDailyCompletion(state, d as IsoDate, settings, ctx).next;
     }
     return state;
   };
@@ -333,28 +462,49 @@ async function main() {
     Number(swellRow?.longest_len ?? 0) === before.longestLen;
   if (!modelAgrees) {
     console.log(
-      `\n    NOTE: the replay does not reproduce the stored counters. That is expected where\n` +
-        `    grace, closures or island time were applied under earlier rules. The restore will\n` +
-        `    therefore apply the DELTA the restored day makes (${before.currentLen} -> ${after.currentLen}),\n` +
-        `    not the replay's absolute values, so nothing else about their streak is rewritten.`
+      `\n    NOTE: the replay does not reproduce the stored counters, so it is treated as a\n` +
+        `    MODEL THAT FAILED ITS OWN CHECK. Only the DELTA the restored day makes is applied\n` +
+        `    (${before.currentLen} -> ${after.currentLen}); no absolute value from the replay is written, and\n` +
+        `    longest_len can rise no higher than the new current. Nothing else is rewritten.`
     );
   }
   const nextCurrent =
     modelAgrees
       ? after.currentLen
       : Number(swellRow?.current_len ?? 0) + (after.currentLen - before.currentLen);
-  const nextLongest = Math.max(Number(swellRow?.longest_len ?? 0), nextCurrent, after.longestLen);
+  /*
+   * LONGEST TAKES NOTHING FROM A REPLAY THAT DISAGREED.
+   *
+   * This read Math.max(stored, nextCurrent, after.longestLen), and on the first
+   * dry run that would have raised a real advisor's longest streak from 9 to 15
+   * — entirely out of a replay computed against a calendar it could not read.
+   * longest_len is a personal record; inflating it is not recoverable by
+   * re-running anything.
+   *
+   * So when the model does not reproduce the stored counters it contributes
+   * NOTHING but the delta: longest can only rise to the new current, which is
+   * the only thing the restored day can honestly have achieved.
+   */
+  const nextLongest = modelAgrees
+    ? Math.max(Number(swellRow?.longest_len ?? 0), nextCurrent, after.longestLen)
+    : Math.max(Number(swellRow?.longest_len ?? 0), nextCurrent);
   /* last_completed_on only moves FORWARD. Restoring 30 October must not tell the
      app that the most recent completion is older than the one on 2 November. */
   const storedLast = (swellRow?.last_completed_on as string | null) ?? null;
   const nextLast = storedLast && storedLast > storeDate ? storedLast : storeDate;
+
+  /* ONE EXPRESSION, USED BY BOTH THE PREVIEW AND THE INSERT. The preview
+     printed the operator's bare reason while the insert stored the reason plus
+     the override's trace — so the dry run was not showing what it would write,
+     which is the only thing a dry run is for. */
+  const storedReason = overrides.length ? `${reason} [${overrides.join("; ")}]` : reason;
 
   console.log(`\n  WOULD WRITE:`);
   console.log(`    daily_completion  ${storeDate}  kind=${kind}  rooftop=${rooftopId}`);
   console.log(`      video_content_id       ${mindset}`);
   console.log(`      pitch_video_content_id ${pitch ?? "null"}`);
   console.log(`      item_content_id        ${item}`);
-  console.log(`      restored_reason        "${reason}"`);
+  console.log(`      restored_reason        "${storedReason}"`);
   console.log(`    swell  current_len ${swellRow?.current_len ?? 0} -> ${nextCurrent}, longest ${swellRow?.longest_len ?? 0} -> ${nextLongest}, last ${storedLast ?? "null"} -> ${nextLast}`);
   console.log(`    NOT written: sand dollars, badges, paddle-out bank, content_progress,`);
   console.log(`                 pool cursors, track entry, module completion, accrual.`);
@@ -377,13 +527,20 @@ async function main() {
       morning_kind: kind,
       /* The percentages the GATE recorded, which is the measurement this day is
          being restored on the strength of. */
+      /* NULL where the leg came from the override: there is no coverage figure
+         for it, and writing content_progress's furthest-reached number into a
+         column that means coverage is exactly the two-numbers-one-name mistake
+         this script's header refuses. */
       lifestyle_video_watch_pct: gates.find((g) => g.content_id === mindset)?.watched_pct ?? null,
       pitch_video_watch_pct: pitch
         ? (gates.find((g) => g.content_id === pitch)?.watched_pct ?? null)
         : null,
       watch_error: false,
-      was_scheduled: scheduledOn(storeDate, scheduleContext as never),
-      restored_reason: reason,
+      was_scheduled: scheduledOn(storeDate, ctx),
+      /* THE TRACE THE OPERATOR CANNOT FORGET. An annotation adds evidence; an
+         override removes a refusal, and a refusal overruled with no record is
+         indistinguishable afterwards from one that never fired. */
+      restored_reason: storedReason,
       restored_at: now,
     })
     .select("id")

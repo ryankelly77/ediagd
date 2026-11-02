@@ -6,5 +6,5 @@
     "outDir": "../.tmp-rd", "baseUrl": "..", "paths": { "@/*": ["./*"] },
     "lib": ["ES2022", "DOM"], "types": ["node"]
   },
-  "include": ["./restore-day.ts", "../lib/watch-coverage.ts", "../lib/gamification/streak.ts"]
+  "include": ["./restore-day.ts", "../lib/watch-coverage.ts", "../lib/gamification/streak.ts", "../lib/work-schedule.ts"]
 }
