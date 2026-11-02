@@ -20,18 +20,44 @@
    version that replaced it, which is the same act as archived_asset_id in the
    place a person actually looks.
 
+   ---------------------------------------------------------------------------
+   THIS SCRIPT DOES NOT TRIM. TRIM DOCTRINE V2, 2 NOVEMBER.
+   ---------------------------------------------------------------------------
+   It used to: upload, clip, swap, re-derive, all in one run. That is removed,
+   and not because it was buggy in itself — because v2 settled where a cut is
+   made, and it is not here.
+
+   NOTHING IS TRIMMED AT UPLOAD. `trim:apply` cuts from the DISK MASTER in
+   `02 - Published`, behind the sync gate, and swaps through the same RPC this
+   script uses. One cutter, one place.
+
+   WHY THAT IS THE WHOLE FIX AND NOT A RESTRICTION. Trimming here made the
+   master a Mux clip, and `mux://assets/<clip>` does not deliver that clip's
+   timeline — Mux re-resolves to the underlying source and lands on a keyframe
+   before the clip's zero, returning exactly the length asked for and the wrong
+   content. Every later problem followed from that: a second cut was unsafe, the
+   archive held a generation nobody wanted, and PR #59 found three films with
+   nothing clean to re-cut from. PR #61 closed that gap the pre-v2 way, by
+   keeping the untrimmed upload in `archived_asset_id` so a later clip had
+   something honest to cut. Under v2 there is no later clip from Mux at all, so
+   the gap is not patched — it is unrepresentable. The upload IS the master, and
+   `archived_asset_id` is the version it replaced, which is what it says.
+
    ORDER MATTERS, AND IT IS ENFORCED HERE:
-     upload → (optional trim) → swap the master → derive the vertical
-   Trimming after derivation would leave the two formats a second apart. The
-   swap marks the existing vertical 'stale' automatically (0058), and the derive
-   step then rebuilds it from the new master.
+     upload → swap the master → derive the vertical
+   The swap marks the existing vertical 'stale' automatically (0058), and the
+   derive step then rebuilds it from the new master. A cut, when one is wanted,
+   happens afterwards through `trim:apply` and re-derives again.
 
      npm run replace:video -- --id=<content uuid> --file="/path/to.mov"
-     npm run replace:video -- --id=… --file=… --trim-start=1
      npm run replace:video -- --id=… --file=… --dry
+
+   The trim flags are REFUSED rather than ignored, and a film with a cut point
+   on file is named at the end with the command that cuts it.
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
 import { checkSync } from "@/lib/video/sync-gate";
+import { cutPointNotice, type PlanCutRow } from "@/lib/video/cut-point-notice";
 import { readdirSync as __readdirSync } from "node:fs";
 
 /* The disk master for a row, matched on the name the file HAS on disk.
@@ -54,7 +80,7 @@ function masterPathFor(row: { canonical_filename?: string | null; source_filenam
 import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { createReadStream, statSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { mkdir, rename, stat } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -62,43 +88,43 @@ import { spawn } from "node:child_process";
 
 const run = promisify(execFile);
 
-const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
-  auth: { persistSession: false },
-});
-const mux = new Mux({
-  tokenId: process.env.MUX_TOKEN_ID!,
-  tokenSecret: process.env.MUX_TOKEN_SECRET!,
-  jwtSigningKey: process.env.MUX_SIGNING_KEY_ID!,
-  jwtPrivateKey: process.env.MUX_SIGNING_KEY_PRIVATE!,
-});
+/*
+ * ---- THE CLIENTS ARE BUILT AFTER THE ARGUMENTS ARE VALIDATED -------------
+ *
+ * They used to be built here, above the flag parsing, and that made the trim
+ * refusal unreachable without credentials: `--trim-only` with no SB_URL died
+ * inside `createClient` with a Supabase stack trace instead of the three lines
+ * telling the operator to use trim:apply. The refusal is the whole point of
+ * removing the flag, so it must not depend on the environment being right.
+ *
+ * Validate the request, then touch the world. See below the guards.
+ */
 
 const args = process.argv.slice(2);
 const arg = (k: string) => args.find((a) => a.startsWith(`--${k}=`))?.split("=").slice(1).join("=");
 const contentId = arg("id");
 const file = arg("file");
-const trimStart = arg("trim-start") ? Number(arg("trim-start")) : null;
-const trimEnd = arg("trim-end") ? Number(arg("trim-end")) : null;
 const dry = args.includes("--dry");
+
 /*
- * ---- TRIM SOMETHING ALREADY HERE -----------------------------------------
+ * ---- THE TRIM FLAGS ARE REFUSED, NOT IGNORED ------------------------------
  *
- * The batch that prompted this arrives with a spoken slate on the front of
- * every film — a few seconds before Mitch says "Aloha" — and the cut point is
- * different in each one, so it comes from the transcript rather than from a
- * constant.
- *
- * Those films reach Mux through two different doors: a new film is a fresh
- * ingest, a reshoot is a replacement. Trimming them would have meant a trim in
- * the ingest path as well as this one — two implementations of clip → swap →
- * re-derive, and the ingest copy would have been the one that eventually
- * forgot the derive.
- *
- * So neither door trims. Everything lands untrimmed, and then this runs once
- * per film against the row that is already there. `--trim-only` is this whole
- * script minus its first half: no file, no upload, the CURRENT master as the
- * clip source, and the same swap and re-derive afterwards.
+ * A flag a script accepts and quietly drops is this codebase's most-repeated
+ * defect wearing a new hat: the operator types `--trim-start=4.26`, the run
+ * reports success, and the film is live with its slate on. So the flags are
+ * still PARSED, purely so they can be named in a refusal that says where the
+ * cut now happens.
  */
-const trimOnly = args.includes("--trim-only");
+const REMOVED_TRIM_FLAGS = ["trim-start", "trim-end", "trim-only"] as const;
+const removedUsed = REMOVED_TRIM_FLAGS.filter(
+  (f) => args.includes(`--${f}`) || args.some((a) => a.startsWith(`--${f}=`))
+);
+/*
+ * `--trim-only` is gone with the rest. It was this script minus its first half
+ * — no file, no upload, the current master as the clip source — and it is the
+ * exact shape the hazard note below says is unsafe: a clip of a clip. What
+ * replaced it is `trim:apply --only=<id>`, which cuts from the disk master.
+ */
 /**
  * ---- THE SAME TAKE, RE-ENCODED, BECAUSE THE ASSET WAS WRONG ---------------
  *
@@ -116,15 +142,38 @@ const trimOnly = args.includes("--trim-only");
  */
 const assetOnly = args.includes("--asset-only");
 
-if (!contentId || (!file && !trimOnly)) {
+if (removedUsed.length) {
+  console.error(`\n  REFUSING — ${removedUsed.map((f) => `--${f}`).join(", ")} ${removedUsed.length === 1 ? "is" : "are"} gone.`);
+  console.error("");
+  console.error("  Trim doctrine v2: nothing is trimmed at upload. A cut is made from the");
+  console.error("  DISK MASTER in `02 - Published`, behind the sync gate, by trim:apply —");
+  console.error("  never from a Mux asset, because a clip of a clip returns the right length");
+  console.error("  and the wrong content.");
+  console.error("");
+  console.error("  Upload and swap with this script, then:");
+  console.error(`      npm run trim:apply -- --only=${contentId ?? "<content uuid>"}            # report`);
+  console.error(`      npm run trim:apply -- --apply --only=${contentId ?? "<content uuid>"}    # cut`);
+  console.error("");
+  process.exit(1);
+}
+if (!contentId || !file) {
   console.error("  need --id=<content uuid> and --file=<path>");
-  console.error("  or:  --id=<content uuid> --trim-start=<seconds> --trim-only");
   process.exit(1);
 }
-if (trimOnly && trimStart == null && trimEnd == null) {
-  console.error("  --trim-only needs --trim-start and/or --trim-end");
-  process.exit(1);
-}
+/* Bound after the guard. process.exit returns `never` but TypeScript will not
+   narrow a module-level const through it, and a `!` at each use is the
+   assertion that stops being true the day somebody moves the guard. */
+const id: string = contentId;
+
+const sb = createClient(process.env.SB_URL!, process.env.SB_KEY!, {
+  auth: { persistSession: false },
+});
+const mux = new Mux({
+  tokenId: process.env.MUX_TOKEN_ID!,
+  tokenSecret: process.env.MUX_TOKEN_SECRET!,
+  jwtSigningKey: process.env.MUX_SIGNING_KEY_ID!,
+  jwtPrivateKey: process.env.MUX_SIGNING_KEY_PRIVATE!,
+});
 
 async function waitForAsset(assetId: string, label: string) {
   let a = await mux.video.assets.retrieve(assetId);
@@ -282,18 +331,7 @@ async function main() {
   let newAssetId: string | null = null;
   let asset;
 
-  if (trimOnly) {
-    /* Narrowed into a const: newAssetId is nullable for the upload path, and
-       waitForAsset takes a string. */
-    const current = row.mux_asset_id;
-    if (!current) throw new Error("row has no master asset to trim");
-    newAssetId = current;
-    asset = await waitForAsset(current, "current master");
-    console.log(`\n  Trim only. Source is the current master.`);
-    console.log(`    ${asset.aspect_ratio}  ${asset.duration?.toFixed(1)}s`);
-    console.log(`    trim: ${trimStart ?? 0}s -> ${trimEnd ?? "end"}`);
-    if (dry) { console.log("\n  --dry, stopping here.\n"); return; }
-  } else {
+  {
   const { stdout } = await run("ffprobe", [
     "-v", "error", "-select_streams", "v:0",
     "-show_entries", "stream=width,height,r_frame_rate,codec_name",
@@ -309,10 +347,6 @@ async function main() {
   console.log(`    9:16 slice will be ${sliceW}px wide -> ${sliceW >= 1080
     ? `downscaled to 1080. No upscale; this is what a 4K master buys.`
     : `upscaled ${(1080 / sliceW).toFixed(2)}x to 1080 — soft.`}`);
-  if (trimStart != null || trimEnd != null) {
-    console.log(`    trim: ${trimStart ?? 0}s -> ${trimEnd ?? "end"}`);
-  }
-
   if (dry) { console.log("\n  --dry, stopping here.\n"); return; }
 
   /* ---- 3. Upload ---------------------------------------------------------- */
@@ -336,7 +370,7 @@ async function main() {
       max_resolution_tier: "2160p",
       normalize_audio: true,
       /*
-       * ---- NO CAPTIONS ON AN UPLOAD THAT IS ABOUT TO BE TRIMMED -----------
+       * ---- CAPTIONS: WHY THIS WAS CONDITIONAL, AND WHY IT NO LONGER IS ----
        *
        * Mux refuses to clip an asset whose text track is still generating —
        * "Asset to clip has a pending text track, try again in a few minutes" —
@@ -344,15 +378,24 @@ async function main() {
        * captions or not. Every replacement in the first run of Ryan's batch
        * died there, after uploading a full 4K master each time.
        *
-       * Waiting for the track would fix the error and buy nothing: the clip
-       * below requests its own subtitles, and the intermediate's would be
-       * discarded anyway because their timings are wrong by exactly the length
-       * of the cut. So they are not requested at all — one fewer failure mode
-       * and one fewer caption job billed per film.
+       * Waiting for the track would have fixed the error and bought nothing
+       * WHILE THIS SCRIPT STILL CLIPPED: the clip requested its own subtitles,
+       * and the intermediate's were discarded anyway because their timings were
+       * wrong by exactly the length of the cut. So they were skipped whenever a
+       * trim was coming.
+       *
+       * THE CLIP IS GONE, SO THEY ARE ALWAYS REQUESTED NOW. The asset this
+       * uploads is the master that goes live, and an untrimmed master's
+       * subtitle timings are correct — there is no cut to shift them. Leaving
+       * the old condition in place would have been harmless only for as long as
+       * nobody passed a trim flag, and the flags now refuse, so the condition
+       * could only ever have evaluated one way. A branch that cannot take its
+       * other arm is a branch that misleads the next reader.
+       *
+       * A later trim:apply cut re-requests subtitles for the cut asset, which
+       * is where the shifted-timings problem actually belonged.
        */
-      ...(trimStart != null || trimEnd != null
-        ? {}
-        : { inputs: [{ generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }] }),
+      inputs: [{ generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }],
     },
   });
 
@@ -419,60 +462,25 @@ async function main() {
   /* ---- 4. Trim, if asked — BEFORE the swap, so both formats share the cut - */
   /*
    * ---------------------------------------------------------------------------
-   * KNOWN HAZARD, 9 OCTOBER 2026: THIS IS SAFE FOR A FRESH UPLOAD AND NOT SAFE
-   * FOR A SECOND TRIM OF AN ALREADY-TRIMMED MASTER.
+   * THE CLIP IS GONE, AND THE HAZARD WITH IT
    * ---------------------------------------------------------------------------
-   * `mux://assets/ID` where ID is ITSELF a clip does not deliver that clip's
-   * timeline. Mux re-resolves to the underlying source and lands on a keyframe
-   * BEFORE the clip's zero, so the output carries extra lead at the front and
-   * loses the same amount off the back — while coming back EXACTLY the length
-   * that was asked for, which is why the length check below cannot see it.
+   * What stood here clipped the new asset through `mux://assets/<id>` before
+   * swapping it in, under a note that began "KNOWN HAZARD, 9 OCTOBER 2026" and
+   * said plainly that it was safe for a fresh upload and unsafe for a second
+   * trim of an already-trimmed master: Mux re-resolves a clip of a clip to the
+   * underlying source, lands on a keyframe before the clip's zero, and returns
+   * exactly the length asked for. Measured at +4.7s on one Walk-Around film.
    *
-   * Measured on `15,000 Mile Dealer Upsell Menu, Part 4`, whose master was
-   * already a clip: asked for 0 → 89.59s of a master whose Mahalo ends at
-   * 88.89s, and got 89.59s of content opening 0.90s late and closing on
-   * "Maha!" with no air after it. On `30 Second Walk-Around, Part 3` the shift
-   * was about 4.7s. The same films clipped from `archived_asset_id` in the
-   * archive's timeline come back correct to the centisecond.
+   * The note also said the right gate was "probably refuse --trim-only when
+   * archived_asset_id is set, and clip the archive instead", and left it for
+   * its own change. This is that change, and the answer turned out to be
+   * neither: v2 does not clip from Mux at all. `trim:apply` cuts from the disk
+   * master in `02 - Published` behind the sync gate.
    *
-   * WHEN THIS BITES: a `--trim-only` run on a row whose `archived_asset_id` is
-   * already set — that is, any film the trim passes have touched. The 252 films
-   * trim:apply cut were first-generation masters at the time, so they were
-   * fine; a film cut twice through here would not be.
-   *
-   * NOT FIXED HERE, deliberately: the right gate is probably "refuse
-   * --trim-only when archived_asset_id is set, and clip the archive instead",
-   * but that changes the ingest path's behaviour and belongs in its own change
-   * with its own acceptance run rather than riding along with a trim batch.
-   * scripts/trim-last-batch.ts carries the working construction to copy.
-   * ---------------------------------------------------------------------------
+   * So the master this script swaps in is always a first-generation upload, and
+   * `archived_asset_id` is always the version it replaced. Both facts are now
+   * true by construction rather than by a flag nobody must pass.
    */
-  if (trimStart != null || trimEnd != null) {
-    console.log(`\n  Trimming…`);
-    if (row.archived_asset_id) {
-      console.log(
-        `    NOTE: this row already has an archived asset, so its master is itself a clip.\n` +
-        `          Clipping a clip shifts the result — see the hazard note in this file.\n` +
-        `          Read the result's ends before trusting this cut.`
-      );
-    }
-    const clip = await mux.video.assets.create({
-      inputs: [{
-        url: `mux://assets/${newAssetId}`,
-        ...(trimStart != null ? { start_time: trimStart } : {}),
-        ...(trimEnd != null ? { end_time: trimEnd } : {}),
-        generated_subtitles: [{ language_code: "en", name: "English (auto)" }],
-      }],
-      playback_policies: ["signed"],
-      // A clip of a master is still a master — see the note on the upload above.
-      video_quality: "premium",
-      max_resolution_tier: "2160p",
-      normalize_audio: true,
-    });
-    asset = await waitForAsset(clip.id, "clip");
-    newAssetId = clip.id;
-    console.log(`    trimmed to    ${asset.duration?.toFixed(1)}s`);
-  }
 
   const playback = asset.playback_ids?.find((p) => p.policy === "signed");
   if (!playback) throw new Error("new asset has no signed playback id");
@@ -480,13 +488,17 @@ async function main() {
   /* ---- 5. Swap ------------------------------------------------------------ */
   /*
    * The version and the name move with the asset — but only for a real
-   * replacement. A --trim-only run is the SAME take cut differently, and
-   * bumping it would invent a take that was never shot. See 0107, which was
-   * written after fifty-four reshoots left their rows claiming v1 of a file
-   * that had already been archived under another name.
+   * replacement. `--asset-only` is the SAME take re-encoded because the asset
+   * was wrong, and bumping it would invent a take that was never shot. See
+   * 0107, written after fifty-four reshoots left their rows claiming v1 of a
+   * file that had already been archived under another name.
+   *
+   * `--trim-only` used to share this arm, for the same reason. It is gone: a
+   * trim is still the same take cut differently, and trim:apply carries that
+   * rule now by passing null for both through the same RPC.
    */
-  const newCanonical = trimOnly || assetOnly ? null : path.basename(file!);
-  const newVersion = trimOnly || assetOnly
+  const newCanonical = assetOnly ? null : path.basename(file!);
+  const newVersion = assetOnly
     ? null
     : Number(newCanonical!.match(/—\s*v(\d+)\.[a-z0-9]+$/i)?.[1] ?? row.version + 1);
 
@@ -585,8 +597,8 @@ async function main() {
    * a lie when the replacement IS that file — and it leaves the shelf without
    * the master it still needs.
    */
-  const fromTheShelf = !trimOnly && !assetOnly && file!.includes(`${path.sep}02 - Published${path.sep}`);
-  if (!trimOnly && !assetOnly && !fromTheShelf) {
+  const fromTheShelf = !assetOnly && file!.includes(`${path.sep}02 - Published${path.sep}`);
+  if (!assetOnly && !fromTheShelf) {
     await archiveOldMaster(row);
     await fileNewMaster(row, file!);
   }
@@ -643,7 +655,49 @@ async function main() {
   console.log(`    duration   ${after?.duration_sec}s`);
   console.log(`    landscape  ${String(after?.mux_playback_id).slice(0, 16)}…`);
   console.log(`    vertical   ${String(after?.vertical_playback_id).slice(0, 16)}…  (${after?.vertical_status})`);
-  console.log(`    archived   ${String(after?.archived_asset_id).slice(0, 16)}…\n`);
+  console.log(`    archived   ${String(after?.archived_asset_id).slice(0, 16)}…`);
+
+  /*
+   * ---- A CUT POINT ON FILE IS SAID OUT LOUD --------------------------------
+   *
+   * This script no longer trims, so a film that needs cutting leaves here with
+   * its slate still on. That is correct and it is also the one way this change
+   * could cost something: the operator's next step used to be nothing, and now
+   * it is a second command. A run that ends "Done." over a film the plan says
+   * to cut is a silence exactly where the handover is.
+   *
+   * reports/trim-plan.json is where trim:apply reads its cut points, so it is
+   * what is consulted — not a guess from the transcript, and not a second
+   * measurement. The absence of a plan row is reported too: "no cut point on
+   * file" is a different statement from saying nothing, and on an untrimmed
+   * upload it is the one that tells the operator to go and measure.
+   *
+   * ADVISORY ONLY. It reads a file and prints; it cannot fail the run, because
+   * the swap has already happened and a missing or malformed plan is not a
+   * reason to report a completed replacement as a failure.
+   */
+  /*
+   * ADVISORY ONLY. It reads a file and prints; it cannot fail the run, because
+   * the swap has already happened and a missing or malformed plan is not a
+   * reason to report a completed replacement as a failure.
+   *
+   * THE WORDS ARE IN lib/video/cut-point-notice.ts, which is pure. This branch
+   * only fires after a real upload, sync pass, swap and derive — so inside this
+   * script it would be unreachable to a test, and the one new behaviour of
+   * "replace:video never trims" would be the one thing nobody could check.
+   */
+  try {
+    const PLAN = "reports/trim-plan.json";
+    const rows = existsSync(PLAN)
+      ? ((JSON.parse(readFileSync(PLAN, "utf8")) as { rows?: PlanCutRow[] }).rows ?? [])
+      : null;
+    const notice = cutPointNotice(rows, id);
+    console.log("");
+    for (const line of notice.lines) console.log(`  ${line}`);
+  } catch (e) {
+    console.log(`\n  (could not read the trim plan: ${(e as Error).message} — the swap stands)`);
+  }
+  console.log("");
 }
 
 /*

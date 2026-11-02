@@ -1,0 +1,11 @@
+{
+  "//": "Standalone build for cut-point-scenarios.ts. It imports the REAL lib/video/cut-point-notice.ts, which is the whole point: the notice fires only after a live upload, sync pass, swap and derive, so this is the only place its four cases can be exercised.",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs",
+    "moduleResolution": "node", "esModuleInterop": true, "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-cpt", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./cut-point-scenarios.ts", "../lib/video/cut-point-notice.ts"]
+}
