@@ -138,8 +138,9 @@ export async function recordGateMet(
     pct = null;
   } else {
     /* Authoritative duration — never the client's. A forgery that could declare
-       the video four seconds long would satisfy its own check, and it also sets
-       the ticket's TTL, so both halves read the same number. */
+       the video four seconds long would satisfy its own check. It no longer sets
+       a ticket TTL (0 Nov: the ticket lives for its store-local day), so this is
+       read for the plausibility test alone. */
     const { data: row } = await service
       .from("content")
       .select("duration_sec")
@@ -147,7 +148,9 @@ export async function recordGateMet(
       .maybeSingle();
     const durationSec = row?.duration_sec == null ? null : Number(row.duration_sec);
 
-    const check = readWatchTicket(ticket, userId, contentId, storeDate, durationSec);
+    /* The duration below is still read — gateMetIsPlausible needs it — but the
+       ticket no longer takes one: its lifetime is its store-local date. */
+    const check = readWatchTicket(ticket, userId, contentId, storeDate);
     if (!check.ok) return { persisted: false, reason: check.reason };
 
     if (!gateMetIsPlausible(durationSec, check.elapsedSec)) {

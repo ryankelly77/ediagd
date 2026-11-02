@@ -20,10 +20,29 @@
      MINTED AT OPEN, NOT AT RENDER. The stamp now says when the PLAYER was
      opened, so the elapsed window starts when there was something to watch.
 
-     A TTL PROPORTIONAL TO THE ASSET. Three times the duration plus five
-     minutes, instead of a flat twelve hours. Long enough for a service drive —
-     pause, serve a customer, come back — and short enough that a ticket cannot
-     be banked in the morning and spent at lunch.
+     A LIFETIME OF ONE STORE-LOCAL DAY, and nothing shorter.
+
+     This was three times the duration plus five minutes, and that number cost
+     an advisor her day: an 85-second mindset film with the player open 577
+     seconds, against a 555-second TTL. She watched it, the gate write was
+     refused as expired, and the morning could not be saved.
+
+     The TTL was there to stop a ticket being "banked in the morning and spent
+     at lunch" — which was a real risk for the OLD ticket, minted when the PAGE
+     rendered, because the elapsed window started at render and waiting was free.
+     It is not a risk for this one. The stamp is minted on first PLAY and the
+     wall-clock test below is a LOWER bound: enough time must have passed for
+     the video to have played. An upper bound buys nothing on top of that —
+     spending at lunch is no cheaper than spending ninety seconds after opening,
+     because both have to clear the same lower bound. What the upper bound did
+     buy was a refusal for the honest viewer who takes longer than three times
+     the film, which on a short film is no time at all.
+
+     So the lifetime is THE STORE-LOCAL DAY, and it needs no arithmetic: the
+     date is already signed into the ticket and already compared against the
+     rooftop's today. A ticket cannot outlive its day because the day is part of
+     what it says, and a mismatch is `wrong-day`. The unsafe state is not
+     representable rather than merely bounded.
 
      SINGLE USE. The completion records a hash of the ticket it spent, and a
      ticket already spent is refused. Bound to the store-local date as well, so
@@ -73,20 +92,14 @@ function sign(payload: string): string {
   return createHmac("sha256", secret()).update(payload).digest("base64url");
 }
 
-/**
- * How long a ticket stays spendable, from the moment the player opened.
+/* ticketTtlMs is GONE, not deprecated.
  *
- * Three times the asset plus five minutes. A twelve-minute video on a service
- * drive is genuinely watched in bursts, so a tight multiple would fail honest
- * viewers; three times is generous to them and still refuses a ticket minted
- * before the morning meeting and spent after lunch. The flat five minutes
- * covers assets whose duration is unknown or very short.
+ * A duration-proportional TTL was the only reason this module needed to know an
+ * asset's duration, and it is the thing that refused an honest watch. There is
+ * no replacement constant to tune, because the lifetime is now a property of
+ * what the ticket SAYS — its store-local date, compared below — rather than a
+ * number somebody has to pick. See the header.
  */
-export function ticketTtlMs(durationSec: number | null | undefined): number {
-  const d = Number(durationSec);
-  const base = Number.isFinite(d) && d > 0 ? d : 0;
-  return (base * 3 + 300) * 1000;
-}
 
 /**
  * What gets stored on the completion so a ticket can only be spent once.
@@ -140,8 +153,12 @@ export type TicketFailure =
   | "forged"
   | "wrong-user"
   | "wrong-content"
-  | "wrong-day"
-  | "expired";
+  | "wrong-day";
+/* "expired" is gone with the TTL. It is removed from this union rather than
+   left as an unreachable member, because a failure code nothing can return is a
+   branch every reader has to reason about and no test can reach. The case it
+   described — a real ticket gone stale — is now either the same store day (in
+   which case it is valid) or a different one (in which case it is wrong-day). */
 
 export type TicketCheck =
   | { ok: true; openedAt: number; elapsedSec: number }
@@ -149,6 +166,10 @@ export type TicketCheck =
 
 /**
  * Verify a ticket and say how long the player has been open.
+ *
+ * NO DURATION PARAMETER ANY MORE. It existed only to compute the TTL, and a
+ * parameter a function accepts and ignores is how a check ends up measuring
+ * something nobody intended.
  *
  * Every failure is distinguishable in the return value, because these end up in
  * an error the advisor reads: "your day did not save" with no reason is the
@@ -160,7 +181,6 @@ export function readWatchTicket(
   userId: string,
   contentId: string | null,
   storeDate: string,
-  durationSec: number | null | undefined,
   now: number = Date.now()
 ): TicketCheck {
   if (!contentId) return { ok: false, reason: "no video on this step", code: "no-video" };
@@ -185,18 +205,18 @@ export function readWatchTicket(
 
   if (tUser !== userId) return { ok: false, reason: "watch ticket belongs to another user", code: "wrong-user" };
   if (tContent !== contentId) return { ok: false, reason: "watch ticket is for another video", code: "wrong-content" };
+  /*
+   * THE LIFETIME, AND IT IS THIS LINE.
+   *
+   * The ticket is signed with the store-local date it was minted on, so a
+   * ticket is spendable exactly while that day is still the rooftop's today.
+   * Nothing expires inside a day; nothing survives past it. This is the whole
+   * of the ticket's lifetime and there is no second expression of it.
+   */
   if (tDate !== storeDate) return { ok: false, reason: "watch ticket is from another day", code: "wrong-day" };
 
   const openedAt = Number(tTime);
   if (!Number.isFinite(openedAt)) return { ok: false, reason: "malformed watch ticket time", code: "malformed" };
-  if (now - openedAt > ticketTtlMs(durationSec)) {
-    return {
-      ok: false,
-      reason: "watch ticket expired — open the video again",
-      code: "expired",
-    };
-  }
-
   /*
    * A ticket from the future means the server's own clock moved, not that the
    * client cheated — it cannot forge one. Clamp to zero elapsed rather than
