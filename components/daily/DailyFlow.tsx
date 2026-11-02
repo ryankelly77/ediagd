@@ -290,6 +290,18 @@ export function DailyFlow({
    */
   const [pitchWatch, setPitchWatch] = useState<WatchState | null>(null);
   const [mindsetWatch, setMindsetWatch] = useState<WatchState | null>(null);
+  /*
+   * ---- AND THE OTHER TWO FILMS, WHICH MEASURED AND THEN THREW IT AWAY -----
+   *
+   * The item and the track film were measured by their players exactly like
+   * these two and then reported nowhere: the completion carried a percentage
+   * and a ticket for the mindset and the pitch and nothing at all for them. So
+   * their only route to the server was the fire-and-forget gate write, and when
+   * that call was lost the day had no second way to establish the leg. See
+   * CompleteDayInput in lib/gamification/completeDay.ts.
+   */
+  const [itemWatch, setItemWatch] = useState<WatchState | null>(null);
+  const [trackFilmWatch, setTrackFilmWatch] = useState<WatchState | null>(null);
 
   /*
    * ---- THE GATE, HELD WHERE BOTH MOUNTS CAN SEE IT ------------------------
@@ -376,15 +388,43 @@ export function DailyFlow({
        */
       remember(gateFromWatch(state));
       void (async () => {
-        try {
-          await recordGateMetAction({
-            contentId,
-            pct: state.error ? null : state.pct,
-            watchError: state.error,
-            ticket: ticket.current,
-          });
-        } catch {
-          /* Deliberately silent — see above. */
+        /*
+         * ---- IT IS TRIED MORE THAN ONCE, AND THAT IS THE WHOLE POINT -------
+         *
+         * This was one call, unawaited, with `catch {}` under it. A single
+         * dropped POST destroyed the only evidence completeDay would accept
+         * that the film had been watched, and nothing ever asked again: the
+         * gate opens once per player, coverage does not survive a reload, and
+         * Try again only re-rendered. Ryan's 30 October died exactly there —
+         * the film played through, the gate opened, no row was ever written,
+         * and the day could not be saved for the rest of the day.
+         *
+         * Three attempts with a widening wait covers a handover between the
+         * dealership wifi and LTE, which is the network this runs on. It stops
+         * on the first SERVER answer of any kind — a refusal is an answer, and
+         * repeating a claim the server has already declined would just be
+         * noise. Only a failure to GET an answer is retried.
+         *
+         * THE BACKSTOP IS STILL THE COMPLETION, not this. completeDay files
+         * the same claim itself, on a request the advisor is waiting on, so a
+         * morning that loses all three attempts still saves. This is here so
+         * that the gate survives a RELOAD, which is what the record was
+         * invented for and what the completion's filing cannot do.
+         */
+        const payload = {
+          contentId,
+          pct: state.error ? null : state.pct,
+          watchError: state.error,
+          ticket: ticket.current,
+        };
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            await recordGateMetAction(payload);
+            return;
+          } catch {
+            /* No answer. Wait and ask again. */
+            await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+          }
         }
       })();
     },
@@ -591,6 +631,7 @@ export function DailyFlow({
             video={{ ...trackFilm, gate: trackFilmGate }}
             trackName={track?.name ?? ""}
             threshold={videoThreshold}
+            onWatch={setTrackFilmWatch}
             onFirstPlay={() => mintTicket(trackFilm.contentId, trackFilmTicket)}
             onGateMet={(s) =>
               fileGate(trackFilm.contentId, trackFilmTicket, s, setTrackFilmSessionGate)
@@ -619,6 +660,7 @@ export function DailyFlow({
             item={item}
             video={item?.video ? { ...item.video, gate: itemGate } : null}
             threshold={videoThreshold}
+            onWatch={setItemWatch}
             onFirstPlay={() => mintTicket(item?.video?.contentId ?? null, itemTicket)}
             onGateMet={(s) =>
               fileGate(item?.video?.contentId ?? null, itemTicket, s, setItemSessionGate)
@@ -650,7 +692,20 @@ export function DailyFlow({
             watchError={Boolean(pitchWatch?.error || mindsetWatch?.error)}
             pitchWatchTicket={pitchTicket}
             lifestyleWatchTicket={mindsetTicket}
+            /* The other two films' measurements now travel with the completion
+               too, so a lost gate write is not the end of the day. */
+            itemWatchPct={itemWatch ? itemWatch.pct : null}
+            itemWatchTicket={itemTicket}
+            trackFilmWatchPct={trackFilmWatch ? trackFilmWatch.pct : null}
+            trackFilmWatchTicket={trackFilmTicket}
             itemAck={itemAck}
+            /* Where to send them back to when the server says a leg is
+               outstanding. A refusal is not a retry — see onReturnToStep. */
+            onReturnToStep={(key) => {
+              setStep(
+                key === "mindset" ? 1 : key === "item" ? 3 : 2
+              );
+            }}
             /* RULING 6 — after the streak advances, gating nothing. */
             closingQuote={closingQuote}
             ackLabel={ackLabel}
@@ -1081,6 +1136,7 @@ function ItemStep({
   item,
   video,
   threshold,
+  onWatch,
   onFirstPlay,
   onGateMet,
   onAck,
@@ -1089,6 +1145,7 @@ function ItemStep({
   item: Item | null;
   video: LifestyleVideo | null;
   threshold: number;
+  onWatch: (state: WatchState) => void;
   onFirstPlay: () => void;
   onGateMet: (state: WatchState) => void;
   onAck: () => void;
@@ -1133,7 +1190,10 @@ function ItemStep({
               initialPositionSec={video.positionSec}
               initialMet={video.gate}
               onGateMet={onGateMet}
-              onWatchChange={setWatch}
+              onWatchChange={(s) => {
+                setWatch(s);
+                onWatch(s);
+              }}
             />
           ) : item ? (
             <Prose text={item.body ?? item.title} />
@@ -1196,6 +1256,7 @@ function TrackFilmStep({
   video,
   trackName,
   threshold,
+  onWatch,
   onFirstPlay,
   onGateMet,
   onNext,
@@ -1203,6 +1264,7 @@ function TrackFilmStep({
   video: LifestyleVideo;
   trackName: string;
   threshold: number;
+  onWatch: (state: WatchState) => void;
   onFirstPlay: () => void;
   onGateMet: (state: WatchState) => void;
   onNext: () => void;
@@ -1233,7 +1295,10 @@ function TrackFilmStep({
             initialPositionSec={video.positionSec}
             initialMet={video.gate}
             onGateMet={onGateMet}
-            onWatchChange={setWatch}
+            onWatchChange={(s) => {
+              setWatch(s);
+              onWatch(s);
+            }}
           />
         </div>
       </PhoneScreen.Body>
@@ -1512,7 +1577,12 @@ function CelebrationStep({
   watchError,
   pitchWatchTicket,
   lifestyleWatchTicket,
+  itemWatchPct,
+  itemWatchTicket,
+  trackFilmWatchPct,
+  trackFilmWatchTicket,
   itemAck,
+  onReturnToStep,
   closingQuote,
   ackLabel,
   badgeNames,
@@ -1529,8 +1599,15 @@ function CelebrationStep({
   watchError: boolean;
   pitchWatchTicket: React.RefObject<string | null>;
   lifestyleWatchTicket: React.RefObject<string | null>;
+  /** The item film's own measurement and ticket. Null when the item is text. */
+  itemWatchPct: number | null;
+  itemWatchTicket: React.RefObject<string | null>;
+  trackFilmWatchPct: number | null;
+  trackFilmWatchTicket: React.RefObject<string | null>;
   /** The item slot was worked through. See CompleteDayInput.itemAck. */
   itemAck: boolean;
+  /** Send them back to a step the server says is outstanding. */
+  onReturnToStep: (key: "mindset" | "pitch" | "item" | "track_film") => void;
   /** RULING 6 — rendered below the payoff, gating nothing. */
   closingQuote: Quote | null;
   ackLabel: string;
@@ -1551,14 +1628,37 @@ function CelebrationStep({
     previewResult ?? readCachedResult(dayStamp)
   );
   const [alreadyDone, setAlreadyDone] = useState<CompleteDayResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const fired = useRef(false);
+  /*
+   * ---- THE WHOLE FAILURE, NOT JUST ITS SENTENCE ---------------------------
+   *
+   * This was a `string`, and that is why "Try again" could not work. The stage
+   * tells a retryable failure from a `day.gate` refusal, which no retry can
+   * ever clear, and `outstanding` says which step is actually missing — so the
+   * screen can hand the advisor the player they still owe instead of a button
+   * that re-renders the error it is printed under.
+   */
+  const [failure, setFailure] = useState<{
+    error: string;
+    stage?: string;
+    outstanding?: string[];
+  } | null>(null);
+  /*
+   * NOT A REF ANY MORE, AND THAT IS THE FIX TO "Try again does nothing".
+   *
+   * `fired` was a ref set before the POST and never cleared, so the effect
+   * could never run a second time in this mount — which made Try again's
+   * router.refresh() the only thing it could possibly have done, and a refresh
+   * does not re-mount a component whose state holds the error. A counter in
+   * STATE lets the retry re-enter the effect honestly.
+   */
+  const [attempt, setAttempt] = useState(0);
+  const inFlight = useRef(false);
 
   useEffect(() => {
     // Already have the numbers (this mount or a previous one) — never re-fire.
     // A demo always has them, so the action is never called.
-    if (result || previewResult || fired.current) return;
-    fired.current = true;
+    if (result || previewResult || inFlight.current) return;
+    inFlight.current = true;
 
     (async () => {
       /*
@@ -1590,6 +1690,12 @@ function CelebrationStep({
       const lifeSend = verifiable(lifestyleWatchPct, lifestyleWatchTicket.current);
       const unverifiable = pitchSend !== pitchWatchPct || lifeSend !== lifestyleWatchPct;
 
+      /* The same downgrade for the other two films, for the same reason. These
+         do not land in a column — there is none — so what they are for is the
+         gate filing in fileGateClaims(), which refuses a null ticket anyway. */
+      const itemSend = verifiable(itemWatchPct, itemWatchTicket.current);
+      const trackSend = verifiable(trackFilmWatchPct, trackFilmWatchTicket.current);
+
       const response = await completeDayAction({
         dayStamp,
         pitchWatchPct: pitchSend,
@@ -1597,10 +1703,21 @@ function CelebrationStep({
         watchError: watchError || unverifiable,
         pitchWatchTicket: pitchWatchTicket.current,
         lifestyleWatchTicket: lifestyleWatchTicket.current,
+        itemWatchPct: itemSend,
+        itemWatchTicket: itemWatchTicket.current,
+        trackFilmWatchPct: trackSend,
+        trackFilmWatchTicket: trackFilmWatchTicket.current,
         itemAck,
       });
       if (!response.ok) {
-        setError(response.error);
+        setFailure({
+          error: response.error,
+          stage: response.stage,
+          outstanding: response.outstanding,
+        });
+        /* Let the effect be re-entered by Try again. The guard above is the
+           in-flight guard, not a once-ever latch. */
+        inFlight.current = false;
         return;
       }
       if (response.result.alreadyComplete) {
@@ -1621,9 +1738,15 @@ function CelebrationStep({
     watchError,
     pitchWatchTicket,
     lifestyleWatchTicket,
+    itemWatchPct,
+    itemWatchTicket,
+    trackFilmWatchPct,
+    trackFilmWatchTicket,
     result,
     today,
     previewResult,
+    /* Try again bumps this, which is what re-enters the effect. */
+    attempt,
   ]);
 
   if (alreadyDone) {
@@ -1635,24 +1758,95 @@ function CelebrationStep({
     );
   }
 
-  if (error) {
+  if (failure) {
+    /*
+     * ---- TWO FAILURES, AND ONLY ONE OF THEM HAS A RETRY --------------------
+     *
+     * A `day.gate` refusal means the server has no record of a film being
+     * watched. Posting the same thing again cannot change that, so "Try again"
+     * was never going to work here — and the old button was a router.refresh()
+     * against an error living in client state, so it did not even repaint.
+     * Ryan: "Try again does nothing." It did nothing twice over.
+     *
+     * So a refusal offers the one thing that CAN fix it: the step that is
+     * outstanding, with its player. Everything else keeps Try again, and that
+     * button now clears the error and posts again rather than refreshing a
+     * route the error is not stored in.
+     */
+    const gated = failure.stage === "day.gate";
+    const LEG_STEP = {
+      mindset: "the mindset film",
+      pitch: "the pitch film",
+      item: "today's item",
+      track_film: "the track film",
+    } as const;
+    type LegKey = keyof typeof LEG_STEP;
+    const legs = (failure.outstanding ?? []).filter(
+      (k): k is LegKey => k in LEG_STEP
+    );
+    const first = legs[0];
+    /*
+     * NAMES EVERY OUTSTANDING LEG, NOT JUST THE ONE IT IS ABOUT TO SEND THEM
+     * TO. "One thing left" over two unfinished films is a heading that knows
+     * better than it says, and the advisor would finish one film and meet the
+     * same screen having been told there was nothing else.
+     */
+    const names = legs.map((k) => LEG_STEP[k]);
+    const listed =
+      names.length === 0
+        ? "the film"
+        : names.length === 1
+          ? names[0]
+          : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+
     return (
       <section className="flex flex-1 flex-col justify-center">
         <div className="rounded-card border border-line bg-surface-card p-6">
           <p className="text-base font-extrabold text-navy">
-            We couldn&apos;t save today just yet
+            {gated
+              ? names.length > 1
+                ? "Still to finish"
+                : "One thing left"
+              : "We couldn’t save today just yet"}
           </p>
-          <p className="mt-2 text-sm text-ink-soft">{error}</p>
-          <p className="mt-2 text-sm text-ink-soft">
-            Nothing was lost — try again and your day will count.
-          </p>
+          {gated ? (
+            <p className="mt-2 text-sm text-ink-soft">
+              Finish {listed} to save your day.
+            </p>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-ink-soft">{failure.error}</p>
+              <p className="mt-2 text-sm text-ink-soft">
+                Nothing was lost — try again and your day will count.
+              </p>
+            </>
+          )}
         </div>
-        <button
-          onClick={() => router.refresh()}
-          className="mt-6 w-full rounded-xl bg-navy p-4 text-lg font-extrabold text-white"
-        >
-          Try again
-        </button>
+        {gated ? (
+          <button
+            onClick={() => {
+              /* Clear the error on the way out, or coming back to step 4 shows
+                 a refusal that has not been re-tested. */
+              setFailure(null);
+              onReturnToStep(first ?? "item");
+            }}
+            className="mt-6 w-full rounded-xl bg-navy p-4 text-lg font-extrabold text-white"
+          >
+            {first === "item" || first === undefined
+              ? "Back to today’s item"
+              : "Back to the film"}
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setFailure(null);
+              setAttempt((n) => n + 1);
+            }}
+            className="mt-6 w-full rounded-xl bg-navy p-4 text-lg font-extrabold text-white"
+          >
+            Try again
+          </button>
+        )}
       </section>
     );
   }
