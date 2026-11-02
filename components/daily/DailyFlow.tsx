@@ -2296,12 +2296,31 @@ type QuizWaiting = { moduleId: string; moduleName: string; trackName: string };
  * and completes the module — one grading path, reused by reference.
  */
 function QuizWaitingLink({ quiz }: { quiz: QuizWaiting }) {
+  /*
+   * ---- IT HAS NEVER APPEARED, AND THE REASON WAS NOT THIS COMPONENT -------
+   *
+   * pendingQuizzes() filters `has_quiz = true` on my_module_progress, and until
+   * 0170 that column read a table no advisor can select — so the list was empty
+   * for every advisor on every day since this shipped, and this link rendered
+   * for nobody. The copy below was never wrong; it was never reachable.
+   *
+   * FILLED GOLD NOW, NOT AN OUTLINE. An outlined row beside a gold CTA reads as
+   * the secondary option, and this is the only thing standing between a watched
+   * lesson and a finished one. The morning's own CTA has already been pressed by
+   * the time this is on screen, so there is nothing for it to compete with.
+   */
   return (
     <Link
       href={`/library/m/${quiz.moduleId}/quiz`}
-      className="block w-full rounded-xl border border-gold px-4 py-3 text-center text-sm font-bold text-navy transition hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className="block w-full rounded-xl bg-gold px-4 py-3 text-center text-sm font-extrabold text-navy transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      Quiz waiting: {quiz.trackName} — {quiz.moduleName}
+      Quiz waiting — {quiz.moduleName}
+      <span className="mt-0.5 block text-xs font-bold opacity-80">
+        {/* NO QUESTION COUNT. This component is not handed one, and "four
+            questions" would be a number it invented — true of most modules
+            today and a lie the first time Mitch writes a fifth. */}
+        {quiz.trackName} · pass it and the lesson is done
+      </span>
     </Link>
   );
 }

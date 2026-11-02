@@ -735,7 +735,47 @@ export async function completeModuleIfReady(
 ): Promise<{ moduleId: string; bonus: number } | null> {
   const moduleId = await moduleForItem(service, contentId);
   if (!moduleId) return null;
+  return completeModuleIfReadyById(service, userId, moduleId, rooftopId, bonus);
+}
 
+/**
+ * The same thing, when the caller already holds the MODULE id.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY A SECOND ENTRY POINT AND NOT A SECOND IMPLEMENTATION
+ * ---------------------------------------------------------------------------
+ * completeModuleIfReady is reached from exactly three places, and every one of
+ * them is a moment when a film or a quiz FINISHED: the library deck, the quiz
+ * grader, and the morning loop. That is the whole trigger surface — so a module
+ * whose requirements become met for any OTHER reason is never written. A film
+ * unpublished, retired or swapped out of a module; a quiz pulled; a content row
+ * re-pointed. Each of those can make a module met after the fact, and nothing
+ * will ever notice, because nothing finished.
+ *
+ * So the Certs read reconciles (lib/certifications.ts). It needs to ask about a
+ * MODULE, not about a content row, and the lookup it would otherwise do —
+ * module id to some content id in that module and back again — is a round trip
+ * whose only purpose is to satisfy a signature.
+ *
+ * THE REQUIREMENTS CHECK AND THE INSERT ARE STILL IN ONE PLACE. This is where
+ * they live; the content-id form above now calls it. There is no second rule
+ * and no second writer — which is the thing TWO_LADDERS insists on, and the
+ * reason a reconcile is safe to run on a page read at all.
+ *
+ * MEASURED BEFORE BUILDING IT: zero advisor-module pairs in production are in
+ * this state today (14 advisors x 116 gating modules; 13 complete, 22 quiz
+ * waiting, 0 met-without-a-row, reconciled two ways). The mechanism is real and
+ * the instances are not, yet. It is built as the standing guard rather than as a
+ * repair, and the backfill that comes with it writes nothing today — which is
+ * stated here so nobody later reads an empty run as a broken script.
+ */
+export async function completeModuleIfReadyById(
+  service: Client,
+  userId: string,
+  moduleId: string,
+  rooftopId: string,
+  bonus: number
+): Promise<{ moduleId: string; bonus: number } | null> {
   const req = await moduleRequirementsMet(service, userId, moduleId);
   /* Not met is the NORMAL case — items left, or a quiz still to pass. The quiz
      path calls this too after grading, so whichever finishes last triggers it. */

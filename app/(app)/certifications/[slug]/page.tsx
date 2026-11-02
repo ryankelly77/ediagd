@@ -303,7 +303,9 @@ function ModuleRow({ module: m, position }: { module: TrackModuleRow; position: 
     m.state === "complete"
       ? `Complete${m.hasQuiz ? " · quiz passed" : ""}`
       : m.state === "quiz_waiting"
-        ? "Film watched · quiz waiting"
+        ? /* PLAINLY, AND FIRST. "Film watched · quiz waiting" buried the only
+             outstanding thing behind the thing already done. */
+          "Quiz waiting"
         : m.state === "reinforcement"
           ? "Reinforcement · doesn't gate the track"
           : m.hasQuiz
@@ -311,6 +313,7 @@ function ModuleRow({ module: m, position }: { module: TrackModuleRow; position: 
             : "Lesson";
 
   return (
+    <>
     <Link
       href={`/library/m/${m.moduleId}`}
       className="flex min-h-[3.5rem] items-center gap-3 py-3.5 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -357,5 +360,16 @@ function ModuleRow({ module: m, position }: { module: TrackModuleRow; position: 
         ›
       </span>
     </Link>
+    {/* A sibling, not a nested Link — see the note on the Certs tile. The row
+        goes to the lesson; this goes to the one thing still outstanding. */}
+    {m.state === "quiz_waiting" && (
+      <Link
+        href={`/library/m/${m.moduleId}/quiz`}
+        className="mb-2 ml-11 inline-flex min-h-[2.25rem] items-center rounded-pill bg-gold px-4 text-xs font-extrabold text-navy transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      >
+        Take the quiz
+      </Link>
+    )}
+    </>
   );
 }
