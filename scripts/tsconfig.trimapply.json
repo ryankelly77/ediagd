@@ -1,0 +1,18 @@
+{
+  "//": "Standalone build for trim-apply.ts, on the pattern tsconfig.replacevideo.json set. It exists because trim:apply now makes the cut itself, through lib/video/cut-master.mjs — the one cutter the sync repair also uses. node16 module resolution is what lets a CommonJS build import that ESM module through `await import()` and read its .d.mts types; the bare tsc line the npm script used could resolve neither.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-tap",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./trim-apply.ts", "./trim-measure.ts", "../lib/video/cut-master.d.mts"]
+}

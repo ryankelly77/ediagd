@@ -59,13 +59,46 @@
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
 import Mux from "@mux/mux-node";
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { join, basename } from "node:path";
+import { pathToFileURL } from "node:url";
 import { parseCues } from "./trim-measure";
+
+/* ---- THE ONE CUTTER, loaded through a dynamic import ----------------------
+   lib/video/cut-master.mjs is ESM so scripts/sync-repair.mjs can import it
+   directly; this script compiles to CommonJS, and CJS reaches ESM only
+   through `import()`. Lazy and memoised rather than top-level, because a
+   CommonJS module has no top-level await and the cutter is not needed by a
+   report-only run at all. */
+type CutMaster = typeof import("../lib/video/cut-master.mjs", { with: { "resolution-mode": "import" } });
+let _cutMaster: CutMaster | null = null;
+async function cutter(): Promise<CutMaster> {
+  if (_cutMaster) return _cutMaster;
+  /* RESOLVED FROM THE CWD, NOT RELATIVE TO THIS FILE. tsc emits this script
+     flat into .tmp-tap/, so a `../lib/...` specifier would resolve one level
+     ABOVE the repo at runtime while compiling perfectly — the compile-time
+     path and the runtime path are not the same path. This script already reads
+     reports/trim-plan.json from the cwd, so the cwd is the repo root by the
+     same assumption, and it fails loudly below if it is not. */
+  const url = pathToFileURL(join(process.cwd(), "lib/video/cut-master.mjs")).href;
+  if (!existsSync(join(process.cwd(), "lib/video/cut-master.mjs"))) {
+    throw new Error(
+      `the cutter is not at lib/video/cut-master.mjs relative to ${process.cwd()} — ` +
+      "run trim:apply from the repo root"
+    );
+  }
+  _cutMaster = (await import(url)) as CutMaster;
+  return _cutMaster;
+}
 
 const PLAN = "reports/trim-plan.json";
 const LEDGER = "reports/trim-pass.json";
 const LOCK = "reports/.trim-pass.lock";
+/* Where the cut file is written before it is handed to replace:video. Under
+   .tmp-* so it is gitignored, and per-run rather than per-film because the
+   file is deleted the moment the swap commits. */
+const WORK = ".tmp-trim-cuts";
 
 /*
  * ---- RYAN IS UNPUBLISHING THESE AND MITCH RESHOOTS ------------------------
@@ -124,6 +157,10 @@ type PlanRow = {
   head: number | null;
   tail: number | null;
   inOldLedger: boolean;
+  /* From the plan. Older plans predate it, so an absent status is treated as
+     published -- the cautious reading, since that is the case the window
+     exists for. */
+  status?: string;
 };
 
 type LedgerEntry = {
@@ -334,12 +371,28 @@ async function main() {
     console.log(`\n  --apply to cut. Nothing changed.\n`);
     return;
   }
-  if (!window.ok && !FORCE_WINDOW) {
+  /* ---- THE WINDOW GUARDS ADVISORS, SO IT ASKS WHETHER ANY ARE AT RISK -----
+     The rule is "a swap under an advisor mid-film costs them their place".
+     That cannot happen to a DRAFT: it is advisor-invisible, nobody is
+     watching it, and there is no place to lose. So a run that touches only
+     drafts needs no window, and one that touches a single published film
+     still needs it at any hour.
+
+     Keyed on what the run will actually do rather than on a flag, so the safe
+     case does not depend on an operator remembering --force-window and the
+     unsafe case cannot be waved through by passing it out of habit. */
+  const publishedInRun = candidates.filter((c) => (c.status ?? "published") === "published");
+  if (!window.ok && publishedInRun.length > 0 && !FORCE_WINDOW) {
     console.error(
-      `\n  REFUSING: a swap under an advisor mid-film costs them their place.\n` +
-        `  Run after 21:00 Central, before 05:00, or on a Sunday — or pass --force-window.\n`
+      `\n  REFUSING: ${publishedInRun.length} of ${candidates.length} films in this run are PUBLISHED,\n` +
+        `  and a swap under an advisor mid-film costs them their place.\n` +
+        `  Run after 21:00 Central, before 05:00, or on a Sunday — or pass --force-window.\n` +
+        `  (A run of drafts only needs no window and would not have stopped here.)\n`
     );
     process.exit(1);
+  }
+  if (!window.ok && publishedInRun.length === 0) {
+    console.log(`\n  outside the quiet window, but every film in this run is a DRAFT — no advisor to interrupt.\n`);
   }
   if (!candidates.length) {
     console.log(`\n  nothing to do.\n`);
@@ -383,7 +436,7 @@ async function main() {
          these offsets describe a film that is no longer there. */
       const { data: row, error } = await db()
         .from("content")
-        .select("id, title, mux_asset_id, mux_playback_id, status, retired_at, duration_sec")
+        .select("id, title, mux_asset_id, mux_playback_id, status, retired_at, duration_sec, canonical_filename, source_filename")
         .eq("id", r.id)
         .maybeSingle();
       if (error) throw new Error(`row read: ${error.message}`);
@@ -391,9 +444,16 @@ async function main() {
       const cur = row as unknown as {
         mux_asset_id: string | null; mux_playback_id: string | null;
         status: string; retired_at: string | null; duration_sec: number | null;
+        canonical_filename: string | null; source_filename: string | null;
       };
-      if (cur.status !== "published" || cur.retired_at) {
-        throw new Error(`no longer published (status=${cur.status}, retired_at=${cur.retired_at})`);
+      /* PUBLISHED OR DRAFT. A draft is the BEST time to cut — it is
+         advisor-invisible by construction, so cutting it there is the only
+         order in which nobody is ever served the slate. The check was
+         published-only, which meant a new film had to go live with its slate
+         on before it could be trimmed. Retired is still refused: a film that
+         is out has nothing to cut. */
+      if ((cur.status !== "published" && cur.status !== "draft") || cur.retired_at) {
+        throw new Error(`not cuttable (status=${cur.status}, retired_at=${cur.retired_at})`);
       }
       if (!cur.mux_asset_id) throw new Error("row has no master asset");
       if (cur.mux_asset_id !== r.muxAssetId) {
@@ -405,17 +465,61 @@ async function main() {
       }
       if (ledger[cur.mux_asset_id]) throw new Error("asset is already in the ledger");
 
-      /* THE SYNC GATE IS INHERITED, NOT RE-IMPLEMENTED. This does not swap
-         the asset itself — replace:video does, and replace:video now refuses
-         any swap whose finished asset does not measure within ±40 ms of its
-         disk master (lib/video/sync-gate.ts). A second copy of the gate here
-         would be a second chance to get it wrong, and the wrong copy is the
-         one nobody reads. If replace:video refuses, run() throws and this
-         film is left exactly as it was. */
-      const args = ["run", "replace:video", "--", `--id=${r.id}`, "--trim-only"];
-      if (r.proposedStart != null) args.push(`--trim-start=${r.proposedStart}`);
-      if (r.proposedEnd != null) args.push(`--trim-end=${r.proposedEnd}`);
-      await run("npm", args);
+      /* ---- THIS SCRIPT MAKES THE CUT. IT DID NOT, AND NOTHING ELSE DID -----
+         Until now this asked replace:video to trim, with --trim-only,
+         --trim-start and --trim-end. #87 removed all three from that script and
+         wrote into INGEST.md that trim:apply cuts and writes the ledger — but
+         left this caller passing them. They are in REMOVED_TRIM_FLAGS, so every
+         invocation was refused on sight, and since this file contained no
+         ffmpeg, NOTHING IN THE REPO PERFORMED A CUT. The document described a
+         path that did not exist.
+
+         So the cut happens here, from the disk master, through the one cutter
+         in lib/video/cut-master.mjs — the same function the sync repair uses,
+         so there is one method and not a copy per caller.
+
+         THE GATE IS STILL INHERITED, NOT RE-IMPLEMENTED. replace:video measures
+         the finished asset against the file it was made from (#88) and refuses
+         anything outside ±40 ms. Handing it the cut file means it gates the cut
+         — which is the thing that needs gating. If it refuses, run() throws and
+         this film is left exactly as it was: the cut file is a temp file, and
+         the live row still points at the uncut asset. */
+      const { cutFromMaster, findMaster } = await cutter();
+      const master = findMaster(process.env.VIDEO_MASTERS_DIR, [
+        cur.canonical_filename, cur.source_filename,
+      ]);
+      if (!master) {
+        throw new Error(
+          "no disk master for this film, so there is nothing to cut FROM. " +
+          "A cut is never taken from a Mux asset — a clip of a clip returns the " +
+          "right length and the wrong content."
+        );
+      }
+
+      /* The window. `proposedEnd` is an absolute point in the master, so the
+         duration is end-minus-start; a null end means "to the end of the
+         film", which is the asset's own length less the head cut. */
+      const start = r.proposedStart ?? 0;
+      const endAt = r.proposedEnd ?? Number(cur.duration_sec ?? 0);
+      const duration = Number((endAt - start).toFixed(3));
+      if (!(duration > 0)) {
+        throw new Error(`the plan's window is not a cut: start ${start}s, end ${endAt}s`);
+      }
+
+      /* The cut keeps the master's OWN name, so replace:video's --asset-only
+         leaves canonical_filename alone and the row keeps naming the untrimmed
+         master on disk. That is the arrangement trim doctrine v2 wants: the
+         master is untrimmed, the asset is cut. */
+      mkdirSync(WORK, { recursive: true });
+      const cutPath = join(WORK, basename(master));
+      cutFromMaster({ master, start, duration, out: cutPath });
+      console.log(`    cut ${start.toFixed(2)}s → ${endAt.toFixed(2)}s (${duration.toFixed(2)}s) from ${basename(master)}`);
+
+      await run("npm", [
+        "run", "replace:video", "--",
+        `--id=${r.id}`, `--file=${cutPath}`, "--asset-only",
+      ]);
+      try { unlinkSync(cutPath); } catch { /* a leftover temp file is not a failure */ }
 
       /* ---- the ledger row goes in the moment the swap commits ------------- */
       const { data: after } = await db()
