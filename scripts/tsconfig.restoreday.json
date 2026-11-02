@@ -1,0 +1,10 @@
+{
+  "//": "Standalone build for restore-day.ts. It imports the REAL lib/watch-coverage.ts (gateThreshold — the live per-film bar, so a day cannot be restored on a threshold the app does not use) and the REAL lib/gamification/streak.ts (applyDailyCompletion — replayed over the history rather than a second streak rule for backdated days).",
+  "compilerOptions": {
+    "strict": true, "target": "ES2022", "module": "commonjs",
+    "moduleResolution": "node", "esModuleInterop": true, "skipLibCheck": true,
+    "outDir": "../.tmp-rd", "baseUrl": "..", "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"], "types": ["node"]
+  },
+  "include": ["./restore-day.ts", "../lib/watch-coverage.ts", "../lib/gamification/streak.ts"]
+}
