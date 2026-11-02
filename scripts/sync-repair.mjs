@@ -39,6 +39,7 @@ import { readFileSync, writeFileSync, existsSync, appendFileSync, readdirSync, u
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import crypto from "node:crypto";
+import { cutAndUpload } from "../lib/video/cut-master.mjs";
 
 for (const l of readFileSync("/Users/ryankelly/ediagd/.env.local", "utf8").split("\n")) {
   const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
@@ -270,29 +271,30 @@ async function doFilm(w) {
     oldAssetId: c.mux_asset_id, newAssetId: null, startedAt: new Date().toISOString() };
   save();
 
-  const out = `${W}/sr_cut.mp4`;
-  execFileSync("ffmpeg", ["-nostdin", "-v", "error", "-ss", start.toFixed(3), "-i", master,
-    "-t", dur.toFixed(3), "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-    "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out], { stdio: "pipe", maxBuffer: MAXBUF });
+  /* ---- THE CUT, from lib/video/cut-master.mjs ----------------------------
+     This used to be twelve lines here, and a near-copy of them lived in
+     sync-finish.mjs three times over while trim-apply.ts — the script
+     INGEST.md names as the cutter — had no ffmpeg at all.
 
-  const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
-    new_asset_settings: { playback_policy: ["signed"], video_quality: "basic",
-      passthrough: `sync-recut-${c.id}`,
-      generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }, cors_origin: "*" }) });
-  execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
-
-  let assetId = null;
-  for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { assetId = u.asset_id; break; } await sleep(3000); }
-  if (!assetId) { ledger[w.id] = { ...ledger[w.id], status: "refused", why: "upload produced no asset" }; save();
-    logLine(`FAIL  ${c.title}  refused: upload produced no asset`); return; }
+     Lifting it out fixed a drift the copies had already acquired: the request
+     below asked for captions with `generated_subtitles` at the TOP LEVEL of
+     new_asset_settings, where Mux accepts the request, creates the asset and
+     silently generates nothing. That is how 256 masters and 261 verticals
+     lost their captions without one error. sync-finish.mjs had it inside
+     `inputs[0]` and kept its own. The shared cutter has it inside inputs[0],
+     so every caller gets the half this copy had lost. */
+  const cut = await cutAndUpload({
+    master, start, duration: dur,
+    out: `${W}/sr_cut.mp4`,
+    passthrough: `sync-recut-${c.id}`,
+    mux, say,
+  });
+  const { assetId, playbackId: newPb, asset } = cut;
+  if (!assetId) { ledger[w.id] = { ...ledger[w.id], status: "refused", why: cut.why ?? "upload produced no asset" }; save();
+    logLine(`FAIL  ${c.title}  refused: ${cut.why ?? "upload produced no asset"}`); return; }
   ledger[w.id] = { ...ledger[w.id], newAssetId: assetId }; save();   // intent now names the asset
-
-  let asset = null;
-  for (let i = 0; i < 480; i++) { const a = await mux(`/assets/${assetId}`);   // 40 min, was 16
-    if (a.status === "ready") { asset = a; break; } if (a.status === "errored") break; await sleep(5000); }
-  if (!asset) { ledger[w.id] = { ...ledger[w.id], status: "refused", why: "asset never became ready" }; save();
-    logLine(`FAIL  ${c.title}  refused: asset never became ready`); return; }
-  const newPb = (asset.playback_ids ?? [])[0]?.id;
+  if (!asset) { ledger[w.id] = { ...ledger[w.id], status: "refused", why: cut.why ?? "asset never became ready" }; save();
+    logLine(`FAIL  ${c.title}  refused: ${cut.why ?? "asset never became ready"}`); return; }
 
   /* ---- THE GATE, on the finished asset, before any swap ------------------- */
   const after = measure(master, newPb, "sr_after");
