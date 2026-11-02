@@ -47,7 +47,7 @@
     "native:open:ios": "npx cap open ios",
     "native:open:android": "npx cap open android",
     "derive:vertical": "rm -rf .tmp-dv && tsc scripts/derive-vertical.ts scripts/trim-check.ts --outDir .tmp-dv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dv/derive-vertical.js",
-    "replace:video": "rm -rf .tmp-rv && tsc scripts/replace-video.ts --outDir .tmp-rv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-rv/replace-video.js",
+    "replace:video": "rm -rf .tmp-rv && tsc -p scripts/tsconfig.replacevideo.json && mkdir -p .tmp-rv/node_modules/server-only && echo \"module.exports={};\" > .tmp-rv/node_modules/server-only/index.js && ln -sfn .. .tmp-rv/node_modules/@ && node .tmp-rv/scripts/replace-video.js",
     "restore:cues": "rm -rf .tmp-rc && tsc scripts/restore-cues.ts --outDir .tmp-rc --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-rc/restore-cues.js",
     "export:cue-questions": "rm -rf .tmp-cq && tsc scripts/export-cue-questions.ts --outDir .tmp-cq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-cq/export-cue-questions.js",
     "import:quotes": "rm -rf .tmp-iq && tsc scripts/import-quotes.ts --outDir .tmp-iq --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-iq/import-quotes.js",
@@ -131,7 +131,11 @@
     "trim:last-batch": "rm -rf .tmp-tlb && tsc scripts/trim-last-batch.ts scripts/trim-check.ts --outDir .tmp-tlb --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlb/trim-last-batch.js",
     "trim:last-batch-report": "rm -rf .tmp-tlbr && tsc scripts/trim-last-batch-report.ts --outDir .tmp-tlbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-tlbr/trim-last-batch-report.js",
     "accept:push-return": "rm -rf .tmp-pr2 && tsc -p scripts/tsconfig.pushreturn.json && mkdir -p .tmp-pr2/node_modules/server-only && echo \"module.exports={};\" > .tmp-pr2/node_modules/server-only/index.js && ln -sfn .. .tmp-pr2/node_modules/@ && node .tmp-pr2/scripts/push-return-acceptance.js",
-    "audit:push-return": "rm -rf .tmp-pra && tsc scripts/push-return-audit.ts --outDir .tmp-pra --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-pra/push-return-audit.js"
+    "audit:push-return": "rm -rf .tmp-pra && tsc scripts/push-return-audit.ts --outDir .tmp-pra --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-pra/push-return-audit.js",
+    "backfill:modules": "rm -rf .tmp-mbf && tsc -p scripts/tsconfig.modulebackfill.json && mkdir -p .tmp-mbf/node_modules/server-only && echo \"module.exports={};\" > .tmp-mbf/node_modules/server-only/index.js && ln -sfn .. .tmp-mbf/node_modules/@ && node .tmp-mbf/scripts/backfill-module-completions.js",
+    "backfill:short-titles": "rm -rf .tmp-st && tsc -p scripts/tsconfig.shorttitles.json && mkdir -p .tmp-st/node_modules && ln -sfn .. .tmp-st/node_modules/@ && node .tmp-st/scripts/backfill-short-titles.js",
+    "restore:day": "rm -rf .tmp-rd && tsc -p scripts/tsconfig.restoreday.json && mkdir -p .tmp-rd/node_modules && ln -sfn .. .tmp-rd/node_modules/@ && node .tmp-rd/scripts/restore-day.js",
+    "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

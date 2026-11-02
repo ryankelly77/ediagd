@@ -9,13 +9,32 @@ import { recordGateMet } from "@/lib/watch-gate";
 import type { IsoDate } from "@/lib/gamification/streak";
 import {
   completeDay,
+  type CompleteDayError,
   type CompleteDayInput,
   type CompleteDayResult,
 } from "@/lib/gamification/completeDay";
 
 export type CompleteDayActionResult =
   | { ok: true; result: CompleteDayResult }
-  | { ok: false; error: string };
+  | {
+      ok: false;
+      error: string;
+      /**
+       * WHICH KIND OF FAILURE, AS A VALUE.
+       *
+       * The screen has to tell two things apart that used to look identical:
+       * a failure a retry can fix, and a `day.gate` refusal, which no retry can
+       * ever fix because nothing about posting again makes an unwatched film
+       * watched. The old screen offered "Try again" for both — and for the
+       * refusal it was a `router.refresh()` against an error held in client
+       * state, so it changed nothing on screen and could not have helped if it
+       * had. Matching on the sentence would work until somebody improved the
+       * wording, so the stage travels.
+       */
+      stage?: string;
+      /** On a gate refusal: the legs the server says are still outstanding. */
+      outstanding?: string[];
+    };
 
 /**
  * The daily loop's entry point for the UI.
@@ -109,7 +128,13 @@ export async function completeDayAction(
     revalidatePath("/", "layout");
     return { ok: true, result };
   } catch (error) {
-    return { ok: false, error: (error as Error).message };
+    const e = error as Partial<CompleteDayError> & Error;
+    return {
+      ok: false,
+      error: e.message,
+      stage: typeof e.stage === "string" ? e.stage : undefined,
+      outstanding: Array.isArray(e.outstanding) ? e.outstanding : undefined,
+    };
   }
 }
 

@@ -40,6 +40,7 @@ import { loadScheduleContext } from "@/lib/work-schedule";
 import {
   describeOutstanding,
   evaluateDayGate,
+  type Leg,
   type MorningKind,
   type ServedMorning,
   type SlotState,
@@ -47,7 +48,7 @@ import {
 import { accrueFromCompletion } from "@/lib/certification-server";
 import { completeModuleIfReady } from "@/lib/lms";
 import { readWatchTicket, watchTicketRef } from "@/lib/watch-ticket";
-import { readGate } from "@/lib/watch-gate";
+import { readGate, recordGateMet } from "@/lib/watch-gate";
 import { readDayStamp, type ServedDay } from "@/lib/day-stamp";
 import { clampWatchPct, isWatched, watchIsPlausible } from "@/lib/watch-coverage";
 import { recordEvent } from "@/lib/events/record";
@@ -77,6 +78,24 @@ export type CompleteDayInput = {
   watchError?: boolean | null;
   pitchWatchTicket?: string | null;
   lifestyleWatchTicket?: string | null;
+  /*
+   * ---- THE OTHER TWO FILM SLOTS, WHICH USED TO SEND NOTHING ----------------
+   *
+   * The item slot and the track film are gated exactly like the pitch and the
+   * mindset film — buildMorning() requires a watch_gate row for each of them —
+   * and until now their measurement had exactly ONE way of reaching this
+   * server: recordGateMetAction, fired and forgotten from the player, with both
+   * its refusal and its network failure swallowed. Mindset and pitch had two
+   * channels; the item had one, and it is the leg that got stuck.
+   *
+   * These carry the same two things the other slots carry, and they are checked
+   * by the same function. Nothing here decides anything on its own — see
+   * fileGateClaims().
+   */
+  itemWatchPct?: number | null;
+  itemWatchTicket?: string | null;
+  trackFilmWatchPct?: number | null;
+  trackFilmWatchTicket?: string | null;
   /**
    * The item slot was worked through.
    *
@@ -130,7 +149,17 @@ const EDDIES_PICK_TARGET = 20;
 export class CompleteDayError extends Error {
   constructor(
     message: string,
-    readonly stage: string
+    readonly stage: string,
+    /**
+     * Which legs are required and not met. Only set on a `day.gate` refusal.
+     *
+     * CARRIED, NOT RE-DERIVED. The client has to send the advisor back to the
+     * step that is actually outstanding, and the alternative is the client
+     * guessing from its own state — which is the state that disagreed with the
+     * server in the first place. A gate refusal is the one error where the
+     * server knows exactly what is missing, so it says so.
+     */
+    readonly outstanding: Leg["key"][] = []
   ) {
     super(message);
     this.name = "CompleteDayError";
@@ -227,6 +256,45 @@ export async function completeDay(
   const watch = await verifyWatch(supabase, userId, today, content, served);
 
   /*
+   * ---- 1d½. FILE THE GATES THIS REQUEST BROUGHT WITH IT -------------------
+   *
+   * THE DEFECT THIS CLOSES, AND WHY THE FIX IS HERE RATHER THAN ANYWHERE ELSE.
+   *
+   * A film leg is met if and only if a watch_gate row exists (buildMorning,
+   * below). That row had one writer: recordGateMetAction, called from the
+   * player the instant the gate opened, UNAWAITED, with its refusal and its
+   * network failure both swallowed, exactly once per player instance. So a
+   * single lost call — a dropped POST on dealership wifi, a tab backgrounded
+   * mid-flight — destroyed the only evidence the completion will accept, and
+   * nothing ever asked again: coverage is session-only, the claim is never
+   * re-made, and "Try again" only re-rendered the screen. The day became
+   * unsaveable for good.
+   *
+   * Measured: Ryan, 30 October. One session. The mindset gate landed at
+   * 22:56:21Z and the pitch gate at 22:58:29Z; the item film played through
+   * 22:58:35Z to 23:00:45Z and reached 100% of furthest-reached in
+   * content_progress, and no gate row was ever written. The same claim for the
+   * same film on the same store-day persisted when the morning was driven
+   * through again four hours later — so nothing refused it. It was lost.
+   *
+   * WHAT THIS DOES NOT CHANGE. It does not change what counts as a watched
+   * film, and it is deliberately not a second definition of "met". The gate row
+   * is still the only evidence, written only by recordGateMet, only after the
+   * ticket's signature and the wall clock allow it. All that changes is that
+   * the completion now MAKES THE SAME FILING with the claim it was handed, on a
+   * path that is awaited and therefore cannot be silently lost. The upsert is
+   * idempotent, so a claim the player already filed costs one write and changes
+   * nothing.
+   *
+   * A REFUSAL HERE IS STILL QUIET, and that is the point: if the ticket is
+   * expired or the clock disagrees, no row is written, buildMorning finds none,
+   * and the advisor is sent back to the step with its player — which is
+   * recoverable, because rewatching mints a fresh ticket. The old behaviour in
+   * that case was the same refusal with no way back.
+   */
+  await fileGateClaims(supabase, userId, rooftopId, today, served, content);
+
+  /*
    * ---- 1e. THE GATE, ASKED ONCE ------------------------------------------
    *
    * Three morning shapes, one function. buildMorning turns the signed stamp and
@@ -242,7 +310,8 @@ export async function completeDay(
   if (!gate.complete) {
     throw new CompleteDayError(
       `Not finished yet — ${describeOutstanding(gate.outstanding)} still to go.`,
-      "day.gate"
+      "day.gate",
+      gate.outstanding
     );
   }
 
@@ -914,27 +983,22 @@ async function verifyWatch(
       .maybeSingle();
     const durationSec = row?.duration_sec == null ? null : Number(row.duration_sec);
 
-    const check = readWatchTicket(ticket, userId, contentId, today, durationSec);
+    const check = readWatchTicket(ticket, userId, contentId, today);
     if (!check.ok) {
       /*
-       * ---- AN EXPIRED TICKET IS NOT A FORGERY, AND MUST NOT LOCK THE DAY ---
+       * ---- THERE IS NO LONGER A STALE-BUT-HONEST TICKET --------------------
        *
-       * The TTL is three times the video plus five minutes, measured from the
-       * moment the player opened. That is generous to a service drive and it is
-       * not generous to somebody who got stuck: fight a gate for eight minutes
-       * on a fifty-second video and the ticket you are holding is stale before
-       * you ever clear it. Refusing there means our own clock costs a streak.
+       * This used to degrade an `expired` ticket to a null percentage with
+       * watch_error so the day still saved, because a TTL of three times the
+       * film plus five minutes refused people who simply took longer. The TTL
+       * is gone: a ticket now lives for its store-local day, so a ticket that
+       * does not verify is a ticket that was MADE UP — a bad signature, another
+       * user's, another video's, another day's. Every one of those is refused.
        *
-       * So it degrades exactly like a missing one: null percentage — we cannot
-       * say what they watched — and watch_error, and the DAY SAVES. Nothing is
-       * gained by sending a stale ticket, because nothing is credited for it.
-       *
-       * Everything else here is a ticket that was made up rather than one that
-       * went stale: a bad signature, another user's, another video's, another
-       * day's. Those are still refused.
+       * The degrade path is removed rather than kept for a code nothing returns.
+       * A missing ticket is still not a rejection — that is the branch above,
+       * and it is the one an honest client with a failed mint actually reaches.
        */
-      if (check.code === "expired") return { pct: null, ref: null, degraded: true };
-
       throw new CompleteDayError(
         `Could not verify the ${label} video watch (${check.reason}). Reload the day and try again.`,
         "watch.ticket"
@@ -1049,6 +1113,86 @@ async function currentState(
     certificationsEarned: [],
     credential: null,
   };
+}
+
+/* ---------------------------------------------------------------------------
+   THE GATES THIS REQUEST CARRIED
+--------------------------------------------------------------------------- */
+
+/**
+ * File the watch gate for every film slot this request brought a claim for.
+ *
+ * ---------------------------------------------------------------------------
+ * ONE WRITER, ONE RULE, A SECOND ROUTE TO IT
+ * ---------------------------------------------------------------------------
+ * This is not a new way for a gate to open. It calls recordGateMet — the only
+ * writer there has ever been — so the claim faces the identical two checks: a
+ * ticket signed for THIS advisor, THIS video and THIS store-local day, and
+ * enough wall clock since that ticket was minted for the video to have played.
+ * A claim that fails either writes nothing, exactly as it does from the player.
+ *
+ * ALL FOUR SLOTS, NOT JUST THE TWO THAT WERE STUCK. The item is the leg the
+ * report came in about, but every film leg is read the same way by
+ * buildMorning, so every film leg could be lost the same way — and one was:
+ * a second advisor's 30 October failed on the MINDSET gate, on an 85-second
+ * film whose player had been open 577 seconds, which is past a 555-second TTL.
+ * Fixing only the slot in front of us is how the next instance survives.
+ *
+ * THE IDS COME FROM THE STAMP, never from the request body. A claim can only
+ * be filed against a video that was actually served today, which is the same
+ * rule verifyWatch applies — a ticket minted for a four-second clip cannot be
+ * spent on the morning's film, and a content id the client invented has no
+ * slot to be filed under.
+ *
+ * NOTHING IS AWAITED FOR ITS ANSWER AND NOTHING THROWS. The outcome is
+ * deliberately discarded: the caller's next act is to read the gate, which is
+ * the honest question either way. What is NOT discarded is the round trip —
+ * these writes are part of a request the client is waiting on, which is the
+ * whole difference between this and the call that got lost.
+ */
+async function fileGateClaims(
+  supabase: ServiceClient,
+  userId: string,
+  rooftopId: string,
+  today: IsoDate,
+  served: ServedDay,
+  content: CompleteDayInput
+): Promise<void> {
+  const claims: { contentId: string | null; pct: number | null; ticket: string | null }[] = [
+    { contentId: served.vid, pct: content.lifestyleWatchPct ?? null, ticket: content.lifestyleWatchTicket ?? null },
+    { contentId: served.pitch, pct: content.pitchWatchPct ?? null, ticket: content.pitchWatchTicket ?? null },
+    { contentId: served.item, pct: content.itemWatchPct ?? null, ticket: content.itemWatchTicket ?? null },
+    { contentId: served.tfilm, pct: content.trackFilmWatchPct ?? null, ticket: content.trackFilmWatchTicket ?? null },
+  ];
+
+  for (const claim of claims) {
+    /* No slot, no measurement, or no ticket: there is nothing to stand behind.
+       A null ticket is refused by recordGateMet anyway; skipping it here keeps
+       the write count honest rather than making four doomed round trips. */
+    if (!claim.contentId || claim.pct == null || !claim.ticket) continue;
+
+    /* Already open. Re-filing would be harmless — the upsert's conflict target
+       is the natural key — but it would also overwrite a percentage this server
+       has already checked with one it is checking now, and the first
+       measurement is the one the evidence trail should keep. */
+    const existing = await readGate(supabase, userId, claim.contentId, today);
+    if (existing) continue;
+
+    await recordGateMet(supabase, {
+      userId,
+      rooftopId,
+      contentId: claim.contentId,
+      storeDate: today,
+      pct: claim.pct,
+      /* NEVER the failure valve from here. `watchError` on the request is a
+         whole-day flag — one broken player sets it — and filing a null-pct
+         error row for a DIFFERENT film would mark a watch unmeasurable that
+         nobody said was. The valve files its own row from the player, for the
+         one video it fired on. */
+      watchError: false,
+      ticket: claim.ticket,
+    });
+  }
 }
 
 /* ---------------------------------------------------------------------------

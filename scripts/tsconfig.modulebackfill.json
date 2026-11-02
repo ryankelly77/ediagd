@@ -1,0 +1,17 @@
+{
+  "//": "Standalone build for backfill-module-completions.ts. It imports the REAL lib/lms.ts through the @/ alias because completeModuleIfReadyById is the ONE writer of module_completion and moduleRequirementsMet is the one definition of 'met'. A backfill that paraphrased either would be a second accounting of what finishes a lesson — the exact drift TWO_LADDERS forbids.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-mbf",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./backfill-module-completions.ts", "../lib/lms.ts"]
+}

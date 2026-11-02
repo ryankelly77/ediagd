@@ -16,8 +16,18 @@ enough of them.
 SOUND: unchanged — RMS envelope cross-correlation, which already works.
 
 OFFSET = picture lag - sound lag.
+
+GEOMETRY: the two sides must be the same picture, not merely the same film.
+A vertical rendition is a 9:16 centre crop, and hashing it against the
+master's full frame compares two different pictures — the picture lag that
+comes back is noise. It does not look like noise: 70 verticals came back with
+offsets from -42 s to +0.4 s while their audio agreed to 42 ms, and every one
+was a clean crop of the film it was measured against. So this refuses on a
+geometry mismatch rather than reporting a number, and refuses just as loudly
+when the sidecar that would prove geometry is absent. sync-signals.sh writes
+it on every run; pass its 9x16 crop for the master side of a vertical.
 """
-import numpy as np, sys, json
+import numpy as np, sys, json, os
 
 RATE = 25.0
 MIN_AUDIO_Q = 0.50      # audio correlation floor (unchanged)
@@ -92,7 +102,47 @@ def picture_lag(mh, ph, guard=int(RATE*1.5)):
     spread = float(np.median(np.abs(v - med)))
     return med, len(v), spread
 
+GEOM_TOL = 0.02         # aspect ratios are written to 2dp
+
+
+def geom(path):
+    """The aspect of the picture that was hashed, or None if not recorded."""
+    f = path + ".geom"
+    if not os.path.exists(f):
+        return None
+    t = open(f).read().strip()
+    try:
+        return float(t)
+    except ValueError:
+        return None
+
+
+def refuse(why):
+    out = {"status": "unmeasurable", "offset_ms": None, "rejected_offset_ms": None,
+           "picture_votes": 0, "picture_spread_frames": None, "audio_corr": None,
+           "picture_lag_s": None, "audio_lag_s": None, "why": why}
+    if "--json" in sys.argv:
+        print(json.dumps(out))
+    else:
+        for k, v in out.items():
+            print(f"  {k:24} {v}")
+    sys.exit(0)
+
+
 m, p = sys.argv[1], sys.argv[2]
+
+# GEOMETRY FIRST — before any measurement, so a mismatch cannot produce a
+# number that a caller might read.
+mg, pg = geom(m), geom(p)
+if mg is None or pg is None:
+    missing = " and ".join(n for n, g in (("master", mg), ("probe", pg)) if g is None)
+    refuse(f"no geometry sidecar for the {missing} side — re-extract with "
+           f"scripts/sync-signals.sh, which writes .geom on every run")
+if abs(mg - pg) > GEOM_TOL:
+    refuse(f"geometry mismatch: master {mg:.2f} vs probe {pg:.2f} — these are "
+           f"different pictures, so a picture lag between them is noise. For a "
+           f"vertical, extract the master side with the 9x16 crop.")
+
 mh, ph = dhash(frames(m+".luma")), dhash(frames(p+".luma"))
 vlag, votes, spread = picture_lag(mh, ph)
 alag, aq = audio_lag(audio_env(m+".pcm"), audio_env(p+".pcm"))

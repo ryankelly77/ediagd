@@ -1,0 +1,18 @@
+{
+  "//": "Standalone build for replace-video.ts. It exists because the script imports lib/video/sync-gate.ts through the @/ alias, and the bare `tsc scripts/replace-video.ts` the npm script used could not resolve it — so `npm run replace:video` has not compiled since the sync gate landed in 8f20b65. The gate is the one thing that must not be paraphrased in a copy: no asset is swapped in without a measured sync pass.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-rv",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["./replace-video.ts", "../lib/video/sync-gate.ts", "../lib/video/cut-point-notice.ts"]
+}

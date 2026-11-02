@@ -201,7 +201,12 @@ On Ryan's confirmation of the dry-run table: upload to Mux. New films land **dra
 
 **Trimming is the dangerous part of this pipeline. A double-trim is invisible — the film still plays, it just starts mid-sentence.**
 
-- `replace:video` trims reshoots **inline** and does **not** write the trim ledger. The ledger is therefore incomplete by construction and must never be the sole check.
+- **`replace:video` does not trim. It uploads and swaps, and nothing else.** As of 2 November the `--trim-start`, `--trim-end` and `--trim-only` flags are **refused**, not ignored — a flag a script accepts and quietly drops is how a film goes live with its slate on while the run reports success. The refusal names `trim:apply` and prints the command for that film.
+
+  *Why this is the fix and not a restriction.* Trimming at upload made the master a Mux clip, and `mux://assets/<clip>` does not deliver that clip's timeline — Mux re-resolves to the underlying source and lands on a keyframe before the clip's zero, returning **exactly the length asked for and the wrong content**. Measured at +4.7s on a Walk-Around film. Everything downstream followed from that: a second cut was unsafe, `archived_asset_id` held a generation nobody wanted, and PR #59 found three films with nothing clean to re-cut from. PR #61 closed that gap the pre-v2 way, by keeping the untrimmed upload in `archived_asset_id`. Under v2 there is no Mux clip at all, so the gap is not patched — it is **unrepresentable**. The upload *is* the master, and `archived_asset_id` is the version it replaced, which is what the column says.
+
+- **A film that needs cutting leaves `replace:video` live and untrimmed, and the run says so.** It reads `reports/trim-plan.json` and prints the film's proposed window with the `trim:apply --only=<id>` command. It also says when there is *no* cut point on file, because on an untrimmed upload that is the line that sends you to `trim:measure` — a silent handover is where a film gets forgotten. Four cases, all proved: `npm run test:cut-point`.
+- `replace:video` still does **not** write the trim ledger, because it no longer cuts anything. `trim:apply` writes it. The ledger remains incomplete for anything cut by hand and must never be the sole check.
 - **Verify trims from durations, not from the ledger or the ingest report**: full audio length minus slate offset, compared against live duration, for every file in the batch. That comparison is unambiguous; a ledger lookup is not.
 - After any trim applied outside the ledger-writing path, **backfill the ledger row** so the next blanket run can't re-cut it.
 - Never run `trim:slates --apply` across a set without duration-verifying that set first.

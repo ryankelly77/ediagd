@@ -248,6 +248,18 @@ export type CoreTrackTile = CertificationTile & {
   nextLine: string | null;
   gatingModules: number;
   gatingDone: number;
+  /**
+   * The lesson on this track whose film is watched and whose quiz is not passed.
+   *
+   * CARRIED AS AN ID, NOT A SENTENCE, because the tile needs to render a LINK to
+   * the quiz and a sentence cannot be clicked. Valerie Patterson had six of
+   * these on Walk Around and the tile said "Next: 1. The Walk-Around Routine" —
+   * the not-started copy, over a lesson she had finished, with no route to the
+   * only thing left. (The deeper cause was 0170: `has_quiz` read a table no
+   * advisor can select, so this was null for everybody and the state was
+   * unreachable.)
+   */
+  quizWaiting: { moduleId: string; name: string } | null;
 };
 
 /**
@@ -401,14 +413,26 @@ export async function loadCertificationsOverview(
     const gating = modules.filter((m) => m.gates);
     const gatingDone = gating.filter((m) => m.state === "complete").length;
 
+    /*
+     * THE FIRST LESSON WAITING ON ITS QUIZ, in the order the loop walks. Taken
+     * from the module STATE rather than from pendingQuizzes() alone, so the
+     * tile and the track page cannot disagree: both read `quiz_waiting`, which
+     * is items_done && has_quiz && !quiz_passed.
+     */
+    const waiting = gating.find((m) => m.state === "quiz_waiting") ?? null;
+    const quizWaiting = waiting ? { moduleId: waiting.moduleId, name: waiting.name } : null;
+
     let nextLine: string | null = null;
     if (t.state === "unearned" && t.active) {
       /* The loop's walk: the first gating module that is not complete. */
       const nextModule = gating.find((m) => m.state !== "complete");
       if (nextModule) {
-        nextLine = pendingByModule.has(nextModule.moduleId)
-          ? `Next: quiz for ${nextModule.name}`
-          : `Next: ${nextModule.name}`;
+        nextLine =
+          nextModule.state === "quiz_waiting" || pendingByModule.has(nextModule.moduleId)
+            ? /* PLAINLY. "Next: quiz for X" read as another thing to start; this
+                 says the lesson is done and names what is left. */
+              `Quiz waiting: ${nextModule.name}`
+            : `Next: ${nextModule.name}`;
       } else if (gating.length === 0) {
         /* Power of Positive Language today: cues only. Not a failure. */
         nextLine = "Lessons on the way";
@@ -422,7 +446,7 @@ export async function loadCertificationsOverview(
       }
     }
 
-    return { ...t, nextLine, gatingModules: gating.length, gatingDone };
+    return { ...t, nextLine, gatingModules: gating.length, gatingDone, quizWaiting };
   };
 
   const coreTracks: CoreTrackTile[] = view.tiles

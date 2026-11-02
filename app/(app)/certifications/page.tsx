@@ -34,6 +34,7 @@ import {
   type CoreTrackTile,
 } from "@/lib/certifications";
 import { loadLightMode } from "@/lib/service-family";
+import { reconcileModuleCompletions } from "@/lib/module-reconcile";
 import { trackRowProgress } from "@/lib/certification";
 import { SealMedallion } from "@/components/brand/badges/SealMedallion";
 import { Card } from "@/components/brand/Card";
@@ -64,6 +65,26 @@ export default async function CertificationsPage() {
   const today: IsoDate = membership?.rooftop_id
     ? await rooftopToday(supabase, membership.rooftop_id)
     : (new Date().toISOString().slice(0, 10) as IsoDate);
+
+  /*
+   * ---- RECONCILE BEFORE READING, THROUGH THE ONE WRITER -------------------
+   *
+   * module_completion is only ever written when a film or a quiz FINISHES, so a
+   * lesson that becomes finished for any other reason — a gating film retired,
+   * unpublished or swapped, a quiz pulled — never gets its row, and this screen
+   * counts it as outstanding while every part of the lesson reads complete.
+   *
+   * BEFORE, not after, and awaited: the read below has to see what this wrote,
+   * or the page would show the stale answer once and the right one on the next
+   * visit. It calls completeModuleIfReadyById, which re-asks the rule as the
+   * service role — so this cannot complete anything the quiz grader would not.
+   * It writes nothing in the ordinary case; see lib/module-reconcile.ts.
+   */
+  await reconcileModuleCompletions(
+    supabase,
+    user.id,
+    (membership?.rooftop_id as string | null) ?? null
+  );
 
   const [view, lightMode] = await Promise.all([
     loadCertificationsOverview(supabase, user.id, today),
@@ -251,6 +272,7 @@ function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
   const { line, pct } = trackRowProgress(trackRowInput(tile));
 
   return (
+    <>
     <Link
       href={`/certifications/${encodeURIComponent(tile.slug)}`}
       className="flex min-h-[3.5rem] items-center gap-3 py-3.5 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -280,6 +302,35 @@ function CoreTrackRow({ tile }: { tile: CoreTrackTile }) {
       <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
         ›
       </span>
+    </Link>
+    {/*
+      THE BUTTON THAT WAS MISSING, AND IT IS A SIBLING OF THE ROW RATHER THAN
+      INSIDE IT. The whole row is a Link to the track page; a second Link nested
+      in an anchor is invalid markup and the browser's recovery is to drop one of
+      them — which is how a button ends up on screen and not clickable.
+    */}
+    {tile.quizWaiting && (
+      <QuizWaitingButton moduleId={tile.quizWaiting.moduleId} />
+    )}
+    </>
+  );
+}
+
+/**
+ * "Take the quiz" — one lesson's last step, from wherever it is outstanding.
+ *
+ * GOLD, because this is the advisor's to claim: the film is watched and the
+ * lesson closes the moment they pass. Clay would read as a warning and teal as
+ * progress; neither is what four questions between them and a finished lesson
+ * is.
+ */
+function QuizWaitingButton({ moduleId }: { moduleId: string }) {
+  return (
+    <Link
+      href={`/library/m/${moduleId}/quiz`}
+      className="mb-2 ml-[3.75rem] inline-flex min-h-[2.25rem] items-center rounded-pill bg-gold px-4 text-xs font-extrabold text-navy transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      Take the quiz
     </Link>
   );
 }
