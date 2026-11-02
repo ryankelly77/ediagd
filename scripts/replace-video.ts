@@ -58,25 +58,34 @@
 import { createClient } from "@supabase/supabase-js";
 import { checkSync } from "@/lib/video/sync-gate";
 import { cutPointNotice, type PlanCutRow } from "@/lib/video/cut-point-notice";
-import { readdirSync as __readdirSync } from "node:fs";
 
-/* The disk master for a row, matched on the name the file HAS on disk.
-   canonical first (published files were renamed to it), source as the
-   fallback for anything still in the Drop Zone. */
-function masterPathFor(row: { canonical_filename?: string | null; source_filename?: string | null }): string | null {
-  const rootDir = process.env.VIDEO_MASTERS_DIR;
-  if (!rootDir) return null;
-  const index = new Map<string, string>();
-  (function walk(d: string) {
-    for (const e of __readdirSync(d, { withFileTypes: true })) {
-      const f = `${d}/${e.name}`;
-      if (e.isDirectory()) walk(f); else index.set(e.name.toLowerCase(), f);
-    }
-  })(rootDir);
-  return (row.canonical_filename && index.get(row.canonical_filename.toLowerCase()))
-    || (row.source_filename && index.get(row.source_filename.toLowerCase()))
-    || null;
-}
+/* ---------------------------------------------------------------------------
+   THE GATE MEASURES THE ASSET AGAINST THE FILE IT WAS MADE FROM
+   ---------------------------------------------------------------------------
+   This used to resolve the master from the ROW — canonical_filename, falling
+   back to source_filename. On a replacement that is the take being superseded,
+   because the row still names the old file until the swap commits. So the gate
+   was handed a v2 asset and a v1 master and asked to align them: two different
+   recordings of the same lesson.
+
+   It answered `unmeasurable`, which is a refusal, so the swap was refused.
+   Measured on the eight Coverage is Key de-branded reshoots of 2 November:
+   8 of 8 refused, every live row untouched, eight ready assets stranded in
+   Mux. Nothing was wrong with the films or with the instrument — the gate was
+   comparing the wrong pair, and because `unmeasurable` is the cautious answer
+   it looked like the gate working rather than the gate being misfed.
+
+   The question the gate exists to ask is "does the asset Mux will serve match
+   the thing I just uploaded" — so the master is `--file`, in both modes. For a
+   new take that is the new master. For `--asset-only` (trim:apply's cut) it is
+   the cut file, and asset-against-its-own-source is still the right question,
+   because under trim doctrine v2 there is no Mux clip in the path: the upload
+   IS the content, so a mismatch can only be the transcode.
+
+   Whether the cut landed at the right POINT is a different question and has
+   its own instrument — trim:verify, derived from durations. A gate cannot
+   answer both, and the old code answered neither for a replacement.
+   --------------------------------------------------------------------------- */
 import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -509,11 +518,14 @@ async function main() {
      the FINISHED asset, against the disk master, through the playback Mux
      actually serves. `unmeasurable` is a refusal, not a pass. */
   {
-    const master = masterPathFor(row);
-    if (!master) {
+    /* `file` — the thing this asset was made from. Never the row's master:
+       see the note where masterPathFor used to live. */
+    const master = file!;
+    if (!existsSync(master)) {
       throw new Error(
-        "sync gate: no disk master for this film, so the cut cannot be verified. " +
-        "Refusing the swap — the asset is in Mux and can be swapped by hand if that is really wanted."
+        `sync gate: the uploaded file is no longer on disk at ${master}, so the asset ` +
+        "cannot be measured against it. Refusing the swap — the asset is in Mux and can " +
+        "be swapped by hand if that is really wanted."
       );
     }
     const verdict = checkSync(master, playback.id, `replace-${String(contentId).slice(0, 8)}`);
