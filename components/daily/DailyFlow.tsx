@@ -1785,18 +1785,33 @@ function CelebrationStep({
       (k): k is LegKey => k in LEG_STEP
     );
     const first = legs[0];
+    /*
+     * NAMES EVERY OUTSTANDING LEG, NOT JUST THE ONE IT IS ABOUT TO SEND THEM
+     * TO. "One thing left" over two unfinished films is a heading that knows
+     * better than it says, and the advisor would finish one film and meet the
+     * same screen having been told there was nothing else.
+     */
+    const names = legs.map((k) => LEG_STEP[k]);
+    const listed =
+      names.length === 0
+        ? "the film"
+        : names.length === 1
+          ? names[0]
+          : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 
     return (
       <section className="flex flex-1 flex-col justify-center">
         <div className="rounded-card border border-line bg-surface-card p-6">
           <p className="text-base font-extrabold text-navy">
-            {gated ? "One thing left" : "We couldn’t save today just yet"}
+            {gated
+              ? names.length > 1
+                ? "Still to finish"
+                : "One thing left"
+              : "We couldn’t save today just yet"}
           </p>
           {gated ? (
             <p className="mt-2 text-sm text-ink-soft">
-              {first
-                ? `Finish ${LEG_STEP[first]} to save your day.`
-                : "Finish the film to save your day."}
+              Finish {listed} to save your day.
             </p>
           ) : (
             <>
