@@ -983,27 +983,22 @@ async function verifyWatch(
       .maybeSingle();
     const durationSec = row?.duration_sec == null ? null : Number(row.duration_sec);
 
-    const check = readWatchTicket(ticket, userId, contentId, today, durationSec);
+    const check = readWatchTicket(ticket, userId, contentId, today);
     if (!check.ok) {
       /*
-       * ---- AN EXPIRED TICKET IS NOT A FORGERY, AND MUST NOT LOCK THE DAY ---
+       * ---- THERE IS NO LONGER A STALE-BUT-HONEST TICKET --------------------
        *
-       * The TTL is three times the video plus five minutes, measured from the
-       * moment the player opened. That is generous to a service drive and it is
-       * not generous to somebody who got stuck: fight a gate for eight minutes
-       * on a fifty-second video and the ticket you are holding is stale before
-       * you ever clear it. Refusing there means our own clock costs a streak.
+       * This used to degrade an `expired` ticket to a null percentage with
+       * watch_error so the day still saved, because a TTL of three times the
+       * film plus five minutes refused people who simply took longer. The TTL
+       * is gone: a ticket now lives for its store-local day, so a ticket that
+       * does not verify is a ticket that was MADE UP — a bad signature, another
+       * user's, another video's, another day's. Every one of those is refused.
        *
-       * So it degrades exactly like a missing one: null percentage — we cannot
-       * say what they watched — and watch_error, and the DAY SAVES. Nothing is
-       * gained by sending a stale ticket, because nothing is credited for it.
-       *
-       * Everything else here is a ticket that was made up rather than one that
-       * went stale: a bad signature, another user's, another video's, another
-       * day's. Those are still refused.
+       * The degrade path is removed rather than kept for a code nothing returns.
+       * A missing ticket is still not a rejection — that is the branch above,
+       * and it is the one an honest client with a failed mint actually reaches.
        */
-      if (check.code === "expired") return { pct: null, ref: null, degraded: true };
-
       throw new CompleteDayError(
         `Could not verify the ${label} video watch (${check.reason}). Reload the day and try again.`,
         "watch.ticket"

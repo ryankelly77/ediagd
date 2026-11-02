@@ -15,10 +15,9 @@ import { mintDayStamp, readDayStamp, type ServedDay } from "../lib/day-stamp";
 import {
   mintWatchTicket,
   readWatchTicket,
-  ticketTtlMs,
   watchTicketRef,
 } from "../lib/watch-ticket";
-import { watchIsPlausible } from "../lib/watch-coverage";
+import { gateMetIsPlausible, watchIsPlausible } from "../lib/watch-coverage";
 
 let passed = 0;
 let failed = 0;
@@ -116,49 +115,75 @@ const ticket = mintWatchTicket(USER, VIDEO, DAY, opened)!;
 
 check(
   "a ticket read at the moment of opening has no elapsed time",
-  readWatchTicket(ticket, USER, VIDEO, DAY, THREE_MIN, opened),
+  readWatchTicket(ticket, USER, VIDEO, DAY, opened),
   { ok: true, openedAt: opened, elapsedSec: 0 }
 );
 check(
   "another user's ticket is refused",
-  readWatchTicket(ticket, OTHER, VIDEO, DAY, THREE_MIN, opened).ok,
+  readWatchTicket(ticket, OTHER, VIDEO, DAY, opened).ok,
   false
 );
 check(
   "a ticket for another video is refused",
-  readWatchTicket(ticket, USER, CUE, DAY, THREE_MIN, opened),
+  readWatchTicket(ticket, USER, CUE, DAY, opened),
   { ok: false, reason: "watch ticket is for another video", code: "wrong-content" }
 );
 check(
   "and one carried across midnight is refused",
-  readWatchTicket(ticket, USER, VIDEO, "2026-09-03", THREE_MIN, opened),
+  readWatchTicket(ticket, USER, VIDEO, "2026-09-03", opened),
   { ok: false, reason: "watch ticket is from another day", code: "wrong-day" }
 );
 
 /*
- * THE TTL. Three times the asset plus five minutes: generous to a service drive
- * that pauses to serve a customer, and far short of the twelve hours that let a
- * ticket be minted at the morning meeting and spent after lunch.
+ * ---- THE LIFETIME IS THE STORE-LOCAL DAY ---------------------------------
+ *
+ * There is no TTL. It was three times the asset plus five minutes and it cost a
+ * real advisor her day: an 85-second film with the player open 577 seconds
+ * against a 555-second window. The upper bound bought nothing the lower bound
+ * does not already buy — the wall-clock test below is a floor, so spending at
+ * lunch is no cheaper than spending ninety seconds after opening — and what it
+ * did buy was a refusal for somebody who took their time.
+ *
+ * The replacement is not a bigger number. It is that the ticket's DATE is what
+ * bounds it, and the date is signed in and compared, so an out-of-day ticket is
+ * not representable rather than merely out of window.
  */
-check("a three-minute video's ticket lives 14 minutes", ticketTtlMs(THREE_MIN), 840_000);
 check(
   "still valid ten minutes after opening",
-  readWatchTicket(ticket, USER, VIDEO, DAY, THREE_MIN, opened + 600_000).ok,
+  readWatchTicket(ticket, USER, VIDEO, DAY, opened + 600_000).ok,
   true
 );
 check(
-  "expired after fifteen",
-  readWatchTicket(ticket, USER, VIDEO, DAY, THREE_MIN, opened + 900_000),
-  {
-    ok: false,
-    reason: "watch ticket expired — open the video again",
-    code: "expired",
-  }
+  "still valid fifteen minutes after opening — the old TTL refused this",
+  readWatchTicket(ticket, USER, VIDEO, DAY, opened + 900_000).ok,
+  true
 );
 check(
-  "and the twelve-hour window the old ticket allowed is long gone",
-  readWatchTicket(ticket, USER, VIDEO, DAY, THREE_MIN, opened + 12 * 3_600_000).ok,
+  "still valid 577 seconds into an 85-second film — the exact watch that was refused",
+  readWatchTicket(ticket, USER, VIDEO, DAY, opened + 577_000).ok,
+  true
+);
+check(
+  "and still valid eleven hours later, so long as it is the SAME store day",
+  readWatchTicket(ticket, USER, VIDEO, DAY, opened + 11 * 3_600_000).ok,
+  true
+);
+check(
+  "but the next store day refuses it, which is the whole of the lifetime",
+  readWatchTicket(ticket, USER, VIDEO, "2026-09-03", opened + 60_000),
+  { ok: false, reason: "watch ticket is from another day", code: "wrong-day" }
+);
+/* AND THE LOWER BOUND IS UNTOUCHED, which is the half that does the work. An
+   all-day ticket must not make an instant claim pass. */
+check(
+  "a full watch claimed two seconds after opening is still impossible",
+  gateMetIsPlausible(THREE_MIN, 2),
   false
+);
+check(
+  "and the same claim after the film's own length is possible",
+  gateMetIsPlausible(THREE_MIN, THREE_MIN),
+  true
 );
 
 /* ---- 3 · The wall-clock test, from open rather than render ---------------- */
@@ -223,12 +248,12 @@ check("a second ticket for the same video, same day, is issued", typeof second, 
 check("and it is a different ticket", first === second, false);
 check(
   "the first still verifies",
-  readWatchTicket(first, USER, VIDEO, DAY, THREE_MIN, opened + 30_000).ok,
+  readWatchTicket(first, USER, VIDEO, DAY, opened + 30_000).ok,
   true
 );
 check(
   "and so does the second",
-  readWatchTicket(second, USER, VIDEO, DAY, THREE_MIN, opened + 30_000).ok,
+  readWatchTicket(second, USER, VIDEO, DAY, opened + 30_000).ok,
   true
 );
 check(
@@ -243,7 +268,7 @@ check(
  */
 check(
   "the fresh ticket's window starts at its own minting",
-  readWatchTicket(second, USER, VIDEO, DAY, THREE_MIN, opened + 30_000),
+  readWatchTicket(second, USER, VIDEO, DAY, opened + 30_000),
   { ok: true, openedAt: opened + 30_000, elapsedSec: 0 }
 );
 
@@ -256,12 +281,10 @@ section("6 · Stale and made-up are told apart, because they end differently");
  * have survived exactly until somebody improved the wording, and the failure
  * would have been a locked day.
  */
-check(
-  "a stale ticket reports expired",
-  readWatchTicket(first, USER, VIDEO, DAY, THREE_MIN, opened + 900_000).ok ||
-    (readWatchTicket(first, USER, VIDEO, DAY, THREE_MIN, opened + 900_000) as { code: string }).code,
-  "expired"
-);
+/* The expired case is gone with the TTL — a real ticket on its own day is
+   valid, and on another day it is wrong-day. What remains distinguishable is
+   forged from wrong-user from wrong-content from wrong-day, which is what the
+   completion path actually branches on. */
 check(
   "a tampered one reports forged",
   (readWatchTicket(
@@ -269,24 +292,23 @@ check(
     USER,
     CUE,
     DAY,
-    THREE_MIN,
     opened
   ) as { code: string }).code,
   "forged"
 );
 check(
   "another user's reports wrong-user, which is also a refusal",
-  (readWatchTicket(first, OTHER, VIDEO, DAY, THREE_MIN, opened) as { code: string }).code,
+  (readWatchTicket(first, OTHER, VIDEO, DAY, opened) as { code: string }).code,
   "wrong-user"
 );
 check(
   "a missing one reports missing",
-  (readWatchTicket(null, USER, VIDEO, DAY, THREE_MIN, opened) as { code: string }).code,
+  (readWatchTicket(null, USER, VIDEO, DAY, opened) as { code: string }).code,
   "missing"
 );
 check(
   "and garbage reports malformed, not a crash",
-  (readWatchTicket("garbage", USER, VIDEO, DAY, THREE_MIN, opened) as { code: string }).code,
+  (readWatchTicket("garbage", USER, VIDEO, DAY, opened) as { code: string }).code,
   "malformed"
 );
 
