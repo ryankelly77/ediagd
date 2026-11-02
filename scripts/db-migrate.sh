@@ -12,7 +12,7 @@
 #   1  dump          pg_dump -Fc --no-owner --no-privileges
 #   2  VERIFY        pg_restore --list the file just written, and assert its
 #                    table of contents names tables that must exist
-#   3  push          supabase db push --linked        <-- only reachable via 2
+#   3  push          supabase db push --linked [--yes] <-- only reachable via 2
 #   4  confirm       read supabase_migrations.schema_migrations, not the push
 #                    output, because a runner that reports what it intended is
 #                    the oldest defect in this project
@@ -43,6 +43,26 @@
 # acceptance can be observed without migrating production to see it.
 # =============================================================================
 set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# THE CONSENT THE CLI ASKS FOR, CARRIED RATHER THAN ROUTED AROUND
+# ---------------------------------------------------------------------------
+# `supabase db push` refuses a hosted mutation when it cannot prompt — in an
+# agent run it exits with HostedMutationConsentRequiredError and changes nothing.
+# That refusal is correct and it is the one thing in this script a backup cannot
+# substitute for: the dump proves the data survives, not that anybody asked for
+# the change.
+#
+# So the consent is an ARGUMENT, not a default. Without --yes this script stays
+# exactly as interactive as it was; with it, the person running it is recording
+# that they have already said to apply these migrations to production. It is
+# never implied by anything else — not by being on main, not by a clean guard,
+# not by an environment variable, because an env var set once in a shell profile
+# is a confirmation nobody gives again.
+ASSUME_YES=0
+for arg in "$@"; do
+  [[ "$arg" == "--yes" ]] && ASSUME_YES=1
+done
 
 KEYCHAIN_SERVICE="ediagd-prod-db"
 DB_HOST="aws-0-us-east-2.pooler.supabase.com"
@@ -302,8 +322,15 @@ verify_dump "$DUMP"
 
 # ---- STEP 3: only now, the migration ---------------------------------------
 printf '\n  3. migrate\n'
+PUSH_ARGS=(db push --linked)
+if (( ASSUME_YES )); then
+  say "--yes: the operator has already consented to applying these to production"
+  PUSH_ARGS+=(--yes)
+else
+  say "no --yes: the CLI will ask. In a non-interactive run it will refuse and change nothing."
+fi
 if ! SUPABASE_DB_PASSWORD="$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)" \
-     npx supabase db push --linked; then
+     npx supabase "${PUSH_ARGS[@]}"; then
   fail "supabase db push failed. The pre-migration dump is intact at:
              ${DUMP}"
 fi
