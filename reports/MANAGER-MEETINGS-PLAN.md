@@ -1,44 +1,140 @@
 # Manager Meetings — the plan
 
 Mapping the spec onto the schema and code as they stand on `main` at `c94e835`.
-No feature code written. Read against `MANAGER_MEETINGS.md` for the branch rules
-and the Preview constraint.
+No feature code written. Read with `MANAGER_MEETINGS.md` for the branch rules and
+the Preview constraint.
+
+**Revision 2**, incorporating Ryan's rulings A–I. The first revision planned an
+op-code-grain ranking; ruling A moves it to family grain, which removes most of
+the risk and one whole spec item. What changed is recorded in *What the rulings
+settled* at the end.
 
 ---
 
-## The one finding that changes the shape of the work
+## The ranking is the pitch picker's, one level up
 
-**The pitch picker ranks service families. The spec ranks op codes. Those are
-not the same grain, and the schema cannot currently join them.**
+**Rank service families exactly as `derive_focus_family()` does, summed across
+the rooftop's advisors. Serve a manager film whose op code sits in the winning
+family.** No op-code-grain attach rate is built.
 
-| | key | where it lives |
-|---|---|---|
-| DMS performance | **dealer** op code (`'13D'`, `'QL20D'`) → resolved to a **family** | `advisor_op_metric.op_code` → `service_line.op_code` |
-| Films, advisor | **EDIAGD catalog** code (`'OF-008'`) | `content.op_code` → `op_code_catalog.code` |
-| Films, manager | **EDIAGD catalog** code | `manager_meeting_op_code.op_code` (0168) |
-| The bridge | dealer code → catalog code, **per rooftop** | `dms_op_code_map` (0093) |
+The formula, unchanged from 0123:
 
-`derive_focus_family()` ranks families precisely because the family is the only
-grain the two sides share today. `advisor_op_metric` resolves a line as far as
-`resolved_family`, then stops; there is no canonical op code on the metric grain,
-and **no op-code-grain attach rate exists anywhere in the schema.**
+```
+missed_ros = greatest(store_avg_pct − attach_rate_pct, 0) / 100 × advisor_ros
+```
 
-So op-code ranking is reachable only through `dms_op_code_map`, and the usable
-fraction of the feed is exactly its coverage. That number is unmeasured here and
-is the gate on whether item (a) is buildable as written — which is why slice 1
-measures and builds nothing.
+clamped at zero so an advisor ahead of the store is not a negative opportunity,
+tie-broken by `opportunity` (`missed_ros × labor_per_ro`) and then by family name
+so a dead heat resolves the same way on every server.
 
-`dms_op_code_map` is also **platform-owner-only** (0093), so the bridge is
-invisible to managers and to admins. Any ranking that crosses it has to run as a
-definer function or as the service role, the way `derive_focus_family` already
-does.
+Aggregating to the rooftop means **summing that per-advisor numerator across the
+rooftop's advisors** — "how many ROs the below-average half of this drive is
+missing in this family." Re-deriving the formula at rooftop grain would give zero
+by construction, because `store_avg_pct` *is* the rooftop's own average: the
+store cannot have a gap against itself. Same numerator, same clamp, same floor,
+one grain up.
+
+**It reads the same two views the picker reads, including where they disagree
+with each other.** `derive_focus_family` takes the advisor's own rate from
+`advisor_family_attach` (0055) and the store average from
+`family_store_benchmark` (0096), which is built on `advisor_family_attach_all`
+(0081) — and only `_all` is epoch-aware about `sub_category_map`'s
+`effective_from` / `retired_at`. That asymmetry is pre-existing. **This branch
+reproduces the picker's pairing rather than improving it**, because a manager
+meeting that disagreed with the advisor's own pitch about which family is
+weakest would be worse than either answer. If the pairing is wrong it is wrong
+for the pitch too, and that is its own task with its own verification.
+
+Likewise `min_ros_for_coaching()` (20) and the departed-advisor exclusion are
+**called, not restated**. 0123 already paid for the reason: a store average that
+can disagree with the one on the advisor's own screen is worse than no
+derivation at all.
 
 ---
 
-## The second finding: the gate excludes the viewer it is built for
+## The measurement that is not being built on
 
-This is live in the schema right now, before a line of this feature exists.
+Ruling A: measure `dms_op_code_map` coverage once, as a finding, so we know
+whether op-code grain is reachable later. **Build nothing from it.**
 
+**This has not been run, and here is why.** The measurement needs service-role
+access, because `dms_op_code_map` is platform-owner-only (0093) and the counts
+cross `advisor_op_metric`. The three Supabase variables are stored as **Vercel
+Secrets** and cannot be pulled (`vercel env pull` writes `[SENSITIVE]`
+placeholders for them), and the only `.env.local` on this machine lives in
+`~/ediagd`, which this branch may not touch. Reporting a number I did not take
+would be the thing this project has been caught on four times.
+
+So the query is specified and ready, and it needs one thing: a service-role key
+in `~/ediagd-manager/.env.local`, or the result of running this read-only block
+against Preview.
+
+```sql
+-- Scope stated before the finding: ONE rooftop at a time, latest closed period.
+-- Two paths, reconciled, because a path-scoped count read as a fact about the
+-- subject is this project's most repeated mistake.
+
+-- PATH 1 — from the map outward: how much of the catalog is bridged at all.
+select r.name as rooftop,
+       count(*)                                                   as map_rows,
+       count(*) filter (where m.status = 'confirmed')              as confirmed,
+       count(*) filter (where m.status = 'proposed')               as proposed,
+       count(*) filter (where m.status = 'no_match')               as no_match,
+       count(distinct m.canonical_code)                            as catalog_codes_reached
+  from dms_op_code_map m
+  join rooftop r on r.id = m.rooftop_id
+ where m.retired_at is null
+ group by r.name order by r.name;
+
+-- PATH 2 — from the feed outward: what share of the WORK is bridged.
+-- This is the number that decides whether op-code grain is possible, and it is
+-- weighted by ROs and by dollars because a mapping can cover many rare codes
+-- and little real volume.
+select r.name as rooftop,
+       sum(d.cp_ros)                                               as ros_total,
+       sum(d.cp_ros)    filter (where m.canonical_code is not null) as ros_mapped,
+       round(100.0 * sum(d.cp_ros) filter (where m.canonical_code is not null)
+                   / nullif(sum(d.cp_ros), 0), 1)                   as ros_pct,
+       sum(d.labor_sales)                                           as labor_total,
+       sum(d.labor_sales) filter (where m.canonical_code is not null) as labor_mapped,
+       round(100.0 * sum(d.labor_sales) filter (where m.canonical_code is not null)
+                   / nullif(sum(d.labor_sales), 0), 1)              as labor_pct
+  from dms_daily_metric d
+  join rooftop r on r.id = d.rooftop_id
+  left join dms_op_code_map m
+    on m.rooftop_id = d.rooftop_id
+   and m.dms_op_code = d.op_code
+   and m.retired_at is null
+   and m.canonical_code is not null
+ where r.name not like '[DEMO]%'
+ group by r.name order by r.name;
+```
+
+**What the repo can already tell us, and it is a real part of the answer.**
+Counted from `data/op_code_seed.csv` and `data/op_code_family_map.csv`, which
+are the files the catalog was seeded from:
+
+| | |
+|---|---|
+| catalog op codes | **73** |
+| distinct families they fall into | **19** |
+| codes ruled `coachable = false` | **13** (the `MNU-*` bundles and MPI-061, per 0066) |
+
+So the family grain is **19 buckets over 73 codes** — roughly four codes per
+family. That ratio is why ruling A de-risks the work: a family is measurable as
+soon as *any* of its codes is bridged, where an op code needs its own bridge row.
+Nineteen buckets is also small enough that a rooftop's ranking is legible on a
+screen.
+
+What the SQL above still has to settle is whether the bridged share of ROs and
+dollars is large enough to make op-code grain worth returning to. Until it runs,
+the honest statement is: **unmeasured, and nothing in this plan depends on it.**
+
+---
+
+## The gate that excludes the viewer it is built for — ruling H
+
+Live in the schema now, before a line of this feature exists.
 `op_code_catalog_read` and `op_code_family_read` (0081) both gate on:
 
 ```sql
@@ -48,254 +144,261 @@ This is live in the schema right now, before a line of this feature exists.
 and `admin_rooftops()` (0045) is platform owner, `role = 'admin'`, and the
 `group_owner` org role. **`manager` is not on that list.**
 
-So the meeting screen — the screen whose entire audience is managers — cannot
-read the op code's own **name**. A manager querying `op_code_catalog` gets zero
-rows and no error. `manager_meeting_op_code`'s own policy (0168) does include
-manager and admin, so the association is readable while the thing it points at
-is not.
+So the meeting screen — whose entire audience is managers — cannot read the
+**name** of the op code its film teaches. A manager querying `op_code_catalog`
+gets zero rows and no error. `manager_meeting_op_code`'s own policy (0168) does
+admit managers, so the association is readable while the thing it points at is
+not.
 
-This is the sub-pattern AGENTS.md says has earned its own name, for the fourth
-time: `has_performance_surface()`, `op_code_family` in `pickPitch`,
-`dms_advisor_read` on `/advisor`, and now this.
+Fourth instance of the sub-pattern AGENTS.md has already named three times:
+`has_performance_surface()`, `op_code_family` in `pickPitch`, `dms_advisor_read`
+on `/advisor`.
 
-**Naming the roles that will really call the meeting screen:**
+**Ruling H: widen `op_code_catalog_read` to `managed_rooftops()`, in its own
+slice with its own migration.** The catalog holds a code, a name, a category and
+piggyback notes — reference data with no per-store numbers, so a manager reading
+it discloses nothing about anybody. The alternative, copying the name onto the
+serve row, would be a second definition of what a code is called and it would
+drift.
 
-| role | `op_code_catalog` | `op_code_family` | `dms_op_code_map` | `advisor_op_metric` | `family_store_benchmark` | `manager_meeting_op_code` |
-|---|---|---|---|---|---|---|
-| platform owner | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| admin | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
-| **manager** | **❌** | **❌** | ❌ | ✅ | ✅ | ✅ |
-| advisor | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
-| technician | ❌ | ❌ | ❌ | ✅ | ❌ (0096) | ❌ |
-| service_role | ✅ | ✅ | ✅ | ✅ | ✅ (0123) | ✅ |
+**`op_code_family` stays exactly as it is.** Under family grain the screen never
+needs it: the family is plain text on `advisor_family_attach` and
+`family_store_benchmark`, both of which a manager can already read. Only the
+definer function reads `op_code_family`, and it runs as its owner.
 
-**The fix is to widen `op_code_catalog_read` to `managed_rooftops()`**, not to
-copy the name onto the serve row. The catalog holds a code, a name, a category
-and piggyback notes — reference data, no per-store numbers, so a manager reading
-it discloses nothing. A denormalised name on the serve row would be a second
-definition of what a code is called, and it would drift. `op_code_family` and
-`dms_op_code_map` stay exactly as they are; the definer function reads them.
+Roles named, with the widening applied:
 
-**There is a trap in verifying this.** Beaumont's two managers may well hold
-`admin` as well as `manager`. An acceptance suite that signs in as them and
-passes would have tested the one context in which the gate cannot fail. The
-suite signs in as a fixture user holding **`role = 'manager'` and nothing else.**
+| role | `op_code_catalog` | `op_code_family` | `advisor_family_attach` | `family_store_benchmark` | `manager_meeting_op_code` |
+|---|---|---|---|---|---|
+| platform owner | ✅ | ✅ | ✅ | ✅ | ✅ |
+| admin | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **manager** | ✅ *(widened)* | ❌ *(not needed)* | ✅ | ✅ | ✅ |
+| advisor | ❌ | ❌ | ✅ | ✅ | ❌ |
+| technician | ❌ | ❌ | ✅ | ❌ (0096) | ❌ |
+| service_role | ✅ | ✅ | ✅ | ✅ (0123) | ✅ |
+
+**The verification trap, and it is the whole slice.** Beaumont's two managers may
+well hold `admin` as well as `manager`. A suite that signed in as them and passed
+would have tested the one context in which this gate cannot fail. So the fixture
+user holds **`role = 'manager'` and nothing else**, and the slice proves both
+halves: that user reads the catalog after the migration, and a technician fixture
+user still does not.
 
 ---
 
 ## What already exists
 
-Considerably more than expected. 0168 and 0169 did the hard structural work.
+0168 and 0169 did the structural work, and ruling A means most of it is now
+directly usable.
 
 - **`manager_meeting_op_code`** (0168) — `content_id` → `op_code_catalog.code`,
-  with `origin in ('manifest','manual')` so a hand correction is distinguishable
-  from a pipeline one. Deliberately **not** unique on `op_code`: Vol 5 may coach
-  the same code again. RLS includes manager and admin. Deliberately **not**
+  `origin in ('manifest','manual')` so a hand correction is distinguishable from
+  a pipeline one. Deliberately **not unique** on `op_code`: Vol 5 may coach the
+  same code again. RLS admits manager and admin. Deliberately **not**
   `content.op_code`, because `service_family_content` excludes only
   `placement = 'reference'` by name and a manager film carrying an op code would
   enter the view the advisor pitch slot reads.
-- **`placement = 'manager_meeting'`** (0168) on the enum, and (0169) backfilled
-  onto all 17 Vol 3 films with a null-safe CHECK — `IS NOT DISTINCT FROM`,
-  because `placement = 'manager_meeting'` evaluates to NULL for a NULL and a
+- **`placement = 'manager_meeting'`** (0168 on the enum, 0169 backfilled onto all
+  17 Vol 3 films) behind a null-safe CHECK — `IS NOT DISTINCT FROM`, because
+  `placement = 'manager_meeting'` evaluates to NULL for a NULL placement and a
   CHECK passes on NULL. Every advisor picker selects by positive equality, so a
   manager film cannot be drawn by any of them.
-- **The ranking**, `derive_focus_family()` (0123):
-  `missed_ros = greatest(store_avg_pct − attach_rate_pct, 0) / 100 × advisor_ros`,
-  tie-broken by `opportunity` (`missed_ros × labor_per_ro`) then by name for
-  determinism. Clamped at zero so being ahead of the store is not a negative
-  opportunity. Inner-joined to supply so a family with no film is not a
-  candidate however large its gap.
-- **The lock precedent**, `advisor_focus_family`: an open row with `ended_on`
-  null, `source in ('derived','manager')`, and a manager ruling that the
-  derivation will not overwrite.
-- **`min_ros_for_coaching()` = 20**, and the departed-advisor exclusion in
-  `family_store_benchmark` (0096). Both reused, never restated — 0123 says why:
-  a store average that can disagree with the one on the advisor's own screen is
-  worse than no derivation at all.
-- **`has_performance_surface()`** (0096, repaired 0123) — manager **is**
-  included, and `bypasses_rls()` lets the backend through. Nothing to fix here.
-- **`app_event`** (0163) — `kind` CHECK over seven known values, service-role
-  the only writer, `managed_rooftops()` read, advisor reads nothing. 0163 also
-  asserts its own constraint is not vacuous.
-- **`/meetings`** — browse by topic, `type = 'manager_video'`, behind
+- **The ranking and all of its inputs** — `derive_focus_family()` (0123),
+  `advisor_family_attach` (0055), `family_store_benchmark` (0096/0123),
+  `advisor_family_labor` (0055), `min_ros_for_coaching()` (20).
+- **`family_pitch_supply`** (0123) — the shape to mirror for manager films,
+  including its `and f.coachable` filter.
+- **The lock precedent** — `advisor_focus_family`: an open row with `ended_on`
+  null, a `source` that distinguishes derived from manager, and the derivation
+  refusing to overwrite a manager ruling.
+- **`perf_period.is_partial`** (0039, `not null default false`) — which is what
+  makes "the last **full** period" in ruling F representable at all, rather than
+  a thing a reader has to judge.
+- **`app_event`** (0163) — `kind` CHECK over seven known values, service role the
+  only writer, `managed_rooftops()` read, advisor reads nothing. 0163 also
+  asserts its own constraint is not vacuous, which is the test to mirror.
+- **`/meetings`** — browse by topic over `type = 'manager_video'`, behind
   `checkEntitlement(…, ["manager"], "manager_meetings")`. **Never reads
-  `placement`**, so 0169 left it untouched. In `check:nav`'s `WATCHED` list, so
-  routes beneath it are checked for reachability.
-- **Impact** (0029/0032/0033) — `impact_rollup` carries `attach_rate_pct`,
-  `prev_attach_rate_pct`, `delta_pts` per advisor × family × period. Prior art
-  for item (f), at the wrong grain.
+  `placement`**, so 0169 left it untouched. Already in `check:nav`'s `WATCHED`,
+  so routes beneath it are checked for reachability.
+- **The family attach-rate UI, already built.** `lib/advisor.ts`
+  (`buildServiceFamilies`, `hasCoachingVolume`, `advisorTier`) and
+  `lib/manager.ts` render exactly what ruling E asks for, keyed on
+  `advisor_op_id` with the op code as the fallback label — the
+  never-identify-by-name rule already honoured, and `hasVolume` already rendering
+  "too thin to judge" instead of a number.
 - **`game_settings`** — single row, columns added by `alter table`, with
   `coaching_block_days_sane` as the sanity-constraint precedent.
 - **"Attach rate"** is already the standing word on `/advisor`, `/manager`,
-  `/admin/impact`, `/admin/dms` and the dealer-codes screens. Item (e) needs no
-  new vocabulary, only consistency with what is there.
+  `/admin/impact`, `/admin/dms` and the dealer-codes screens. Ruling E keeps it.
 - **`scripts/focus-family-acceptance.ts`** — creates a throwaway rooftop, auth
-  users, period, DMS metrics, op codes and films; exercises each path as the
-  role that will really call it; deletes it all; refuses a non-localhost
-  `SB_URL`. Exactly the harness the Preview constraint requires.
+  users, a period, DMS metrics, op codes and films; exercises each path *as the
+  role that will really call it*; deletes it all; refuses a non-localhost
+  `SB_URL`. Exactly the harness the Preview constraint requires, and the suite
+  that already proves this ranking.
 
 **Entitlement reality:** `manager_meetings` is active for **one** rooftop —
 Doggett Ford of Beaumont (0164) — and two managers. Everything below serves one
-store on day one. The serve is therefore gated on `rooftop_product`, so turning
-the product on for a store is what starts its Mondays. Never a list of rooftop
-ids.
+store on day one. The serve is gated on `rooftop_product`, so turning the product
+on for a store is what starts its Mondays. Never a list of rooftop ids.
 
 ---
 
 ## Item by item
 
-### (a) Weekly pick per rooftop
+### (a) Weekly pick per rooftop — family grain
 
-**Exists:** the ranking formula and all of its inputs; the lock pattern;
-`manager_meeting_op_code`.
-
-**Two grain changes, and they are different problems.**
-
-**1. Advisor → rooftop.** `missed_ros` is a per-advisor quantity measured against
-the rooftop's *own* average. Re-deriving the formula at rooftop grain yields zero
-by construction — store average minus store average. The only aggregation that
-reuses the picker's metric rather than inventing a second one is to **sum the
-per-advisor `missed_ros` across the rooftop's advisors**: "how many ROs the
-below-average half of this drive is missing on this op code." Same numerator,
-same clamp, same floor; one grain up. That is a defensible manager-meeting
-metric, and it is a **decision that needs Ryan's yes** rather than something to
-slip in under "the same ranking".
-
-**2. Family → op code.** The blocker above. Gated on slice 1's measurement.
+**Exists:** the whole ranking, its inputs, the lock pattern,
+`manager_meeting_op_code`, and `family_pitch_supply` as the template.
 
 **New:**
-- `advisor_op_code_attach` — view, attach rate per advisor × catalog op code ×
-  period, through `dms_op_code_map`. Reuses `min_ros_for_coaching()` and the
-  departed-advisor exclusion.
-- `op_code_store_benchmark` — view, the store average and best at op-code grain.
-  Role-scoped by `has_performance_surface()`, tenancy-scoped the way
-  `family_store_benchmark` is.
-- `manager_pick_supply` — view, catalog codes with a published manager film,
-  mirroring `family_pitch_supply`. Inner-joined by the pick, so a code with no
-  film cannot be served however large its gap.
-- `rank_manager_meeting_op_codes(_rooftop uuid, _period uuid)` — definer, no
-  grants, returning the ranked candidates. Reads the platform-owner-only bridge,
-  which is why it is a definer.
-- `manager_meeting_serve` — the lock. See (b).
+- `rooftop_family_missed` — view. Per rooftop × family × period: the sum of
+  per-advisor `missed_ros`, the summed `opportunity`, and `advisors_counted`.
+  Built on the same two views and the same floor the picker uses.
+- `manager_meeting_supply` — view. Families that have at least one published
+  manager film, via `manager_meeting_op_code` → `op_code_family`. Mirrors
+  `family_pitch_supply`, including `and f.coachable`. **Inner-joined by the
+  pick**, so a family with no manager film is not a candidate however large its
+  gap — the same construction that keeps ten filmless advisor families out of
+  the pitch slot today.
+- `pick_manager_meeting(_rooftop uuid, _period uuid)` — definer, no grants. The
+  family walk in ruling B. Definer because it reads `op_code_family`, which is
+  admin-scoped.
 
-### (b) Skip anything served in the last N weeks
+**One question for Mitch or Ryan, not for me.** `family_pitch_supply` filters
+`and f.coachable`, and 0066 draws that line as *"map for reporting but never
+coach"* — 13 of the 73 codes, the `MNU-*` bundles and MPI-061. A manager meeting
+is coaching, so the plan keeps the filter. But it is a standing ruling about
+advisor coaching being applied to a new surface, and if a manager film is ever
+made about a menu bundle the filter will silently hide it.
 
-**Exists:** `game_settings` and its constraint precedent.
+### (b) Within the winning family, and when to fall through — ruling B
 
-**New:** `game_settings.manager_meeting_repeat_weeks int not null default 8`,
-plus a sanity CHECK. The suppression lives inside the pick, reading
-`manager_meeting_serve`.
+**Order inside a family:** the eligible film **least recently served to that
+rooftop**, **never-served first**, ties broken by **op code**.
 
-**Two things to get right.**
+Expressed as `order by last_served_at asc nulls first, op_code asc`. `nulls
+first` is doing the "never-served first" work, and it is the kind of clause that
+inverts silently if someone later changes the sort — so the acceptance suite
+asserts a never-served film beats a served one directly, rather than only
+asserting the full ordering.
 
-The spec suppresses a **film**; the pick selects an **op code**. 0168
-deliberately allows one film to carry several codes, so suppressing a film can
-remove more than one candidate. Correct, and worth saying out loud on the screen
-when it happens.
+**Fall-through:** if every film in a family is inside the N-week window, the walk
+moves to the next family by rank.
 
-If suppression empties the candidate list, **serve nothing and say so.** Never
-fall back to a repeat, and never serve the most-recently-shown film because it
-sorted first. That is `derive_focus_family`'s honest null, and the acceptance
-half that will get skipped is the one proving a film **outside** the window is
-served again — which is the half that catches a window computed in the wrong
-direction.
+**Nothing eligible anywhere: no pick, and a stated reason.** The reason is a
+value on the row, not a log line, and it distinguishes the cases that look
+identical on a screen:
 
-### (c) The five codes are manager-pick only
+| reason | what happened |
+|---|---|
+| `no_period` | no closed DMS period for this rooftop |
+| `no_ranked_family` | every family has a clamped gap of zero |
+| `no_supply` | families rank, none has a manager film |
+| `all_suppressed` | every candidate film is inside the N-week window |
+| `not_entitled` | the rooftop has not bought `manager_meetings` |
 
-**Exists:** nothing that distinguishes them. BTT-035, TPS-050, WWF-016, OF-008
-and BCS-032 are all in `op_code_catalog`, all in `data/op_code_family_map.csv`
-with a family, and all marked `coachable = true` — two at `ruled` confidence and
-three at `high`.
+This is `derive_focus_family`'s honest null with the reason attached. A silent
+no-pick and a rooftop nobody has configured are indistinguishable otherwise, and
+`no_supply` is the expected state for every rooftop until Vol 4 is filmed — so
+it must read as a normal state rather than a fault.
 
-**New, and it is deliberately both mechanisms, because they answer different
-questions:**
+### (c) — withdrawn by ruling D
 
-- **By construction:** a code with no mapped DMS volume produces no ranking row
-  and so cannot be picked. Free and self-maintaining.
-- **By value:** `op_code_catalog.manager_pick_only boolean not null default
-  false`, set for the five by name in the migration. `not null default false`
-  means no row can decline to carry it — AGENTS.md's rule that an exclusion by
-  value is only as strong as the guarantee the column is written.
+Dropped. Under family grain its reason is gone: **the family is measured even
+when one code in it is not.**
 
-The structural exclusion is what works today. The column records the **ruling**,
-so that if the mapping later acquires BTT-035, the code does not silently become
-auto-pickable without somebody deciding that it should. Construction alone would
-let a mapping change rewrite a policy.
+Confirmed against `data/op_code_family_map.csv` — all five of the named codes sit
+in families that are measured by other codes:
 
-**A question for Ryan:** "not in the DMS feed" is stated as a global fact, but
-`dms_op_code_map` is **per rooftop**. Is this five-code list a property of the
-Doggett feed, or of every feed we expect to meet? Slice 1 measures which it is.
+| code | family |
+|---|---|
+| OF-008 | Oil Change |
+| WWF-016 | Wipers |
+| BCS-032 | Brake Service |
+| BTT-035 | Battery |
+| TPS-050 | Tires & Rotation |
 
-### (d) Swap, and served / watched / swapped as events
+So a manager film carrying BTT-035 becomes servable when Battery ranks, which is
+the intended effect of the ruling and not a side effect of it. No column, no
+list, no migration. **Nothing is built for this item, and the five codes are
+named here only so a later reader knows the question was asked and answered.**
 
-**Exists:** `app_event` and its non-vacuous constraint test (0163).
-`content_progress` as the format-agnostic consumption record — and memory worth
-repeating: `content_progress.source` is last-writer-wins and says which surface
-touched the row *last*, not which finished it. `app_event` is the append-only
-answer.
+### (d) Swap, and served / watched / swapped — ruling G
+
+**Exists:** `app_event` and 0163's constraint-is-not-vacuous assertion.
+`content_progress` as the format-agnostic consumption record — and the caution
+worth repeating: `content_progress.source` is last-writer-wins and says which
+surface touched the row *last*, not which finished it. `app_event` is the
+append-only answer.
 
 **New:** three kinds on the CHECK constraint — `manager_meeting_served`,
-`manager_meeting_watched`, `manager_meeting_swapped` — with 0163's
-constraint-is-not-vacuous assertion mirrored.
+`manager_meeting_watched`, `manager_meeting_swapped` — with 0163's non-vacuous
+test mirrored.
 
-**One real obstacle.** `app_event.user_id` is `not null references app_user(id)`.
-The Monday serve is a **rooftop-level act by a cron**; it has no user. Two ways
-out, and the recommendation matters:
+**Ruling G: one `served` event per manager at serve time.
+`app_event.user_id` stays `not null`.** The serve is a rooftop-level act with no
+user, but the server knows the rooftop's managers from `membership`, so it writes
+one row each. Relaxing `user_id` would weaken an invariant every existing reader
+holds in order to serve one kind. Pairing served with watched per person is also
+what an engagement funnel actually needs.
 
-- ✅ **Write one `served` event per manager at serve time.** The cron knows the
-  rooftop's managers from `membership`, so it writes one row each. `user_id`
-  stays honestly not-null, and served/watched pair up per person — which is what
-  an engagement funnel needs anyway.
-- ❌ Relax `user_id` to nullable. It weakens an invariant every existing reader
-  of the table holds, to serve one kind.
+The authoritative "this was served" fact is the `manager_meeting_serve` row. The
+events are the engagement record, not the state.
 
-The authoritative "this was served" fact is the `manager_meeting_serve` row, not
-the events. The events are the engagement record.
+**The swap leaves a trace in the row, not only in an event.** AGENTS.md's
+hold/override rule: a manager swapping is legitimate and often right; what must
+not happen is it leaving no record, because afterwards a swapped week and a week
+nobody touched look identical. So the serve row carries `source`,
+`overridden_from_content_id`, `swapped_at` and `swapped_by`.
 
-**The swap leaves a trace in the row, not only in an event.** AGENTS.md's hold/
-override rule: a correct automatic pick that a manager overrides must be
-recoverable afterwards, or a swapped week and a week nobody touched look
-identical. So the serve row carries `source`, `overridden_from_content_id`,
-`swapped_at` and `swapped_by` — a manager swapping is legitimate and often
-right; what must not happen is it leaving no record.
+### (e) The meeting screen — ruling E
 
-### (e) The meeting screen
+**The film, the family named, and the family's attach rate by advisor for the
+rooftop.** "Attach rate" stays the word.
 
-**Exists:** the entitlement check; "Attach rate" as the standing word;
-`lib/manager.ts`, which keys the roster on `advisor_op_id` and falls back to the
-op code when the name is unreadable — the never-identify-by-name rule already
-honoured.
+**Exists: nearly all of it.** `advisor_family_attach` and
+`family_store_benchmark` are both manager-readable and both carry `family` as
+plain text, so **no new view is needed for this item** and `op_code_family` is
+never consulted. `lib/advisor.ts` and `lib/manager.ts` already build the
+per-advisor family rows, keyed on `advisor_op_id`, with the op code as fallback
+label and `hasVolume` rendering "too thin to judge" below
+`min_ros_for_coaching()`.
 
-**New:** `/meetings/this-week` (inside the watched `meetings` tree, so
-`check:nav` covers it), a loader, and the `op_code_catalog_read` widening from
-the second finding. Attach rate by advisor comes from
-`advisor_op_code_attach` — manager-readable, floored at
-`min_ros_for_coaching()`, with "too thin to judge" rendered rather than a
-number, the way `/manager` already handles `hasVolume`.
+**New:** `/meetings/this-week` — inside the watched `meetings` tree, so
+`check:nav` covers it — plus a loader. Behind the same `manager_meetings`
+entitlement `/meetings` already uses. Driven as a fixture manager, not an admin.
 
-Exercised as a fixture user holding `manager` and nothing else.
+**The serve row stores the family it ranked.** Not a denormalisation that can
+drift: it is a historical fact about the pick, exactly as
+`advisor_focus_family` stores `missed_ros` and `period_id`. The inputs change
+every month, and a meeting from March must still say which family it was about.
 
-### (f) Four weeks later, the attach rate change
+### (f) Follow-up — ruling F
 
-**Exists:** `impact_rollup`, `admin_impact_rooftop`, `impact_settings` and
-`ImpactV2` — the same quantity in percentage points, at advisor × family ×
-**month** grain.
+**Month over month, both months named on screen. "Moved" wording only.**
 
-**The spec and the schema disagree, and AGENTS.md says report it rather than
-pick one.** Attach rate exists only per `perf_period`, and a period is a
-**month** (`label` 'June 2026', `is_partial` when the source stops early). "Four
-weeks after the meeting" is not expressible. The nearest honest measurement is
-*the first period starting after the meeting week, compared with the period
-containing it* — so the screen must name the two months it compared rather than
-print "4 weeks".
+- **Before** = the last **full** `perf_period` before the meeting week.
+- **After** = the first **full** `perf_period` that starts after it.
+- Until that period closes, the row **names the month it is waiting on.**
 
-And it can only be reported once that later month's DMS has landed. Until then
-the screen says **not yet measurable**, never `0.0`. A sync in this very area
-already reported a cursor it was not resuming from and announced success with
-ten months missing; a zero here would be the same confident wrong answer.
+"Full" is `not is_partial` (0039), which exists precisely because *"a partial
+month read as a full one looks like a collapse in performance."* So this reads a
+column rather than judging a date range.
 
-"Reported, not required" is taken literally: this never gates serving, never
-blocks the screen, and its absence is not an error.
+Never `0.0` while waiting — "waiting on November" and "moved 0.0 points" are
+different facts and only one of them is true. A sync in this very area already
+reported a cursor it was not resuming from and announced success with ten months
+missing; a premature zero here is the same confident wrong answer.
+
+Prior art at the right grain: `impact_rollup` carries `attach_rate_pct`,
+`prev_attach_rate_pct` and `delta_pts` per advisor × **family** × period, and
+`ImpactV2` already renders percentage-point movement. Under ruling A this is now
+the same grain, so the follow-up reads the family attach rate the screen already
+shows rather than anything new.
+
+**Reported, not required:** it never gates serving, never blocks the screen, and
+its absence is not an error.
 
 ### (g) The 17 Vol 3 films
 
@@ -305,119 +408,116 @@ The Manager Bank Account series — an introduction, eight deposits, seven
 withdrawals and an outro — is `type = 'manager_video'`, now
 `placement = 'manager_meeting'` (0169), and carries no op code. The pick
 inner-joins `manager_meeting_op_code`, so **a film with no row there cannot be
-auto-picked, by construction** — no condition for anyone to remember.
+auto-picked, by construction** — no condition for anybody to remember.
 
 Browsing is untouched: `listManagerTopics` and `loadManagerVideos` select on
 `type = 'manager_video'` and have never read `placement`.
 
-One consequence to state rather than discover: (d) says a manager may swap to
-*any other manager film*, so a Vol 3 film is a legitimate swap target. It cannot
-be picked and it can be chosen, which is the right asymmetry.
+One consequence stated rather than discovered: (d) lets a manager swap to *any
+other manager film*, so a Vol 3 film is a legitimate swap target. It cannot be
+picked and it can be chosen — the right asymmetry.
 
 ---
 
-## Build order
+## Build order — ten slices
 
-Each slice is reviewable alone. Migrations are authored and replayed locally and
+Each reviewable alone. Migrations are authored and replayed locally and
 renumbered at merge; nothing is applied from this branch.
 
-| # | slice | shape | why here |
+| # | slice | what lands | why here |
 |---|---|---|---|
-| **0** | **Preview write guard** | `lib/deploy-env.ts` → `refuseWriteOnPreview()`, reading `VERCEL_ENV` (read nowhere today). Every write path added later calls it. | The constraint, by construction. No schema. First because everything after it depends on it. |
-| **1** | **Measure, build nothing** | `report:manager-pick-coverage`, read-only, run against Preview. | Decides whether (a) is buildable as specified. See below. |
-| **2** | **Op-code attach rate, read side** | `advisor_op_code_attach`, `op_code_store_benchmark`; widen `op_code_catalog_read` to `managed_rooftops()`. | Fixes and proves the gate finding. Four roles, refusals asserted. |
-| **3** | **The pick, serving nothing** | `rank_manager_meeting_op_codes()`, `manager_pick_supply`. | Ranking provable in isolation, before any row is written. |
-| **4** | **Serve table and the lock** | `manager_meeting_serve`; `game_settings.manager_meeting_repeat_weeks`; suppression inside the pick. | First write path. Both halves of N weeks. |
-| **5** | **Events** | three `app_event` kinds + the non-vacuous test. | Small, and (d) says from day one. |
-| **6** | **The screen** | `/meetings/this-week`, read-only. | Needs 2–4. Driven as a manager. |
-| **7** | **The swap** | server action; override trace on the row; the event. | Needs 4–6. |
-| **8** | **Four-week change** | two periods compared, months named, "not yet measurable". | Reported, not required — so it comes after the screen works. |
-| **9** | **The cron** | `/api/cron/manager-meeting-serve`, `CRON_SECRET`, the Monday/store-date rule in a lib the way `lib/rollcall-schedule.ts` does it, and the `vercel.json` entry. | **Last.** Vercel runs crons only on Production, so the entry is inert on Preview and live the moment it merges. Until it lands, serving is a manual admin action. |
+| **0** | **Preview write guard** | `lib/deploy-env.ts` → `refuseWriteOnPreview()`, reading `VERCEL_ENV` (read nowhere in the codebase today). Every write path added later calls it. | The branch constraint, by construction rather than by memory. No schema. First because everything after depends on it. |
+| **1** | **The catalog read widens** — ruling H | Migration: `op_code_catalog_read` → `managed_rooftops()`. Acceptance proving a `manager`-only fixture user reads it and a technician still does not. | Its own slice and its own migration, per the ruling. Independent of everything else, and it is a live defect today. |
+| **2** | **Rooftop family ranking** | `rooftop_family_missed`, `manager_meeting_supply`. Read-only; serves nothing. | The metric, provable in isolation against the fixture before any row is written. Reuses the picker's views, floor and clamp. |
+| **3** | **Serve table and the lock** | `manager_meeting_serve` (+ unique index on rooftop × week), `game_settings.manager_meeting_repeat_weeks int not null default 8` with a sanity CHECK. Schema only — no picker. | The pick in slice 4 needs somewhere to read history from. Splitting the table from the logic keeps both reviewable. |
+| **4** | **The pick** — rulings A, B, C | `pick_manager_meeting()`: family walk by rank, least-recently-served film within a family, never-served first, ties by op code, fall through on a fully suppressed family, honest null with a reason. | Reads 2 and 3. The first slice with real decision logic, and the one with the most acceptance surface. |
+| **5** | **Events** — ruling G | Three `app_event` kinds, 0163's non-vacuous test mirrored, one `served` row per manager. | Small, and (d) asks for it from day one. |
+| **6** | **The screen** — ruling E | `/meetings/this-week`: the film, the family named, the family's attach rate by advisor. Reuses `lib/advisor.ts` and `lib/manager.ts`. | Needs 1, 2, 4. Driven as a fixture manager. |
+| **7** | **The swap** | Server action; override trace on the serve row; the `swapped` event. Calls the slice-0 guard. | Needs 4–6. |
+| **8** | **Follow-up** — ruling F | Before/after full periods, both months named, the waiting-on state. | Reported not required, so it comes after the screen works. |
+| **9** | **The cron** — ruling I | `/api/cron/manager-meeting-serve`, `CRON_SECRET`, the Monday-and-store-date rule in a lib the way `lib/rollcall-schedule.ts` does it, and the `vercel.json` entry. | **Last.** Vercel runs crons only on Production, so the entry is inert on Preview and live the moment the branch merges. Until it lands, serving is a manual admin action. |
 
-### What slice 1 has to answer
-
-Read-only, two paths reconciled, scope stated before the finding:
-
-1. Per rooftop, how many `op_code_catalog` codes have **mapped** DMS volume via
-   `dms_op_code_map` — and what share of ROs and of labor dollars that mapping
-   covers. Counted both from the map and from the raw feed, because a
-   path-scoped count stated as a fact about the subject is a mistake this
-   project has already made four times.
-2. Whether the five named codes are absent from **every** feed or only
-   Doggett's.
-3. How many Beaumont advisors clear `min_ros_for_coaching()` in the latest
-   period — item (e) renders nothing useful below it.
-4. How many catalog codes could have both a manager film and rankable volume, if
-   Vol 4 covered them.
-
-**If coverage is too thin, (a) is not buildable as specified, and that is the
-finding rather than something to work around.** The fallback worth pricing in
-that case is to rank **families** exactly as the pitch picker does, aggregate to
-the rooftop, and pick the manager film whose op code sits in the winning family
-— one metric, one grain, and the mapping stops being load-bearing. It is a
-different product decision and would be Ryan's to make.
+Dropped from revision 1: the op-code attach rate and store benchmark (ruling A),
+and the `manager_pick_only` column (ruling D). The coverage measurement is no
+longer a slice — ruling A makes it a finding in this document, built on by
+nothing.
 
 ---
 
 ## Every place that needs a fixture, because Vol 4 is not filmed
 
-No Vol 4 film exists, so **no op code has a manager film, so the pick's inner
-join returns nothing for every rooftop.** Every slice from 3 onward is
-untestable without fixtures. All of them local, created and deleted by the same
-script.
+No Vol 4 film exists, so **no family has a manager film, so the pick's inner join
+returns nothing for every rooftop** — the `no_supply` reason above is the correct
+answer for all eleven rooftops today. Every slice from 2 onward is untestable
+without fixtures. All local, created and deleted by the same script, per the
+Preview constraint.
 
 1. **Manager films and their codes** — throwaway `content` rows
    (`type='manager_video'`, `placement='manager_meeting'`, `status='published'`,
    a `mux_playback_id`) plus `manager_meeting_op_code` rows pointing at catalog
-   codes the fixture feed actually carries. *Slices 3–9.*
-2. **The DMS side at op-code grain** — `perf_period`, `advisor_op_metric` and
-   `dms_op_code_map` rows so a catalog code has mapped volume with a real spread
-   across advisors. Extends the shape `focus-family-acceptance.ts` already
-   builds. *Slices 2–4.*
-3. **Repeat-suppression history** — backdated `manager_meeting_serve` rows both
-   inside and outside the N-week window, to prove the skip **and** prove a film
-   outside the window is served again. The second is the half that gets skipped
-   and the half that catches a window computed backwards. *Slice 4.*
-4. **A manager-pick-only code with volume** — one of the five given mapped
-   volume large enough to rank first, to prove it is still not auto-picked; and
-   an ordinary code in the same fixture that **is** picked, so the test cannot
-   pass by refusing everything. *Slice 4.*
-5. **Two periods for the four-week change** — the same op code at different
-   attach rates across two `perf_period` rows with a serve row in the earlier,
-   **plus** a third case with no later period at all, asserting "not yet
-   measurable" rather than `0.0`. *Slice 8.*
-6. **Three or more advisors at the throwaway rooftop**, at least one below
-   `min_ros_for_coaching()`, so item (e) proves "too thin" renders instead of a
+   codes whose families the fixture feed measures. *Slices 2, 4, 6–9.*
+2. **The DMS side** — `perf_period`, `advisor_op_metric` and `sub_category_map`
+   rows giving two or more families a real spread across advisors, so one family
+   genuinely outranks another. Extends the shape `focus-family-acceptance.ts`
+   already builds. *Slices 2, 4.*
+3. **Three or more advisors**, at least one below `min_ros_for_coaching()`, so
+   the rooftop sum is a sum and item (e) proves "too thin" renders instead of a
    number. *Slices 2, 6.*
-7. **Two or more candidate films** so there is something to swap *to*, plus one
-   film with no op code (a Vol 3 stand-in) to prove swapping to an unmapped film
-   works. *Slice 7.*
-8. **A manager who is only a manager** — `role = 'manager'`, no admin
-   membership. Without this the `op_code_catalog` gate is tested in the one
-   context where it cannot fail. *Slices 2, 6, 7.*
-9. **A bought rooftop and an unbought one** — one with
-   `rooftop_product('manager_meetings')` and one without, to prove the serve
-   skips the store that has not bought it. Both halves; a gate that refuses is
-   not self-verifying. *Slices 4, 9.*
+4. **Two or more films in the winning family, with different serve histories** —
+   one never served, one served long ago, one served recently — to prove ruling
+   B's ordering. Plus two films sharing an op code to force the tie-break.
+   *Slice 4.*
+5. **Backdated `manager_meeting_serve` rows** both inside and outside the N-week
+   window, to prove the skip **and** prove a film outside the window is served
+   again. The second is the half that gets skipped, and the half that catches a
+   window computed in the wrong direction. *Slices 3, 4.*
+6. **A family whose every film is suppressed**, with a lower-ranked family that
+   has an eligible one, to prove the fall-through in ruling B actually falls
+   rather than returning nothing. *Slice 4.*
+7. **A film carrying two op codes** (0168 permits it), to prove ruling C: it
+   suppresses only itself and not the other code's films. *Slice 4.*
+8. **One case per no-pick reason** — five fixtures, so each reason is reached by
+   the state it names rather than all five collapsing onto one code path.
+   *Slice 4.*
+9. **Two full periods and one partial** — the same family at different attach
+   rates across two `perf_period` rows with `is_partial = false`, a serve row in
+   the earlier, **plus** a case where the later period exists but is partial, to
+   prove the screen names the month it is waiting on instead of reporting `0.0`.
+   *Slice 8.*
+10. **A manager who is only a manager** — `role = 'manager'`, no admin
+    membership. Without it, ruling H's gate is tested in the one context where it
+    cannot fail. *Slices 1, 6, 7.*
+11. **A bought rooftop and an unbought one** — one with
+    `rooftop_product('manager_meetings')` and one without, to prove the serve
+    skips the store that has not bought it and records `not_entitled`. Both
+    halves: a gate that refuses is not self-verifying. *Slices 4, 9.*
+12. **Two or more candidate films outside the winning family**, plus one Vol 3
+    stand-in with no op code, so there is something to swap *to* and the unmapped
+    case is covered. *Slice 7.*
 
 ---
 
-## Open questions, and the places the spec and the schema disagree
+## What the rulings settled, and what is still open
 
-1. **"The same ranking, aggregated to the rooftop"** — read as *sum the
-   per-advisor `missed_ros` over the rooftop's advisors*. Re-deriving the formula
-   at rooftop grain gives zero by construction. Needs a yes.
-2. **Op-code grain is not reachable from the DMS** except through
-   `dms_op_code_map`, whose coverage is the gate on (a). Slice 1 measures it;
-   the family-grain fallback is priced above.
-3. **"Four weeks after" cannot be four weeks.** Attach rate exists only per
-   monthly `perf_period`. Month-over-month, with the two months named, is the
-   nearest honest measurement.
-4. **Are the five codes absent from every feed, or only Doggett's?**
-   `dms_op_code_map` is per rooftop; the spec states the list globally.
-5. **Suppression is per film, the pick is per op code**, and 0168 deliberately
-   lets one film carry several codes — so one suppressed film can remove more
-   than one candidate.
-6. **`op_code_catalog_read` must widen to `managed_rooftops()`** or the screen's
-   own audience cannot read the name of the thing it is about. Recommended over
-   denormalising the name onto the serve row.
+**Settled.** A: family grain, summed across advisors; coverage measured as a
+finding only. B: least-recently-served within the family, never-served first,
+ties by op code, fall through, honest null with a reason. C: suppression per
+film. D: item (c) withdrawn. E: the family's attach rate, family named, "attach
+rate" kept. F: month over month, both named, "moved". G: one served event per
+manager, `user_id` untouched. H: catalog read widened in its own slice. I: cron
+last.
+
+**Still open.**
+
+1. **The coverage measurement has not been run.** It needs a service-role key in
+   `~/ediagd-manager/.env.local`, or you running the two queries above against
+   Preview. Nothing in this plan waits on it.
+2. **`coachable = false` and manager films.** The supply view keeps
+   `family_pitch_supply`'s filter, so the 13 codes 0066 marks *"map for
+   reporting but never coach"* cannot supply a manager meeting. Right by
+   default; wrong the day Mitch films a menu bundle. Mitch's or your call.
+3. **`advisor_family_attach` is not epoch-aware and `advisor_family_attach_all`
+   is.** The picker pairs them that way and this branch reproduces the pairing
+   rather than fixing it, so the manager meeting and the advisor's pitch cannot
+   disagree. Worth its own task, and it is a change to the daily loop rather
+   than to this branch.
