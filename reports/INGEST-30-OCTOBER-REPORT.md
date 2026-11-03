@@ -201,3 +201,139 @@ deploy path.
 
 The certification is `item_count 0, active false`, so publishing is what
 activates the track.
+
+---
+
+# Phase 7 — the run is over
+
+## Per-file disposition
+
+| what | count | where it went |
+|---|---|---|
+| September twins | 12 | `04 - Archive/duplicates`, byte-identical, manifest rows |
+| Coverage is Key reshoots | 8 | replaced their rows in place at v2; masters to `02 - Published/Craft` |
+| the v1 masters they superseded | 8 | `04 - Archive`, renamed "(superseded by v2)" |
+| Power of Positive Language | 15 | new **drafts**, masters in `02 - Published/Craft` |
+| Overcoming Objections opener/closer | 2 | new **drafts**, masters in `02 - Published/Craft` |
+| Jeff Becker Service Manager | 16 | `05 - Held`, camera names kept, README names the question and Ryan |
+
+**The Drop Zone holds `MANIFEST.csv` and nothing else.** 154 data rows, up from
+109; the file parses as valid CSV, checked by reading it back with an
+RFC4180 reader rather than by looking at it.
+
+## Counts by state
+
+- reshoots replaced in place: **8**
+- new drafts created: **17**
+- files held: **16**
+- twins archived: **12**
+- rows retired: **0**
+
+## Integrity check — the published count, read from the database
+
+**published `advisor_video`, not retired: 442.** It did not move for this batch,
+which is what a batch of reshoots-plus-new-drafts should do: the 8 reshoots
+replaced published rows **in place**, so no row was added or retired, and the 17
+new films are **drafts**. Draft count is 20, of which 17 are this run's.
+
+`rows retired by this batch: 0` — verified, not assumed. Replace-in-place keeps
+the content id, so every `content_progress` row and every
+`daily_completion.video_content_id` stays attached.
+
+## Trim verification, derived from durations
+
+| | |
+|---|---|
+| cut | 16 of 16 |
+| failed | 0 |
+| came back the right length | 16 |
+| length mismatch | 0 |
+| captions confirm clean | 15 |
+| captions unverified | 1 (word not transcribed — not a failure) |
+| dead air removed | 4.3 minutes |
+| progress rows before / after | 28 / 385 / 232 → 28 / 385 / 232 |
+
+The 8 reshoots were cut **before** the swap, so none went live with its slate
+on. Independent re-measurement reads `head = 0` on all eight. Ledger rows were
+written for every cut, keyed on the asset that was cut.
+
+**No double cut, by construction rather than by care:** re-measuring the already
+cut draft read `head = 0, no cut proposed`, because the plan measures the
+**served asset**. An already-cut film has no dead air to find.
+
+## Power of Positive Language — attached
+
+21 modules, **14 carry a film**: lessons 1–13 in Mitch's part order and the
+closer at 21. The seven cue modules sit at 14–20 as reinforcement, untouched.
+The opener is the certification's `entry_film_content_id`.
+
+`item_count 0, active false` — publishing is what activates the track, and that
+is Ryan and Mitch's step in admin.
+
+## Phone versions: 25 pending
+
+**24 of 25 are `ready` and measured correct** — every vertical checked matches
+its landscape within 0.18 s, 26 of 26, no mismatches. One is `failed` with no
+vertical asset: `Power of Positive Language, Part 1`, the film cut first as the
+standalone proof. `vertical_derivation_queue` selects
+`('pending','stale','failed')`, so it is picked up once the schedule returns.
+
+**A correction to an earlier claim in this run.** I reported that all 25 would
+land `failed` because `derive-vertical.ts` crops from the whole master. Measured,
+that did not happen: 24 of 25 are correct. The extrapolation was from one early
+failure and one line of code, and the measurement contradicts it. The deriver is
+the sync agent's to fix.
+
+## Newly servable, once published
+
+Thirteen `Power of Positive Language` lessons, its opener and closer, and the
+`Overcoming Objections` opener and closer. Nothing is advisor-visible until
+somebody publishes it.
+
+## Reminder
+
+**17 drafts await publishing in admin.**
+
+## Holds needing a ruling
+
+1. **The sixteen Jeff Becker films.** Where do they belong, and is the series
+   *Jeff Becker* or *14 Mindsets*? The slate is unambiguous and the destination
+   is not. Manager Meetings holds a 17-film `Bank Account` series on the
+   identical intro + numbered body + outro shape.
+2. **The Coverage is Key Opener's origin story.** v1 is a different film, not a
+   retake — *"the second class I ever wrote… why would I use your fluid when I
+   could just use Toyota Fluid?… the answer was hidden in fine print on a
+   brochure. The word was coverage."* Does it come back in the de-branded voice?
+   The v1 master is in `04 - Archive`.
+3. **Part 8 dropped three concrete things**: the deductible payment, the
+   reset-the-clock mechanism, and the claim URL.
+
+## Corrections to statements made earlier in this run
+
+- I said all 25 phone versions would fail. **24 of 25 are ready and correct.**
+- I said the eight replaces would need a second pass for their tails. Measured
+  after the swap, the tails are 0.08–1.67 s, inside tolerance: **no second pass.**
+- I wrote the eight manifest rows with a raw `printf`, leaving the filename
+  field unquoted; six of the eight filenames contain a comma, so six rows parsed
+  as nine fields. The repair then turned nested quotes into `+`. Both fixed, and
+  the reason text now carries no quote characters at all — a field that cannot
+  contain the delimiter cannot be mis-escaped by the next person writing it.
+- My first attempt at the eight ran before #88 was merged into this branch, so
+  the old gate refused two of them again and stranded one extra asset. All nine
+  stranded assets were deleted.
+
+## What Mitch still owes
+
+- **Walk-Around Part 7, The Handback** — module 13 of 13, the only cue-only gap
+  in that track; until it exists Walk Around cannot be completed as a track
+- **Walk-Around opener and closer**
+- **The 2748 and 2821 menu recuts**
+
+## Two documents that disagree with the code
+
+1. **The naming law.** INGEST.md specifies `PREFIX — Title — Voice — vN.ext`;
+   **331 of 481** published files use `PREFIX — Title (Voice) — vN.ext` and
+   exactly **one** matches the document.
+2. **`derive-vertical.ts`** crops from the whole master while INGEST.md's trim
+   doctrine says a cut comes from the disk master at the served window. The sync
+   agent owns it.
