@@ -421,8 +421,15 @@ picked and it can be chosen — the right asymmetry.
 
 ## Build order — ten slices
 
-Each reviewable alone. Migrations are authored and replayed locally and
-renumbered at merge; nothing is applied from this branch.
+Each reviewable alone. Migrations are authored and replayed locally, numbered
+when the PR opens and re-checked immediately before the merge; nothing is
+applied from this branch. **`0173` landed on `main` from another branch while
+this plan was being written, so the first number here is `0174`** — and that is
+the reason the re-check exists rather than a story about it.
+
+Four of the ten slices carry a migration: 1 (the catalog read), 2 (two views),
+3 (the serve table and the setting), 5 (the event kinds). They take consecutive
+numbers in that order at PR time.
 
 | # | slice | what lands | why here |
 |---|---|---|---|
@@ -435,7 +442,25 @@ renumbered at merge; nothing is applied from this branch.
 | **6** | **The screen** — ruling E | `/meetings/this-week`: the film, the family named, the family's attach rate by advisor. Reuses `lib/advisor.ts` and `lib/manager.ts`. | Needs 1, 2, 4. Driven as a fixture manager. |
 | **7** | **The swap** | Server action; override trace on the serve row; the `swapped` event. Calls the slice-0 guard. | Needs 4–6. |
 | **8** | **Follow-up** — ruling F | Before/after full periods, both months named, the waiting-on state. | Reported not required, so it comes after the screen works. |
-| **9** | **The cron** — ruling I | `/api/cron/manager-meeting-serve`, `CRON_SECRET`, the Monday-and-store-date rule in a lib the way `lib/rollcall-schedule.ts` does it, and the `vercel.json` entry. | **Last.** Vercel runs crons only on Production, so the entry is inert on Preview and live the moment the branch merges. Until it lands, serving is a manual admin action. |
+| **9** | **The cron** — ruling I | `/api/cron/manager-meeting-serve`, `CRON_SECRET`, the Monday-and-store-date rule in a lib the way `lib/rollcall-schedule.ts` does it. **The `vercel.json` entry is requested, not committed** — see below. | **Last.** Vercel runs crons only on Production, so the entry is inert on Preview and live the moment the branch merges. Until it lands, serving is a manual admin action. |
+
+**Slice 9 does not edit `vercel.json`.** Another branch has a pending one-line
+schedule change to that same file, and a file with two editors at once is how
+one of them quietly loses — the merge reports success and says nothing about
+what it dropped. So slice 9 delivers the route, the secret check and the
+schedule rule, and hands over the one line to add:
+
+```json
+{ "path": "/api/cron/manager-meeting-serve", "schedule": "0 13 * * 1" }
+```
+
+`0 13 * * 1` is Monday 07:00 Central in daylight time, 06:00 in winter — Vercel
+crons are UTC and do not observe DST, which `app/api/cron/rollcall/route.ts`
+already documents at length. The hour is deliberately loose because the decision
+of *whether* it is Monday at that store is made in the route against the store's
+own date, not by the cron expression: `30 22 * * 1` would put half the rule in
+`vercel.json` and half in the code, which is two sources of truth about when a
+meeting is served. Same reasoning the Rollcall post settled.
 
 Dropped from revision 1: the op-code attach rate and store benchmark (ruling A),
 and the `manager_pick_only` column (ruling D). The coverage measurement is no
@@ -509,9 +534,14 @@ last.
 
 **Still open.**
 
-1. **The coverage measurement has not been run.** It needs a service-role key in
-   `~/ediagd-manager/.env.local`, or you running the two queries above against
-   Preview. Nothing in this plan waits on it.
+1. **The coverage measurement has not been run.** It needs a service-role key
+   placed in `~/ediagd-manager/.env.local`, or you running the two queries above
+   against Preview. Nothing in this plan waits on it.
+
+   **The staging database will not answer it.** The question is what share of the
+   *real* Doggett feed is bridged, so it has to be asked of production data —
+   which is exactly why the read is read-only and why it is the one thing this
+   branch wants from Preview.
 2. **`coachable = false` and manager films.** The supply view keeps
    `family_pitch_supply`'s filter, so the 13 codes 0066 marks *"map for
    reporting but never coach"* cannot supply a manager meeting. Right by
