@@ -5202,5 +5202,22 @@
   "expectedDuration": 109.8,
   "durationOk": true,
   "backfilledBy": "ingest 11 October — replace:video trims inline and writes no ledger row; this is that row, written by hand. Head and tail are trim:verify on the landscape master after the swap."
+ },
+ "r00wjhDoA01CuAfOVJhxm9QxTMqwuwKNNEhLbFgXxr39w": {
+  "contentId": "5505bac4-5e1c-42ce-b087-52b5ecf44b32",
+  "title": "Power of Positive Language, Part 1",
+  "newAssetId": "AnKbe61nae0002x012RMwwbD02CIs82z2zbgPoZm3FvjCm00",
+  "trimStart": 15.46,
+  "trimEnd": 142.46,
+  "oldDuration": 148.905,
+  "newDuration": 127,
+  "cutAt": "2026-11-02T20:18:05.317Z",
+  "durationOk": true,
+  "expectedDuration": 127,
+  "verified": {
+   "head": 0,
+   "tail": 0.607,
+   "ok": true
+  }
  }
 }

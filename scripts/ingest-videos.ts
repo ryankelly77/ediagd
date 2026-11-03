@@ -203,8 +203,24 @@ const ROUTES: Record<string, Route> = {
   CLOSE: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "The Close" },
   OBJECTION: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "Objection Handling" },
   MPI: { placement: "daily_lifestyle", collection: "Craft", craftSeries: "Multi-Point Inspection" },
-  // Craft rotation, series deliberately unassigned — somebody will sort it.
-  CRAFT: { placement: "daily_lifestyle", collection: "Craft", craftSeries: null },
+  /*
+   * Craft rotation, series deliberately unassigned — somebody will sort it.
+   *
+   * `daily_craft`, NOT `daily_lifestyle` — corrected 31 October. 0131 added
+   * `daily_craft` as slot 3's placement and said why in as many words: calling
+   * a craft lesson film `daily_lifestyle` "would be false about every one of
+   * them". This table was never updated, so every CRAFT film ingested since
+   * has been routed to slot 1's value. Measured before the change: 116 of the
+   * 141 live Craft films carry `daily_craft`, and all 12 Coverage is Key films
+   * do, so the ingest disagreed with the library it was writing into.
+   *
+   * It was inert rather than harmless: nothing reads `daily_craft` yet, and
+   * the lifestyle slot also requires `collection = 'Mindset'`, so a Craft film
+   * could not actually reach the wrong morning. What it produced was 17 rows
+   * whose placement was a false statement about them — which is the defect
+   * 0131 exists to prevent, one release later.
+   */
+  CRAFT: { placement: "daily_craft", collection: "Craft", craftSeries: null },
   // The first-run intro. Stored correctly; no screen consumes it yet.
   ONBOARDING: { placement: "onboarding_intro", collection: "Onboarding", craftSeries: null },
   /*
