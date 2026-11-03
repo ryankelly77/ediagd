@@ -232,6 +232,10 @@ type Film = {
   duration_sec: number | null;
   mux_asset_id: string | null;
   mux_playback_id: string | null;
+  /* published or draft. Carried into the plan because trim:apply needs it to
+     decide whether the quiet window applies: the window protects advisors
+     mid-film, and a draft has none to protect. */
+  status: string;
 };
 
 type Side = "caption" | "word" | "none";
@@ -298,10 +302,16 @@ async function loadFilms(): Promise<Film[]> {
     const { data, error } = await db()
       .from("content")
       .select(
-        "id, title, collection, placement, duration_sec, mux_asset_id, mux_playback_id"
+        "id, title, collection, placement, duration_sec, mux_asset_id, mux_playback_id, status"
       )
       .eq("type", "advisor_video")
-      .eq("status", "published")
+      /* DRAFTS TOO, and this is the point of cutting before publishing.
+         `.eq("status","published")` meant a film could only be measured after
+         it was already serving its slate to advisors. A draft is
+         advisor-invisible by construction, so measuring and cutting it there
+         is the only order in which nobody ever sees the slate. Retired is
+         still excluded: there is nothing to cut for a film that is out. */
+      .in("status", ["published", "draft"])
       .is("retired_at", null)
       .order("id")
       .range(page * pageSize, page * pageSize + pageSize - 1);
@@ -905,6 +915,7 @@ async function main() {
     tailMeasuredBy: "none",
     flagHead: false,
     flagTail: false,
+    status: f.status,
     proposedStart: null,
     proposedEnd: null,
     notes: [],
@@ -1037,7 +1048,7 @@ async function main() {
 
   const summary = {
     generatedAt: new Date().toISOString(),
-    scope: ONLY || LIMIT ? `SCOPED: ${rows.length} of the published library` : "every published film",
+    scope: ONLY || LIMIT ? `SCOPED: ${rows.length} of the library` : "every published and draft film",
     publishedFilms: rows.length,
     measured,
     screenedIntoWordPass: flagged.length,
