@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "log": "node scripts/work-log.mjs",
+    "log:report": "node scripts/work-log-report.mjs",
     "sync:finish": "node scripts/sync-finish.mjs",
     "sync:repair": "node scripts/sync-repair.mjs",
     "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js",
