@@ -69,3 +69,15 @@ invented here.
 | 2026-10-19 | 2 | Rollcall | [reconstructed] Rollcall posts on days the store is open |
 | 2026-10-20 | 5 | Manager Screen | [reconstructed] Manager roster drops advisors who have left; Tiner/Pinder rulings recorded |
 | 2026-10-26 | 10 | Team Screen & Launch | [reconstructed] Team screen says whether each advisor did today; videos completed today; App Store launch step 1 |
+
+## 2026-11
+
+| Date | Hours | Workstream | Description |
+|---|---|---|---|
+| 2026-11-01 | 1 | Captions & Sync | [reconstructed] Captions scan and restore script, daily flow names every outstanding leg; merged PR #79 day-gate evidence and retry |
+| 2026-11-02 | 4 | Fixes & Repair Tools | [reconstructed] Quiz 404 fix, db:migrate consent, short film titles, watch ticket to store-day end, restore:day, replace:video, sync gate; PRs #80 to #88 |
+| 2026-11-02 | 5.6 | Trim & Ingest | [reconstructed] One cutter (trim:apply from the disk master), November ingest with 0173 Power of Positive Language 13 lessons, run records, branch rules, pitch picker ranking; PR #89 |
+| 2026-11-03 | 1.8 | Ingest | Ingest |
+| 2026-11-03 | 1.8 | Ingest | [reconstructed] Merged PR #91 November ingest, finished the 30 October ingest with corrections, migration number taken at PR time |
+| 2026-11-03 | 0.7 | Agent Coordination | [reconstructed] Who-owns-what rules for the coding agents: checkouts, migrations, file ownership, PR base |
+| 2026-11-04 | 0.4 | Work Log | [reconstructed] Wired up npm run log and log:report, committed the work log scripts |
