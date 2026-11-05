@@ -554,6 +554,20 @@ success.
 This is the same defect as a summary that prints regardless of what happened — the
 merge tells you it merged, and does not tell you where.
 
+## The work log is typed, so it has to be asked for
+
+**At the end of any session where code was written, remind Ryan to run `npm run log`
+before he closes the terminal.** The log is a claim about his time, so no hook, cron
+or script may ever write a row on his behalf. A row nobody is reminded to type is a
+row reconstructed from git months later.
+
+**Rows Ryan has typed into `docs/WORK_LOG.md` are never stashed, reset, checked out
+over, or discarded.** If the file carries uncommitted rows when you start a branch or
+open a PR, commit them first, on their own, as `Work log rows through YYYY-MM-DD`, and
+change nothing inside them. They are the only record of hours nobody can reconstruct:
+git can show what was committed and when, never what a day cost. A stash that swallows
+them looks like tidiness and is a deletion.
+
 ## The Drop Zone ingest pipeline
 
 `INGEST.md` is the ingest procedure — the seven phases from Mitch's raw uploads to draft
