@@ -15,6 +15,7 @@ this is a claim about what somebody worked. The only writer is
 
 Append a row: `npm run log`
 Month total: `npm run log:report -- 2026-11`
+Backfill a past day: `npm run log -- 2026-11-02`
 
 ---
 
@@ -47,6 +48,8 @@ invented here.
 ---
 
 ## 2026-10
+
+**Superseded.** October's figure of record is 125.4 hours, from the [EDIAGD Contribution Record](https://claude.ai/artifact/9VfejBCQZDXaw4bFPgrCYH), not the 94 seeded here; the rows below are kept as they were.
 
 | Date | Hours | Workstream | Description |
 |---|---|---|---|

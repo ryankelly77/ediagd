@@ -35,7 +35,9 @@ const rows = [];
 for (const line of readFileSync(LOG, "utf8").split("\n")) {
   const t = line.trim();
   if (!t.startsWith("|")) continue;
-  const cells = t.slice(1, t.endsWith("|") ? -1 : undefined).split("|").map((c) => c.trim());
+  /* Split on unescaped pipes only: work-log.mjs writes a literal pipe as \\|. */
+  const cells = t.slice(1, t.endsWith("|") ? -1 : undefined)
+    .split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
   if (cells.length < 4) continue;
   const [date, hours, workstream, description] = cells;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;   // skips the header and the rule

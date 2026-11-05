@@ -554,6 +554,13 @@ success.
 This is the same defect as a summary that prints regardless of what happened — the
 merge tells you it merged, and does not tell you where.
 
+## The work log is typed, so it has to be asked for
+
+**At the end of any session where code was written, remind Ryan to run `npm run log`
+before he closes the terminal** — the log is a claim about his time, so no hook, cron
+or script may ever write a row on his behalf, and a row nobody is reminded to type is
+a row reconstructed from git months later.
+
 ## The Drop Zone ingest pipeline
 
 `INGEST.md` is the ingest procedure — the seven phases from Mitch's raw uploads to draft

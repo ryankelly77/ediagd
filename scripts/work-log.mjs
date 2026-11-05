@@ -35,6 +35,30 @@ const today = (() => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 })();
 
+/* AN OPTIONAL DATE, FOR BACKFILL. `npm run log -- 2026-11-02` files the row
+   under that day instead of today. Nothing else changes: the date is an
+   argument you type, and hours, workstream and description are still prompted.
+   A date that does not exist, or one in the future, is refused. */
+const arg = process.argv[2];
+let day = today;
+if (arg !== undefined) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(arg);
+  const real = m !== null && (() => {
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const t = new Date(y, mo - 1, d);
+    return t.getFullYear() === y && t.getMonth() === mo - 1 && t.getDate() === d;
+  })();
+  if (!real) {
+    console.error(`\n  ${arg} is not a date. Use YYYY-MM-DD, e.g. npm run log -- 2026-11-02\n`);
+    process.exit(1);
+  }
+  if (arg > today) {
+    console.error(`\n  ${arg} has not happened yet. Log a day once it is worked.\n`);
+    process.exit(1);
+  }
+  day = arg;
+}
+
 /* A LINE ITERATOR, NOT readline/promises.question().
    question() leaves an unsettled top-level await the moment stdin is a pipe
    rather than a terminal: the first prompt resolves, the second never does,
@@ -61,8 +85,9 @@ async function ask(question, validate) {
 }
 
 try {
-  console.log(`\n  Work log — ${today}\n`);
+  console.log(`\n  Work log — ${day}${day === today ? "" : " (backfill)"}\n`);
 
+  let longDay = null;   // the over-16 figure already warned about once
   const hours = await ask("  Hours worked:   ", (v) => {
     if (!v) return "Enter a number of hours.";
     const n = Number(v);
@@ -70,7 +95,10 @@ try {
     if (n <= 0) return "Hours must be greater than zero.";
     /* A guard, not a rule: 16 is already a very long day, and the usual cause
        of a number above it is a typo (80 for 8.0). It can be overridden. */
-    if (n > 16) return `${n} hours in one day — retype it if that is right.`;
+    if (n > 16 && n !== longDay) {
+      longDay = n;
+      return `${n} hours in one day — retype it if that is right.`;
+    }
     return null;
   });
 
@@ -84,9 +112,9 @@ try {
 
   /* Pipes would break the table; the cell is escaped rather than refused. */
   const clean = (s) => s.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
-  const row = `| ${today} | ${Number(hours)} | ${clean(workstream)} | ${clean(description)} |`;
+  const row = `| ${day} | ${Number(hours)} | ${clean(workstream)} | ${clean(description)} |`;
 
-  const month = today.slice(0, 7);
+  const month = day.slice(0, 7);
   let text = readFileSync(LOG, "utf8");
 
   if (text.includes(`\n## ${month}\n`)) {
@@ -97,8 +125,24 @@ try {
     const nextHeading = text.indexOf("\n## ", start + 1);
     const end = nextHeading === -1 ? text.length : nextHeading;
     const section = text.slice(start, end);
-    const trimmed = section.replace(/\s*$/, "");
-    text = text.slice(0, start) + trimmed + "\n" + row + "\n" + text.slice(end);
+    /* Rows go in date order: after the last row dated on or before this one,
+       or straight under the table's rule if every row is later. A backfilled
+       day lands where it belongs, and a note under the table never ends up
+       between rows. */
+    const sec = section.split("\n");
+    let at = -1;
+    for (let i = 0; i < sec.length; i++) {
+      const d = /^\|\s*(\d{4}-\d{2}-\d{2})\s*\|/.exec(sec[i]);
+      if (d && d[1] <= day) at = i;
+      else if (at === -1 && sec[i].trim() === RULE) at = i;
+    }
+    if (at === -1) {
+      const trimmed = section.replace(/\s*$/, "");
+      text = text.slice(0, start) + trimmed + "\n" + row + "\n" + text.slice(end);
+    } else {
+      sec.splice(at + 1, 0, row);
+      text = text.slice(0, start) + sec.join("\n") + text.slice(end);
+    }
   } else {
     text = text.replace(/\s*$/, "") + `\n\n## ${month}\n\n${HEADER}\n${RULE}\n${row}\n`;
   }
