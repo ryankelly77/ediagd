@@ -51,6 +51,11 @@ export function ServiceShelf({
   const [done, setDone] = useState<Set<string>>(
     () => new Set(films.filter((f) => f.completed).map((f) => f.contentId))
   );
+  /* Which film is mid-write, and why the last write failed if it did. Both are
+     shown, because a completion that is still in flight and one that was
+     refused look identical otherwise — an untocked film. */
+  const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const markDone = (contentId: string, pct: number, errored: boolean) => {
@@ -73,21 +78,59 @@ export function ServiceShelf({
      */
     if (errored) return;
     if (done.has(contentId)) return;
-    setDone((prev) => new Set(prev).add(contentId));
+    if (saving) return;
+
+    /*
+     * ---- THE TICK IS THE SERVER'S ANSWER, NOT A PREDICTION OF IT -----------
+     *
+     * This used to tick first and then swallow whatever came back:
+     *
+     *     setDone(...);  try { await completeLibraryItem(...) } catch {}
+     *
+     * Two things were wrong with it, and the second is the one that cost
+     * somebody a week.
+     *
+     * `completeLibraryItem` reports failure by RETURNING `{ ok: false }`. It
+     * does not throw. So the `catch` caught nothing, the result was discarded
+     * unread, and every refusal was invisible — to the advisor and to us.
+     *
+     * And the tick stayed. The count read 12 of 12 for the rest of the session
+     * and reverted on the next server render, which is the next morning. On
+     * 5 November Valerie Patterson reported finishing all twelve Tires &
+     * Rotation films and finding six the next day, having done nothing in
+     * between — and she was right that she had done nothing, because the ticks
+     * were never saved. Four of those films had no completion and no event
+     * from the day she first watched them; she had watched them twice.
+     *
+     * The old comment reasoned that yanking the tick back "would tell somebody
+     * who just watched it that they had not". That is the wrong comparison. It
+     * tells them the truth one second later instead of the next morning, while
+     * they are still on the screen and can do something about it — and a tick
+     * that is not backed by a row is this file's own named defect: a label that
+     * is not evidence of what is behind it.
+     *
+     * So: tick on `ok`, surface the reason otherwise. The same shape CueDeck
+     * has used all along, which is why the library never had this bug.
+     */
+    setSaving(contentId);
+    setError(null);
     startTransition(async () => {
-      try {
-        /* "card", NOT "library". This shelf shares the library's server
-           action and is not the library — a completion here is outside the
-           daily loop and outside the library both, and 0123's source
-           vocabulary already had the word for it. */
-        await completeLibraryItem(contentId, "card", pct);
-      } catch {
-        /*
-         * Swallowed, and the tick stays. A failed write means the film is
-         * offered again tomorrow, which is a small cost; yanking the tick back
-         * would tell somebody who just watched it that they had not.
-         */
+      /* "card", NOT "library". This shelf shares the library's server
+         action and is not the library — a completion here is outside the
+         daily loop and outside the library both, and 0123's source
+         vocabulary already had the word for it. */
+      const result = await completeLibraryItem(contentId, "card", pct).catch(
+        (e: unknown) => ({
+          ok: false as const,
+          error: e instanceof Error ? e.message : "Could not save that just now.",
+        })
+      );
+      setSaving(null);
+      if (!result.ok) {
+        setError(result.error ?? "Could not save that just now.");
+        return;
       }
+      setDone((prev) => new Set(prev).add(contentId));
     });
   };
 
@@ -130,6 +173,30 @@ export function ServiceShelf({
                   onGateMet={(s) => markDone(current.contentId, s.pct, s.error)}
                 />
               </div>
+
+              {/*
+               * SAID OUT LOUD, because the alternative is what happened: a
+               * film that did not save looked exactly like a film that did.
+               * aria-live so it reaches somebody who is not watching the list.
+               */}
+              {saving === current.contentId && (
+                <p aria-live="polite" className="mt-2 text-xs font-bold text-ink-soft">
+                  Saving this one…
+                </p>
+              )}
+              {error && (
+                <p
+                  role="alert"
+                  className="mt-2 rounded-card px-3 py-2 text-xs font-bold"
+                  style={{
+                    background:
+                      "color-mix(in srgb, rgb(var(--ediagd-clay)) 12%, transparent)",
+                    color: "rgb(var(--ediagd-clay))",
+                  }}
+                >
+                  {error} This one is not saved — it will still be here.
+                </p>
+              )}
             </div>
           )}
 
