@@ -554,7 +554,7 @@ success.
 This is the same defect as a summary that prints regardless of what happened — the
 merge tells you it merged, and does not tell you where.
 
-## The work log is typed, so it has to be asked for
+## The work log: the task records what git sees, Ryan adds what it can't
 
 **The daily scheduled task already logs what git can see, so the rows that go
 missing are the ones it cannot.** If Ryan mentions EDIAGD work the repository has no
