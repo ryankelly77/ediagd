@@ -2,16 +2,26 @@
 
 Contribution hours, recorded as the work happens.
 
-**Every row is typed by a person.** There is deliberately no hook, no cron and
-no script that writes a row on your behalf — not on commit, not on merge, not
-on deploy. A log that fills itself in is a record of what a repository did, and
-this is a claim about what somebody worked. The only writer is
-`npm run log`, and it only runs when you run it.
+**Rows come from two writers, and the tag tells you which.**
+
+The **EDIAGD daily work log** scheduled task writes one set. Once a day has
+finished it estimates that day's repository hours from git and from file
+timestamps, and appends through `npm run log -- <date>`. Every row it writes
+carries `[reconstructed]`, because an estimate from evidence is what it is.
+
+**Ryan** writes the other set, and those rows carry no tag. They are for work
+the repository cannot see (an App Store submission, a call with Mitch that
+counts as development, a content pipeline run) or for his own figure on a day
+where the estimate is not the one he stands behind.
+
+**Nothing else writes a row.** No git hook, no cron inside this repository, and
+no coding agent. The scheduled task lives outside the repo and calls the same
+script a person does.
 
 | marker | meaning |
 |---|---|
-| `[reconstructed]` | written after the fact, from evidence, not logged on the day |
-| *(no marker)* | typed on or near the day the work happened |
+| `[reconstructed]` | written by the daily scheduled task, estimated from git and file timestamps |
+| *(no marker)* | typed by Ryan, for work the repository cannot see or his own figure for a day |
 
 Append a row: `npm run log`
 Month total: `npm run log:report -- 2026-11`
@@ -69,3 +79,14 @@ invented here.
 | 2026-10-19 | 2 | Rollcall | [reconstructed] Rollcall posts on days the store is open |
 | 2026-10-20 | 5 | Manager Screen | [reconstructed] Manager roster drops advisors who have left; Tiner/Pinder rulings recorded |
 | 2026-10-26 | 10 | Team Screen & Launch | [reconstructed] Team screen says whether each advisor did today; videos completed today; App Store launch step 1 |
+
+## 2026-11
+
+| Date | Hours | Workstream | Description |
+|---|---|---|---|
+| 2026-11-01 | 1 | Captions & Sync | [reconstructed] Captions scan and restore script, daily flow names every outstanding leg; merged PR #79 day-gate evidence and retry |
+| 2026-11-02 | 4 | Fixes & Repair Tools | [reconstructed] Quiz 404 fix, db:migrate consent, short film titles, watch ticket to store-day end, restore:day, replace:video, sync gate; PRs #80 to #88 |
+| 2026-11-02 | 5.6 | Trim & Ingest | [reconstructed] One cutter (trim:apply from the disk master), November ingest with 0173 Power of Positive Language 13 lessons, run records, branch rules, pitch picker ranking; PR #89 |
+| 2026-11-03 | 1.8 | Ingest | [reconstructed] Merged PR #91 November ingest, finished the 30 October ingest with corrections, migration number taken at PR time |
+| 2026-11-03 | 0.7 | Agent Coordination | [reconstructed] Who-owns-what rules for the coding agents: checkouts, migrations, file ownership, PR base |
+| 2026-11-04 | 0.4 | Work Log | [reconstructed] Wired up npm run log and log:report, committed the work log scripts |
