@@ -31,7 +31,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { completeModuleIfReady } from "@/lib/lms";
 import { accrueFromCompletion } from "@/lib/certification-server";
-import { gateThreshold, isWatched } from "@/lib/watch-coverage";
+import { isWatched, serverGateThreshold } from "@/lib/watch-coverage";
 import { recordEvent } from "@/lib/events/record";
 import type { CompletionSurface } from "@/lib/events/kinds";
 
@@ -143,13 +143,22 @@ export async function completeLibraryItem(
    * two decimals before comparing, because floating-point summation of
    * TimeRanges produces 94.999999 for a film plainly finished.
    *
-   * The client reports and the server verifies — unchanged. What changed is
-   * that both now verify against the same number.
+   * The client reports and the server verifies — unchanged.
+   *
+   * AND IT VERIFIES AGAINST serverGateThreshold, NOT gateThreshold. "Both now
+   * verify against the same number" was the sentence that lived here, and it
+   * was not true: the player's number comes off the media element and this one
+   * comes out of an integer column, so they disagreed in the fourth decimal
+   * place on 196 of 411 published films and this gate refused completions the
+   * player had already credited. Valerie Patterson lost four Tires & Rotation
+   * films to it and rewatched them twice. The server's bar is now provably
+   * below the player's for any duration the column can hold; see the long note
+   * on serverGateThreshold.
    */
   const isVideo = item.type !== "cue";
   if (isVideo) {
     const pct = Number(watchedPct ?? 0);
-    const bar = gateThreshold(item.duration_sec as number | null);
+    const bar = serverGateThreshold(item.duration_sec as number | null);
     if (!Number.isFinite(pct) || !isWatched(pct, bar)) {
       return { ok: false, error: "Not finished yet — watch to the end." };
     }
