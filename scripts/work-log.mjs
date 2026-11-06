@@ -1,14 +1,21 @@
 #!/usr/bin/env node
 /* ============================================================================
-   npm run log — append one row to docs/WORK_LOG.md, interactively.
+   npm run log: append one row to docs/WORK_LOG.md.
 
    PLAIN NODE, NO DEPENDENCIES. readline from the standard library and nothing
    else, so this keeps working whatever happens to the dependency tree.
 
-   IT ONLY RUNS WHEN YOU RUN IT. There is no hook and no automation behind this
-   file by design: the log is a claim about somebody's time, so every row is
-   typed. If you ever find yourself wanting to call this from a commit hook,
-   that is the moment to re-read the top of docs/WORK_LOG.md.
+   IT READS ANSWERS FROM STDIN, SO PIPED INPUT WORKS AS WELL AS A KEYBOARD.
+   That is how the EDIAGD daily work log scheduled task writes its rows: it
+   calls `npm run log -- <date>` and feeds the three answers down a pipe. The
+   prompts behave identically either way, which is deliberate, because a
+   separate machine path for the automated writer would be a second thing to
+   keep correct.
+
+   NOTHING INSIDE THIS REPOSITORY CALLS IT AUTOMATICALLY. No git hook, no cron
+   here, no coding agent. The scheduled task lives outside the repo. If you
+   ever find yourself wanting to call this from a commit hook, that is the
+   moment to re-read the top of docs/WORK_LOG.md.
 
    The month heading is created on first use of a new month, so the table stays
    grouped and `log:report` has something to key on.

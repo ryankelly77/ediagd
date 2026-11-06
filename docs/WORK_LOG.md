@@ -2,16 +2,26 @@
 
 Contribution hours, recorded as the work happens.
 
-**Every row is typed by a person.** There is deliberately no hook, no cron and
-no script that writes a row on your behalf — not on commit, not on merge, not
-on deploy. A log that fills itself in is a record of what a repository did, and
-this is a claim about what somebody worked. The only writer is
-`npm run log`, and it only runs when you run it.
+**Rows come from two writers, and the tag tells you which.**
+
+The **EDIAGD daily work log** scheduled task writes one set. Once a day has
+finished it estimates that day's repository hours from git and from file
+timestamps, and appends through `npm run log -- <date>`. Every row it writes
+carries `[reconstructed]`, because an estimate from evidence is what it is.
+
+**Ryan** writes the other set, and those rows carry no tag. They are for work
+the repository cannot see (an App Store submission, a call with Mitch that
+counts as development, a content pipeline run) or for his own figure on a day
+where the estimate is not the one he stands behind.
+
+**Nothing else writes a row.** No git hook, no cron inside this repository, and
+no coding agent. The scheduled task lives outside the repo and calls the same
+script a person does.
 
 | marker | meaning |
 |---|---|
-| `[reconstructed]` | written after the fact, from evidence, not logged on the day |
-| *(no marker)* | typed on or near the day the work happened |
+| `[reconstructed]` | written by the daily scheduled task, estimated from git and file timestamps |
+| *(no marker)* | typed by Ryan, for work the repository cannot see or his own figure for a day |
 
 Append a row: `npm run log`
 Month total: `npm run log:report -- 2026-11`

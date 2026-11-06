@@ -556,10 +556,11 @@ merge tells you it merged, and does not tell you where.
 
 ## The work log is typed, so it has to be asked for
 
-**At the end of any session where code was written, remind Ryan to run `npm run log`
-before he closes the terminal.** The log is a claim about his time, so no hook, cron
-or script may ever write a row on his behalf. A row nobody is reminded to type is a
-row reconstructed from git months later.
+**The daily scheduled task already logs what git can see, so the rows that go
+missing are the ones it cannot.** If Ryan mentions EDIAGD work the repository has no
+record of (an App Store submission, a call with Mitch that counts as development, a
+content pipeline run), remind him to add it with `npm run log`. Coding agents never
+write rows, including that one: telling him it is missing is the whole of the job.
 
 **Rows Ryan has typed into `docs/WORK_LOG.md` are never stashed, reset, checked out
 over, or discarded.** If the file carries uncommitted rows when you start a branch or
