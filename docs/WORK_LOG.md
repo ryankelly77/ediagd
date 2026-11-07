@@ -90,3 +90,6 @@ invented here.
 | 2026-11-03 | 1.8 | Ingest | [reconstructed] Merged PR #91 November ingest, finished the 30 October ingest with corrections, migration number taken at PR time |
 | 2026-11-03 | 0.7 | Agent Coordination | [reconstructed] Who-owns-what rules for the coding agents: checkouts, migrations, file ownership, PR base |
 | 2026-11-04 | 0.4 | Work Log | [reconstructed] Wired up npm run log and log:report, committed the work log scripts |
+| 2026-11-05 | 3.1 | Fixes & Repair Tools | [reconstructed] Watch ticks that never saved: server gate matched to the player, service shelf now reports refused completions, migration 0174 restores nine lost completions, watched-rule test fixed; measured 27 clipped live films for a re-cut brief; PR #95 merged 6 November |
+| 2026-11-06 | 2.9 | Fixes & Repair Tools | [reconstructed] Restored completions get their watch event (migration 0175) and the eight lessons that were never paid get paid (0176), both rehearsed against production in a rolled back transaction; PRs #95 and #96 |
+| 2026-11-06 | 1.5 | Entitlement & Access | [reconstructed] The focus card counts only what the shelf can show an unentitled advisor (migration 0177), then started an entitlement parity check that runs after every migration apply; PR #97 |
