@@ -342,6 +342,56 @@ PGPASSWORD="$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)" \
   "select version from supabase_migrations.schema_migrations order by version desc limit 8;" \
   | sed 's/^/     /'
 
+# ---- STEP 5: THE TWO COPIES OF THE ENTITLEMENT RULE MUST STILL AGREE -------
+#
+# 0177 put the entitlement predicate in one place and cost 5x on every read of
+# `content`; 0178 put the policy back inline and kept the function for the
+# card's definer path. Two copies of one rule, and this project's standing rule
+# is that a convention closes a case while a construction closes a class — so
+# the parity is checked rather than promised.
+#
+# WHY IT RUNS HERE AND NOT ONLY ON DEMAND. Both copies are database objects.
+# Nothing but a migration can change either one. So "after every apply" is not
+# a sampling interval, it is the complete set of moments at which they can
+# possibly diverge — which is what makes this check exhaustive rather than
+# periodic.
+#
+# WHY IT RUNS AFTER THE PUSH, WHICH IS A REAL LIMITATION AND NOT A DETAIL. The
+# new state cannot be measured before it exists, so a drift is caught with the
+# migration already applied. This is therefore a tripwire and not a gate: it
+# makes the divergence loud within seconds and names the pre-migration backup
+# to go back to. Being honest about which of the two it is matters, because a
+# tripwire described as a gate is a confident wrong answer about safety.
+#
+# It reads as `authenticated` with each advisor's own claims, because a policy
+# cannot be observed as a role that bypasses it — see the script's header.
+printf '\n  5. entitlement parity — the RLS policy against content_entitled_for\n'
+PARITY="$(dirname "$0")/entitlement-parity.sql"
+[[ -f "$PARITY" ]] || fail "the parity check is missing: ${PARITY}
+             This step is not optional and a missing file is not a pass."
+
+# NO PIPELINE HERE, DELIBERATELY. `psql ... | sed` would put the one command
+# whose exit status decides this step on the left of a pipe, and the long note
+# on verify_dump above records what this script already paid for that: under
+# `set -o pipefail` a pipeline's status is not the status of the command you
+# care about. Captured first, printed second, tested on psql's own code.
+PARITY_OUT=""
+PARITY_RC=0
+PARITY_OUT="$(PGPASSWORD="$(security find-generic-password -s "$KEYCHAIN_SERVICE" -w)" \
+  psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+       -v ON_ERROR_STOP=1 -q -f "$PARITY" 2>&1)" || PARITY_RC=$?
+printf '%s\n' "$PARITY_OUT" | sed 's/^/     /'
+
+if (( PARITY_RC != 0 )); then
+  fail "ENTITLEMENT PARITY FAILED — the RLS policy on \`content\` and
+             content_entitled_for no longer agree. The migration IS APPLIED;
+             this check runs after the push because the new state cannot be
+             measured before it exists.
+
+             The pre-migration dump is intact at:
+             ${DUMP}"
+fi
+
 # ---- retention: keep the last ten, delete nothing else ---------------------
 printf '\n  retention\n'
 COUNT=$(ls -1t "${BACKUP_DIR}"/prod-*.dump 2>/dev/null | wc -l | tr -d ' ')

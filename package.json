@@ -137,7 +137,8 @@
     "backfill:modules": "rm -rf .tmp-mbf && tsc -p scripts/tsconfig.modulebackfill.json && mkdir -p .tmp-mbf/node_modules/server-only && echo \"module.exports={};\" > .tmp-mbf/node_modules/server-only/index.js && ln -sfn .. .tmp-mbf/node_modules/@ && node .tmp-mbf/scripts/backfill-module-completions.js",
     "backfill:short-titles": "rm -rf .tmp-st && tsc -p scripts/tsconfig.shorttitles.json && mkdir -p .tmp-st/node_modules && ln -sfn .. .tmp-st/node_modules/@ && node .tmp-st/scripts/backfill-short-titles.js",
     "restore:day": "rm -rf .tmp-rd && tsc -p scripts/tsconfig.restoreday.json && mkdir -p .tmp-rd/node_modules && ln -sfn .. .tmp-rd/node_modules/@ && node .tmp-rd/scripts/restore-day.js",
-    "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js"
+    "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js",
+    "check:entitlement-parity": "bash scripts/entitlement-parity.run.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
