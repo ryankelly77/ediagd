@@ -67,14 +67,12 @@
    ============================================================================ */
 
 import type { IsoDate } from "@/lib/gamification/streak";
+import { meter, meterCells, pctText } from "@/lib/meter";
 import type { Rollcall, RollcallChange, RollcallRow } from "@/lib/rollcall";
 import { hasMovement, loopCompletionMismatches } from "@/lib/rollcall";
 
 /** Beyond this many advisors the message is truncated — and says so. */
 const MAX_ADVISORS = 40;
-
-/** The meter's width in cells. 10 so a cell is a round ten per cent. */
-const METER_CELLS = 10;
 
 /** "10 Oct". */
 function shortDate(iso: IsoDate | string | null): string {
@@ -122,40 +120,26 @@ export function storeDay(instant: Date, timezone: string | null): string {
   }
 }
 
-/**
- * `▰▰▰▱▱▱▱▱▱▱ 31%` — the meter and its number, as one string of fixed width.
+/*
+ * THE METER'S ARITHMETIC LIVES IN lib/meter.ts, AND THAT MOVE IS THE POINT
+ * OF 0179 RATHER THAN TIDYING.
  *
- * ONE PAIR OF FUNCTIONS FOR THE TEAM LINE AND EVERY ROSTER ROW, because a bar
- * drawn twice is two claims about one number. The percentage is rounded for
- * display and the cell count is rounded from the same fraction, so the two
- * cannot disagree about which side of a tenth the advisor is on.
+ * It was private to this file while the post was the only surface allowed to
+ * draw it. Ryan, 8 November: /admin/engagement draws it too, per advisor — so
+ * there are now two renderings of one number, and a second copy of the rounding
+ * is how the screen and Slack come to disagree about one advisor with nothing
+ * erroring.
  *
- * The number is PADDED BY THE ROSTER rather than here, to a width taken from
- * the rows actually being printed: fixing it at three would put two spaces
- * before every ordinary "82%" to leave room for a "100%" that may not be on
- * the post, and fixing it at three would ALSO misalign the day somebody hits
- * 100. A column's width is a property of its contents.
+ * `meterCells` is still the SLACK rendering: box-drawing characters, because the
+ * roster is a code fence and Slack only lines columns up in a monospaced font.
+ * The screen draws the brand's progress rule over the same `meterPct`.
  *
- * ZERO OF ZERO DRAWS AN EMPTY METER AND SAYS 0%, and that only ever happens
- * when the store has no active core track at all — a state the caller reports
- * as a sentence instead, because an empty bar claims "none of this is done"
- * which is false when there is nothing to do.
+ * The number is PADDED BY THE ROSTER rather than by the formatter, to a width
+ * taken from the rows actually being printed: fixing it at three would put two
+ * spaces before every ordinary "82%" to leave room for a "100%" that may not be
+ * on the post, and would misalign the day somebody hits 100. A column's width
+ * is a property of its contents.
  */
-function meterCells(done: number, total: number): string {
-  const fraction = total > 0 ? done / total : 0;
-  const filled = Math.min(METER_CELLS, Math.max(0, Math.round(METER_CELLS * fraction)));
-  return `${"▰".repeat(filled)}${"▱".repeat(METER_CELLS - filled)}`;
-}
-
-/** "82%", "0%", "100%" — the same rounding the cells use. */
-function pctText(done: number, total: number): string {
-  return `${Math.round(100 * (total > 0 ? done / total : 0))}%`;
-}
-
-/** The meter and its number, for a line that is a sentence rather than a row. */
-function meter(done: number, total: number): string {
-  return `${meterCells(done, total)} ${pctText(done, total)}`;
-}
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 

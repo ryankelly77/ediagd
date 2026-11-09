@@ -128,7 +128,7 @@ async function main() {
     `  window since   ${since ? since.toISOString() : "— (no successful post recorded; this renders as a first post)"}`
   );
   console.log(
-    `  cert meter     ${rollcall.teamGatingDone} of ${rollcall.teamGatingTotal} gating modules across ${rollcall.coreTracks} active core tracks · proven ${rollcall.certProgressProven}`
+    `  cert meter     ${rollcall.teamGatingDone} of ${rollcall.teamGatingTotal} gating modules across ${rollcall.coreTracks} active core tracks`
   );
   console.log(
     `  listed         ${message.listed}, dropped ${message.dropped}, moved ${message.changed}`

@@ -4,10 +4,17 @@
    Ryan, 6 October: the six facts per advisor, and "Slack it to #ediagd too".
    Ryan, 6 November: who did their morning, who did not, and a meter per person
    toward EDIAGD Certified — see lib/rollcall-message.ts for what was dropped
-   and why. The post's meter is correct HERE and nowhere else without care:
-   module_completion is own-rows-only (0035) and this route reads it as the
-   SERVICE ROLE, which the section below already names as the one caller whose
-   scope is not its policy.
+   and why.
+
+   THIS ROUTE IS NO LONGER THE ONLY PLACE THE METER IS CORRECT. It used to be,
+   and the sentence here said so: module_completion was own-rows-only (0035), so
+   the numerator was readable by this route alone, as the SERVICE ROLE, which
+   the section below names as the one caller whose scope is not its policy. Ryan
+   reversed that ruling on 8 November and 0179 opened the read to a manager, an
+   admin and the platform owner — so /admin/engagement draws the same meter from
+   the same lib/meter.ts, through the viewer's own session. Nothing in this route
+   changed; what changed is that it is no longer alone, which is why the screen
+   and this post can now be checked against each other.
 
    ---------------------------------------------------------------------------
    THE SCHEDULE, AND THE DST CAVEAT IT CARRIES

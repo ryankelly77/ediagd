@@ -182,7 +182,6 @@ function rollcall(rows: RollcallRow[], over: Partial<Rollcall> = {}): Rollcall {
     teamGatingDone: rows.reduce((n, r) => n + r.certs.gatingDone, 0),
     teamGatingTotal: gatingTotal * rows.length,
     teamEarned: rows.reduce((n, r) => n + r.certs.earned.length, 0),
-    certProgressProven: true,
     ...over,
   };
 }

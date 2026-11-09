@@ -37,9 +37,30 @@
    the real install record lives. A column headed "Installed" over a sign-in
    date would be this project's most-repeated mistake: a label with something
    else behind it.
+
+   ---------------------------------------------------------------------------
+   THE METER IS HERE, AND IT IS THE SLACK POST'S METER — RYAN, 8 NOVEMBER
+   ---------------------------------------------------------------------------
+   This screen used to show earned tracks and refuse to draw a percentage,
+   because module_completion was own-rows-only and a bar read through an admin's
+   session would have been 0% for a whole roster. 0179 is the read path —
+   module_completion_read admits the platform owner, the person themselves and
+   managed_users() — so the team line and every row now carry the meter, from
+   lib/meter.ts, which is the function the post prints.
+
+   THE SCREEN AND SLACK CANNOT DISAGREE BECAUSE THEY SHARE THE ARITHMETIC, not
+   because somebody will remember to change both. The renderings differ on
+   purpose: the post draws box-drawing cells inside a code fence, this draws the
+   brand's progress rule.
    ============================================================================ */
 
 import { Card } from "@/components/brand/Card";
+/* The brand's progress rule, as used on /certifications and /library. The
+   Slack post's box-drawing cells are a monospace-fence rendering and would be a
+   ragged row of glyphs here; what the two surfaces share is the ARITHMETIC,
+   which is lib/meter.ts, not the characters. */
+import { ProgressBar } from "@/components/library/CoursePieces";
+import { meterPct, pctText } from "@/lib/meter";
 import { flagLine } from "@/lib/schedule-flags";
 import {
   loopCompletionMismatches,
@@ -392,42 +413,69 @@ export function RollcallSection({
         </p>
       )}
 
-      {/* ---- THE CRAFT LADDER, AND WHAT THIS SCREEN MAY SAY ABOUT IT -----
-          The evening Slack post carries a meter per advisor toward EDIAGD
-          Certified. This screen carries the EARNED TRACKS and not the meter,
-          and the reason is a ruling rather than an omission:
+      {/* ---- THE CRAFT LADDER — THE SAME METER THE EVENING POST CARRIES ---
+          Ryan, 8 November: managers and admins see the EDIAGD Certified meter
+          here, the same one the Slack post has. That reversed 0117's ruling
+          and 0179 is the read path: module_completion_read admits the platform
+          owner, the person themselves and managed_users(), so this screen's
+          viewer — an admin at the rooftop, or the platform owner — gets real
+          numbers through their own session instead of the silent zeros
+          module_completion_own used to return.
 
-            · module_completion is own-rows-only — module_completion_own, 0035
-              — so read through an admin's session this screen would show 0%
-              for an entire roster, with no error. A label with nothing behind
-              it is worse than a blank.
-            · 0117 says so deliberately: "a manager sees a credential pill ...
-              and never a colleague's per-track progress", and
-              loadCredentialPills repeats it. advisor_certification IS readable
-              for managed_users(), which is exactly the credential.
+          THE PERCENTAGE COMES FROM lib/meter.ts, which is also what the post
+          prints. Two roundings of one fraction would agree until one of them
+          was edited, and then Slack and this screen would disagree about one
+          advisor with nothing erroring.
 
-          The post is correct because the cron runs as the service role.
-          `certProgressProven` is the loader's OBSERVATION that this caller
-          managed a cross-user read, so if that ever becomes true here — a
-          definer path, a policy change — the team meter appears without
-          anybody having to remember to switch it on. */}
-      {rollcall.certProgressProven && rollcall.teamGatingTotal > 0 && (
-        <p className="mt-3 px-1 text-sm font-bold text-navy">
-          Team toward EDIAGD Certified:{" "}
-          {Math.round((100 * rollcall.teamGatingDone) / rollcall.teamGatingTotal)}% of
-          core lessons · {rollcall.teamEarned}{" "}
-          {rollcall.teamEarned === 1 ? "track" : "tracks"} earned
-        </p>
-      )}
-      {!rollcall.certProgressProven && rollcall.coreTracks > 0 && (
-        <p className="mt-3 max-w-prose px-1 text-xs leading-relaxed text-ink-soft">
-          Per-advisor lesson progress toward the {rollcall.coreTracks} core
-          tracks is not readable from here — completions are own-rows-only, so a
-          percentage on this screen would read 0% for everybody whatever they
-          have done. Earned tracks below come from the credential itself, and
-          the evening Slack post carries the full meter because the cron reads
-          it as the service role.
-        </p>
+          `teamGatingTotal > 0` IS STILL TESTED, and it is not a permission
+          test any more: it is "does an active core track exist at all". An
+          empty bar claims nobody has done any of it, which is false when there
+          is nothing to do — so that case is a sentence instead. */}
+      {rollcall.teamGatingTotal > 0 ? (
+        <div className="mt-4 rounded-xl border border-line bg-cream-card p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+            Toward EDIAGD Certified · {rollcall.coreTracks}{" "}
+            {rollcall.coreTracks === 1 ? "core track" : "core tracks"}
+          </p>
+          <p className="mt-1 text-base font-extrabold text-navy">
+            {pctText(rollcall.teamGatingDone, rollcall.teamGatingTotal)} of core
+            lessons
+            <span className="text-ink-soft"> · </span>
+            {rollcall.teamEarned.toLocaleString()}{" "}
+            {rollcall.teamEarned === 1 ? "track" : "tracks"} earned
+          </p>
+          <ProgressBar
+            pct={meterPct(rollcall.teamGatingDone, rollcall.teamGatingTotal)}
+          />
+          {/* The denominator, said out loud — the same discipline the push line
+              follows. A percentage with no stated base is a number somebody
+              will quote at a dealer, and this one is per-person × the roster
+              rather than a count of modules. */}
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+            {rollcall.teamGatingDone.toLocaleString()} of{" "}
+            {rollcall.teamGatingTotal.toLocaleString()} gating lessons across the{" "}
+            {rollcall.total} {rollcall.total === 1 ? "account" : "accounts"} on
+            this roll. A track somebody has already earned counts as all of its
+            lessons, because a track earned before a tenth lesson was published
+            is still earned.
+          </p>
+        </div>
+      ) : (
+        /* NOT `coreTracks === 0`, which would leave a hole the size of "the
+           tracks exist and none of them has a gating lesson" — the state Power
+           of Positive Language was in for weeks. Both reasons produce a zero
+           denominator and both get the same sentence, because the honest thing
+           to say is the same. The no-accounts case is silent: the section above
+           already says nobody has been provisioned, and this would be a second
+           sentence about the same absence. */
+        rollcall.total > 0 && (
+          <p className="mt-3 max-w-prose px-1 text-xs leading-relaxed text-ink-soft">
+            No active core track carries a gating lesson yet, so there is no
+            EDIAGD Certified meter to draw. An empty bar would claim nobody has
+            done any of it, which is a different statement from there being
+            nothing to do.
+          </p>
+        )
       )}
 
       <div className="mt-3 space-y-2">
@@ -436,10 +484,6 @@ export function RollcallSection({
             key={`${row.userId}:${row.rooftopId}`}
             row={row}
             showRooftop={showRooftop}
-            /* Passed in rather than read off the row, because it is a fact
-               about the CALLER and not about the advisor. A row cannot answer
-               "could I see this". */
-            progressReadable={rollcall.certProgressProven}
           />
         ))}
       </div>
@@ -576,11 +620,9 @@ function Chip({ href, label, active }: { href: string; label: string; active: bo
 function Row({
   row,
   showRooftop,
-  progressReadable,
 }: {
   row: RollcallRow;
   showRooftop: boolean;
-  progressReadable: boolean;
 }) {
   const line = flagLine(row.flags);
   /* "iOS", "iOS · Web". The platforms a session has actually arrived from —
@@ -665,11 +707,12 @@ function Row({
               : `${row.completionCount} · last ${shortDate(row.lastCompletionOn)}`
           }
         />
-        {/* EARNED TRACKS, not a percentage. advisor_certification is readable
-            for managed_users() (0115) and is the credential a manager is meant
-            to see; the per-track progress behind it is not, and is not faked
-            here with a number that would be zero for everybody. The meter is
-            on the Slack post, which runs as the service role. */}
+        {/* THE TRACKS BY NAME, AND THE METER BESIDE THEM — both, now, and the
+            pairing is the point. advisor_certification is readable for
+            managed_users() (0115) and the completions behind it are too since
+            0179, so "earned 2" and "41% of core lessons" are finally answers to
+            one question under one permission. The names stay because a
+            credential has a name and a percentage does not. */}
         <Field
           label="Core tracks earned"
           value={
@@ -679,14 +722,7 @@ function Row({
           }
           wrap
         />
-        <Field
-          label="Lesson progress"
-          value={
-            progressReadable
-              ? `${row.certs.gatingDone} of ${row.certs.gatingTotal} core lessons`
-              : "Not readable here"
-          }
-        />
+        <MeterField done={row.certs.gatingDone} total={row.certs.gatingTotal} />
         <Field label="Certs opened" value={tallyLine(row.certsOpened)} />
         <Field label="Tracks opened" value={tallyLine(row.tracksOpened)} />
         <Field label="Library opened" value={tallyLine(row.libraryOpened)} />
@@ -744,6 +780,52 @@ function Row({
         </p>
       )}
     </Card>
+  );
+}
+
+/**
+ * One advisor's meter toward EDIAGD Certified — a cell on the same grid.
+ *
+ * ---------------------------------------------------------------------------
+ * THE PERCENT IS THE POST'S PERCENT, FROM THE POST'S FUNCTION
+ * ---------------------------------------------------------------------------
+ * `pctText` and `meterPct` are lib/meter.ts, which is what buildRollcallMessage
+ * prints. The arithmetic is shared and the rendering is not: Slack gets
+ * box-drawing cells because its roster is a monospaced fence, and this gets the
+ * brand's progress rule because every other bar in the app is one. A second
+ * `Math.round(100 * done / total)` typed into this component would agree with
+ * the post until one of them was edited.
+ *
+ * BOTH NUMBERS, NOT JUST THE PERCENT. "41%" alone is a figure somebody will
+ * repeat to a dealer with no idea what it is 41% of, and the denominator here
+ * is the gating lessons of the active core tracks — counted once per track, so
+ * it matches the bar the advisor sees on /certifications rather than being the
+ * tidier distinct count.
+ *
+ * A ZERO DENOMINATOR DRAWS NO BAR. It means no active core track carries a
+ * gating lesson, and an empty rule under "0%" would claim this advisor has done
+ * none of something that does not exist. The section says so once, above.
+ */
+function MeterField({ done, total }: { done: number; total: number }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+        Toward EDIAGD Certified
+      </dt>
+      {total > 0 ? (
+        /* The rule lives INSIDE the dd, because a dl's grouping div may hold
+           only dt and dd — a span beside them is invalid markup. It costs
+           nothing: ProgressBar's filled half is already aria-hidden, so a
+           screen reader reads the figures once. */
+        <dd className="mt-0.5 text-sm text-ink">
+          <span className="font-extrabold text-navy">{pctText(done, total)}</span> ·{" "}
+          {done} of {total} core lessons
+          <ProgressBar pct={meterPct(done, total)} />
+        </dd>
+      ) : (
+        <dd className="mt-0.5 truncate text-sm text-ink">No core lessons yet</dd>
+      )}
+    </div>
   );
 }
 
