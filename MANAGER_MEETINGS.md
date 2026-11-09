@@ -22,9 +22,15 @@ current `origin/main`, and **checked again immediately before Ryan merges** —
 because another branch can land a migration in between, and a collision does
 not announce itself. It silently picks one of the two files.
 
-That has already happened once on this branch: `0173` landed on `main` from
-another branch while this plan was being written, so the next free number here
-is `0174` rather than `0173`. Re-checking is not a formality.
+That has already happened **twice** on this branch, and the second time is the
+better evidence. `0173` landed from another branch while the plan was being
+written, making the next free number `0174`. The plan then said `0174` — and
+`0174` through `0179` all landed on `main` in the week it sat in review, so the
+next free number is now `0180`.
+
+Six numbers in a week, on a document whose own rule is to re-check. Re-checking is
+not a formality, and the number written in either document is a reading of
+`origin/main` on the day, never a reservation.
 
 ### Merge `main` in at least weekly, and always before writing a migration
 

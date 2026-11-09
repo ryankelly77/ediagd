@@ -1,13 +1,35 @@
 # Manager Meetings — the plan
 
-Mapping the spec onto the schema and code as they stand on `main` at `c94e835`.
+Mapping the spec onto the schema and code as they stand on `main` at `c1f3b4b`.
 No feature code written. Read with `MANAGER_MEETINGS.md` for the branch rules and
 the Preview constraint.
 
-**Revision 2**, incorporating Ryan's rulings A–I. The first revision planned an
-op-code-grain ranking; ruling A moves it to family grain, which removes most of
-the risk and one whole spec item. What changed is recorded in *What the rulings
-settled* at the end.
+**Revision 3**, re-grounded on current `origin/main`. Revision 2 mapped onto
+`c94e835`; thirty-three commits and six new migrations have landed since, and this revision
+is what re-reading them changed. Nothing in the *design* moved — rulings A–I all
+still hold, and every view, function and library the plan leans on is byte-identical
+on `main` today. What moved is four things the plan said about its surroundings, and
+one of them is the number it would have written into a migration filename.
+
+**What revision 3 changes, and why each one matters.**
+
+1. **The first migration number is `0180`, not `0174`.** `0174`–`0179` all landed
+   while revision 2 sat in review. This is the **second** time this branch has been
+   caught by it, and it is the clearest possible argument for the re-check rule:
+   revision 2 already told this story about `0173` and *still* went stale, because a
+   number written down is a claim about a moving target. See *Build order*.
+2. **Ruling H now has a precedent on `main`, and the plan should copy it rather
+   than invent.** `0179` (8 November) widened a manager-facing read in exactly the
+   shape slice 1 needs. See *The gate that excludes the viewer it is built for*.
+3. **`0178` measured the cost of the construction slice 1 would reach for.** A
+   function call inside an RLS qual cannot be folded into the planner's InitPlan and
+   is evaluated per row — 4.5–5.2x on `content`. It changes the idiom slice 1 writes,
+   and it is a measurement rather than a preference.
+4. **Slice 5 was half a change.** `app_event` has a `dedup_key` the plan never
+   mentioned and a companion file, `lib/events/kinds.ts`, that a new kind is
+   *required* to edit. Both are now in the slice. See *(d)*.
+
+Revision 2's own record of what the rulings settled is kept at the end, unchanged.
 
 ---
 
@@ -166,16 +188,104 @@ needs it: the family is plain text on `advisor_family_attach` and
 `family_store_benchmark`, both of which a manager can already read. Only the
 definer function reads `op_code_family`, and it runs as its owner.
 
-Roles named, with the widening applied:
+Verified against current `origin/main`: `0081`'s policy body is unchanged, and
+`admin_rooftops()` (0045) still excludes `manager`. The defect is live today.
+
+### `0179` is this slice's precedent, and slice 1 copies its shape
+
+**Authored 8 November and merged to `main` 9 November in PR #100 (`c1f3b4b`), while revision 2 was in review.** The same PR also edited `0117` in place; nothing in this plan reads `0117`.
+`0179_managers_read_their_advisors_completions` is the same move on a different
+table: a manager-facing surface could not read the one relation it needed,
+returned a confident `0%` for an entire roster with no error, and the remedy was
+the read path rather than a heuristic that detects its absence. It is shaped on
+`advisor_certification_read` (0115), and slice 1 is now shaped on it in turn:
+
+- **Three arms, in that order** — `is_platform_owner()`, the caller's own scope,
+  then the managed scope.
+- **`(select ...)` scalar subqueries rather than bare calls**, so the planner
+  hoists them into an InitPlan instead of calling them per row. That is 0027's
+  rule, and 0178 is the measurement behind it.
+- **One policy, not two that have to agree.** 0179 dropped `module_completion_own`
+  because its whole content had become an arm of the new policy, and two
+  permissive policies are ORed anyway — so leaving it would be a duplicate clause
+  nobody would think to edit in step. Slice 1 has no such duplicate
+  (`op_code_catalog_read` is the only select policy on the table), but the question
+  is asked here so the answer is on the record rather than assumed.
+- **Stale comments are replaced in the same pull request, not softened.** 0179
+  rewrote the two sentences that still described the ruling it reversed, on the
+  stated grounds that a comment describing a rule the codebase has stopped
+  following instructs the reader not to look. Slice 1 inherits that: 0081's own
+  commentary about who may read the catalog is part of the change, not a follow-up.
+
+**And 0178 is why the idiom is a measurement rather than a preference.** It found,
+on production as a Beaumont advisor, that moving an entitlement predicate out of
+an inline `EXISTS` and into a shared function cost **4.5–5.2x on every read of
+`content`** — an inline `EXISTS` inside an RLS qual is compiled into the plan's
+InitPlan / hashed-SubPlan machinery and evaluated once, and a function call cannot
+be folded into that, so it runs per row. A second remedy, hoisting the question to
+one call per query behind `= any(...)`, measured *worse* than the thing it was
+fixing.
+
+The honest read for slice 1: `op_code_catalog` holds **73 rows**, so the per-row
+cost is bounded and nothing here is in `content`'s league — and the existing policy
+*already* uses `exists (select 1 from admin_rooftops())`, as do its three siblings
+in 0081. So this slice keeps the established shape rather than reaching for a
+rewrite 0178 would not justify at this size. What 0178 forbids is the opposite
+move — "improving" these four policies onto one shared function — and that is
+written down here so nobody attempts it on this branch believing it to be a
+tidy-up.
+
+### Widening to `managed_rooftops()` also admits `group_manager`, and that is a decision
+
+`managed_rooftops()` is not simply "admin plus manager". It is:
+
+```sql
+  membership.role in ('manager', 'admin')
+  union
+  org_rooftops(array['group_owner', 'group_manager'])
+```
+
+and `admin_rooftops()` **deliberately excludes `group_manager`** — 0045 says why,
+in terms: *"running several stores is not the same as administering the account,
+and the admin surfaces carry pricing, gamification settings and the DMS
+importer."*
+
+So this widening hands catalog read to a role the admin gate refused on purpose.
+**The plan accepts that and states it rather than inheriting it silently**, because
+AGENTS.md's rule is to name the roles that will really call it — and revision 2's
+table named four of the seven. The reasoning: 0045's exclusion is about pricing,
+settings and the importer, none of which is in `op_code_catalog`, and a group
+manager running several stores has a plainer claim to read the *name* of an op code
+than an advisor does. If Ryan disagrees, the alternative is a bespoke predicate —
+which is a second definition of "manages this rooftop", and therefore the thing to
+avoid rather than the safe option.
+
+Roles named — all seven this time, with the widening applied:
 
 | role | `op_code_catalog` | `op_code_family` | `advisor_family_attach` | `family_store_benchmark` | `manager_meeting_op_code` |
 |---|---|---|---|---|---|
 | platform owner | ✅ | ✅ | ✅ | ✅ | ✅ |
 | admin | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **manager** | ✅ *(widened)* | ❌ *(not needed)* | ✅ | ✅ | ✅ |
+| group_owner | ✅ *(already, via 0045)* | ✅ | ✅ | ✅ | ✅ |
+| **group_manager** | ✅ *(widened — newly granted, see above)* | ❌ | ✅ | ✅ | ✅ |
 | advisor | ❌ | ❌ | ✅ | ✅ | ❌ |
 | technician | ❌ | ❌ | ✅ | ❌ (0096) | ❌ |
 | service_role | ✅ | ✅ | ✅ | ✅ (0123) | ✅ |
+
+### The new parity gate is not evidence about this slice
+
+`db:migrate` now runs `check:entitlement-parity` as step 5 after every successful
+push, and it is a real gate — it exits non-zero on any difference and fails the
+migrate. **It is scoped to `content`**: it compares the three permissive policies
+on `content` against `content_entitled_for`, for every advisor on the database and
+every value of `content_type`.
+
+It therefore says **nothing** about `op_code_catalog`, and a green `db:migrate` on
+the slice-1 migration is not evidence that slice 1 is right. Stated because a
+check that passes alongside your change reads like a check *of* your change — which
+is this document's own scope rule, and the reason slice 1 carries its own
+acceptance.
 
 **The verification trap, and it is the whole slice.** Beaumont's two managers may
 well hold `admin` as well as `manager`. A suite that signed in as them and passed
@@ -332,9 +442,49 @@ worth repeating: `content_progress.source` is last-writer-wins and says which
 surface touched the row *last*, not which finished it. `app_event` is the
 append-only answer.
 
-**New:** three kinds on the CHECK constraint — `manager_meeting_served`,
-`manager_meeting_watched`, `manager_meeting_swapped` — with 0163's non-vacuous
-test mirrored.
+**New:** three kinds — `manager_meeting_served`, `manager_meeting_watched`,
+`manager_meeting_swapped` — with 0163's non-vacuous test mirrored.
+
+**Revision 3: this slice was half a change, and three things were missing.**
+
+**1. A kind is a migration *and* a line in `lib/events/kinds.ts`.** 0163 says so
+outright, and the file repeats it: *"Adding a kind means editing BOTH — a
+migration and this file — and that friction is the feature."* The two are one
+claim stated twice, the database refusing an unknown kind with a 23514 and
+`APP_EVENT_KINDS` refusing it before the round trip. Revision 2 named only the
+constraint, which would have left `AppEventKind` unable to type the call sites
+that write these rows. Both halves are in the slice.
+
+**2. None of the three goes in `CLIENT_OPEN_KINDS`, and the reason is the trust
+boundary.** That array is the whole of it, and its comment is explicit that a
+server action is reachable by direct POST — so the kinds that are *evidence of
+work* are deliberately absent and emitted from inside the functions that have
+already verified the thing happened. All three of these are evidence of work:
+
+| kind | written from | why not client-named |
+|---|---|---|
+| `manager_meeting_served` | the serve path, service role | a rooftop-level act with no browser in it at all |
+| `manager_meeting_watched` | inside the verified watch path, as `lesson_completed` is | a client that could post it could manufacture a record of watching |
+| `manager_meeting_swapped` | inside the swap server action, after the swap is written | the event must not be able to disagree with the serve row it describes |
+
+**3. `app_event.dedup_key` exists, and the serve needs it.** 0163 gives the table
+a `dedup_key` and a **partial** unique index (`app_event_dedup_idx`, unique on
+`dedup_key` where it is not null). Revision 2 never mentioned it, and the gap is
+real: the unique index on `manager_meeting_serve` (rooftop × week) protects the
+*serve row*, so a cron that fires twice — or is retried — writes one serve and a
+second full set of `served` events. The authoritative fact stays correct while the
+engagement record silently doubles, which is the funnel reading high for reasons
+nothing reports.
+
+So the `served` insert carries a dedup key per **(rooftop, week, manager)** and
+uses 0163's existing arbiter. 0175 is the worked precedent, including the part
+that bites: `on conflict (dedup_key) where dedup_key is not null` — the index
+predicate is **required** to infer against a partial unique index, and omitting it
+is not a style question, the statement simply errors.
+
+`watched` takes no dedup key — a manager rewatching is a real second act — and
+`swapped` takes none for the same reason, since swapping twice in a week is two
+decisions and the serve row's override trace is what records the current state.
 
 **Ruling G: one `served` event per manager at serve time.
 `app_event.user_id` stays `not null`.** The serve is a rooftop-level act with no
@@ -423,22 +573,54 @@ picked and it can be chosen — the right asymmetry.
 
 Each reviewable alone. Migrations are authored and replayed locally, numbered
 when the PR opens and re-checked immediately before the merge; nothing is
-applied from this branch. **`0173` landed on `main` from another branch while
-this plan was being written, so the first number here is `0174`** — and that is
-the reason the re-check exists rather than a story about it.
+applied from this branch.
 
 Four of the ten slices carry a migration: 1 (the catalog read), 2 (two views),
 3 (the serve table and the setting), 5 (the event kinds). They take consecutive
 numbers in that order at PR time.
 
+### The number, and the second time this branch was caught by it
+
+**The next free number is `0180`.** `origin/main` holds `0174` through `0179`
+today, at `c1f3b4b`.
+
+Revision 2 said the first number here was `0174`, and told the story of `0173`
+landing from another branch as the reason the re-check rule exists. **Then the
+same thing happened to revision 2, six times over, while it sat in review** —
+`0174`–`0179` all landed on `main` between the two revisions.
+
+That is worth more than a corrected number, because it answers a question the rule
+only implied: *how fast does this go stale?* Six numbers in one week. So the number
+in this document is a **reading, not a reservation** — it is accurate as of
+`c1f3b4b` and it will be wrong again. The operative instruction is the re-check
+immediately before Ryan merges, and the thing to re-check against is current
+`origin/main`, not this line.
+
+Provisional, at `c1f3b4b`, and to be re-derived at PR time:
+
+| slice | migration |
+|---|---|
+| 1 — the catalog read widens | `0180` |
+| 2 — the two ranking views | `0181` |
+| 3 — the serve table and the setting | `0182` |
+| 5 — the event kinds | `0183` |
+
+**This branch is 22 commits behind `origin/main` and has not been merged since
+`b90f714`.** The branch rule is to merge at least weekly and *always* before
+writing a migration, so the merge is the first act of slice 1 and not a chore to
+be sequenced later — a number taken on a stale base is the defect above, and a
+migration authored on one replays against a schema nobody is running. The merge
+brings in `docs/WORK_LOG.md`, whose rows are never stashed or checked out over
+(AGENTS.md, 9 November).
+
 | # | slice | what lands | why here |
 |---|---|---|---|
 | **0** | **Preview write guard** | `lib/deploy-env.ts` → `refuseWriteOnPreview()`, reading `VERCEL_ENV` (read nowhere in the codebase today). Every write path added later calls it. | The branch constraint, by construction rather than by memory. No schema. First because everything after depends on it. |
-| **1** | **The catalog read widens** — ruling H | Migration: `op_code_catalog_read` → `managed_rooftops()`. Acceptance proving a `manager`-only fixture user reads it and a technician still does not. | Its own slice and its own migration, per the ruling. Independent of everything else, and it is a live defect today. |
+| **1** | **The catalog read widens** — ruling H | Merge `main` first. Migration: `op_code_catalog_read` → `managed_rooftops()`, shaped on `0179`, and 0081's stale commentary replaced in the same PR. Acceptance proving a `manager`-only fixture user reads it and a technician still does not. | Its own slice and its own migration, per the ruling. Independent of everything else, and it is a live defect today. |
 | **2** | **Rooftop family ranking** | `rooftop_family_missed`, `manager_meeting_supply`. Read-only; serves nothing. | The metric, provable in isolation against the fixture before any row is written. Reuses the picker's views, floor and clamp. |
 | **3** | **Serve table and the lock** | `manager_meeting_serve` (+ unique index on rooftop × week), `game_settings.manager_meeting_repeat_weeks int not null default 8` with a sanity CHECK. Schema only — no picker. | The pick in slice 4 needs somewhere to read history from. Splitting the table from the logic keeps both reviewable. |
 | **4** | **The pick** — rulings A, B, C | `pick_manager_meeting()`: family walk by rank, least-recently-served film within a family, never-served first, ties by op code, fall through on a fully suppressed family, honest null with a reason. | Reads 2 and 3. The first slice with real decision logic, and the one with the most acceptance surface. |
-| **5** | **Events** — ruling G | Three `app_event` kinds, 0163's non-vacuous test mirrored, one `served` row per manager. | Small, and (d) asks for it from day one. |
+| **5** | **Events** — ruling G | Three `app_event` kinds **and the matching lines in `lib/events/kinds.ts`**, none of them in `CLIENT_OPEN_KINDS`; 0163's non-vacuous test mirrored; one `served` row per manager, carrying a `dedup_key` per rooftop × week × manager. | Small, and (d) asks for it from day one. |
 | **6** | **The screen** — ruling E | `/meetings/this-week`: the film, the family named, the family's attach rate by advisor. Reuses `lib/advisor.ts` and `lib/manager.ts`. | Needs 1, 2, 4. Driven as a fixture manager. |
 | **7** | **The swap** | Server action; override trace on the serve row; the `swapped` event. Calls the slice-0 guard. | Needs 4–6. |
 | **8** | **Follow-up** — ruling F | Before/after full periods, both months named, the waiting-on state. | Reported not required, so it comes after the screen works. |
@@ -542,6 +724,11 @@ last.
    *real* Doggett feed is bridged, so it has to be asked of production data —
    which is exactly why the read is read-only and why it is the one thing this
    branch wants from Preview.
+
+   **Re-checked for revision 3 and still true:** there is no `.env.local` in
+   `~/ediagd-manager`, so the blocker has not moved. Recorded rather than left to
+   be assumed, because "still blocked" and "nobody looked again" read identically
+   in a document.
 2. **`coachable = false` and manager films.** The supply view keeps
    `family_pitch_supply`'s filter, so the 13 codes 0066 marks *"map for
    reporting but never coach"* cannot supply a manager meeting. Right by
@@ -551,3 +738,37 @@ last.
    rather than fixing it, so the manager meeting and the advisor's pitch cannot
    disagree. Worth its own task, and it is a change to the daily loop rather
    than to this branch.
+
+---
+
+## What revision 3 checked, by what means, and what it did not
+
+Scope before finding. Everything below was read from **git objects on
+`origin/main` at `c1f3b4b`** — `git show origin/main:<path>` in this worktree. No
+database was queried, nothing was applied, replayed or seeded, no cron was run,
+and nothing was written from a Preview deploy. No other checkout was touched.
+
+**Confirmed unchanged on `main`, so the plan's claims still hold:**
+
+| claim | how checked |
+|---|---|
+| `op_code_catalog_read` still gates on `admin_rooftops()` | 0081 is the latest definition; only 0062 and 0081 mention the policy |
+| `admin_rooftops()` still excludes `manager` | 0045 body read |
+| `VERCEL_ENV` is read nowhere — slice 0's premise | `git grep VERCEL_ENV` over `origin/main`: no hits |
+| `vercel.json` is byte-identical on `main` and this branch | both blobs printed and compared; two crons, neither one ours |
+| `APP_EVENT_KINDS` still has seven values | `lib/events/kinds.ts`, unchanged since the merge base |
+| `lib/advisor.ts`, `lib/manager.ts`, `app/meetings`, `scripts/focus-family-acceptance.ts` | `git diff --name-only` across the 22 commits: **zero changes to any of them** |
+
+**Found changed, and folded in above:** the migration high-water mark
+(`0179`), `0179` itself as ruling H's precedent, `0178`'s RLS measurement,
+`app_event.dedup_key`, the `lib/events/kinds.ts` requirement, the
+`group_manager` consequence of `managed_rooftops()`, and
+`check:entitlement-parity` now running inside `db:migrate`.
+
+**Not checked, and therefore not claimed.** The `dms_op_code_map` coverage
+numbers (open question 1 — no credentials here). Whether the four provisional
+migration numbers are free *at PR time* — by construction that cannot be settled
+in advance, which is the point of the re-check. And nothing in this document has
+been exercised against a running database: every slice's acceptance is still
+future work, and a plan that reads correctly is not evidence that the SQL in it
+runs.
