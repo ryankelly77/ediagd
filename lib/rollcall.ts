@@ -1,11 +1,19 @@
 /* ============================================================================
-   EDIAGD — Rollcall: the six facts, per advisor, from one place
+   EDIAGD — Rollcall: what every advisor has done, from one place
    SERVER ONLY (takes a Supabase client).
 
    Ryan, 6 October, before the Beaumont invites: who downloaded the TestFlight
    app and when, who created their password, who completed onboarding, who
    completed a daily loop, who clicked on Certs and other courses, and who
    completed lessons outside the daily loop.
+
+   Ryan, 6 November, four weeks in: the onboarding half stopped changing and the
+   tap counts were never progress, so the evening post now leads on who did
+   their morning and how far each advisor is toward EDIAGD Certified. The old
+   columns are all still loaded — /admin/engagement is the long form and the
+   taps answer real questions there — and `certs` is the new one. See
+   CertProgress, which carries a role warning that must be read before anything
+   else renders its numerator.
 
    ---------------------------------------------------------------------------
    ONE LOADER, TWO READERS, AND THAT IS THE POINT
@@ -50,6 +58,7 @@ import {
 } from "@/lib/admin-onboarding";
 import type { IsoDate } from "@/lib/gamification/streak";
 import type { SignInPlatform } from "@/lib/events/kinds";
+import { gatingModuleIds } from "@/lib/lms";
 import { storeDateOf } from "@/lib/store-day";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -145,6 +154,67 @@ export type RollcallRow = OnboardingRow & {
    * words rather than leaving a blank somebody has to interpret.
    */
   lastPush: LastPush | null;
+
+  /** How far toward EDIAGD Certified. See CertProgress. */
+  certs: CertProgress;
+};
+
+/**
+ * An advisor's position on the craft ladder — the thing the taps never
+ * measured.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS REPLACED "Certs 44 · tracks 28" IN THE POST
+ * ---------------------------------------------------------------------------
+ * certsOpened and tracksOpened count TAPS. They rise when somebody browses and
+ * cannot fall, so they are a record of curiosity reported in the position where
+ * a reader expects progress. These two numbers are the gating-module count the
+ * credential itself is computed from, which is the only quantity on this row
+ * that answers "are they getting certified".
+ *
+ * ---------------------------------------------------------------------------
+ * READ THE ROLE WARNING BEFORE RENDERING gatingDone ANYWHERE NEW
+ * ---------------------------------------------------------------------------
+ * `module_completion` is own-rows-only — `module_completion_own`, 0035 — and
+ * that is a restated product ruling rather than an oversight: 0117 says in as
+ * many words that a manager sees a credential pill and "never a colleague's
+ * per-track progress", and loadCredentialPills repeats it.
+ *
+ * So for a SESSION client this numerator comes back as ZERO for everybody the
+ * caller is not, with no error — the exact shape of this codebase's
+ * most-repeated defect. `Rollcall.certProgressProven` says whether the caller
+ * actually demonstrated a cross-user read, and no surface may draw a meter
+ * from `gatingDone` without consulting it. The evening post is correct because
+ * it runs as the SERVICE ROLE, which the cron's header already names.
+ *
+ * `earned` has no such caveat: advisor_certification is readable for
+ * `managed_users()` (0115), which is precisely the credential a manager is
+ * meant to see.
+ */
+export type CertProgress = {
+  /**
+   * Completed gating modules across the ACTIVE core tracks.
+   *
+   * A HELD TRACK COUNTS AS ALL OF ITS GATING MODULES DONE, whatever
+   * module_completion says, because trackRowProgress already rules that held is
+   * full: a track earned before a tenth lesson was published is still earned,
+   * and a bar at 90% under the word "Earned" would be the row arguing with
+   * itself.
+   */
+  gatingDone: number;
+  /** Gating modules across the active core tracks. Same for everyone here. */
+  gatingTotal: number;
+  /** Core certifications held, by name, in certification.sort order. */
+  earned: string[];
+  /**
+   * The last day they completed a gating module in a core track, or null.
+   *
+   * Carried so the post can say "last cert work 27 Oct" instead of leaving a
+   * low meter beside a completed morning with no explanation. It is the store
+   * date of the latest module_completion, so it inherits gatingDone's role
+   * caveat exactly.
+   */
+  lastWorkedOn: IsoDate | null;
 };
 
 /**
@@ -285,6 +355,41 @@ export type Rollcall = Omit<OnboardingStatus, "rows"> & {
    * the generator. This is the second cause, counted.
    */
   unreachable: number;
+
+  /** Active core certifications — the tracks the credential is made of. */
+  coreTracks: number;
+  /** The roster's gating modules completed, summed. */
+  teamGatingDone: number;
+  /** `gatingTotal` × the roster, so the team meter has the same denominator
+      per person as every individual meter. */
+  teamGatingTotal: number;
+  /** Core certifications held across the roster. */
+  teamEarned: number;
+  /**
+   * Whether this caller DEMONSTRATED that it can read somebody else's
+   * module_completion — not whether we assume it can.
+   *
+   * ---------------------------------------------------------------------------
+   * PROOF, BECAUSE THE FAILURE IS A CONFIDENT ZERO AND NOT AN ERROR
+   * ---------------------------------------------------------------------------
+   * `module_completion_own` (0035) returns the caller's own rows and nothing
+   * else, silently. A screen reading `certs.gatingDone` through a session
+   * client therefore draws 0% for an entire roster and looks like a store where
+   * nobody has started — a label with nothing behind it, which is the defect
+   * this project has met more than any other.
+   *
+   * It cannot be inferred from the client object, so it is OBSERVED: rows came
+   * back for two or more DISTINCT roster members, which one session can only
+   * manage if the policy let it past its own `auth.uid()`. False is therefore
+   * "unproven", not "forbidden" — including on a store where fewer than two
+   * people have finished a lesson, where the meter would be flat anyway and
+   * "nothing recorded" is the true thing to say.
+   *
+   * The evening post does not consult this because it runs as the service role
+   * and bypasses RLS outright; /admin/engagement does, and suppresses the meter
+   * rather than printing a zero it cannot stand behind.
+   */
+  certProgressProven: boolean;
 };
 
 /**
@@ -357,6 +462,256 @@ function tallyPushes(rows: PushRow[], days: number): PushTally {
     days,
     firstOn: dates[0] ?? null,
     lastOn: dates[dates.length - 1] ?? null,
+  };
+}
+
+/**
+ * PostgREST puts an `in` list in the query string, so a long one is split.
+ * 100 is the batch size the rest of the codebase settled on (gatingModuleIds).
+ */
+const BATCH = 100;
+
+function batched<T>(items: T[]): T[][] {
+  if (items.length === 0) return [];
+  return Array.from({ length: Math.ceil(items.length / BATCH) }, (_, i) =>
+    items.slice(i * BATCH, (i + 1) * BATCH)
+  );
+}
+
+/** One page. Below PostgREST's default ceiling, so the range is what decides. */
+const PAGE = 1000;
+
+/**
+ * Read every row, in pages, for each batch of user ids — and never stop
+ * because a page happened to be full.
+ *
+ * ---------------------------------------------------------------------------
+ * A CAPPED READ IS A SILENT TRUNCATION, AND THIS ONE WOULD UNDERCOUNT
+ * ---------------------------------------------------------------------------
+ * PostgREST returns a bounded page whether or not the caller asked for one. A
+ * single `select` over a store's completions therefore has a size at which it
+ * starts quietly reporting less work than an advisor has done — low, in the
+ * direction that looks like somebody slacking, with nothing erroring. This
+ * keeps asking until a page comes back short, which is the only condition that
+ * means "that was all of them".
+ *
+ * `order` is required for paging to be stable: 0128's sibling lesson is that a
+ * page without an ORDER BY is a page of whatever the planner felt like.
+ */
+async function pageAll<T>(
+  userIds: string[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  query: (users: string[], from: number, to: number) => any
+): Promise<T[]> {
+  const out: T[] = [];
+  for (const users of batched(userIds)) {
+    for (let from = 0; ; from += PAGE) {
+      const { data } = await query(users, from, from + PAGE - 1);
+      const rows = (data ?? []) as T[];
+      out.push(...rows);
+      if (rows.length < PAGE) break;
+    }
+  }
+  return out;
+}
+
+/**
+ * How far every advisor on the roster is toward EDIAGD Certified, in one pass.
+ *
+ * ---------------------------------------------------------------------------
+ * THE SAME POPULATION THE CREDENTIAL IS COMPUTED FROM, BY THE SAME DEFINITION
+ * ---------------------------------------------------------------------------
+ * GATING modules of the ACTIVE CORE tracks — which is what craftComplete()
+ * requires and what the bar on /certifications draws. The gating rule itself is
+ * NOT reimplemented here: `gatingModuleIds` in lib/lms.ts is the one definition,
+ * it mirrors `gating_content_types()` in the database, and `npm run check:gating`
+ * fails if the two ever differ. A second copy of "which modules gate" is how the
+ * library screen and the credential come to disagree about one module.
+ *
+ * A module reachable from two core tracks is counted ONCE PER TRACK, because
+ * `certification.item_count` and the page's own `coreModulesTotal` do the same —
+ * the meter has to equal the bar the advisor sees, and matching it matters more
+ * than the tidier number.
+ *
+ * It CANNOT call `my_certification_progress()`, which 0117 keyed on `auth.uid()`
+ * deliberately so that no parameter exists to forge. The cron has no session, so
+ * every piece is read from the tables it is derived from instead — and each of
+ * those reads goes through the CALLER's client, so the answer is the caller's
+ * policies' answer and not a claim about somebody else's.
+ */
+async function loadCertProgress(
+  client: Client,
+  userIds: string[],
+  rooftopTzOfUser: (userId: string) => string | null
+): Promise<{
+  byUser: Map<string, CertProgress>;
+  gatingTotal: number;
+  coreTracks: number;
+  proven: boolean;
+}> {
+  const empty = {
+    byUser: new Map<string, CertProgress>(),
+    gatingTotal: 0,
+    coreTracks: 0,
+    proven: false,
+  };
+  if (userIds.length === 0) return empty;
+
+  /* ---- 1. The tracks the credential is made of ------------------------- */
+  const { data: certRows } = await client
+    .from("certification")
+    .select("id, name, sort")
+    .eq("is_core", true)
+    .eq("active", true);
+
+  const coreCerts = ((certRows ?? []) as { id: string; name: string; sort: number | null }[])
+    .slice()
+    .sort((a, b) => Number(a.sort ?? 0) - Number(b.sort ?? 0));
+  if (coreCerts.length === 0) return empty;
+
+  const coreIds = coreCerts.map((c) => c.id);
+  const nameOfCert = new Map(coreCerts.map((c) => [c.id, c.name]));
+
+  /* ---- 2. Their courses, and 3. those courses' modules ----------------- */
+  const { data: ccRows } = await client
+    .from("certification_course")
+    .select("certification_id, course_id")
+    .in("certification_id", coreIds);
+
+  const links = (ccRows ?? []) as { certification_id: string; course_id: string }[];
+  const courseIds = [...new Set(links.map((l) => l.course_id))];
+  if (courseIds.length === 0) {
+    return { ...empty, coreTracks: coreCerts.length };
+  }
+
+  const moduleRows: { id: string; course_id: string }[] = [];
+  for (const batch of batched(courseIds)) {
+    const { data } = await client.from("module").select("id, course_id").in("course_id", batch);
+    moduleRows.push(...((data ?? []) as { id: string; course_id: string }[]));
+  }
+
+  /* ---- 4. Which of those modules GATE. One definition, imported. ------- */
+  const gating = await gatingModuleIds(
+    client,
+    moduleRows.map((m) => m.id)
+  );
+
+  const modulesOfCourse = new Map<string, string[]>();
+  for (const m of moduleRows) {
+    if (!gating.has(m.id)) continue;
+    const list = modulesOfCourse.get(m.course_id) ?? [];
+    list.push(m.id);
+    modulesOfCourse.set(m.course_id, list);
+  }
+
+  /* Per TRACK, deliberately — see the header on double-counting. */
+  const gatingOfCert = new Map<string, Set<string>>();
+  for (const l of links) {
+    const set = gatingOfCert.get(l.certification_id) ?? new Set<string>();
+    for (const id of modulesOfCourse.get(l.course_id) ?? []) set.add(id);
+    gatingOfCert.set(l.certification_id, set);
+  }
+  const gatingTotal = coreIds.reduce((n, id) => n + (gatingOfCert.get(id)?.size ?? 0), 0);
+
+  const allGatingIds = [...new Set([...gatingOfCert.values()].flatMap((s) => [...s]))];
+
+  /* ---- 5. What each of them has completed, and 6. what they hold -------
+     BY USER, NOT BY USER × MODULE, AND PAGED.
+
+     The obvious shape — one request per user batch per module batch — is eight
+     round trips against the real catalogue's 736 gating modules, and each one
+     could return more rows than PostgREST hands back by default. A read capped
+     at its default page is a silent truncation, and a truncated numerator reads
+     as an advisor who has done less than they have: wrong in the direction
+     nobody questions.
+
+     So the filter is the ROSTER (one request per user batch, paged to
+     exhaustion) and the gating set is applied in memory, where it is a set
+     lookup. A completion outside the core tracks costs a few rows of payload
+     and is dropped by the intersection below. */
+  const completionRows = await pageAll<{
+    user_id: string;
+    module_id: string;
+    completed_at: string;
+  }>(userIds, (users, from, to) =>
+    client
+      .from("module_completion")
+      .select("user_id, module_id, completed_at")
+      .in("user_id", users)
+      .order("module_id")
+      .range(from, to)
+  );
+
+  const earnedRows = await pageAll<{ user_id: string; certification_id: string }>(
+    userIds,
+    (users, from, to) =>
+      client
+        .from("advisor_certification")
+        .select("user_id, certification_id")
+        .in("user_id", users)
+        .in("certification_id", coreIds)
+        .order("certification_id")
+        .range(from, to)
+  );
+
+  const gatingSet = new Set(allGatingIds);
+  const completedOf = new Map<string, Set<string>>();
+  const lastWorkedAtOf = new Map<string, string>();
+  for (const r of completionRows) {
+    /* The intersection the query no longer does. A module outside the active
+       core tracks is not what this meter measures. */
+    if (!gatingSet.has(r.module_id)) continue;
+    const set = completedOf.get(r.user_id) ?? new Set<string>();
+    set.add(r.module_id);
+    completedOf.set(r.user_id, set);
+    const previous = lastWorkedAtOf.get(r.user_id);
+    if (!previous || r.completed_at > previous) lastWorkedAtOf.set(r.user_id, r.completed_at);
+  }
+
+  const heldOf = new Map<string, Set<string>>();
+  for (const r of earnedRows) {
+    const set = heldOf.get(r.user_id) ?? new Set<string>();
+    set.add(r.certification_id);
+    heldOf.set(r.user_id, set);
+  }
+
+  const byUser = new Map<string, CertProgress>();
+  for (const userId of userIds) {
+    const completed = completedOf.get(userId) ?? new Set<string>();
+    const held = heldOf.get(userId) ?? new Set<string>();
+
+    let done = 0;
+    for (const certId of coreIds) {
+      const mods = gatingOfCert.get(certId);
+      if (!mods) continue;
+      /* HELD IS FULL — trackRowProgress's ruling, applied to the same track so
+         the Slack meter and that track's own bar cannot disagree. */
+      if (held.has(certId)) {
+        done += mods.size;
+        continue;
+      }
+      for (const id of mods) if (completed.has(id)) done++;
+    }
+
+    const lastAt = lastWorkedAtOf.get(userId);
+    byUser.set(userId, {
+      gatingDone: done,
+      gatingTotal,
+      earned: coreIds
+        .filter((id) => held.has(id))
+        .map((id) => nameOfCert.get(id))
+        .filter((n): n is string => Boolean(n)),
+      lastWorkedOn: lastAt ? storeDate(lastAt, rooftopTzOfUser(userId)) : null,
+    });
+  }
+
+  return {
+    byUser,
+    gatingTotal,
+    coreTracks: coreCerts.length,
+    /* OBSERVED, never assumed. Two distinct people's rows is something one
+       session's `auth.uid()` cannot produce. See certProgressProven. */
+    proven: new Set(completionRows.map((r) => r.user_id)).size >= 2,
   };
 }
 
@@ -598,11 +953,15 @@ export async function loadRollcall(
   /* Each person's own rooftop, so a registration instant is formatted as the
      day it fell on AT THEIR STORE. Built once rather than searched per row. */
   const rooftopOfUser = new Map(status.rows.map((r) => [r.userId, r.rooftopId]));
+  const tzOfUser = (userId: string) =>
+    rooftopMeta.get(rooftopOfUser.get(userId) ?? "")?.timezone ?? null;
+
+  /* ---- How far up the craft ladder, for everybody, in one pass --------- */
+  const certs = await loadCertProgress(client, userIds, tzOfUser);
 
   const reachOf = new Map<string, Reachability>();
   for (const r of reachRows) {
-    const tz =
-      rooftopMeta.get(rooftopOfUser.get(r.user_id) ?? "")?.timezone ?? null;
+    const tz = tzOfUser(r.user_id);
     reachOf.set(r.user_id, {
       reachable: Boolean(r.reachable),
       livePlatforms: ((r.live_platforms ?? []) as string[]).filter(
@@ -699,6 +1058,16 @@ export async function loadRollcall(
       storiesSubmitted: b.storiesSubmitted,
       reach: reachOf.get(r.userId) ?? null,
       lastPush: lastPushOf.get(r.userId) ?? null,
+      /* Never undefined: loadCertProgress returns a row for every user id it
+         was given, and an empty one when there is no active core track at all.
+         A missing key here would make a 0% meter and "no tracks exist yet"
+         render identically. */
+      certs: certs.byUser.get(r.userId) ?? {
+        gatingDone: 0,
+        gatingTotal: certs.gatingTotal,
+        earned: [],
+        lastWorkedOn: null,
+      },
     };
   });
 
@@ -783,6 +1152,13 @@ export async function loadRollcall(
     unreachable: rows.filter((r) => !r.reach?.reachable).length,
     nativeInstalled: rows.filter((r) => r.firstNativeSignInOn !== null).length,
     onboarded: rows.filter((r) => r.scheduleSetOn !== null).length,
+    coreTracks: certs.coreTracks,
+    /* SUMMED FROM THE ROWS, so the team line and the per-person meters cannot
+       disagree — the same discipline the push tally follows. */
+    teamGatingDone: rows.reduce((n, r) => n + r.certs.gatingDone, 0),
+    teamGatingTotal: certs.gatingTotal * rows.length,
+    teamEarned: rows.reduce((n, r) => n + r.certs.earned.length, 0),
+    certProgressProven: certs.proven,
     completedToday: today
       ? rows.filter((r) => r.lastCompletionOn === today).length
       : 0,
@@ -803,69 +1179,163 @@ export async function loadRollcall(
  * twice a day, so two changes on the same date have to be distinguishable, and
  * a date comparison would mark the morning's facts new again at 17:30.
  *
- * So this reads the four underlying tables' own timestamps. All four have one
- * — app_event.at, daily_completion.created_at, work_schedule.schedule_set_at,
- * daily_activity.created_at — which is why this is precise rather than a
- * best guess about a day.
+ * So this reads the underlying tables' own timestamps — app_event.at,
+ * daily_completion.created_at, work_schedule.schedule_set_at,
+ * advisor_certification.earned_at, and app_event_rollcall.first_at for the
+ * first native sign-in — which is why this is precise rather than a best guess
+ * about a day.
  *
- * daily_activity.created_at is the row's WRITE time, not the activity_date it
- * records, and for the first-sign-in fact those are the same moment: the row
- * is written by markActiveToday as the page renders. For a backfilled row they
- * would not be, and the honest reading of a change here is "we learned this
- * since the last post", which is what the message says.
+ * ---------------------------------------------------------------------------
+ * A FIRST-TIME FACT IS PROVED TO BE A FIRST, NOT ASSUMED FROM A ROW EXISTING
+ * ---------------------------------------------------------------------------
+ * daily_activity.created_at used to set a fact labelled "first sign-in", and
+ * any native sign-in used to set one labelled "signed in from a phone". Both
+ * fired on every subsequent occurrence, so the 6 November post told Ryan that
+ * seven advisors who onboarded in October had just signed in for the first
+ * time. The window was right; the labels described something else.
+ *
+ * `firstMorning` is now checked against the all-time `completionCount`, and
+ * `installedApp` against the aggregate's `first_at` — a value that does not
+ * move when somebody signs in again. The daily_activity read is gone entirely:
+ * "they opened the app" is not news about an advisor who opens it every day.
  */
-export type RollcallFact =
-  | "installed"
-  | "password"
-  | "onboarded"
-  | "mornings"
-  | "certs"
-  | "tracks"
-  | "library"
-  | "lessons"
-  | "story";
+export type RollcallChange = {
+  /**
+   * lesson_completed events in the window, ANY source.
+   *
+   * ONE COUNT, NOT A MORNING/LIBRARY SPLIT. The split is a question about
+   * surfaces and /admin/engagement answers it; in a channel it was two numbers
+   * nobody added together. The morning's own item is included — it is a lesson
+   * somebody finished — and the mark beside their name already says they did
+   * their morning, so nothing is being counted twice in one column.
+   */
+  lessons: number;
+  /** Core certifications whose `earned_at` fell in the window, by name. */
+  earned: string[];
+  /** A Good News Story was filed. An edit is not a submission. */
+  story: boolean;
+  /**
+   * Their FIRST EVER morning landed in the window.
+   *
+   * ---------------------------------------------------------------------------
+   * FIRST-TIME, PROVED AGAINST THE ALL-TIME COUNT — AND THE OLD VERSION WAS NOT
+   * ---------------------------------------------------------------------------
+   * This used to be a fact called `password` ("first sign-in") set by ANY
+   * daily_activity row in the window, and `installed` ("signed in from a phone")
+   * set by ANY native sign-in. So on 6 November seven advisors who had first
+   * signed in weeks earlier were reported as having just signed in for the first
+   * time. The diff was right about what happened and the label was wrong about
+   * what it meant, which is this codebase's most-repeated defect wearing a
+   * change-log costume.
+   *
+   * It fires only when EVERY completion this person has is inside the window,
+   * compared against `completionCount` from the same table — so a second
+   * morning cannot set it, and neither can a hundredth.
+   */
+  firstMorning: boolean;
+  /** work_schedule.schedule_set_at fell in the window — onboarding finished. */
+  onboarded: boolean;
+  /**
+   * Their FIRST EVER native sign-in landed in the window.
+   *
+   * Taken from app_event_rollcall's `first_at` per platform, which is an
+   * INSTANT, so this is decided on the same grain as the window itself rather
+   * than on the store-date the row carries. A second sign-in, on any day,
+   * cannot fire it: `first_at` does not move.
+   */
+  installedApp: boolean;
+};
+
+const NO_CHANGE: RollcallChange = {
+  lessons: 0,
+  earned: [],
+  story: false,
+  firstMorning: false,
+  onboarded: false,
+  installedApp: false,
+};
+
+/** Did anything at all happen for this person? */
+export function hasMovement(change: RollcallChange | undefined): boolean {
+  if (!change) return false;
+  return (
+    change.lessons > 0 ||
+    change.earned.length > 0 ||
+    change.story ||
+    change.firstMorning ||
+    change.onboarded ||
+    change.installedApp
+  );
+}
 
 export async function loadRollcallChanges(
   client: Client,
   rooftopId: string,
   since: Date,
-  userIds: string[]
-): Promise<Map<string, Set<RollcallFact>>> {
-  const out = new Map<string, Set<RollcallFact>>();
+  rows: Pick<RollcallRow, "userId" | "completionCount">[]
+): Promise<Map<string, RollcallChange>> {
+  const out = new Map<string, RollcallChange>();
+  const userIds = rows.map((r) => r.userId);
   if (userIds.length === 0) return out;
 
-  const add = (userId: string, fact: RollcallFact) => {
-    const set = out.get(userId) ?? new Set<RollcallFact>();
-    set.add(fact);
-    out.set(userId, set);
+  const change = (userId: string): RollcallChange => {
+    const existing = out.get(userId);
+    if (existing) return existing;
+    const fresh = { ...NO_CHANGE, earned: [] as string[] };
+    out.set(userId, fresh);
+    return fresh;
   };
 
   const sinceIso = since.toISOString();
 
-  const [{ data: events }, { data: completions }, { data: schedules }, { data: activity }] =
-    await Promise.all([
-      client
-        .from("app_event")
-        .select("user_id, kind, meta")
-        .eq("rooftop_id", rooftopId)
-        .in("user_id", userIds)
-        .gt("at", sinceIso),
-      client
-        .from("daily_completion")
-        .select("user_id")
-        .in("user_id", userIds)
-        .gt("created_at", sinceIso),
-      client
-        .from("work_schedule")
-        .select("user_id")
-        .in("user_id", userIds)
-        .gt("schedule_set_at", sinceIso),
-      client
-        .from("daily_activity")
-        .select("user_id")
-        .in("user_id", userIds)
-        .gt("created_at", sinceIso),
-    ]);
+  const [
+    { data: events },
+    { data: completions },
+    { data: schedules },
+    { data: earned },
+    { data: signIns },
+    { data: coreCerts },
+  ] = await Promise.all([
+    client
+      .from("app_event")
+      .select("user_id, kind, meta")
+      .eq("rooftop_id", rooftopId)
+      .in("user_id", userIds)
+      .gt("at", sinceIso),
+    client
+      .from("daily_completion")
+      .select("user_id")
+      .in("user_id", userIds)
+      .gt("created_at", sinceIso),
+    client
+      .from("work_schedule")
+      .select("user_id")
+      .in("user_id", userIds)
+      .gt("schedule_set_at", sinceIso),
+    client
+      .from("advisor_certification")
+      .select("user_id, certification_id")
+      .in("user_id", userIds)
+      .gt("earned_at", sinceIso),
+    /* THE FIRST native sign-in per platform, as an INSTANT. The aggregate
+       already holds it, so this is one small read rather than a scan of every
+       sign-in anybody has ever made. */
+    client
+      .from("app_event_rollcall")
+      .select("user_id, platform, first_at")
+      .eq("rooftop_id", rooftopId)
+      .eq("kind", "signed_in")
+      .in("user_id", userIds),
+    /* Core tracks only, and NOT filtered on `active`: a track that was earned
+       and later retired was still earned, and dropping the name would turn a
+       credential into a silent nothing on the row. */
+    client.from("certification").select("id, name, sort").eq("is_core", true),
+  ]);
+
+  const coreName = new Map<string, { name: string; sort: number }>();
+  for (const c of (coreCerts ?? []) as { id: string; name: string; sort: number | null }[]) {
+    coreName.set(c.id, { name: c.name, sort: Number(c.sort ?? 0) });
+  }
 
   for (const e of (events ?? []) as {
     user_id: string;
@@ -873,39 +1343,81 @@ export async function loadRollcallChanges(
     meta: Record<string, unknown> | null;
   }[]) {
     switch (e.kind) {
-      case "signed_in":
-        /* Only a NATIVE sign-in moves the installed fact, for the same reason
-           the column does: a web session is not an install. */
-        if (e.meta?.platform === "ios" || e.meta?.platform === "android") {
-          add(e.user_id, "installed");
-        }
-        break;
-      case "certs_opened":
-        add(e.user_id, "certs");
-        break;
-      case "track_opened":
-        add(e.user_id, "tracks");
-        break;
-      case "library_opened":
-      case "lesson_opened":
-        add(e.user_id, "library");
-        break;
       case "lesson_completed":
-        /* The MORNING's item is already covered by the completion fact below;
-           marking it here as well would report one act twice. */
-        if (e.meta?.source !== "loop") add(e.user_id, "lessons");
+        change(e.user_id).lessons++;
         break;
       case "story_submitted":
-        add(e.user_id, "story");
+        change(e.user_id).story = true;
+        break;
+      /*
+       * THE TAPS ARE DELIBERATELY NOT FACTS ANY MORE. certs_opened,
+       * track_opened, library_opened and lesson_opened each produced a line on
+       * the old post that said somebody had browsed — true, and not movement.
+       * They are still counted on the row for /admin/engagement; they are not
+       * news. Named here rather than left to the default so a reader can see
+       * the decision instead of wondering whether a kind was forgotten.
+       */
+      case "signed_in":
+      case "certs_opened":
+      case "track_opened":
+      case "library_opened":
+      case "lesson_opened":
         break;
       default:
         console.warn(`[rollcall] no change fact for app_event kind ${JSON.stringify(e.kind)}`);
     }
   }
 
-  for (const r of (completions ?? []) as { user_id: string }[]) add(r.user_id, "mornings");
-  for (const r of (schedules ?? []) as { user_id: string }[]) add(r.user_id, "onboarded");
-  for (const r of (activity ?? []) as { user_id: string }[]) add(r.user_id, "password");
+  /* ---- The first-time events, each proved to be a first ---------------- */
+  const windowCompletions = new Map<string, number>();
+  for (const r of (completions ?? []) as { user_id: string }[]) {
+    windowCompletions.set(r.user_id, (windowCompletions.get(r.user_id) ?? 0) + 1);
+  }
+  for (const row of rows) {
+    const inWindow = windowCompletions.get(row.userId) ?? 0;
+    /* `>=` rather than `===` because completionCount is counted from the same
+       table one query earlier: a morning completed BETWEEN the two reads would
+       make the window count the larger of the two, and that is still a first
+       morning. */
+    if (inWindow > 0 && inWindow >= row.completionCount) {
+      change(row.userId).firstMorning = true;
+    }
+  }
+
+  for (const r of (schedules ?? []) as { user_id: string }[]) {
+    change(r.user_id).onboarded = true;
+  }
+
+  for (const r of (signIns ?? []) as {
+    user_id: string;
+    platform: string | null;
+    first_at: string;
+  }[]) {
+    /* NATIVE ONLY, for the same reason the column is: a web session is a
+       sign-in and is not an install. */
+    if (r.platform !== "ios" && r.platform !== "android") continue;
+    if (r.first_at > sinceIso) change(r.user_id).installedApp = true;
+  }
+
+  for (const r of (earned ?? []) as { user_id: string; certification_id: string }[]) {
+    const cert = coreName.get(r.certification_id);
+    /* A non-core certification is not what the post is measuring. Silently
+       skipped rather than named, because the line is "toward EDIAGD Certified"
+       and a service track in it would be a different claim. */
+    if (!cert) continue;
+    change(r.user_id).earned.push(cert.name);
+  }
+  for (const c of out.values()) {
+    c.earned.sort((a, b) => {
+      const sa = [...coreName.values()].find((v) => v.name === a)?.sort ?? 0;
+      const sb = [...coreName.values()].find((v) => v.name === b)?.sort ?? 0;
+      return sa - sb || a.localeCompare(b);
+    });
+  }
+
+  /* Rows that had nothing are LEFT OUT rather than stored empty, so
+     `hasMovement` and `changes.get(id)` agree with each other. */
+  for (const [userId, c] of [...out]) if (!hasMovement(c)) out.delete(userId);
 
   return out;
 }

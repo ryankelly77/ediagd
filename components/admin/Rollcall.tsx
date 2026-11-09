@@ -392,9 +392,55 @@ export function RollcallSection({
         </p>
       )}
 
+      {/* ---- THE CRAFT LADDER, AND WHAT THIS SCREEN MAY SAY ABOUT IT -----
+          The evening Slack post carries a meter per advisor toward EDIAGD
+          Certified. This screen carries the EARNED TRACKS and not the meter,
+          and the reason is a ruling rather than an omission:
+
+            · module_completion is own-rows-only — module_completion_own, 0035
+              — so read through an admin's session this screen would show 0%
+              for an entire roster, with no error. A label with nothing behind
+              it is worse than a blank.
+            · 0117 says so deliberately: "a manager sees a credential pill ...
+              and never a colleague's per-track progress", and
+              loadCredentialPills repeats it. advisor_certification IS readable
+              for managed_users(), which is exactly the credential.
+
+          The post is correct because the cron runs as the service role.
+          `certProgressProven` is the loader's OBSERVATION that this caller
+          managed a cross-user read, so if that ever becomes true here — a
+          definer path, a policy change — the team meter appears without
+          anybody having to remember to switch it on. */}
+      {rollcall.certProgressProven && rollcall.teamGatingTotal > 0 && (
+        <p className="mt-3 px-1 text-sm font-bold text-navy">
+          Team toward EDIAGD Certified:{" "}
+          {Math.round((100 * rollcall.teamGatingDone) / rollcall.teamGatingTotal)}% of
+          core lessons · {rollcall.teamEarned}{" "}
+          {rollcall.teamEarned === 1 ? "track" : "tracks"} earned
+        </p>
+      )}
+      {!rollcall.certProgressProven && rollcall.coreTracks > 0 && (
+        <p className="mt-3 max-w-prose px-1 text-xs leading-relaxed text-ink-soft">
+          Per-advisor lesson progress toward the {rollcall.coreTracks} core
+          tracks is not readable from here — completions are own-rows-only, so a
+          percentage on this screen would read 0% for everybody whatever they
+          have done. Earned tracks below come from the credential itself, and
+          the evening Slack post carries the full meter because the cron reads
+          it as the service role.
+        </p>
+      )}
+
       <div className="mt-3 space-y-2">
         {rollcall.rows.map((row) => (
-          <Row key={`${row.userId}:${row.rooftopId}`} row={row} showRooftop={showRooftop} />
+          <Row
+            key={`${row.userId}:${row.rooftopId}`}
+            row={row}
+            showRooftop={showRooftop}
+            /* Passed in rather than read off the row, because it is a fact
+               about the CALLER and not about the advisor. A row cannot answer
+               "could I see this". */
+            progressReadable={rollcall.certProgressProven}
+          />
         ))}
       </div>
     </section>
@@ -527,7 +573,15 @@ function Chip({ href, label, active }: { href: string; label: string; active: bo
   );
 }
 
-function Row({ row, showRooftop }: { row: RollcallRow; showRooftop: boolean }) {
+function Row({
+  row,
+  showRooftop,
+  progressReadable,
+}: {
+  row: RollcallRow;
+  showRooftop: boolean;
+  progressReadable: boolean;
+}) {
   const line = flagLine(row.flags);
   /* "iOS", "iOS · Web". The platforms a session has actually arrived from —
      said plainly, because "signed in from a phone" with nothing naming which
@@ -609,6 +663,28 @@ function Row({ row, showRooftop }: { row: RollcallRow; showRooftop: boolean }) {
             row.completionCount === 0
               ? "Never"
               : `${row.completionCount} · last ${shortDate(row.lastCompletionOn)}`
+          }
+        />
+        {/* EARNED TRACKS, not a percentage. advisor_certification is readable
+            for managed_users() (0115) and is the credential a manager is meant
+            to see; the per-track progress behind it is not, and is not faked
+            here with a number that would be zero for everybody. The meter is
+            on the Slack post, which runs as the service role. */}
+        <Field
+          label="Core tracks earned"
+          value={
+            row.certs.earned.length === 0
+              ? "None yet"
+              : `${row.certs.earned.length} · ${row.certs.earned.join(", ")}`
+          }
+          wrap
+        />
+        <Field
+          label="Lesson progress"
+          value={
+            progressReadable
+              ? `${row.certs.gatingDone} of ${row.certs.gatingTotal} core lessons`
+              : "Not readable here"
           }
         />
         <Field label="Certs opened" value={tallyLine(row.certsOpened)} />
