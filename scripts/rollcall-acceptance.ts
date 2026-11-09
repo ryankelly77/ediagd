@@ -33,11 +33,16 @@
      9  the cert meter counts GATING modules of the ACTIVE CORE tracks, and a
         HELD track reads as full — read as the service role, which is the role
         the cron really uses
-    10  THE PAIRED HALF: the same loader read as an ADMIN comes back with zero
-        completed modules and says so — `certProgressProven` false — because
-        module_completion is own-rows-only (0035, restated by 0117). A meter
-        drawn from those zeros would be 0% for a whole roster with no error,
-        which is this codebase's most-repeated defect
+    10  THE SAME LOADER, READ AS A MANAGER AND AS AN ADMIN, AGREES WITH IT —
+        0179's read path, proved by the roles that really call it, including
+        the equality of the numerator and of the denominator; and a manager at
+        another rooftop still reads zero, so the policy is proved to SCOPE and
+        not merely to open
+    10b the manager's DENOMINATOR is zero for a reason 0179 does not touch —
+        `content_entitled_read` admits the advisor role for advisor_video and
+        the admin is admitted by `content_admin_all` instead — and a
+        manager-only account cannot reach /admin/engagement anyway, which is
+        asserted rather than claimed
     11  the change window reports lesson completions as one count, and the
         first-time facts are proved to be FIRSTS: a second sign-in and a fourth
         morning fire neither, which is the defect in the 6 November post
@@ -53,8 +58,16 @@
             SB_KEY=<local service role> SB_ANON_KEY=<local anon>
      npm run accept:rollcall
 
-   PROVEN NON-VACUOUS: with app_event_team_read replaced by `using (true)` the
-   four refusals in sections 2 and 3 fail. The run is recorded in the report.
+   PROVEN NON-VACUOUS, BOTH DIRECTIONS, BOTH RECORDED:
+
+     · with app_event_team_read replaced by `using (true)` the four refusals in
+       sections 2 and 3 fail.
+     · with 0179 reverted — module_completion_read dropped and 0035's
+       own-rows-only policy put back — SEVEN of section 10's acceptances fail,
+       including the admin's numerator equality, which is the whole point of the
+       change. The advisor's own read keeps passing, which is correct: 0035 did
+       that too, and an acceptance that failed there would be testing the wrong
+       thing. Measured 8 November; 75 passed / 0 failed with 0179 applied.
    ============================================================================ */
 
 import { randomUUID } from "node:crypto";
@@ -173,6 +186,19 @@ async function main() {
 
   const roofA = await mkRooftop("Store A");
   const roofB = await mkRooftop("Store B");
+
+  /* ---- BOTH STORES HAVE BOUGHT THE PRODUCT ------------------------------
+     Beaumont has, so a fixture rooftop without it would be testing a store
+     that does not exist. It also makes section 10's denominator finding
+     unambiguous: with the product in place, an ADVISOR at this rooftop reads
+     the films and a MANAGER still does not, so the exclusion is provably about
+     the ROLE rather than about entitlement. */
+  for (const roof of [roofA, roofB]) {
+    const { error } = await sb
+      .from("rooftop_product")
+      .insert({ rooftop_id: roof, product: "advisor_base" });
+    if (error) throw new Error(`rooftop_product: ${error.message}`);
+  }
 
   /* A certification and a module, so track_opened and lesson_opened have real
      targets and the Rollcall can be checked on whether it NAMES the track. */
@@ -378,19 +404,23 @@ async function main() {
      completed nothing and HOLDS trackHeld — which must read as full, because
      a track earned before a tenth lesson was published is still earned. The
      two cases together are the only way to tell the rule from a plain count. */
-  for (const [userId, moduleId_] of [
-    [advisorA, trackDone.moduleId],
-    /* TWO PEOPLE, and that is not padding: `certProgressProven` is the
-       loader's OBSERVATION that it got past its own auth.uid(), and one
-       person's rows cannot demonstrate that. With a single completer the
-       service role reads as "unproven" too, which is correct and would make
-       section 10's refusal prove nothing. */
-    [veteranA, trackHeld.moduleId],
+  for (const [userId, moduleId_, roof] of [
+    [advisorA, trackDone.moduleId, roofA],
+    /* TWO PEOPLE AT STORE A, and that is not padding. A cross-user read has to
+       be shown to pick up somebody OTHER than the one row that might be the
+       caller's own, so section 10 compares a manager's answer and the service
+       role's over two different advisors. */
+    [veteranA, trackHeld.moduleId, roofA],
+    /* AND ONE AT STORE B, so section 10's cross-rooftop refusal has something
+       to refuse. A manager at B reading zero of A's proves scope only if the
+       same manager, the same query, DOES read their own store's — otherwise it
+       is also consistent with a broken session or an empty table. */
+    [advisorB, trackDone.moduleId, roofB],
   ] as const) {
     const { error } = await sb.from("module_completion").insert({
       user_id: userId,
       module_id: moduleId_,
-      rooftop_id: roofA,
+      rooftop_id: roof,
     });
     if (error) throw new Error(`module_completion fixture: ${error.message}`);
   }
@@ -733,10 +763,9 @@ async function main() {
      9. THE CERT METER — THE NUMBER THAT REPLACED THE TAP COUNTS
 
      Read as the SERVICE ROLE here, which is the role the cron really uses.
-     That is also the only role that can read it: module_completion is
-     own-rows-only (0035) and 0117 restates the ruling, so section 10 asserts
-     the other half — an admin gets zeros, and the loader SAYS it is unproven
-     rather than letting a screen draw them.
+     Section 10 then reads the SAME loader as a manager and as an admin and
+     requires the same answer, because since 0179 this is no longer the only
+     role that can produce one.
      ====================================================================== */
   section("9. The cert meter counts gating modules, and held is full");
 
@@ -793,50 +822,256 @@ async function main() {
     `done ${rollcall.teamGatingDone}, total ${rollcall.teamGatingTotal}, earned ${rollcall.teamEarned}`
   );
   ok(
-    "the SERVICE ROLE's cross-user read is PROVEN, so the post may draw a meter",
-    rollcall.certProgressProven,
-    "two advisors' completion rows came back as one read — if this is false the post would be printing zeros"
+    "BOTH completers' rows came back in one pass — the cross-user read the cron's meter depends on",
+    rowA?.certs.gatingDone === 1 &&
+      rollcall.rows.find((r) => r.userId === veteranA)?.certs.gatingDone === 1,
+    `advisorA ${rowA?.certs.gatingDone}, veteranA ${
+      rollcall.rows.find((r) => r.userId === veteranA)?.certs.gatingDone
+    } — one person's rows would not demonstrate it`
   );
 
   /* ======================================================================
-     10. AND THE SAME LOADER, READ AS AN ADMIN, REFUSES TO CLAIM IT
+     10. 0179: THE ROLES THAT RENDER THE METER READ IT, AND NOBODY ELSE DOES
 
-     THE PAIRED HALF, and the reason it is here: a meter is a label, and the
-     failure mode of this one is a confident 0% rather than an error. An admin
-     cannot read anybody else's module_completion — module_completion_own,
-     0035, restated by 0117 — so the loader must come back UNPROVEN for them.
-     If this ever passes with `certProgressProven` true, /admin/engagement is
-     entitled to draw the bar and the screen should start doing it.
+     This section used to assert the opposite — that an admin read ZERO
+     completed modules and the loader said so — because `module_completion_own`
+     (0035) was own-rows-only and 0117 restated that as a ruling. Ryan reversed
+     the ruling on 8 NOVEMBER 2026: managers and admins see the EDIAGD
+     Certified meter on /admin/engagement, the same one the evening post
+     carries. 0179 is the read path and this is its acceptance.
+
+     BOTH HALVES, AS THE RULE REQUIRES. A policy that merely opens is as wrong
+     as one that merely refuses, so every claim below is paired: the manager and
+     the admin read a managed advisor's completions AND their figure EQUALS the
+     service client's; a manager at another rooftop reads zero AND reads their
+     own store's; the advisor still reads their own AND still reads none of a
+     colleague's, which is 0035's policy being carried forward by the second arm
+     rather than quietly widened.
      ====================================================================== */
-  section("10. Read as an admin, the meter is unproven rather than zero");
+  section("10. A manager and an admin read their advisors' completions (0179)");
 
+  /* The gating modules this suite created, asked for BY USER — the same shape
+     loadCertProgress uses, so what is proved here is the query the screen
+     really issues and not a convenient simplification of it. */
+  const completedGatingFor = async (client: SupabaseClient, userId: string) => {
+    const { data, error } = await client
+      .from("module_completion")
+      .select("module_id")
+      .eq("user_id", userId)
+      .in("module_id", coreModuleIds);
+    return {
+      ids: ((data ?? []) as { module_id: string }[]).map((r) => r.module_id).sort(),
+      error: error?.message ?? null,
+    };
+  };
+
+  const svcSeesA = await completedGatingFor(sb, advisorA);
+  const svcSeesVeteran = await completedGatingFor(sb, veteranA);
+  ok(
+    "the service role sees one gating completion each for advisorA and veteranA — a known NON-EMPTY answer to compare against",
+    svcSeesA.ids.length === 1 && svcSeesVeteran.ids.length === 1,
+    `advisorA ${svcSeesA.ids.length}, veteranA ${svcSeesVeteran.ids.length} — comparing against an empty answer would prove nothing`
+  );
+
+  const mgrSeesA = await completedGatingFor(managerAC, advisorA);
+  const mgrSeesVeteran = await completedGatingFor(managerAC, veteranA);
+  ok(
+    "a MANAGER at the same rooftop reads advisorA's completion, and the SAME module ids the service role read",
+    mgrSeesA.ids.length === 1 &&
+      JSON.stringify(mgrSeesA.ids) === JSON.stringify(svcSeesA.ids),
+    `manager ${JSON.stringify(mgrSeesA.ids)} vs service ${JSON.stringify(
+      svcSeesA.ids
+    )}${mgrSeesA.error ? ` (${mgrSeesA.error})` : ""}`
+  );
+  ok(
+    "and veteranA's too — TWO different advisors, so this is a cross-user read and not the caller's own row",
+    mgrSeesVeteran.ids.length === 1 &&
+      JSON.stringify(mgrSeesVeteran.ids) === JSON.stringify(svcSeesVeteran.ids),
+    `manager ${JSON.stringify(mgrSeesVeteran.ids)} vs service ${JSON.stringify(
+      svcSeesVeteran.ids
+    )}`
+  );
+
+  /* THE ADMIN IS THE ROLE THAT ACTUALLY OPENS THIS SCREEN, and is asserted
+     separately rather than assumed to behave like a manager: `managed_users()`
+     is built from `managed_rooftops()`, which is `role in ('manager','admin')`
+     — so the admin is admitted by the same arm, and the standing rule is to
+     check the answer for each role rather than to reason about the predicate. */
+  const admSeesA = await completedGatingFor(adminC, advisorA);
+  ok(
+    "an ADMIN at the same rooftop reads it too — the role /admin/engagement is actually gated on",
+    admSeesA.ids.length === 1 &&
+      JSON.stringify(admSeesA.ids) === JSON.stringify(svcSeesA.ids),
+    `admin ${JSON.stringify(admSeesA.ids)} vs service ${JSON.stringify(svcSeesA.ids)}`
+  );
+
+  const ownerSeesA = await completedGatingFor(ownerC, advisorA);
+  ok(
+    "the PLATFORM OWNER reads it by the first arm, with no membership at this store at all",
+    ownerSeesA.ids.length === 1,
+    `got ${JSON.stringify(ownerSeesA.ids)} — owner is a member of rooftop B only`
+  );
+
+  /* ---- The policy SCOPES, and the pair is what proves it ---------------- */
+  const mgrBSeesA = await completedGatingFor(managerBC, advisorA);
+  const mgrBSeesB = await completedGatingFor(managerBC, advisorB);
+  ok(
+    "a manager at rooftop B reads ZERO of rooftop A's advisor — managed_users() is a scope, not an opening",
+    mgrBSeesA.ids.length === 0,
+    `got ${JSON.stringify(mgrBSeesA.ids)} — the policy leaked across rooftops`
+  );
+  ok(
+    "the same manager, the same query, DOES read their own store's advisor — so the refusal above is about scope and not a broken session",
+    mgrBSeesB.ids.length === 1,
+    `got ${JSON.stringify(mgrBSeesB.ids)}${mgrBSeesB.error ? ` (${mgrBSeesB.error})` : ""}`
+  );
+
+  /* ---- 0035's own-row read, carried forward and NOT widened ------------- */
+  const advisorSeesSelf = await completedGatingFor(advisorAC, advisorA);
+  const advisorSeesColleague = await completedGatingFor(advisorAC, veteranA);
+  ok(
+    "the advisor still reads their OWN completion — module_completion_own was dropped and the second arm carries it",
+    advisorSeesSelf.ids.length === 1,
+    `got ${JSON.stringify(advisorSeesSelf.ids)} — /certifications and the loop read this`
+  );
+  ok(
+    "and reads ZERO of a COLLEAGUE's at the same rooftop — an advisor is not in managed_users()",
+    advisorSeesColleague.ids.length === 0,
+    `got ${JSON.stringify(advisorSeesColleague.ids)} — the ruling changed for managers, not for everybody`
+  );
+
+  /* ---- And the LOADER, as the admin: the whole meter, not just a row ---- */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const asAdmin = await loadRollcall(adminC as any, roofA);
   ok(
-    "the admin sees the same roster — so the refusal below is about one relation, not a broken session",
+    "the admin sees the same roster — so the figures below are over the same population",
     asAdmin.rows.length === 3,
     `got ${asAdmin.rows.length} rows`
   );
   ok(
-    "the admin DOES read the earned track, because that is the credential a manager may see",
+    "the admin DOES read the earned track, as they always could (0115)",
     asAdmin.rows.find((r) => r.userId === quietA)?.certs.earned.length === 1,
     `got ${JSON.stringify(asAdmin.rows.find((r) => r.userId === quietA)?.certs.earned)}`
   );
-  /* THE TWO WHOSE PROGRESS IS COMPLETIONS, not a held track. quietA's 1 comes
-     from holding a certification, which the admin IS entitled to see — so
-     asserting "every row reads zero" would be asserting the wrong thing and
-     would fail for the right reason. */
+  /* THE DENOMINATOR, ASSERTED SEPARATELY FROM THE NUMERATOR. gatingTotal is
+     read from `content` under entitlement RLS, so it is a different question
+     with a different policy behind it — and a meter can be wrong by having the
+     wrong denominator just as easily. An admin reads the whole catalogue
+     through content_admin_all, so it must match the service role's exactly. */
   ok(
-    "the admin reads ZERO completed modules for the two who earned them by completing lessons",
-    [advisorA, veteranA].every(
-      (id) => asAdmin.rows.find((r) => r.userId === id)?.certs.gatingDone === 0
-    ),
-    `done ${JSON.stringify(asAdmin.rows.map((r) => [r.userId, r.certs.gatingDone]))}`
+    "the admin's DENOMINATOR equals the service client's, so the meter is not quietly drawn over a smaller catalogue",
+    asAdmin.rows.every(
+      (r) => r.certs.gatingTotal === rollcall.rows[0]?.certs.gatingTotal
+    ) && asAdmin.teamGatingTotal === rollcall.teamGatingTotal,
+    `admin ${JSON.stringify(
+      asAdmin.rows.map((r) => r.certs.gatingTotal)
+    )} / team ${asAdmin.teamGatingTotal}, service ${
+      rollcall.rows[0]?.certs.gatingTotal
+    } / team ${rollcall.teamGatingTotal}`
   );
   ok(
-    "and the loader says UNPROVEN rather than letting a screen draw those zeros as 0%",
-    asAdmin.certProgressProven === false && rollcall.certProgressProven === true,
-    `admin ${asAdmin.certProgressProven}, service role ${rollcall.certProgressProven} — the pair is the point`
+    "and the admin's NUMERATOR equals it per advisor, with advisorA's NON-ZERO — the figure the screen prints is the figure Slack prints",
+    (asAdmin.rows.find((r) => r.userId === advisorA)?.certs.gatingDone ?? 0) > 0 &&
+      rollcall.rows.every(
+        (r) =>
+          asAdmin.rows.find((a) => a.userId === r.userId)?.certs.gatingDone ===
+          r.certs.gatingDone
+      ),
+    `admin ${JSON.stringify(
+      asAdmin.rows.map((r) => [r.name, r.certs.gatingDone])
+    )}, service ${JSON.stringify(rollcall.rows.map((r) => [r.name, r.certs.gatingDone]))}`
+  );
+  ok(
+    "the team line agrees too, both halves of it",
+    asAdmin.teamGatingDone === rollcall.teamGatingDone &&
+      asAdmin.teamEarned === rollcall.teamEarned,
+    `admin ${asAdmin.teamGatingDone}/${asAdmin.teamEarned}, service ${rollcall.teamGatingDone}/${rollcall.teamEarned}`
+  );
+
+  /* ======================================================================
+     10b. WHAT 0179 DOES *NOT* FIX, MEASURED RATHER THAN ASSUMED
+
+     The prompt for this change said a manager at a rooftop that has bought the
+     product reads the same gating set the service role does. MEASURED, THAT IS
+     FALSE, and it is not about the product: `roles_for_content_type` (0091)
+     maps `advisor_video` to `{advisor}`, so `content_entitled_read` admits the
+     ADVISOR role and no other. An admin is admitted by a different policy
+     altogether — `content_admin_all` — which is why the admin's denominator
+     above is correct and complete.
+
+     So a MANAGER-ONLY session reads none of the films, `gatingModuleIds`
+     returns an empty set, and the loader reports 0 of 0 — a flat meter with a
+     zero denominator, which the component renders as a sentence rather than as
+     an empty bar. The numerator 0179 opened is real and unreachable for them.
+
+     THIS COSTS NOTHING TODAY, and the reason is asserted below rather than
+     claimed: /admin/engagement is gated on `admin_rooftops()`, which is
+     platform owner, admin memberships and org group owners — a manager-only
+     account gets the "this screen is for owners and admins" card and never
+     reaches the meter at all.
+
+     THE QUESTION IS RECORDED RATHER THAN ANSWERED HERE, because answering it
+     means giving managers read access to advisor films, which is a product
+     ruling with consequences well outside this screen: a manager arm in
+     `roles_for_content_type('advisor_video')` would also open the library and
+     the loop's content to them. Ryan's to rule on.
+     ====================================================================== */
+  section("10b. The manager's DENOMINATOR, and why the screen is unaffected");
+
+  const filmsFor = async (client: SupabaseClient) => {
+    const { data } = await client.from("content").select("id").in("id", coreContentIds);
+    return (data ?? []).length;
+  };
+  const mgrFilms = await filmsFor(managerAC);
+  const admFilms = await filmsFor(adminC);
+  const advisorFilms = await filmsFor(advisorAC);
+  ok(
+    "the ADVISOR reads both of this suite's gating films — so the rooftop's entitlement is real and the manager's zero below is not about the product",
+    advisorFilms === 2,
+    `got ${advisorFilms} of 2 — rooftop_product holds advisor_base for this store`
+  );
+  ok(
+    "a MANAGER reads NEITHER, while an ADMIN reads both — roles_for_content_type('advisor_video') is {advisor}, and the admin is admitted by content_admin_all instead",
+    mgrFilms === 0 && admFilms === 2,
+    `manager ${mgrFilms}, admin ${admFilms}`
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const asManager = await loadRollcall(managerAC as any, roofA);
+  ok(
+    "the manager sees the same roster, so the zero below is one relation and not a broken session",
+    asManager.rows.length === 3,
+    `got ${asManager.rows.length} rows`
+  );
+  ok(
+    "and the manager's meter is 0 of 0 — the DENOMINATOR, not the numerator 0179 opened",
+    asManager.rows.every((r) => r.certs.gatingTotal === 0) &&
+      asManager.teamGatingTotal === 0,
+    `gatingTotal ${JSON.stringify(
+      asManager.rows.map((r) => r.certs.gatingTotal)
+    )} — if these are non-zero, roles_for_content_type gained a manager arm and this case should be rewritten`
+  );
+  ok(
+    "a manager-only account cannot reach /admin/engagement at all — admin_engagement_coverage reports 0 rooftops in scope, which the page renders as the 'owners and admins' card",
+    await (async () => {
+      const { data } = await managerAC
+        .from("admin_engagement_coverage")
+        .select("rooftops_in_scope")
+        .maybeSingle();
+      return Number((data as { rooftops_in_scope: number } | null)?.rooftops_in_scope ?? 0) === 0;
+    })(),
+    "if a manager now has rooftops in scope, they can open the screen and will see a 0-of-0 meter — the recorded question above has become live"
+  );
+  ok(
+    "the ADMIN does reach it — so the refusal above is about the role and not about the view being unreadable",
+    await (async () => {
+      const { data } = await adminC
+        .from("admin_engagement_coverage")
+        .select("rooftops_in_scope")
+        .maybeSingle();
+      return Number((data as { rooftops_in_scope: number } | null)?.rooftops_in_scope ?? 0) > 0;
+    })(),
+    "the admin reads zero rooftops in scope, which would make the refusal above prove nothing"
   );
 
   /* ======================================================================
@@ -1027,6 +1262,9 @@ async function main() {
   await sb.from("membership").delete().in("user_id", madeUsers);
   await sb.from("app_user").delete().in("id", madeUsers);
   for (const id of madeUsers) await sb.auth.admin.deleteUser(id);
+  /* Explicit, though rooftop_product cascades on rooftop_id: a reader counting
+     the fixtures back out should not have to know which ones cascade. */
+  await sb.from("rooftop_product").delete().in("rooftop_id", [roofA, roofB]);
   await sb.from("rooftop").delete().in("id", [roofA, roofB]);
   await sb.from("org").delete().eq("id", org!.id);
 }

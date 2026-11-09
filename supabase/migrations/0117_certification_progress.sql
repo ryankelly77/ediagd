@@ -19,9 +19,26 @@
 -- advisor the progress of every other advisor in the company. So it takes no
 -- argument at all and reads auth.uid() itself. There is no parameter to forge.
 --
--- The manager-facing surfaces do not use this: a manager sees a credential
--- pill, which comes from advisor_credential under its own RLS policy, and
--- never a colleague's per-track progress.
+-- The manager-facing surfaces do not use this function, and since 8 November
+-- 2026 that is for a different reason than the one originally written here.
+--
+-- WHAT THIS PARAGRAPH USED TO SAY, AND NO LONGER DOES. It said "a manager sees
+-- a credential pill ... and never a colleague's per-track progress". Ryan
+-- reversed that on 8 November: managers and admins see the EDIAGD Certified
+-- meter on /admin/engagement, the same meter the evening Slack post carries.
+-- 0179 is the change — `module_completion_read` lets a manager, an admin and
+-- the platform owner read the completions of the people in `managed_users()`,
+-- shaped exactly like 0115's `advisor_certification_read` — and it
+-- supersedes the sentence above and the matching note on `loadCredentialPills`
+-- in lib/certifications.ts.
+--
+-- NOTHING IN THIS FUNCTION CHANGES. It is still `auth.uid()`-bound and still a
+-- definer, because the two reasons given above are about THIS function and are
+-- both still true: /certifications is the advisor's own screen, the definer is
+-- what keeps the denominator a fact about the track rather than about what
+-- their rooftop has bought, and a `_user uuid` parameter would still be a
+-- parameter to forge. The manager-facing read is a policy over the table,
+-- scoped by `managed_users()` — not an argument on this function.
 -- ============================================================================
 
 create or replace function my_certification_progress()

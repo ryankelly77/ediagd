@@ -12,8 +12,12 @@
    their morning and how far each advisor is toward EDIAGD Certified. The old
    columns are all still loaded — /admin/engagement is the long form and the
    taps answer real questions there — and `certs` is the new one. See
-   CertProgress, which carries a role warning that must be read before anything
-   else renders its numerator.
+   CertProgress.
+
+   Ryan, 8 November: the screen draws the same meter the post does. Until 0179
+   it could not — `module_completion` was own-rows-only, so a session client got
+   a confident 0% for everybody and this file carried a warning saying so. The
+   warning is gone because the read path exists; see CertProgress.
 
    ---------------------------------------------------------------------------
    ONE LOADER, TWO READERS, AND THAT IS THE POINT
@@ -173,23 +177,36 @@ export type RollcallRow = OnboardingRow & {
  * that answers "are they getting certified".
  *
  * ---------------------------------------------------------------------------
- * READ THE ROLE WARNING BEFORE RENDERING gatingDone ANYWHERE NEW
+ * WHO MAY READ THE NUMERATOR — ANSWERED BY A POLICY, NOT BY A HEURISTIC
  * ---------------------------------------------------------------------------
- * `module_completion` is own-rows-only — `module_completion_own`, 0035 — and
- * that is a restated product ruling rather than an oversight: 0117 says in as
- * many words that a manager sees a credential pill and "never a colleague's
- * per-track progress", and loadCredentialPills repeats it.
+ * Both halves of this are readable by the roles that actually call it:
  *
- * So for a SESSION client this numerator comes back as ZERO for everybody the
- * caller is not, with no error — the exact shape of this codebase's
- * most-repeated defect. `Rollcall.certProgressProven` says whether the caller
- * actually demonstrated a cross-user read, and no surface may draw a meter
- * from `gatingDone` without consulting it. The evening post is correct because
- * it runs as the SERVICE ROLE, which the cron's header already names.
+ *   earned      advisor_certification, for `managed_users()` since 0115
+ *   gatingDone  module_completion, for `managed_users()` since 0179
  *
- * `earned` has no such caveat: advisor_certification is readable for
- * `managed_users()` (0115), which is precisely the credential a manager is
- * meant to see.
+ * So the manager, the admin and the platform owner all get real numbers through
+ * their own session, and the cron gets them as the service role. Name the roles
+ * and check each: a platform owner reads everybody by the first arm, a manager
+ * or admin reads their rooftops' people by the third, an advisor reads only
+ * themselves by the second, and `service_role` is not subject to RLS at all.
+ *
+ * UNTIL 0179 THIS CARRIED A WARNING AND A PROOF FIELD, and the shape of what
+ * went is worth keeping: `module_completion` was own-rows-only (0035), so a
+ * session client's numerator came back ZERO for everybody the caller was not,
+ * with no error — the exact shape of this codebase's most-repeated defect. The
+ * screen suppressed the meter rather than print it, keyed on a
+ * `certProgressProven` flag that OBSERVED whether two distinct users' rows had
+ * come back. That was a heuristic standing in for a read path that did not
+ * exist. The read path exists; the heuristic is gone, and nothing replaced it,
+ * because a session that can read nobody's rows but its own is a question for
+ * the route's guard and not something a meter should paper over.
+ *
+ * STILL TRUE, AND THE ONE THING TO CHECK WHEN ADDING A CALLER: `gatingDone` is
+ * whatever the CALLER's policies say it is. Read through a client with no
+ * standing over somebody, it is a legitimate zero about an unreadable row — so
+ * a new surface must be a surface the viewer has standing on, which /today and
+ * /certifications get from the advisor being themselves and /admin/engagement
+ * gets from `admin_rooftops()`.
  */
 export type CertProgress = {
   /**
@@ -365,31 +382,6 @@ export type Rollcall = Omit<OnboardingStatus, "rows"> & {
   teamGatingTotal: number;
   /** Core certifications held across the roster. */
   teamEarned: number;
-  /**
-   * Whether this caller DEMONSTRATED that it can read somebody else's
-   * module_completion — not whether we assume it can.
-   *
-   * ---------------------------------------------------------------------------
-   * PROOF, BECAUSE THE FAILURE IS A CONFIDENT ZERO AND NOT AN ERROR
-   * ---------------------------------------------------------------------------
-   * `module_completion_own` (0035) returns the caller's own rows and nothing
-   * else, silently. A screen reading `certs.gatingDone` through a session
-   * client therefore draws 0% for an entire roster and looks like a store where
-   * nobody has started — a label with nothing behind it, which is the defect
-   * this project has met more than any other.
-   *
-   * It cannot be inferred from the client object, so it is OBSERVED: rows came
-   * back for two or more DISTINCT roster members, which one session can only
-   * manage if the policy let it past its own `auth.uid()`. False is therefore
-   * "unproven", not "forbidden" — including on a store where fewer than two
-   * people have finished a lesson, where the meter would be flat anyway and
-   * "nothing recorded" is the true thing to say.
-   *
-   * The evening post does not consult this because it runs as the service role
-   * and bypasses RLS outright; /admin/engagement does, and suppresses the meter
-   * rather than printing a zero it cannot stand behind.
-   */
-  certProgressProven: boolean;
 };
 
 /**
@@ -547,13 +539,11 @@ async function loadCertProgress(
   byUser: Map<string, CertProgress>;
   gatingTotal: number;
   coreTracks: number;
-  proven: boolean;
 }> {
   const empty = {
     byUser: new Map<string, CertProgress>(),
     gatingTotal: 0,
     coreTracks: 0,
-    proven: false,
   };
   if (userIds.length === 0) return empty;
 
@@ -705,14 +695,7 @@ async function loadCertProgress(
     });
   }
 
-  return {
-    byUser,
-    gatingTotal,
-    coreTracks: coreCerts.length,
-    /* OBSERVED, never assumed. Two distinct people's rows is something one
-       session's `auth.uid()` cannot produce. See certProgressProven. */
-    proven: new Set(completionRows.map((r) => r.user_id)).size >= 2,
-  };
+  return { byUser, gatingTotal, coreTracks: coreCerts.length };
 }
 
 /** A row of app_event_rollcall. */
@@ -1158,7 +1141,6 @@ export async function loadRollcall(
     teamGatingDone: rows.reduce((n, r) => n + r.certs.gatingDone, 0),
     teamGatingTotal: certs.gatingTotal * rows.length,
     teamEarned: rows.reduce((n, r) => n + r.certs.earned.length, 0),
-    certProgressProven: certs.proven,
     completedToday: today
       ? rows.filter((r) => r.lastCompletionOn === today).length
       : 0,

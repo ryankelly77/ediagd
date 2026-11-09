@@ -789,13 +789,30 @@ export async function loadCredentialCard(
 }
 
 /**
- * What a manager may see about somebody else: the credential, and nothing else.
+ * The credential pill for each of a manager's advisors — the level, and nothing
+ * more, because a pill is all the /manager roster has room for.
  *
- * Deliberately NOT the per-track progress. A roster is a list of who holds a
- * credential, not a coaching dashboard about how far through a colleague is,
- * and advisor_credential's own RLS policy is what decides whether the row comes
- * back at all — this function adds no filter of its own and would return
- * nothing for an advisor the caller cannot see.
+ * ---------------------------------------------------------------------------
+ * THIS IS NO LONGER THE LIMIT OF WHAT A MANAGER MAY SEE. RYAN, 8 NOVEMBER 2026.
+ * ---------------------------------------------------------------------------
+ * This comment used to say "deliberately NOT the per-track progress — a roster
+ * is a list of who holds a credential, not a coaching dashboard about how far
+ * through a colleague is", and that was a RULING rather than a fact about this
+ * function. The ruling was reversed: /admin/engagement now draws the same
+ * EDIAGD Certified meter the evening Slack post carries, per advisor, and 0179
+ * is the read path that makes it true — `module_completion_read` admits the
+ * platform owner, the person themselves and `managed_users()`.
+ *
+ * So the scope of this function is now a question of SPACE and not of
+ * permission: /manager shows a level beside a name, and the meter lives on the
+ * screen built to carry numbers. If a roster ever wants the meter, the thing to
+ * call is `loadRollcall` — which already computes it from the gating modules of
+ * the active core tracks, through the caller's own client — and not a second
+ * progress query grown out of this one.
+ *
+ * WHAT HAS NOT CHANGED: this function adds no user filter of its own.
+ * advisor_credential's RLS policy is what decides whether a row comes back, so
+ * it returns nothing for an advisor the caller cannot see.
  */
 export async function loadCredentialPills(
   client: Client,
