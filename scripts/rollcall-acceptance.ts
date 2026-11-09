@@ -28,10 +28,23 @@
         policy that keys on it
      7  the signed_in dedup key makes a second ping in the same store-day a
         no-op rather than a second row
-     8  loadRollcall reports the six facts correctly, including a zero row for
-        somebody who has done nothing, and does not leak the other rooftop
-     9  the Slack message carries all six facts in a fixed order for everybody,
-        and lists the advisor who did nothing
+     8  loadRollcall reports what happened, including a zero row for somebody
+        who has done nothing, and does not leak the other rooftop
+     9  the cert meter counts GATING modules of the ACTIVE CORE tracks, and a
+        HELD track reads as full — read as the service role, which is the role
+        the cron really uses
+    10  THE PAIRED HALF: the same loader read as an ADMIN comes back with zero
+        completed modules and says so — `certProgressProven` false — because
+        module_completion is own-rows-only (0035, restated by 0117). A meter
+        drawn from those zeros would be 0% for a whole roster with no error,
+        which is this codebase's most-repeated defect
+    11  the change window reports lesson completions as one count, and the
+        first-time facts are proved to be FIRSTS: a second sign-in and a fourth
+        morning fire neither, which is the defect in the 6 November post
+    12  the Slack message renders from what the loader actually returned
+
+   The post's COLUMNS AND SENTENCES are proved line by line, without a
+   database, in `npm run test:rollcall-message`. This file proves the data.
 
    ---------------------------------------------------------------------------
    RUN IT AGAINST LOCAL. IT WRITES.
@@ -124,14 +137,19 @@ async function signedInAs(userId: string): Promise<SupabaseClient> {
   return client;
 }
 
-/** Store-local today for a Chicago rooftop, which is what the fixtures use. */
-function chicagoToday(): string {
+/** The store-date an instant fell on, in a named zone. */
+function dateIn(timeZone: string, instant: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Chicago",
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date());
+  }).format(instant);
+}
+
+/** Store-local today for a Chicago rooftop, which is what the fixtures use. */
+function chicagoToday(): string {
+  return dateIn("America/Chicago", new Date());
 }
 
 async function main() {
@@ -187,13 +205,111 @@ async function main() {
   if (mErr) throw new Error(`module: ${mErr.message}`);
   const moduleId = mod!.id as string;
 
+  /* ---- THE CRAFT LADDER, so the cert meter measures something real -------
+     Two ACTIVE CORE tracks, each one course, each one module, each module
+     holding one PUBLISHED advisor_video — which is what makes a module GATE
+     (gatingModuleIds, and gating_content_types() behind it). A module with
+     only a cue can never complete, so a track built from one would give the
+     meter a denominator nobody can fill. */
+  const mkCoreTrack = async (label: string, sort: number) => {
+    const { data: c, error: certErr } = await sb
+      .from("certification")
+      .insert({
+        slug: `${TAG}-${label}`,
+        name: `${TAG} ${label}`,
+        kind: "craft",
+        is_core: true,
+        active: true,
+        glyph_key: "craft_walk_around",
+        sort,
+      })
+      .select("id, name")
+      .single();
+    if (certErr) throw new Error(`core cert ${label}: ${certErr.message}`);
+
+    const { data: co, error: coErr } = await sb
+      .from("course")
+      .insert({ track: "craft", name: `${TAG} ${label} Course`, slug: `${TAG}-${label}-course` })
+      .select("id")
+      .single();
+    if (coErr) throw new Error(`core course ${label}: ${coErr.message}`);
+
+    const { data: m, error: modErr } = await sb
+      .from("module")
+      .insert({ course_id: co!.id, name: `${TAG} ${label} Module`, sort_order: 1 })
+      .select("id")
+      .single();
+    if (modErr) throw new Error(`core module ${label}: ${modErr.message}`);
+
+    const { error: linkErr } = await sb
+      .from("certification_course")
+      .insert({ certification_id: c!.id, course_id: co!.id, sort: 1 });
+    if (linkErr) throw new Error(`certification_course ${label}: ${linkErr.message}`);
+
+    const { data: film, error: filmErr } = await sb
+      .from("content")
+      .insert({
+        type: "advisor_video",
+        title: `${TAG} ${label} film`,
+        status: "published",
+        module_id: m!.id,
+      })
+      .select("id")
+      .single();
+    if (filmErr) throw new Error(`gating content ${label}: ${filmErr.message}`);
+
+    return {
+      certId: c!.id as string,
+      certName: c!.name as string,
+      courseId: co!.id as string,
+      moduleId: m!.id as string,
+      contentId: film!.id as string,
+    };
+  };
+
   const advisorA = await makeUser("advisorA", roofA, "advisor");
   const quietA = await makeUser("quietA", roofA, "advisor");
+  /* Somebody with a HISTORY: signed in weeks ago, three mornings behind them.
+     The 6 November post called seven people like this "first sign-in". */
+  const veteranA = await makeUser("veteranA", roofA, "advisor");
   const managerA = await makeUser("managerA", roofA, "manager");
   const adminA = await makeUser("adminA", roofA, "admin");
   const managerB = await makeUser("managerB", roofB, "manager");
   const advisorB = await makeUser("advisorB", roofB, "advisor");
   const owner = await makeUser("owner", roofB, "advisor", { platformOwner: true });
+
+  /* ======================================================================
+     THE BASELINE, MEASURED BEFORE THE FIXTURE TRACKS EXIST
+
+     The local database is SEEDED: `supabase start` applies every migration,
+     and several of them create real core certifications with real films. So
+     "the denominator is 2" was a fixture author's assumption about an empty
+     catalogue, and it was wrong the first time it ran — 4, because two seeded
+     core tracks already gate. An absolute number here is a claim about the
+     seed rather than about the loader.
+
+     So the catalogue is measured FIRST and every assertion below is a
+     DIFFERENCE: this suite's two tracks add exactly two gating modules and two
+     active core tracks, whatever the seed happens to hold. That is the
+     reconciliation discipline the standing rules ask for, and it does not go
+     stale the next time a migration publishes a film.
+
+     The advisors exist at this point and have done nothing, so the baseline
+     also establishes that their completed count starts at zero — without which
+     "1 of n" below could be inherited rather than caused.
+     ====================================================================== */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseline = await loadRollcall(sb as any, roofA);
+  const baseGating = baseline.rows[0]?.certs.gatingTotal ?? 0;
+  const baseCoreTracks = baseline.coreTracks;
+  const baseDone = new Map(baseline.rows.map((r) => [r.userId, r.certs.gatingDone]));
+
+  const trackDone = await mkCoreTrack("core-done", 901);
+  const trackHeld = await mkCoreTrack("core-held", 902);
+  const coreTrackIds = [trackDone.certId, trackHeld.certId];
+  const coreCourseIds = [trackDone.courseId, trackHeld.courseId];
+  const coreModuleIds = [trackDone.moduleId, trackHeld.moduleId];
+  const coreContentIds = [trackDone.contentId, trackHeld.contentId];
 
   /* Schedules, so "onboarded" has something to say and the row is Ready-ish.
      Fixture-building as the service role: what is under test is the reading.
@@ -227,6 +343,69 @@ async function main() {
       completion_date: chicagoToday(),
     });
     if (error) throw new Error(`daily_completion fixture: ${error.message}`);
+  }
+
+  /* ---- The veteran's three mornings, two of them OLD ---------------------
+     created_at is written EXPLICITLY, because that is the column the change
+     window is keyed on and a default of now() would put all three inside it —
+     a fixture that cannot distinguish a first morning from a fourth cannot
+     test the thing this section exists for. */
+  {
+    const days = (n: number) => {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - n);
+      return d;
+    };
+    const rows = [
+      { date: dateIn("America/Chicago", days(11)), at: days(11) },
+      { date: dateIn("America/Chicago", days(10)), at: days(10) },
+      /* Today's — the only one inside the window. */
+      { date: chicagoToday(), at: new Date() },
+    ];
+    for (const r of rows) {
+      const { error } = await sb.from("daily_completion").insert({
+        user_id: veteranA,
+        rooftop_id: roofA,
+        completion_date: r.date,
+        created_at: r.at.toISOString(),
+      });
+      if (error) throw new Error(`veteran daily_completion: ${error.message}`);
+    }
+  }
+
+  /* ---- What they have finished, and what one of them HOLDS ---------------
+     advisorA has completed trackDone's only gating module. quietA has
+     completed nothing and HOLDS trackHeld — which must read as full, because
+     a track earned before a tenth lesson was published is still earned. The
+     two cases together are the only way to tell the rule from a plain count. */
+  for (const [userId, moduleId_] of [
+    [advisorA, trackDone.moduleId],
+    /* TWO PEOPLE, and that is not padding: `certProgressProven` is the
+       loader's OBSERVATION that it got past its own auth.uid(), and one
+       person's rows cannot demonstrate that. With a single completer the
+       service role reads as "unproven" too, which is correct and would make
+       section 10's refusal prove nothing. */
+    [veteranA, trackHeld.moduleId],
+  ] as const) {
+    const { error } = await sb.from("module_completion").insert({
+      user_id: userId,
+      module_id: moduleId_,
+      rooftop_id: roofA,
+    });
+    if (error) throw new Error(`module_completion fixture: ${error.message}`);
+  }
+  {
+    /* current_through is NOT NULL — earned_at + a year, which is the annual
+       currency the credential carries. Dated a year out so the fixture holds a
+       CURRENT credential and not a lapsed one. */
+    const nextYear = new Date();
+    nextYear.setUTCFullYear(nextYear.getUTCFullYear() + 1);
+    const { error } = await sb.from("advisor_certification").insert({
+      user_id: quietA,
+      certification_id: trackHeld.certId,
+      current_through: nextYear.toISOString().slice(0, 10),
+    });
+    if (error) throw new Error(`advisor_certification fixture: ${error.message}`);
   }
 
   /* And a daily_activity row, which is what "password set" reads. The two are
@@ -275,6 +454,27 @@ async function main() {
     meta: { source: "loop", content_id: null },
   });
   await ev(advisorA, roofA, "story_submitted", { target_id: certId });
+
+  /* ---- THE VETERAN'S TWO SIGN-INS, AND THIS IS THE WHOLE POINT -----------
+     One forty days ago, one today. Any rule that fires "signed in from a
+     phone" on the presence of a native sign-in inside the window would call
+     the second one an install — which is exactly what the 6 November post
+     did for seven people. `at` is set explicitly for the same reason the
+     veteran's completions are. */
+  {
+    const longAgoAt = new Date();
+    longAgoAt.setUTCDate(longAgoAt.getUTCDate() - 40);
+    await ev(veteranA, roofA, "signed_in", {
+      meta: { platform: "ios" },
+      at: longAgoAt.toISOString(),
+      dedup_key: `${veteranA}:signed_in:${dateIn("America/Chicago", longAgoAt)}`,
+    });
+  }
+  await ev(veteranA, roofA, "signed_in", {
+    meta: { platform: "ios" },
+    dedup_key: `${veteranA}:signed_in:${chicagoToday()}`,
+  });
+
   /* The other store, so a cross-rooftop leak has something to leak. */
   await ev(advisorB, roofB, "certs_opened");
 
@@ -300,22 +500,22 @@ async function main() {
 
   const ownerAtA = await countFor(ownerC, roofA);
   ok(
-    "platform owner reads rooftop A's events (9 written)",
-    ownerAtA.rows === 9,
+    "platform owner reads rooftop A's events (11 written)",
+    ownerAtA.rows === 11,
     `got ${ownerAtA.rows}${ownerAtA.error ? ` (${ownerAtA.error})` : ""}`
   );
 
   const adminAtA = await countFor(adminC, roofA);
   ok(
     "admin at A reads A's events",
-    adminAtA.rows === 9,
+    adminAtA.rows === 11,
     `got ${adminAtA.rows}${adminAtA.error ? ` (${adminAtA.error})` : ""}`
   );
 
   const mgrAtA = await countFor(managerAC, roofA);
   ok(
     "manager at A reads A's events",
-    mgrAtA.rows === 9,
+    mgrAtA.rows === 11,
     `got ${mgrAtA.rows}${mgrAtA.error ? ` (${mgrAtA.error})` : ""}`
   );
 
@@ -331,8 +531,8 @@ async function main() {
     0
   );
   ok(
-    "admin reads the same 9 through app_event_rollcall, and the view agrees with the table",
-    aggTotal === 9,
+    "admin reads the same 11 through app_event_rollcall, and the view agrees with the table",
+    aggTotal === 11,
     `view summed to ${aggTotal}${aggErr ? ` (${aggErr.message})` : ""}`
   );
 
@@ -513,11 +713,11 @@ async function main() {
   ok("a story is recorded", rowA?.storiesSubmitted.count === 1, `got ${rowA?.storiesSubmitted.count}`);
 
   ok(
-    "the header counts agree: 2 accounts, 1 from a phone, 2 onboarded, 1 completed today",
-    rollcall.total === 2 &&
-      rollcall.nativeInstalled === 1 &&
+    "the header counts agree: 3 accounts, 2 from a phone, 2 onboarded, 2 completed today",
+    rollcall.total === 3 &&
+      rollcall.nativeInstalled === 2 &&
       rollcall.onboarded === 2 &&
-      rollcall.completedToday === 1,
+      rollcall.completedToday === 2,
     `got ${rollcall.total}/${rollcall.nativeInstalled}/${rollcall.onboarded}/${rollcall.completedToday}`
   );
 
@@ -529,25 +729,188 @@ async function main() {
     "the rooftop filter leaked"
   );
 
-  /* ---- The changes map, keyed on an instant and not on a date ----------- */
-  const longAgo = new Date(Date.now() - 86_400_000);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const changedSinceYesterday = await loadRollcallChanges(sb as any, roofA, longAgo, [
-    advisorA,
-    quietA,
-  ]);
+  /* ======================================================================
+     9. THE CERT METER — THE NUMBER THAT REPLACED THE TAP COUNTS
+
+     Read as the SERVICE ROLE here, which is the role the cron really uses.
+     That is also the only role that can read it: module_completion is
+     own-rows-only (0035) and 0117 restates the ruling, so section 10 asserts
+     the other half — an admin gets zeros, and the loader SAYS it is unproven
+     rather than letting a screen draw them.
+     ====================================================================== */
+  section("9. The cert meter counts gating modules, and held is full");
+
+  /* MEASURED AS A DIFFERENCE AGAINST THE SEEDED CATALOGUE. See the baseline's
+     comment: the absolute number is a fact about the seed, and it was 4 rather
+     than 2 the first time this ran. */
   ok(
-    "everything advisorA did counts as new since yesterday",
-    (changedSinceYesterday.get(advisorA)?.size ?? 0) >= 5,
-    `got ${JSON.stringify([...(changedSinceYesterday.get(advisorA) ?? [])])}`
+    `this suite's two tracks add exactly 2 gating modules to the denominator (baseline ${baseGating})`,
+    rowA?.certs.gatingTotal === baseGating + 2 &&
+      rowQuiet?.certs.gatingTotal === baseGating + 2,
+    `got ${rowA?.certs.gatingTotal} / ${rowQuiet?.certs.gatingTotal} against a baseline of ${baseGating}`
+  );
+  ok(
+    "and exactly 2 active core tracks — the NON-CORE one is in neither count",
+    /* The fixture's first certification is is_core false AND its module has no
+       published film. Either reason alone would exclude it; +2 proves neither
+       route let it in. */
+    rollcall.coreTracks === baseCoreTracks + 2,
+    `got ${rollcall.coreTracks} against a baseline of ${baseCoreTracks}`
+  );
+  ok(
+    "every advisor started from zero completed, so the counts below are caused and not inherited",
+    [...baseDone.values()].every((n) => n === 0),
+    `baseline done ${JSON.stringify([...baseDone.values()])}`
+  );
+  ok(
+    "advisorA's completed module counts 1",
+    rowA?.certs.gatingDone === 1,
+    `got ${rowA?.certs.gatingDone}`
+  );
+  ok(
+    "quietA has completed NOTHING and still reads 1, because a HELD track is full",
+    rowQuiet?.certs.gatingDone === 1,
+    `got ${rowQuiet?.certs.gatingDone} — held-is-full is what trackRowProgress rules`
+  );
+  ok(
+    "and the held track is NAMED, so the post can say which one",
+    rowQuiet?.certs.earned.length === 1 &&
+      rowQuiet?.certs.earned[0] === `${TAG} core-held` &&
+      rowA?.certs.earned.length === 0,
+    `got ${JSON.stringify(rowQuiet?.certs.earned)} / ${JSON.stringify(rowA?.certs.earned)}`
+  );
+  ok(
+    "the day of the last cert work is the day it happened at the STORE",
+    rowA?.certs.lastWorkedOn === chicagoToday() && rowQuiet?.certs.lastWorkedOn === null,
+    `got ${rowA?.certs.lastWorkedOn} / ${rowQuiet?.certs.lastWorkedOn}`
+  );
+  ok(
+    "the team numbers are the rows summed, not a second query that could drift",
+    rollcall.teamGatingDone ===
+      rollcall.rows.reduce((n, r) => n + r.certs.gatingDone, 0) &&
+      rollcall.teamGatingTotal === (baseGating + 2) * rollcall.rows.length &&
+      rollcall.teamEarned === 1,
+    `done ${rollcall.teamGatingDone}, total ${rollcall.teamGatingTotal}, earned ${rollcall.teamEarned}`
+  );
+  ok(
+    "the SERVICE ROLE's cross-user read is PROVEN, so the post may draw a meter",
+    rollcall.certProgressProven,
+    "two advisors' completion rows came back as one read — if this is false the post would be printing zeros"
+  );
+
+  /* ======================================================================
+     10. AND THE SAME LOADER, READ AS AN ADMIN, REFUSES TO CLAIM IT
+
+     THE PAIRED HALF, and the reason it is here: a meter is a label, and the
+     failure mode of this one is a confident 0% rather than an error. An admin
+     cannot read anybody else's module_completion — module_completion_own,
+     0035, restated by 0117 — so the loader must come back UNPROVEN for them.
+     If this ever passes with `certProgressProven` true, /admin/engagement is
+     entitled to draw the bar and the screen should start doing it.
+     ====================================================================== */
+  section("10. Read as an admin, the meter is unproven rather than zero");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const asAdmin = await loadRollcall(adminC as any, roofA);
+  ok(
+    "the admin sees the same roster — so the refusal below is about one relation, not a broken session",
+    asAdmin.rows.length === 3,
+    `got ${asAdmin.rows.length} rows`
+  );
+  ok(
+    "the admin DOES read the earned track, because that is the credential a manager may see",
+    asAdmin.rows.find((r) => r.userId === quietA)?.certs.earned.length === 1,
+    `got ${JSON.stringify(asAdmin.rows.find((r) => r.userId === quietA)?.certs.earned)}`
+  );
+  /* THE TWO WHOSE PROGRESS IS COMPLETIONS, not a held track. quietA's 1 comes
+     from holding a certification, which the admin IS entitled to see — so
+     asserting "every row reads zero" would be asserting the wrong thing and
+     would fail for the right reason. */
+  ok(
+    "the admin reads ZERO completed modules for the two who earned them by completing lessons",
+    [advisorA, veteranA].every(
+      (id) => asAdmin.rows.find((r) => r.userId === id)?.certs.gatingDone === 0
+    ),
+    `done ${JSON.stringify(asAdmin.rows.map((r) => [r.userId, r.certs.gatingDone]))}`
+  );
+  ok(
+    "and the loader says UNPROVEN rather than letting a screen draw those zeros as 0%",
+    asAdmin.certProgressProven === false && rollcall.certProgressProven === true,
+    `admin ${asAdmin.certProgressProven}, service role ${rollcall.certProgressProven} — the pair is the point`
+  );
+
+  /* ======================================================================
+     11. WHAT CHANGED — AND A FIRST-TIME FACT PROVED TO BE A FIRST
+     ====================================================================== */
+  section("11. The changes, keyed on an instant, with first-time facts that are first");
+
+  const longAgo = new Date(Date.now() - 86_400_000);
+  const changedSinceYesterday = await loadRollcallChanges(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sb as any,
+    roofA,
+    longAgo,
+    rollcall.rows
+  );
+
+  const advisorChange = changedSinceYesterday.get(advisorA);
+  ok(
+    "advisorA's two lesson completions are ONE count, whatever surface finished them",
+    advisorChange?.lessons === 2,
+    `got ${advisorChange?.lessons} — the loop one and the library one`
+  );
+  ok(
+    "and the story is reported",
+    advisorChange?.story === true,
+    `got ${JSON.stringify(advisorChange)}`
+  );
+  ok(
+    "advisorA's ONLY morning is in the window, so it IS their first",
+    advisorChange?.firstMorning === true,
+    `got ${advisorChange?.firstMorning}`
+  );
+  ok(
+    "and their first native sign-in is in the window, so the app is newly installed",
+    advisorChange?.installedApp === true,
+    `got ${advisorChange?.installedApp}`
+  );
+
+  /*
+   * THE CASE THE 6 NOVEMBER POST GOT WRONG, BOTH HALVES OF IT.
+   *
+   * The veteran signed in from a phone forty days ago and again today, and has
+   * three mornings of which one is in the window. The old rule fired
+   * "signed in from a phone" on any native sign-in and "first sign-in" on any
+   * daily_activity row, so it reported both as new. Neither is.
+   */
+  const veteranChange = changedSinceYesterday.get(veteranA);
+  ok(
+    "a SECOND sign-in in the window fires neither installedApp nor firstMorning",
+    veteranChange?.installedApp !== true && veteranChange?.firstMorning !== true,
+    `got ${JSON.stringify(veteranChange)} — this is the 6 November defect`
+  );
+  ok(
+    "the veteran DID complete a morning in the window, so the refusal above is about FIRSTNESS and not about an empty window",
+    rollcall.rows.find((r) => r.userId === veteranA)?.lastCompletionOn === chicagoToday() &&
+      (rollcall.rows.find((r) => r.userId === veteranA)?.completionCount ?? 0) === 3,
+    "if they had done nothing, the assertion above would prove nothing"
+  );
+  ok(
+    "quietA's confirmed schedule is reported as onboarded, and nothing else",
+    changedSinceYesterday.get(quietA)?.onboarded === true &&
+      changedSinceYesterday.get(quietA)?.lessons === 0 &&
+      changedSinceYesterday.get(quietA)?.firstMorning === false,
+    `got ${JSON.stringify(changedSinceYesterday.get(quietA))}`
   );
 
   const inAMoment = new Date(Date.now() + 60_000);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const changedSinceNow = await loadRollcallChanges(sb as any, roofA, inAMoment, [
-    advisorA,
-    quietA,
-  ]);
+  const changedSinceNow = await loadRollcallChanges(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sb as any,
+    roofA,
+    inAMoment,
+    rollcall.rows
+  );
   ok(
     "and nothing counts as new since a minute from now — the window is real, not always-true",
     changedSinceNow.size === 0,
@@ -555,9 +918,14 @@ async function main() {
   );
 
   /* ======================================================================
-     9. THE MESSAGE
+     12. THE MESSAGE, BUILT FROM WHAT THE DATABASE ACTUALLY SAID
+
+     The columns and the sentences are proved line by line without a database
+     in `npm run test:rollcall-message`. What this section adds is the join:
+     the loader's output is a shape the message can actually render, and the
+     advisor who has done nothing is still on the roll.
      ====================================================================== */
-  section("9. The Slack message");
+  section("12. The Slack message, from the loaded Rollcall");
 
   const message = buildRollcallMessage({
     rollcall,
@@ -568,52 +936,66 @@ async function main() {
     changes: changedSinceYesterday,
   });
 
-  ok("every advisor is listed", message.listed === 2, `listed ${message.listed}`);
+  ok("every advisor is listed", message.listed === 3, `listed ${message.listed}`);
   ok("nothing was silently dropped", message.dropped === 0, `dropped ${message.dropped}`);
   ok(
-    "the quiet advisor's line is there, with all six facts and not a shorter line",
-    message.text.includes("quietA") &&
-      message.text.includes("0 mornings") &&
-      message.text.includes("Certs 0, tracks 0") &&
-      message.text.includes("0 outside the morning"),
-    "a line that omitted the empty facts would make the people who did nothing the hardest to spot"
+    "it opens by saying who did their morning and NAMING who did not",
+    message.text.split("\n")[1] ===
+      /* "never signed in" and not "no mornings yet": quietA has a confirmed
+         schedule but no daily_activity row, so the app has no record of them
+         ever opening it — and the reason names the step they are stuck ON. */
+      `*2 of 3 did their morning today.* Missed: ${TAG} quietA (never signed in).`,
+    `got ${JSON.stringify(message.text.split("\n")[1])}`
   );
   ok(
-    "the six facts appear in the stated order on the active advisor's line",
+    "the advisor who has done nothing is still on the roll, marked and explained",
+    message.text
+      .split("\n")
+      .some((l) => l.startsWith("— ") && l.includes("quietA") && l.endsWith("never signed in")),
+    "a roll that omitted them would be a roll of the keen"
+  );
+  /* CHECKED AGAINST THE LOADED ROW, not against a literal: the percentage
+     depends on the seeded catalogue, and the exact rendering of every column is
+     pinned in test:rollcall-message. What this asserts is the JOIN — the post
+     is printing this advisor's own numbers. */
+  ok(
+    "advisorA's line carries their own meter, their mornings and what moved",
     (() => {
-      const line = message.text
-        .split("\n")
-        .find((l) => l.includes("advisorA") && l.startsWith("•"));
-      if (!line) return false;
-      const order = ["phone iOS", "pw ", "onboarded ", " morning", "Certs ", "outside the morning"];
-      let at = -1;
-      for (const token of order) {
-        const next = line.indexOf(token, at + 1);
-        if (next <= at) return false;
-        at = next;
-      }
-      return true;
+      const line = message.text.split("\n").find((l) => l.includes("advisorA"));
+      const pct = Math.round((100 * (rowA?.certs.gatingDone ?? 0)) / (rowA?.certs.gatingTotal ?? 1));
+      return (
+        line !== undefined &&
+        line.startsWith("✓ ") &&
+        line.includes(`${pct}%`) &&
+        line.includes("1 morning") &&
+        line.includes("+2 lessons, story")
+      );
     })(),
-    "the fixed order is the whole requirement — the message has to read the same every day"
+    `got ${JSON.stringify(message.text.split("\n").find((l) => l.includes("advisorA")))}`
   );
-  /*
-   * BOTH advisors have something new, and that is the point of the assertion:
-   * the quiet one's schedule was confirmed in this run, so "new" has to be able
-   * to say "onboarded, and nothing else" about somebody who has still never
-   * opened a screen. An assertion that only checked a count would pass with the
-   * two advisors' change sets swapped.
-   */
   ok(
-    "it names what changed, per advisor, and the quiet one's ONLY change is being onboarded",
-    message.changed === 2 &&
-      /* The line is matched EXACTLY, not with includes() — a substring test
-         would also pass on advisorA's "new: ..., onboarded, first sign-in". */
-      message.text.split("\n").some((l) => l.trim() === "↳ new: onboarded") &&
-      (changedSinceYesterday.get(quietA)?.size ?? 0) === 1 &&
-      (changedSinceYesterday.get(advisorA)?.size ?? 0) >= 6,
-    `changed ${message.changed}; quiet=${JSON.stringify([
-      ...(changedSinceYesterday.get(quietA) ?? []),
-    ])}`
+    "quietA's held track shows as earned 1 even though they have completed nothing",
+    message.text
+      .split("\n")
+      .some((l) => l.includes("quietA") && l.includes("earned 1")),
+    `got ${JSON.stringify(message.text.split("\n").find((l) => l.includes("quietA")))}`
+  );
+  ok(
+    "the team line prints the loader's own team numbers",
+    message.text.split("\n")[2] ===
+      `Team toward EDIAGD Certified: ${"▰".repeat(
+        Math.round((10 * rollcall.teamGatingDone) / rollcall.teamGatingTotal)
+      )}${"▱".repeat(
+        10 - Math.round((10 * rollcall.teamGatingDone) / rollcall.teamGatingTotal)
+      )} ${Math.round(
+        (100 * rollcall.teamGatingDone) / rollcall.teamGatingTotal
+      )}% of core lessons · 1 track earned`,
+    `got ${JSON.stringify(message.text.split("\n")[2])}`
+  );
+  ok(
+    "and the onboarding facts that stopped changing are not in it",
+    !/\bpw \d|phone —|Certs \d+, tracks|outside the morning/.test(message.text),
+    "a fact that stops changing is noise in a daily post"
   );
 
   console.log("\n  ---- the message, as it would be posted ----\n");
@@ -624,10 +1006,21 @@ async function main() {
       .join("\n")
   );
 
-  /* ---- Cleanup -------------------------------------------------------- */
+  /* ---- Cleanup --------------------------------------------------------
+     IN FK ORDER, and the craft-ladder fixtures come out before the tracks
+     they hang off: certification_course references course ON DELETE RESTRICT,
+     so a certification deleted first would leave the course undeletable and
+     the next run would collide on its slug. */
   await sb.from("app_event").delete().in("rooftop_id", [roofA, roofB]);
   await sb.from("daily_completion").delete().in("user_id", madeUsers);
   await sb.from("work_schedule").delete().in("user_id", madeUsers);
+  await sb.from("module_completion").delete().in("user_id", madeUsers);
+  await sb.from("advisor_certification").delete().in("user_id", madeUsers);
+  await sb.from("content").delete().in("id", coreContentIds);
+  await sb.from("certification_course").delete().in("certification_id", coreTrackIds);
+  await sb.from("module").delete().in("id", coreModuleIds);
+  await sb.from("course").delete().in("id", coreCourseIds);
+  await sb.from("certification").delete().in("id", coreTrackIds);
   await sb.from("module").delete().eq("id", moduleId);
   await sb.from("course").delete().eq("id", course!.id);
   await sb.from("certification").delete().eq("id", certId);
