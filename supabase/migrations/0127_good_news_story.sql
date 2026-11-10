@@ -277,6 +277,16 @@ grant select, insert on advisor_story_revision to authenticated;
  * grant for column-level grants. "A broad update policy would have let them
  * change the body too" is exactly right, and once review_status decided a leg
  * it also let them change their own verdict.
+ *
+ * AND THE REPLACEMENT IS NARROWER THAN THIS ONE. The sentence below — "a second
+ * door into the same room needs the same lock" — is right about the READ and
+ * wrong about the review, and 0180 first copied it before Ryan corrected it on
+ * 10 November. managed_rooftops() says which rooftops the CALLER manages and
+ * nothing about WHOSE story it is, so an advisor who also holds a manager row
+ * at their own store manages the rooftop their own story is stamped with. Here
+ * that was harmless — the function wrote only a read-stamp. Once the outcome
+ * decided a leg it was an advisor marking their own homework. review_story() is
+ * is_platform_owner() alone; managers still read via the policy above.
  */
 create or replace function mark_story_reviewed(_story uuid)
 returns void

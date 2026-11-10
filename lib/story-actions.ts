@@ -382,9 +382,17 @@ export type ReviewVerdict = "good" | "kickback";
  * /admin/stories requires `isPlatformOwner`, and that is a courtesy — the same
  * relationship the track page's locked row has to submitStory(). A server action
  * takes a POST from anywhere, so the permission is decided inside
- * `review_story()`: platform owner at any rooftop, or the rooftop's own
- * manager/admin, and nobody else. An advisor calling this gets a 42501 from the
- * database, which accept:story asserts as a refusal.
+ * `review_story()`: PLATFORM OWNER ONLY, at any rooftop, and nobody else.
+ * An advisor gets a 42501 from the database, and so does a store manager —
+ * managers READ their rooftop's stories (0127's read policy, arm 2) and do not
+ * mark them. accept:story asserts all three.
+ *
+ * THE MANAGER REFUSAL IS THE ONE WORTH KNOWING ABOUT. This function and the
+ * database both admitted a rooftop's manager until Ryan closed it on
+ * 10 November: managed_rooftops() names the rooftops the CALLER manages and
+ * says nothing about whose story it is, so an advisor who also holds a manager
+ * row — Valerie Patterson does, at Beaumont — managed the rooftop their own
+ * story is stamped with and could have marked it Good.
  *
  * SO THERE IS NO GUARD HERE, DELIBERATELY. A `getAdminContext()` check in this
  * function would read as the control and would be the weaker of the two —
@@ -424,9 +432,17 @@ export async function reviewStory(
    * membership row at all, which would drop the event entirely with a warning
    * nobody reads.
    *
-   * Through the viewer's client so the read is the new RLS arm answering. If
-   * they cannot read the row they cannot review it, and the RPC below will say
-   * so with the same 42501 — one decision, asked twice, never two decisions.
+   * Through the viewer's client so the read is the RLS answering rather than a
+   * service-role read stepping over it.
+   *
+   * READING IS A WEAKER TEST THAN REVIEWING, AND SINCE 10 NOVEMBER DELIBERATELY
+   * SO. This used to say "if they cannot read it they cannot review it — one
+   * decision, asked twice", and that stopped being true when review_story()
+   * narrowed to is_platform_owner(): a store manager reads their rooftop's
+   * stories through arm 2 and is refused the mark. So this read is a lookup for
+   * the event's rooftop, NOT a permission check — it can succeed for somebody
+   * the RPC below will refuse, which is correct and is what the 42501 branch is
+   * for. Nothing here may be read as the gate.
    */
   const { data: story, error: readErr } = await supabase
     .from("advisor_story")

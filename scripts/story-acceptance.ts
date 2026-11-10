@@ -28,8 +28,12 @@
      6. a PLATFORM OWNER reads every story at every rooftop — and a rooftop
         ADMIN at store A still reads nothing at store B, which is the half that
         proves the new arm did not widen rule 4 for dealer staff
-     7. review_story() accepts a platform owner and the rooftop's own manager,
-        refuses the AUTHOR, and refuses `pending` and junk as a status
+     7. review_story() accepts a PLATFORM OWNER AND NOBODY ELSE — refused for
+        the rooftop's own manager, for a colleague, for the author, and for an
+        author who is ALSO a manager at their own rooftop (the real case: an
+        advisor with a manager row manages the rooftop their own story is
+        stamped with, so a managed_rooftops() arm let them mark themselves
+        Good). It also refuses `pending` and junk as a status
      8. a kickback returns the leg to unmet — my_story_for() goes false AND
         loadStoryGate().toldFor drops the track, asserted through the real
         reader rather than a restatement of it
@@ -278,6 +282,19 @@ async function main() {
   const mgrB = await makeUser("mgr-b", roofB, "manager");
 
   /*
+   * THE PLATFORM OWNER IS BUILT WITH THE REST, not down in section 9, because
+   * since 10 November they are the ONLY caller review_story() accepts — so
+   * section 5 onwards needs them to do anything at all.
+   *
+   * AN `advisor` MEMBERSHIP AT STORE A, AND THAT IS WHAT MAKES SECTION 9 MEAN
+   * SOMETHING. Give them `manager` and every cross-rooftop read down there is
+   * explained by arm 2 of the read policy, and the test would pass with 0180's
+   * new arm deleted. As an advisor they are in nobody's managed_rooftops(), the
+   * stories are unshared and none are theirs, so arm 4 is the only door.
+   */
+  const owner = await makeUser("owner", roofA, "advisor", { platformOwner: true });
+
+  /*
    * EVERY ADVISOR WHO WRITES A STORY BELOW IS FINISHED FIRST — including the
    * peer, who only ever writes one to prove a refusal is non-vacuous.
    *
@@ -294,6 +311,7 @@ async function main() {
   const peerC = await signedInAs(peerA);
   const mgrAC = await signedInAs(mgrA);
   const mgrBC = await signedInAs(mgrB);
+  const ownerC = await signedInAs(owner);
 
   /* ==================================================================== */
   section("1 — an advisor writes their own story, and only their own");
@@ -467,18 +485,45 @@ async function main() {
     oldFnErr ? undefined : "it still exists — a story can be stamped with no outcome"
   );
 
-  const { error: revErr } = await mgrAC.rpc("review_story", {
+  const { error: revErr } = await ownerC.rpc("review_story", {
     _story: storyId,
     _status: "good",
   });
-  ok("the rooftop's manager can mark a story Good", !revErr, revErr?.message);
+  ok("a platform owner can mark a story Good", !revErr, revErr?.message);
+
+  /*
+   * ---- THE ROOFTOP'S OWN MANAGER IS REFUSED (Ryan, 10 November) ----------
+   *
+   * This was an ACCEPTANCE until 10 November, mirroring the read policy on the
+   * reasoning that "a second door into the same room needs the same lock".
+   * Right about the read, wrong here: READING AND REVIEWING ARE DIFFERENT
+   * PERMISSIONS. A manager reads their team's words through arm 2 — asserted
+   * in section 4 and untouched — and marks none of them, because a mark
+   * decides a leg of somebody's credential and that judgement is Mitch's.
+   *
+   * mgrA manages roofA and the story is AT roofA, so this is the strongest
+   * form of the refusal: everything managed_rooftops() ever checked is true
+   * and the answer is still no.
+   */
+  const { error: mgrRevErr } = await mgrAC.rpc("review_story", {
+    _story: storyId,
+    _status: "good",
+  });
+  ok(
+    "REFUSED: the rooftop's OWN manager cannot review — they read, they do not mark",
+    Boolean(mgrRevErr),
+    mgrRevErr
+      ? undefined
+      : "a store manager marked a story; the managed_rooftops() arm is back, and " +
+        "with it an advisor who holds a manager row reviewing their own story"
+  );
 
   const { error: revCrossErr } = await mgrBC.rpc("review_story", {
     _story: storyId,
     _status: "good",
   });
   ok(
-    "REFUSED: a manager at another rooftop cannot review it",
+    "REFUSED: …and so is a manager at another rooftop",
     Boolean(revCrossErr),
     revCrossErr ? undefined : "the review succeeded across the rooftop fence"
   );
@@ -490,7 +535,7 @@ async function main() {
     .single();
   ok(
     "  ↳ and it recorded who, when and the verdict",
-    gateRow?.reviewed_by === mgrA &&
+    gateRow?.reviewed_by === owner &&
       Boolean(gateRow?.reviewed_at) &&
       gateRow?.review_status === "good",
     `reviewed_by=${gateRow?.reviewed_by} status=${gateRow?.review_status}`
@@ -702,19 +747,12 @@ async function main() {
   section("9 — EDIAGD reads every rooftop; a dealer's admin still does not");
 
   /*
-   * THE PLATFORM OWNER IS AN `advisor` HERE, AND THAT IS WHAT MAKES THE TEST
-   * ABOUT 0180's ARM.
-   *
-   * Give them `manager` and every read below is explained by arm 2
-   * (managed_rooftops) — the test would pass with the new arm deleted. As an
-   * advisor they are in nobody's managed_rooftops, the stories are unshared, and
-   * none of them are theirs, so arm 4 is the ONLY door. Section 2 already
-   * proved a plain advisor at roofA reads none of this, which is the
-   * non-vacuity for the whole section.
+   * `owner` and `ownerC` are built with the other fixtures — see the note
+   * there for why the membership is `advisor` and not `manager`, which is what
+   * makes every read below attributable to 0180's arm and nothing else.
+   * Section 2 already proved a plain advisor at roofA reads none of this, and
+   * that is the non-vacuity for the whole section.
    */
-  const owner = await makeUser("owner", roofA, "advisor", { platformOwner: true });
-  const ownerC = await signedInAs(owner);
-
   const { data: ownerFlag } = await ownerC.rpc("is_platform_owner");
   ok(
     "the fixture owner really is one, asked as themselves",
@@ -825,8 +863,8 @@ async function main() {
     selfRev ? undefined : "an advisor marked their own story Good — the gate is decorative"
   );
 
-  /* A colleague is not a reviewer either — neither arm of the function names
-     them, and they are the likeliest accidental caller. */
+  /* A colleague is not a reviewer either, and they are the likeliest
+     accidental caller. */
   const { error: peerRev } = await peerC.rpc("review_story", {
     _story: reStory!.id as string,
     _status: "good",
@@ -838,23 +876,99 @@ async function main() {
   );
 
   /*
-   * `pending` IS REFUSED AS AN INPUT. Returning a story to the queue is the
-   * ADVISOR's act — they edit, the trigger resets it — and a reviewer who could
-   * set pending could take a kickback off somebody's screen while leaving the
-   * leg unmet, which is a state nothing in the product explains.
+   * ---- THE CASE THE OLD SUITE COULD NOT SEE, AND THE REASON FOR THE CHANGE -
+   *
+   * AN AUTHOR WHO IS ALSO A MANAGER AT THEIR OWN ROOFTOP.
+   *
+   * "REFUSED: the author cannot review their own story" passed from the day it
+   * was written — because the fixture author is a plain ADVISOR. It was
+   * evidence about the sample it had built, stated as a fact about authors.
+   *
+   * managed_rooftops() names the rooftops the CALLER manages and says nothing
+   * about WHOSE story it is, so an advisor who also holds a manager row
+   * manages the rooftop their own story is stamped with. Valerie Patterson
+   * holds one at Beaumont and has three stories there; under the first version
+   * of review_story() she could have marked all three Good.
+   *
+   * So the fixture is built: one person, an advisor membership AND a manager
+   * membership at the same rooftop, writing their own story and then trying to
+   * mark it. This assertion is what fails if the managed_rooftops() arm ever
+   * comes back.
    */
-  const { error: pendingRev } = await mgrAC.rpc("review_story", {
+  const bothHats = await makeUser("both-hats", roofA, "advisor");
+  const { error: hatErr } = await sb
+    .from("membership")
+    .insert({ user_id: bothHats, rooftop_id: roofA, role: "manager", active: true });
+  ok("fixture: one person holding advisor AND manager at the same rooftop", !hatErr, hatErr?.message);
+
+  const bothHatsC = await signedInAs(bothHats);
+  const { data: hatManages } = await bothHatsC.rpc("managed_rooftops");
+  ok(
+    "  ↳ and managed_rooftops() really does name their own rooftop",
+    JSON.stringify(hatManages ?? []).includes(roofA),
+    `managed_rooftops() returned ${JSON.stringify(hatManages)} — if it omits roofA ` +
+      `the refusal below is about nothing`
+  );
+
+  await finishLessons(bothHats, roofA);
+  const { data: hatStory, error: hatStoryErr } = await bothHatsC
+    .from("advisor_story")
+    .insert({
+      user_id: bothHats,
+      rooftop_id: roofA,
+      certification_id: certId,
+      body: "my own story, at the store I manage",
+    })
+    .select("id")
+    .single();
+  ok("  ↳ and they can write their own story", !hatStoryErr && Boolean(hatStory), hatStoryErr?.message);
+
+  const { error: hatSelfRev } = await bothHatsC.rpc("review_story", {
+    _story: hatStory?.id as string,
+    _status: "good",
+  });
+  ok(
+    "REFUSED: an author who MANAGES their own rooftop still cannot review their own story",
+    Boolean(hatSelfRev),
+    hatSelfRev
+      ? undefined
+      : "they marked their own story Good. This is the Valerie Patterson case and " +
+        "it is what the managed_rooftops() arm admitted — the author refusal above " +
+        "passed the whole time because its fixture was a plain advisor"
+  );
+
+  const { data: hatRow } = await sb
+    .from("advisor_story")
+    .select("review_status")
+    .eq("id", hatStory?.id as string)
+    .single();
+  ok(
+    "  ↳ and the row is untouched — still pending, still in Mitch's queue",
+    hatRow?.review_status === "pending",
+    `review_status=${hatRow?.review_status}`
+  );
+
+  /*
+   * ---- THE STATUS CHECKS RUN AS THE OWNER, AND THAT IS NOT INCIDENTAL -----
+   *
+   * These were a manager's calls until 10 November. Now that a manager is
+   * refused outright, a refusal from one would have TWO possible causes — the
+   * role or the status — and this file's own header says a refusal with two
+   * possible causes tests neither. Asked as the one caller the function
+   * accepts, so the only thing left to refuse is the value.
+   */
+  const { error: pendingRev } = await ownerC.rpc("review_story", {
     _story: reStory!.id as string,
     _status: "pending",
   });
   ok(
-    "REFUSED: `pending` is not a verdict a reviewer may set",
+    "REFUSED: `pending` is not a verdict a reviewer may set — asked as the OWNER",
     Boolean(pendingRev),
     pendingRev ? undefined : "a reviewer can silently un-kick a story and leave the leg unmet"
   );
 
   for (const junk of ["GOOD", "approved", "", "kickback; drop table"]) {
-    const { error: junkErr } = await mgrAC.rpc("review_story", {
+    const { error: junkErr } = await ownerC.rpc("review_story", {
       _story: reStory!.id as string,
       _status: junk,
     });
@@ -867,9 +981,10 @@ async function main() {
 
   /*
    * NON-VACUOUS: the SAME client, the SAME story, a status that IS allowed. A
-   * function that refused everything would pass all five refusals above.
+   * function that refused everything would pass every refusal above — which,
+   * now that the permission is narrow, is exactly the failure mode to fear.
    */
-  const { error: realRev } = await mgrAC.rpc("review_story", {
+  const { error: realRev } = await ownerC.rpc("review_story", {
     _story: reStory!.id as string,
     _status: "good",
   });

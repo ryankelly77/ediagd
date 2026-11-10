@@ -56,9 +56,12 @@
 -- NAMING THE ROLES, because a gate written as "not X" decides something about
 -- every role that is not X and one of them is usually the caller:
 --
---   authenticated   Mitch (platform owner) and a rooftop's manager/admin call
---                   review_story(); the advisor calls neither and is refused.
---                   All three proved in npm run accept:story.
+--   authenticated   Mitch (platform owner) calls review_story(). A store
+--                   manager READS their rooftop's stories and does NOT review
+--                   one — reviewing is Mitch's, and a managed_rooftops() arm
+--                   here would let an advisor who also holds a manager row
+--                   review their own story (Ryan, 10 November; see §3).
+--                   All three roles proved in npm run accept:story.
 --   service_role    reads stories through the `bypasses_rls()` arm, which is
 --                   FIRST and untouched here — is_platform_owner() keys on
 --                   auth.uid() and is false for the backend, which is the
@@ -200,6 +203,56 @@ create policy advisor_story_revision_read on advisor_story_revision
  * what makes "an advisor cannot mark their own story good" a property rather
  * than a hope.
  *
+ * ---------------------------------------------------------------------------
+ * PLATFORM OWNER ONLY. STORE MANAGERS READ, THEY DO NOT REVIEW
+ * ---------------------------------------------------------------------------
+ * Ryan, 10 November. This function first shipped gated on
+ * `is_platform_owner() or rooftop_id in (select managed_rooftops())`, mirroring
+ * the read policy — "a second door into the same room needs the same lock",
+ * which is 0127's rule about the READ and the wrong rule for this.
+ *
+ * READING AND REVIEWING ARE NOT THE SAME PERMISSION. A manager reads their
+ * rooftop's stories through arm 2 of `advisor_story_read`, and that is
+ * untouched: 0127 built it so a manager can see their team's words, and they
+ * still can. What they cannot do is MARK one, because a mark decides a leg of
+ * somebody's credential and the judgement is Mitch's.
+ *
+ * ---- WHY THIS IS A HOLE AND NOT A PREFERENCE ------------------------------
+ * `managed_rooftops()` is keyed on the CALLER's memberships and the story's
+ * rooftop. It says nothing whatsoever about whose story it is. An advisor who
+ * also holds a manager row at their own store therefore manages the rooftop
+ * their own story is stamped with — so the arm admitted them to review
+ * THEMSELVES, straight past the §5 column grants that exist to stop exactly
+ * that, and past the "an advisor cannot mark their own story good" property
+ * three paragraphs up.
+ *
+ * NOT HYPOTHETICAL: Valerie Patterson holds a manager row at Beaumont and has
+ * three stories there. She could have marked all three Good.
+ *
+ * ---- WHY THE SUITE DID NOT CATCH IT, WHICH IS THE LESSON ------------------
+ * accept:story asserted "REFUSED: the author cannot review their own story"
+ * and it passed — because the fixture author is a plain ADVISOR. The test was
+ * evidence about the sample it built, stated as a fact about authors. The
+ * suite now builds a manager-author at their own rooftop and refuses them by
+ * name; it fails if this arm comes back.
+ *
+ * ---- THE ONE COST, NAMED ---------------------------------------------------
+ * A story at a rooftop Mitch has not got to is simply unreviewed. That is the
+ * 0127 posture and it is deliberate: review gates nothing until somebody
+ * ACTIVELY kicks a story back, so a backlog is never the reason a credential
+ * is stuck.
+ *
+ * NAMING THE ROLES, since a gate written as "only X" has decided something
+ * about everybody else:
+ *   platform owner  the only caller. Any rooftop, including ones they hold no
+ *                   membership at.
+ *   manager/admin   REFUSED, 42501 — they read via arm 2 and mark nothing.
+ *   advisor/author  REFUSED, and now refused whatever else they hold.
+ *   service_role    REFUSED. is_platform_owner() keys on auth.uid(), which is
+ *                   null for the backend. Correct: a review is a person's
+ *                   judgement with a person's id on it, and nothing
+ *                   server-side marks a story.
+ *
  * REFUSES 'pending' AS AN INPUT, and that is not pedantry. Returning a story to
  * the queue is the ADVISOR's act — they edit, the trigger below resets it — and
  * a reviewer who could set pending could take a kickback back off the advisor's
@@ -245,11 +298,11 @@ begin
    where s.id = _story
      and s.retired_at is null
      /*
-      * THE SAME TWO DOORS AS THE READ POLICY, and they have to be the same or
-      * the queue would show Mitch a card whose buttons the database refuses.
-      * is_platform_owner() first so the common caller is the first test.
+      * ONE DOOR, AND IT IS NOT THE READ POLICY'S DOOR. See the header: reading
+      * and reviewing are different permissions, and a managed_rooftops() arm
+      * here would let a manager review their own story.
       */
-     and (is_platform_owner() or s.rooftop_id in (select managed_rooftops()));
+     and is_platform_owner();
 
   if not found then
     raise exception 'not permitted to review this story'
@@ -259,10 +312,13 @@ end $$;
 
 comment on function review_story(uuid, text, text) is
   'Mark a Good News Story good or kickback, with an optional note to the '
-  'advisor. Permitted for a platform owner at any rooftop and for a rooftop''s '
-  'manager/admin at theirs; refused for the author and for the service role. '
-  'Refuses pending — returning a story to the queue is the advisor''s act, via '
-  'the edit trigger. 0180, replacing 0127''s mark_story_reviewed().';
+  'advisor. PLATFORM OWNER ONLY, at any rooftop — store managers READ their '
+  'rooftop''s stories (0127 read policy, arm 2) and do not review; reviewing is '
+  'Mitch''s. A managed_rooftops() arm would admit an advisor who also holds a '
+  'manager row to review their OWN story, which is the hole Ryan closed on '
+  '10 November. Refused for managers, authors and the service role. Refuses '
+  'pending — returning a story to the queue is the advisor''s act, via the edit '
+  'trigger. 0180, replacing 0127''s mark_story_reviewed().';
 
 /* The 0127 function recorded that somebody looked and nothing about what they
    concluded. Dropped rather than left beside its replacement: two ways to
