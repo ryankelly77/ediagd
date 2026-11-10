@@ -30,6 +30,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { completeModuleIfReady } from "@/lib/lms";
+import { chooseRooftop } from "@/lib/rooftop-choice";
 import { accrueFromCompletion } from "@/lib/certification-server";
 import { isWatched, serverGateThreshold } from "@/lib/watch-coverage";
 import { recordEvent } from "@/lib/events/record";
@@ -164,17 +165,31 @@ export async function completeLibraryItem(
     }
   }
 
-  // The rooftop this counts against. Any active membership will do; the
-  // entitlement question was already settled by the read above.
-  const { data: membership } = await supabase
+  /*
+   * ---- THE ROOFTOP THIS COUNTS AGAINST ------------------------------------
+   *
+   * This used to be `limit(1)` with no ordering and no role preference, under
+   * the comment "Any active membership will do; the entitlement question was
+   * already settled by the read above". The entitlement question was indeed
+   * settled. A DIFFERENT question was not: `team_videos_completed` filters on
+   * `content_progress.rooftop_id`, so a completion stamped with the wrong one
+   * of a person's two rooftops is invisible on their manager's Team screen —
+   * no error, no empty state, just "No videos completed today" about somebody
+   * who did their morning.
+   *
+   * A manager who is also an advisor is the case that found it. Valerie
+   * Patterson holds both at Beaumont and reported it on 10 November.
+   *
+   * ONE CHOOSER, shared with completeDayAction — see lib/rooftop-choice.ts for
+   * why advisor wins and why the fallback is ordered rather than arbitrary.
+   */
+  const { data: memberships } = await supabase
     .from("membership")
-    .select("rooftop_id")
+    .select("rooftop_id, role")
     .eq("user_id", user.id)
-    .eq("active", true)
-    .limit(1)
-    .maybeSingle();
+    .eq("active", true);
 
-  const rooftopId = membership?.rooftop_id as string | undefined;
+  const rooftopId = chooseRooftop(memberships ?? []) ?? undefined;
   if (!rooftopId) return { ok: false, error: "You're not on a rooftop yet." };
 
   // ---- 3. Claim it. The unique index decides who was first ----------------

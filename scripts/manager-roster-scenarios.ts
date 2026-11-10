@@ -18,7 +18,12 @@
    every hide below is paired with the people who must survive it.
    ============================================================================ */
 
-import { splitDeparted, rankRoster, type AdvisorSummary } from "@/lib/manager";
+import {
+  splitDeparted,
+  rankRoster,
+  summarizeAdvisor,
+  type AdvisorSummary,
+} from "@/lib/manager";
 
 let passed = 0;
 let failed = 0;
@@ -198,6 +203,76 @@ section("5. The surviving roster still sorts the way it did");
     ranked.map((r) => r.name).join(", ") ===
       "Austin Abate, Destiny Booker, Heather Sztaba, Konner Upshaw, Mathew Martin, Valerie Patterson",
     ranked.map((r) => r.name).join(", ")
+  );
+}
+
+/* ======================================================================
+   6. "Building data" vs "Manager" — the status slot's two no-volume cases
+   ====================================================================== */
+section("6. A manager's row says Manager, not Building data");
+
+{
+  /*
+   * Valerie Patterson, 10 November: her own row on the Team tab read "Building
+   * data". It was TRUE — hasVolume is false under MIN_ROS_FOR_COACHING and a
+   * drive manager is permanently under it — and it reads as a broken account,
+   * because the words promise data that is not coming.
+   *
+   * THE PREDICATE IS "DOES THIS PERSON MANAGE HERE", NOT "role = manager AND
+   * NOT advisor". At Beaumont both managers hold a manager membership AND an
+   * advisor one (0166), which is why they appear on this roster at all — so a
+   * predicate that excluded anyone with an advisor membership would have fired
+   * for nobody at the one store that reported the problem. That is the case
+   * this asserts.
+   */
+  const asManager = summarizeAdvisor({
+    advisorOpId: "500242",
+    name: "a manager who also advises",
+    totalRos: 3,
+    totalLaborSales: 900,
+    attach: [],
+    benchmarks: [],
+    managesHere: true,
+  });
+  ok(
+    "under the floor and managing here → hasVolume false, managesHere true",
+    asManager.hasVolume === false && asManager.managesHere === true,
+    `hasVolume=${asManager.hasVolume} managesHere=${asManager.managesHere}`
+  );
+
+  /* THE OTHER HALF, and it is the one that matters: an advisor genuinely early
+     in a period must still read "Building data", because for them the sentence
+     is true and the data really is coming. A flag that defaulted to true would
+     have silenced the whole roster. */
+  const earlyAdvisor = summarizeAdvisor({
+    advisorOpId: "710",
+    name: "an advisor three days into the month",
+    totalRos: 3,
+    totalLaborSales: 900,
+    attach: [],
+    benchmarks: [],
+  });
+  ok(
+    "the same thin numbers WITHOUT a manager membership stay 'Building data'",
+    earlyAdvisor.hasVolume === false && earlyAdvisor.managesHere === false,
+    `managesHere=${earlyAdvisor.managesHere}`
+  );
+
+  /* A manager who somehow clears the floor is judged on their numbers like
+     anybody else — the flag only replaces the no-volume sentence. */
+  const busyManager = summarizeAdvisor({
+    advisorOpId: "500242",
+    name: "a manager carrying a real book",
+    totalRos: 40,
+    totalLaborSales: 40000,
+    attach: [],
+    benchmarks: [],
+    managesHere: true,
+  });
+  ok(
+    "a manager over the floor still gets a real verdict, not 'Manager'",
+    busyManager.hasVolume === true && busyManager.managesHere === true,
+    `hasVolume=${busyManager.hasVolume}`
   );
 }
 

@@ -495,7 +495,21 @@ export type TrackDetail = {
   /** True when the track is not yet earnable — render the coming-soon body,
       no modules, no progress, no links. */
   comingSoon: boolean;
-  entryFilm: { contentId: string; title: string; watched: boolean } | null;
+  /**
+   * The track's opener, when Mitch has ruled one AND the loop would serve it.
+   *
+   * `playable` IS THE LOOP'S THIRD FILTER. pickItem() requires published, not
+   * retired AND a Mux playback id; this used to check only the first two, so
+   * the track page could show an entry-film card for a film the loop would
+   * never serve and /opener could not play. One definition of "the opener",
+   * applied in both places.
+   */
+  entryFilm: {
+    contentId: string;
+    title: string;
+    watched: boolean;
+    playable: boolean;
+  } | null;
   modules: TrackModuleRow[];
   gatingDone: number;
   gatingTotal: number;
@@ -577,7 +591,12 @@ export async function loadTrackDetail(
     const [{ data: film }, { data: seen }] = await Promise.all([
       client
         .from("content")
-        .select("id, title")
+        /* mux_playback_id is selected rather than filtered on, so a ruled
+           opener that has not finished transcoding is still NAMED on the page
+           — it just does not link. Filtering it out here would make the row
+           vanish, and "the film I was told about disappeared" is a worse
+           answer than "it is coming". */
+        .select("id, title, mux_playback_id")
         .eq("id", cert.entry_film_content_id)
         .eq("status", "published")
         .is("retired_at", null)
@@ -595,6 +614,7 @@ export async function loadTrackDetail(
         contentId: film.id as string,
         title: (film.title as string) ?? "The entry film",
         watched: Boolean(seen),
+        playable: film.mux_playback_id !== null,
       };
     }
   }

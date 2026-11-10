@@ -13,6 +13,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { chooseRooftop } from "@/lib/rooftop-choice";
 import { createServiceClient } from "@/lib/supabase/service";
 import { gradeAttempt } from "@/lib/quiz";
 import { moduleRequirementsMet } from "@/lib/lms";
@@ -48,13 +49,27 @@ export async function submitQuiz(formData: FormData): Promise<void> {
     const req = await moduleRequirementsMet(service, user.id, moduleId);
 
     if (req.met) {
-      const { data: membership } = await supabase
+      /*
+       * THE SAME CHOOSER THE LIBRARY PATH USES, for the same table.
+       *
+       * Both paths write `module_completion.rooftop_id` for the same module:
+       * the library when the last gating item is finished, this one when the
+       * quiz that was holding it is passed. They each had their own unordered
+       * `limit(1)` with no role preference, so for a manager-advisor the two
+       * could file the SAME lesson at two different rooftops depending on which
+       * act completed it. Whichever ran second inserted nothing — the primary
+       * key is the pay-once guard — so the rooftop on the row was decided by a
+       * race nobody knew was there.
+       *
+       * Found by asking who else picks a rooftop after fixing
+       * completeLibraryItem. See lib/rooftop-choice.ts.
+       */
+      const { data: memberships } = await supabase
         .from("membership")
-        .select("rooftop_id")
+        .select("rooftop_id, role")
         .eq("user_id", user.id)
-        .eq("active", true)
-        .limit(1)
-        .maybeSingle();
+        .eq("active", true);
+      const rooftopId = chooseRooftop(memberships ?? []);
 
       const { data: settings } = await service
         .from("game_settings")
@@ -67,7 +82,7 @@ export async function submitQuiz(formData: FormData): Promise<void> {
       const { error } = await service.from("module_completion").insert({
         user_id: user.id,
         module_id: moduleId,
-        rooftop_id: membership?.rooftop_id ?? null,
+        rooftop_id: rooftopId,
       });
 
       if (!error) {
@@ -88,8 +103,8 @@ export async function submitQuiz(formData: FormData): Promise<void> {
          * the quiz path would not, and a course whose final requirement is its
          * quiz would never certify anybody at all.
          */
-        if (membership?.rooftop_id) {
-          await accrueFromModule(service, user.id, membership.rooftop_id, moduleId);
+        if (rooftopId) {
+          await accrueFromModule(service, user.id, rooftopId, moduleId);
         }
       }
     }

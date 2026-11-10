@@ -26,6 +26,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { chooseRooftop } from "@/lib/rooftop-choice";
 import { rooftopToday } from "@/lib/admin-advisor-detail";
 import {
   loadCertificationsOverview,
@@ -51,19 +52,25 @@ export default async function CertificationsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
+  /* THE SAME CHOOSER THE COMPLETION PATHS USE. This page is a reader that
+     WRITES — reconcileModuleCompletions below inserts module_completion rows —
+     so an unordered `limit(1)` here could file a backfilled completion at a
+     different rooftop than the library or the quiz would have chosen for the
+     same lesson, and could date the credential by a different store's day.
+     Three writers of one column, three arbitrary answers. See
+     lib/rooftop-choice.ts. */
+  const { data: memberships } = await supabase
     .from("membership")
-    .select("rooftop_id")
+    .select("rooftop_id, role")
     .eq("user_id", user.id)
-    .eq("active", true)
-    .limit(1)
-    .maybeSingle();
+    .eq("active", true);
+  const rooftopId = chooseRooftop(memberships ?? []);
 
   /* The rooftop's today, so a certification earned this evening in Hawaii is
      not dated tomorrow. Falls back to the server's date when the advisor has no
      membership yet — the same compromise rooftopToday itself makes. */
-  const today: IsoDate = membership?.rooftop_id
-    ? await rooftopToday(supabase, membership.rooftop_id)
+  const today: IsoDate = rooftopId
+    ? await rooftopToday(supabase, rooftopId)
     : (new Date().toISOString().slice(0, 10) as IsoDate);
 
   /*
@@ -80,11 +87,7 @@ export default async function CertificationsPage() {
    * service role — so this cannot complete anything the quiz grader would not.
    * It writes nothing in the ordinary case; see lib/module-reconcile.ts.
    */
-  await reconcileModuleCompletions(
-    supabase,
-    user.id,
-    (membership?.rooftop_id as string | null) ?? null
-  );
+  await reconcileModuleCompletions(supabase, user.id, rooftopId);
 
   const [view, lightMode] = await Promise.all([
     loadCertificationsOverview(supabase, user.id, today),

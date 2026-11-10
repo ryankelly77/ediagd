@@ -58,6 +58,32 @@ export type AdvisorSummary = {
    * somebody who was never given the product.
    */
   today?: TeamToday | null;
+  /**
+   * This person also holds a manager or admin membership at this rooftop.
+   *
+   * ---------------------------------------------------------------------------
+   * IT EXISTS TO EXPLAIN "Building data", WHICH IS TRUE AND READS AS BROKEN
+   * ---------------------------------------------------------------------------
+   * `hasVolume` is false below MIN_ROS_FOR_COACHING, and a drive manager who
+   * writes a handful of repair orders a month is permanently below it. So the
+   * status slot said "Building data" about somebody who will never accumulate
+   * any — a sentence that promises data is coming when nothing is coming.
+   * Valerie Patterson read it as a fault in her account on 10 November, and she
+   * was reading it correctly: a label must be evidence of what is behind it.
+   *
+   * NOT "role = manager AND NOT advisor". At Beaumont both managers hold a
+   * manager membership AND an advisor one — 0166 records this, and it is why
+   * they appear on the roster at all. A predicate that excluded anyone with an
+   * advisor membership would have fired for nobody at the one store that
+   * reported the problem. The question is "does this person manage here",
+   * which is what this answers.
+   *
+   * IT CHANGES NOTHING ABOUT THE ADVISORS' ROWS, and nothing about this
+   * person's numbers: their ROs, their sales, their trend and their today line
+   * all render exactly as before. Only the status slot, and only when there is
+   * no volume to judge them on.
+   */
+  managesHere?: boolean;
 };
 
 export type AdvisorTrend = {
@@ -145,6 +171,8 @@ export function summarizeAdvisor(input: {
   light?: boolean;
   /** See AdvisorSummary.today. Null means no app account, not a missed day. */
   today?: TeamToday | null;
+  /** See AdvisorSummary.managesHere. */
+  managesHere?: boolean;
 }): AdvisorSummary {
   const families = buildServiceFamilies(
     input.attach,
@@ -168,6 +196,7 @@ export function summarizeAdvisor(input: {
     credential: input.credential ?? null,
     light: input.light ?? false,
     today: input.today ?? null,
+    managesHere: input.managesHere ?? false,
   };
 }
 
