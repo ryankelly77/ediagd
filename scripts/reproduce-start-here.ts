@@ -144,7 +144,7 @@ const main = async () => {
     for (const m of mp)
       console.log(`    ${m.sortOrder}. ${m.name} — totalItems=${m.totalItems} completedItems=${m.completedItems} pct=${m.pct} itemsDone=${m.itemsDone} hasQuiz=${m.hasQuiz}`);
 
-    const { items, total } = await loadModuleItems(client as any, m1.id, 100);
+    const { items, total } = await loadModuleItems(client as any, m1.id, userId, 100);
     console.log(`\n  loadModuleItems("${m1.name}"): total=${total}, items returned=${items.length}`);
     for (const it of items)
       console.log(`    [${it.type}] "${it.title}" body=${it.body ? `${it.body.length} chars` : "NULL"} isVideo=${it.isVideo}`);
