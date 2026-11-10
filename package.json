@@ -141,7 +141,7 @@
     "restore:day": "rm -rf .tmp-rd && tsc -p scripts/tsconfig.restoreday.json && mkdir -p .tmp-rd/node_modules && ln -sfn .. .tmp-rd/node_modules/@ && node .tmp-rd/scripts/restore-day.js",
     "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js",
     "check:entitlement-parity": "bash scripts/entitlement-parity.run.sh",
-    "diag:manager-team": "rm -rf .tmp-mtd && tsc -p scripts/tsconfig.managerdiag.json && mkdir -p .tmp-mtd/node_modules && ln -sfn .. .tmp-mtd/node_modules/@ && node .tmp-mtd/scripts/manager-team-diagnostic.js",
+    "diag:manager-team": "rm -rf .tmp-mtd && tsc -p scripts/tsconfig.managerdiag.json && mkdir -p .tmp-mtd/node_modules && ln -sfn .. .tmp-mtd/node_modules/@ && node .tmp-mtd/manager-team-diagnostic.js",
     "test:quiz-gate": "rm -rf .tmp-qg && tsc -p scripts/tsconfig.quizgate.json && mkdir -p .tmp-qg/node_modules && ln -sfn .. .tmp-qg/node_modules/@ && node .tmp-qg/scripts/quiz-gate-scenarios.js",
     "test:rooftop-choice": "rm -rf .tmp-rfc && tsc -p scripts/tsconfig.rooftopchoice.json && mkdir -p .tmp-rfc/node_modules && ln -sfn .. .tmp-rfc/node_modules/@ && node .tmp-rfc/scripts/rooftop-choice-scenarios.js",
     "fixture:valerie": "rm -rf .tmp-vsh && tsc -p scripts/tsconfig.valerieshot.json && mkdir -p .tmp-vsh/node_modules && ln -sfn .. .tmp-vsh/node_modules/@ && node .tmp-vsh/valerie-screenshot-fixture.js"
