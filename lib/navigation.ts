@@ -90,6 +90,22 @@ export const ADMIN_TOOLS: readonly AdminTool[] = [
     hint: "Cues, quotes and videos. Tap a type to open it.",
   },
   {
+    /*
+     * PLATFORM-OWNER ONLY, LISTED ANYWAY — the posture /admin/economy records
+     * two entries down: an unlisted screen is one somebody has to be told
+     * about, and the page itself redirects a rooftop admin to /admin, which is
+     * the same answer the link would have given.
+     *
+     * It matters more here than for the economy. This is the whole of Mitch's
+     * daily job in the product — 0127 built the record and no way in, so for
+     * two years the only way to read a story was a SQL console. A screen
+     * reachable only by URL is how that happens twice.
+     */
+    href: "/admin/stories",
+    label: "Good News Stories",
+    hint: "Read what advisors wrote at track exit. Mark Good or Kickback.",
+  },
+  {
     href: "/admin/front-door",
     label: "Front door",
     hint: "The two films a signed-out visitor sees, and their captions.",

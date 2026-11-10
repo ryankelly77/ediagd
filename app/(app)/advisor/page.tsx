@@ -16,6 +16,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { FocusFamilyCard } from "@/components/advisor/FocusFamilyCard";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
+import { loadKickback, type Kickback } from "@/lib/story";
+import { KickbackBanner } from "@/components/advisor/KickbackBanner";
 import { BRAND, rooftopGreeting } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
@@ -38,6 +40,37 @@ export default async function AdvisorPage() {
   // No session, no screen. The performance views enforce this at the database
   // level too (0006), but redirecting is the honest user experience.
   if (!user) redirect("/login");
+
+  /*
+   * ---- WHAT MITCH ASKED FOR, LOADED BEFORE ANY BRANCH (0180) --------------
+   *
+   * ---------------------------------------------------------------------------
+   * THIS PAGE HAS THREE EARLY RETURNS AND THE BANNER HAS TO SURVIVE ALL OF THEM
+   * ---------------------------------------------------------------------------
+   * MEASURED, NOT ASSUMED. The banner was first placed beside the labor sales
+   * card — correct position, unreachable code. A fixture advisor with no DMS
+   * period hit `if (!totals)` two hundred lines above it and got "No numbers
+   * yet" with no banner at all. Caught by taking the screenshot, which is the
+   * only reason it is not in the PR.
+   *
+   * It is not a corner: this project has 2 active advisor accounts against ~60
+   * measured advisors, and an account whose `membership.op_code_id` is not
+   * linked yet returns at `NoAdvisorProfile` as well. A STORY BELONGS TO THE
+   * ACCOUNT AND NOT TO THE BOOK — nothing about a kickback depends on a DMS
+   * export having landed — so the one screen telling somebody their credential
+   * is waiting on them must not be gated behind a monthly file from the dealer.
+   *
+   * The technician branch is the single exception and it is deliberate: a
+   * technician holds no advisor membership, walks no tracks and writes no
+   * stories, and that screen's whole job is to say the category does not apply.
+   *
+   * THE ADVISOR'S OWN CLIENT and `user.id`, never op_code_id. This screen
+   * already knows the signed-in person and the book's owner can differ — the
+   * "You're viewing X's numbers" disclosure below exists for exactly that — and
+   * keying a kickback on the book would put a colleague's banner on an admin's
+   * screen, which is 0149's defect in a new costume.
+   */
+  const kickbacks = await loadKickback(supabase, user.id);
 
   // ---- Who is this advisor, and which op code are they in the DMS? ----------
   const { data: membership } = await supabase
@@ -67,9 +100,14 @@ export default async function AdvisorPage() {
       .eq("active", true);
     const roles = new Set((anyRole ?? []).map((m) => m.role as string));
     if (roles.has("technician") && !roles.has("advisor")) {
+      /* The ONE branch with no banner, and it is not an oversight: a technician
+         holds no advisor membership, walks no tracks and has written no story.
+         This screen exists to say the category does not apply to them. */
       return <NoTechnicianPerformance />;
     }
-    return <NoAdvisorProfile />;
+    /* An advisor whose op code is not linked yet still has tracks and still has
+       stories — the DMS link decides the NUMBERS, not the credential. */
+    return <NoAdvisorProfile kickbacks={kickbacks} />;
   }
 
   const opCodeId: string = membership.op_code_id;
@@ -147,7 +185,10 @@ export default async function AdvisorPage() {
   if (!totals) {
     return (
       <main className="mx-auto max-w-app px-4 py-10">
-        <Card className="p-6">
+        {/* ABOVE the card, which is where the labor sales block would have been.
+            A kickback does not wait on the dealer's monthly export. */}
+        <KickbackBanner kickbacks={kickbacks} />
+        <Card className="mt-5 p-6">
           <h1 className="text-lg font-extrabold text-navy">No numbers yet</h1>
           <p className="mt-2 text-sm text-ink-soft">
             We don&apos;t have a performance period for this advisor yet. Once the
@@ -341,6 +382,20 @@ export default async function AdvisorPage() {
           with eleven rooftops and a part-finished August on the books that is
           not a small omission. */}
       <PeriodStamp label={periodLabel} className="mt-1" />
+
+      {/*
+        ---- MITCH ASKED FOR MORE, AND IT SITS ABOVE THE NUMBERS -----------
+
+        Ryan's ruling puts the kickback banner above labor sales, and the
+        position is the message: the one thing on this screen that is the
+        advisor's to ACT on goes above the figures that are only theirs to read.
+        Below the big number it would be a footnote on a dashboard.
+
+        Renders nothing when nothing is kicked back — the component returns null
+        rather than this page deciding, so there is one answer to "is there a
+        banner" and it lives next to the copy.
+      */}
+      <KickbackBanner kickbacks={kickbacks} />
 
       {/* ---- Daily stat: the screen's big number, warm not navy ---------- */}
       {/* Feature card rather than a second navy hero — DESIGN_LANGUAGE §5 says
@@ -566,10 +621,21 @@ function NoTechnicianPerformance() {
   );
 }
 
-function NoAdvisorProfile() {
+/**
+ * An advisor account with no DMS op code linked yet.
+ *
+ * TAKES THE KICKBACKS, because "nothing to do on your end" is true of the
+ * NUMBERS and false of the credential. A story belongs to the account; an
+ * unlinked book says nothing about whether Mitch has asked this person for
+ * more. Without the banner here, the only advisors who would never see it are
+ * the ones whose dealer has not finished setting them up — which is most of
+ * them today, and exactly the people a silent screen misleads.
+ */
+function NoAdvisorProfile({ kickbacks }: { kickbacks: Kickback[] }) {
   return (
     <main className="mx-auto max-w-app px-4 py-10">
-      <Card className="p-6">
+      <KickbackBanner kickbacks={kickbacks} />
+      <Card className="mt-5 p-6">
         <h1 className="text-lg font-extrabold text-navy">
           No advisor profile linked to this account yet
         </h1>

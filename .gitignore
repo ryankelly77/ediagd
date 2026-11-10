@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example holds NO secrets — only names and what they are for. It is the
+# opt-in the line above anticipates, and it has to be negated explicitly because
+# `.env*` matches it. Without this, a committed example file is silently ignored
+# and the variable it documents stays undiscoverable. 0180.
+!.env.example
 
 # vercel
 .vercel

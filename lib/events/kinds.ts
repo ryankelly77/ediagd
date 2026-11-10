@@ -24,6 +24,28 @@ export const APP_EVENT_KINDS = [
   "lesson_completed",
   "library_opened",
   "story_submitted",
+  /*
+   * ---- 0180, AND THEY ARE TWO KINDS RATHER THAN ONE --------------------
+   *
+   * story_resubmitted — the advisor rewrote a story Mitch kicked back. NOT a
+   *   second story_submitted: that kind answers "how many first stories were
+   *   filed", and folding rewrites into it would turn the Rollcall column into
+   *   a count of save presses. submitStory() emits it on the EDIT branch only,
+   *   which is where the existing comment already explains why an ordinary edit
+   *   emits nothing at all — a rewrite after a kickback is different because
+   *   somebody is waiting on it.
+   *
+   * story_reviewed — Mitch marked one. ONE kind with meta.status carrying
+   *   good|kickback, rather than story_marked_good and story_kicked_back: 0163
+   *   made meta free-form precisely so "the shape of a kind's context should be
+   *   able to change without a migration", and the thing being counted is
+   *   reviews. Two kinds would also make "how many has he read" a sum, which is
+   *   the kind of arithmetic that goes wrong when a third outcome appears.
+   *   target_id is the STORY's id, not the certification's — the kinds above
+   *   point at a track or a module, and this one is about one person's row.
+   */
+  "story_resubmitted",
+  "story_reviewed",
 ] as const;
 
 export type AppEventKind = (typeof APP_EVENT_KINDS)[number];
