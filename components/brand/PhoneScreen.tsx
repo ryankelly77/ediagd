@@ -96,6 +96,41 @@ function Rail({ children }: { children: React.ReactNode }) {
  * `centre` remains for the rare screen that is genuinely two lines and no
  * card — but it is opt-in, and anything with a headline card should not use it.
  *
+ * ---------------------------------------------------------------------------
+ * `centre` CENTRES WITH AUTO MARGINS, NEVER WITH justify-content
+ * ---------------------------------------------------------------------------
+ * It used to put `justify-center` on the SCROLLER itself, and that is the one
+ * construction a scroll container must not have. When the content is taller
+ * than the box, `justify-content: center` splits the overflow across BOTH ends
+ * — and the half above the start edge is not part of the scrollable area, so
+ * no amount of scrolling reaches it. The screen opens part-way down its own
+ * content and the top is simply gone.
+ *
+ * Measured on the daily loop's celebration at 390x844, the only screen in the
+ * app that passes `centre`, arriving from the real ritual with nothing
+ * scrolled by hand:
+ *
+ *     scrollTop        0      already at the top
+ *     clientHeight   675
+ *     content height 818      143px of overflow
+ *     content top    -45      the scroller's own top is +18
+ *     "Your Swell"   -45..-24 entirely above the viewport, unreachable
+ *
+ * 63px above, 80px below. An advisor finishing a morning met the screen
+ * already scrolled past their Swell day and their balance, and scrolling up
+ * did nothing, because `scrollTop` was 0 the whole time. That is also why a
+ * scroll-to-top on mount does not touch this: both `window.scrollTo(0, 0)`
+ * and `ref.current.scrollTo(0, 0)` are no-ops here — the window never scrolls
+ * (the loop is `fixed inset-0` over an `h-dvh overflow-hidden` shell) and the
+ * scroller is already where it is being asked to go.
+ *
+ * Auto margins centre the same way and cannot do this. CSS Flexbox 8.1 is
+ * explicit that an `auto` margin resolves to ZERO when the free space is
+ * negative — so a short screen still centres, and a tall one pins to the top
+ * with the whole of the overflow below it, where it can be scrolled to. The
+ * unsafe state is not representable rather than merely avoided; there is no
+ * new condition for a future author to remember.
+ *
  * The fade is drawn only when there is actually more below — a permanent
  * gradient is decoration, one that appears when content overflows is
  * information.
@@ -137,10 +172,13 @@ function Body({
         /* pt-4: the "padding" that keeps the headline card off the progress
            dots without floating it down the screen. */
         className={`min-h-0 flex-1 overflow-y-auto px-5 pt-4 ${
-          centre ? "flex flex-col justify-center" : ""
+          centre ? "flex flex-col" : ""
         } ${className}`}
       >
-        {children}
+        {/* `m-auto` on the child, never `justify-center` on the scroller above
+            — see the note on this component. The wrapper exists only when
+            `centre` is asked for, so an ordinary screen's DOM is unchanged. */}
+        {centre ? <div className="m-auto w-full">{children}</div> : children}
       </div>
       <div
         aria-hidden="true"
