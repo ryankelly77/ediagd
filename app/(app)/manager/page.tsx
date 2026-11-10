@@ -122,7 +122,6 @@ export default async function ManagerPage() {
     { data: attachRows },
     { data: benchmarkRows },
     { data: advisorMemberships },
-    { data: managerMemberships },
     familiesWithCues,
     laborByAdvisor,
   ] = await Promise.all([
@@ -149,26 +148,6 @@ export default async function ManagerPage() {
       .select("op_code_id, user_id, app_user:user_id(full_name)")
       .eq("rooftop_id", rooftopId)
       .eq("role", "advisor")
-      .eq("active", true),
-    /*
-     * WHO ON THIS ROSTER IS ALSO A MANAGER HERE.
-     *
-     * A SEPARATE QUERY RATHER THAN WIDENING THE ONE ABOVE, on purpose: a
-     * manager membership can carry its own op_code_id, and those rows going
-     * through the same loop would overwrite nameByOpCode and userIdByOpCode for
-     * an op code the advisor membership already owns. Reading the wrong
-     * person's record because two rows shared a key is the production defect
-     * AGENTS.md names — membership.op_code_id pointed four accounts at other
-     * people's books. One query, one meaning.
-     *
-     * user_id only. No name, no op code: this answers "does this person manage
-     * here", and nothing else is needed to answer it.
-     */
-    supabase
-      .from("membership")
-      .select("user_id")
-      .eq("rooftop_id", rooftopId)
-      .in("role", MANAGER_ROLES)
       .eq("active", true),
     loadFamiliesWithCues(supabase),
     // One query for the whole roster, not one per advisor — this is what lets
@@ -206,14 +185,6 @@ export default async function ManagerPage() {
    * READ-ONLY, EVERYWHERE. There is no granting or editing path from the
    * manager side; these tables have no write policy for any session role.
    */
-  /* The user ids that hold a manager or admin membership AT THIS ROOFTOP. An
-     empty set is the normal case for most rosters and renders nothing new. */
-  const managerUserIds = new Set(
-    ((managerMemberships ?? []) as { user_id: string | null }[])
-      .map((r) => r.user_id)
-      .filter((id): id is string => Boolean(id))
-  );
-
   const userIdByOpCode = new Map<string, string>();
   for (const row of advisorMemberships ?? []) {
     if (!row.op_code_id || !row.user_id) continue;
@@ -269,10 +240,6 @@ export default async function ManagerPage() {
       laborPerRoByFamily: laborByAdvisor.get(opId),
       credential: credentialByUser.get(userIdByOpCode.get(opId) ?? "") ?? null,
       light: lightUsers.has(userIdByOpCode.get(opId) ?? ""),
-      /* MANAGES HERE TOO — so "Building data" can say what it actually means
-         for them. See AdvisorSummary.managesHere and TeamRoster's status slot.
-         Keyed on the USER behind the op code, never on the name. */
-      managesHere: managerUserIds.has(userIdByOpCode.get(opId) ?? ""),
       /* NULL WHEN THERE IS NO ACCOUNT BEHIND THE OP CODE, which is a real case
          and not an error: the roster is keyed by op code, and an advisor can
          appear in the DMS performance data with no membership and no login.
