@@ -88,56 +88,6 @@ function TodayLine({ today }: { today: AdvisorSummary["today"] }) {
 }
 
 /**
- * The status slot: a verdict, or why there isn't one.
- *
- * ---------------------------------------------------------------------------
- * "Building data" IS TRUE OF A MANAGER AND WILL NEVER STOP BEING TRUE
- * ---------------------------------------------------------------------------
- * `hasVolume` is false under MIN_ROS_FOR_COACHING (20 ROs), and a drive manager
- * is permanently under it — so the slot promised data that is not coming. On
- * 10 November Valerie Patterson, a drive manager, reported her own row saying
- * "Building data"; she read it as a broken account, which is the only sensible
- * reading of the words. The gap is not in the arithmetic, it is in the label.
- *
- * "Manager" is not a verdict and must not look like one: ink-soft and
- * semibold, exactly as "Building data" was, so a manager scanning the column
- * for clay still finds only advisors who need a conversation.
- *
- * THE QUESTION THE FIX ASKS IS "WHO ELSE SAYS THIS", and the answer was the
- * drill-in: it told a manager "coaching signals unlock as their volume grows",
- * which is the same promise in different words and equally untrue. Both are
- * corrected. The sentences differ, so they are not one component — but they
- * read one flag, and that is what keeps them from drifting apart.
- */
-function StatusSlot({ advisor }: { advisor: AdvisorSummary }) {
-  if (advisor.hasVolume) {
-    return advisor.pursueCount > 0 ? (
-      <span className="text-sm font-bold text-clay">
-        {advisor.pursueCount} to pursue
-      </span>
-    ) : (
-      <span className="text-sm font-bold text-palm">On track</span>
-    );
-  }
-  /* MANAGER BEFORE "Building data", because for a manager the second sentence
-     is never going to come true. An advisor genuinely early in a period still
-     gets "Building data", which for them is accurate. */
-  if (advisor.managesHere) {
-    return (
-      <span
-        title="A manager's own repair orders are too few to coach on — this is not a fault in their account."
-        className="text-sm font-semibold text-ink-soft"
-      >
-        Manager
-      </span>
-    );
-  }
-  return (
-    <span className="text-sm font-semibold text-ink-soft">Building data</span>
-  );
-}
-
-/**
  * Today's five minutes, on the drill-in. Reck's ask, in his words: "show if
  * they watched today and if they had not".
  *
@@ -302,7 +252,19 @@ export function TeamRoster({
               </span>
 
               <span className="text-right">
-                <StatusSlot advisor={advisor} />
+                {advisor.hasVolume ? (
+                  advisor.pursueCount > 0 ? (
+                    <span className="text-sm font-bold text-clay">
+                      {advisor.pursueCount} to pursue
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-palm">On track</span>
+                  )
+                ) : (
+                  <span className="text-sm font-semibold text-ink-soft">
+                    Building data
+                  </span>
+                )}
               </span>
               <span className="text-lg leading-none text-ink-soft">›</span>
             </button>
@@ -380,18 +342,6 @@ export function TeamRoster({
               <div className="mt-4">
                 <ServiceList families={selected.families} />
               </div>
-            ) : selected.managesHere ? (
-              /* THE SAME CORRECTION AS THE STATUS SLOT, in this card's own
-                 words. "Coaching signals unlock as their volume grows" is a
-                 promise to a manager that nothing will keep — their volume is
-                 not going to grow, because writing repair orders is not their
-                 job. Found by following the first fix to the second reader. */
-              <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-                A manager here, with {selected.totalRos}{" "}
-                {selected.totalRos === 1 ? "RO" : "ROs"} of their own this
-                period — too few to read coaching signals off, and nothing to
-                fix.
-              </p>
             ) : (
               <p className="mt-4 text-sm leading-relaxed text-ink-soft">
                 Just {selected.totalRos}{" "}
