@@ -5,6 +5,7 @@ import { CueDeck, type DeckItem } from "@/components/library/CueDeck";
 import { lessonCount } from "@/components/library/CoursePieces";
 import { RecordOpen } from "@/components/events/RecordOpen";
 import {
+  GATING_CONTENT_TYPES,
   loadCourseCrumb,
   loadModule,
   loadModuleItems,
@@ -14,12 +15,16 @@ import {
 /**
  * A module: its video and cues as a swipeable deck, ending on the quiz.
  *
- * The quiz is deliberately not reachable before the cues are finished. It is
- * the last step of the lesson, not a shortcut past it — and gating it is what
- * makes "passing" mean "read the material", which is the only thing the score
- * is evidence of. The deck's last card reflects that gate; the quiz ROUTE
- * enforces it, so the presentation here can never be the thing that lets
- * somebody past.
+ * THE FILM OPENS THE QUIZ. THE CUES DO NOT.
+ *
+ * This comment used to say the opposite — "the quiz is deliberately not
+ * reachable before the cues are finished" — and it described a rule the quiz
+ * route never enforced. The route gates on `my_module_progress.items_done`,
+ * which has counted gating types only since 0143, so the cues were never in it.
+ * Only the deck's terminal card believed they were, and it refused a quiz the
+ * server would have served. Ryan's ruling of 10 November makes the route's
+ * behaviour the rule everywhere; a cue never gates a lesson (0143), and it does
+ * not gate the lesson's quiz either.
  *
  * ?cue=<contentId> opens the deck on that card. A failed quiz question links
  * here — the whole reason for withholding the answer is to send the advisor
@@ -75,6 +80,13 @@ export default async function ModulePage({
     // coaching footage.
     isSample: (it.source ?? "").toLowerCase().includes("sample"),
     completed: it.completed,
+    /* WHAT GATES, FROM THE ONE LIST. GATING_CONTENT_TYPES mirrors
+       gating_content_types() in the database — the same list
+       my_module_progress.items_done uses, which is what the quiz route gates
+       on — and `npm run check:gating` fails if the two ever differ. Derived
+       from the TYPE, not from `kind`: kind is "video" for every non-cue type,
+       so a manager_video would gate a module the database says it does not. */
+    gates: (GATING_CONTENT_TYPES as readonly string[]).includes(it.type),
   }));
 
   /*
@@ -104,6 +116,10 @@ export default async function ModulePage({
       positionSec: null,
       isSample: false,
       completed: false,
+      // A placeholder gates nothing — there is no row to complete. This is the
+      // construction, not a convention: a synthesized card cannot be marked
+      // done, so it cannot satisfy a gate either.
+      gates: false,
     });
   }
 
@@ -125,8 +141,21 @@ export default async function ModulePage({
         title={mod.name}
         /* Whole numbers, no printed percentage, and a cue-only module says what
            it actually is. "0 of 8 · 0%" over eight cues that cannot move it is
-           the line this whole change started from. */
-        subtitle={lessonCount(mod)}
+           the line this whole change started from.
+
+           AND WHEN THE FRACTION IS FULL BUT THE LESSON IS NOT DONE, say so.
+           total_items has counted gating items only since 0160, so an advisor
+           who watches the film reads "1 of 1 done" while the quiz is still
+           outstanding and the module is still incomplete. That fraction is the
+           reason Valerie Patterson watched Menus lesson 1 several times: the
+           header said finished, the track page said not, and neither named the
+           quiz. Same fact the terminal card uses — mod.itemsDone and
+           mod.hasQuiz — so the two cannot disagree. */
+        subtitle={
+          mod.itemsDone && mod.hasQuiz && !mod.quizPassed
+            ? "Quiz waiting"
+            : lessonCount(mod)
+        }
       />
 
       <CueDeck

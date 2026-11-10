@@ -6,6 +6,7 @@ import { mintWatchTicket } from "@/lib/watch-ticket";
 import { storeToday } from "@/lib/mapping/epoch";
 import { createServiceClient } from "@/lib/supabase/service";
 import { recordGateMet } from "@/lib/watch-gate";
+import { chooseRooftop } from "@/lib/rooftop-choice";
 import type { IsoDate } from "@/lib/gamification/streak";
 import {
   completeDay,
@@ -97,15 +98,26 @@ export async function completeDayAction(
     };
   }
 
-  const chosen =
-    memberships.find((m) => m.role === "advisor") ??
-    memberships.find((m) => m.role === "manager") ??
-    memberships[0];
+  /* THE CHOOSER NOW LIVES IN lib/, because it was also written out longhand in
+     completeLibraryItem — as an unordered `limit(1)` with no role preference at
+     all, which stamped a manager-advisor's library completions at whichever
+     rooftop Postgres happened to return. Same question, two answers, nothing
+     comparing them. The `memberships[0]` fallback here had its own smaller
+     version of the hole: no ORDER BY, so two reads need not agree.
+
+     The technician refusal above stays here. It is a statement about who has a
+     daily loop to complete, not about which rooftop owns the record. */
+  const chosenRooftop = chooseRooftop(
+    memberships as { rooftop_id: string; role: string }[]
+  );
+  if (!chosenRooftop) {
+    return { ok: false, error: "No active membership found for this account." };
+  }
 
   try {
     const result = await completeDay(
       user.id,
-      chosen.rooftop_id as string,
+      chosenRooftop,
       content
     );
     revalidatePath("/advisor");
@@ -239,13 +251,27 @@ export async function recordGateMetAction(input: {
       .eq("user_id", user.id)
       .eq("active", true);
 
-    /* The same preference order completeDayAction uses, so the day this is
-       filed against is the day that will be completed. */
-    const chosen =
-      memberships?.find((m) => m.role === "advisor") ??
-      memberships?.find((m) => m.role === "technician") ??
-      memberships?.[0];
-    const rooftopId = chosen?.rooftop_id as string | undefined;
+    /*
+     * THE SAME PREFERENCE ORDER completeDayAction USES — and now that is a
+     * fact rather than a claim.
+     *
+     * The comment here already said this, and it was wrong: the order was
+     * `advisor ?? technician ?? [0]` while completeDayAction used
+     * `advisor ?? manager ?? [0]`. For a technician-and-manager account the
+     * watch gate was filed at the technician rooftop and the day completed at
+     * the manager one — two different store days, so a gate met this evening
+     * could belong to a date the completion never asks about. A comment
+     * asserting an invariant that the code does not hold is worse than no
+     * comment: it tells the next reader not to check.
+     *
+     * Found by following the library-path chooser out to every other site that
+     * asks "which rooftop". chooseRooftop keeps a technician arm precisely so
+     * adopting it here is a no-op for everyone except that one shape, where it
+     * is the fix.
+     */
+    const rooftopId =
+      chooseRooftop((memberships ?? []) as { rooftop_id: string; role: string }[]) ??
+      undefined;
     if (!rooftopId) return { persisted: false };
 
     const { data: todayRaw } = await supabase.rpc("rooftop_today", {

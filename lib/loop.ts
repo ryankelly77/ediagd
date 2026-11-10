@@ -508,15 +508,40 @@ export async function pickItem(
      */
     let film: LifestyleVideoData | null = null;
     if (entering && cert.entry_film_content_id) {
-      const { data: filmRow } = await client
-        .from("content")
-        .select(MINDSET_COLUMNS)
-        .eq("id", cert.entry_film_content_id)
-        .eq("status", "published")
-        .is("retired_at", null)
-        .not("mux_playback_id", "is", null)
-        .maybeSingle();
-      if (filmRow) film = await shapeVideo(client, filmRow as VideoRow, userId, today);
+      /*
+       * ---- AN OPENER ALREADY WATCHED IS NOT SERVED AGAIN -------------------
+       *
+       * Since 10 November the entry film is playable from the track page
+       * (/certifications/<slug>/opener), so `entering` — which only means "no
+       * advisor_track_entry row" — is no longer the same question as "has this
+       * advisor seen the opener". An advisor who watched it from the track page
+       * HAS HAD THEIR ENTRY MORNING; serving it a second time would spend a
+       * whole morning on a film they chose to watch yesterday, and would make
+       * working ahead cost them rather than pay them.
+       *
+       * It is read through the same consumption record as everything else:
+       * content_progress, which TWO_LADDERS makes the one place a watch is
+       * written, whichever surface wrote it. The track entry itself is still
+       * recorded at completion by completeDay — this changes which morning they
+       * get, not whether the track starts.
+       *
+       * CHECKED BEFORE THE FILM IS SHAPED, so a watched opener costs no Mux
+       * token mint rather than one that is thrown away.
+       */
+      const openerDone = await completedIds(client, userId, [
+        cert.entry_film_content_id,
+      ]);
+      if (!openerDone.has(cert.entry_film_content_id)) {
+        const { data: filmRow } = await client
+          .from("content")
+          .select(MINDSET_COLUMNS)
+          .eq("id", cert.entry_film_content_id)
+          .eq("status", "published")
+          .is("retired_at", null)
+          .not("mux_playback_id", "is", null)
+          .maybeSingle();
+        if (filmRow) film = await shapeVideo(client, filmRow as VideoRow, userId, today);
+      }
     }
 
     const mod = orderedModules.find((m) => m.id === next.module_id);
@@ -775,6 +800,12 @@ export type LoopMorning = {
  * Ruling 2 in one line: `entering && film` is the condition, not `entering`.
  * An advisor entering a track with no film gets a normal morning and the track
  * starts anyway — the entry is still recorded at completion.
+ *
+ * AND THAT SHAPE IS WHAT ABSORBED THE 10 NOVEMBER CHANGE for free. The opener
+ * is now watchable from the track page, so pickItem returns `film: null` for an
+ * advisor who has already watched it (see the note there) and this condition
+ * serves them a normal morning with nothing to add here. A condition written as
+ * `entering` alone would have needed a second place to remember.
  */
 export async function assembleMorning(
   client: Client,
