@@ -59,7 +59,11 @@ export default async function ModulePage({
    * fewer definition of the rule.
    */
   const [{ items }, course, nextStep] = await Promise.all([
-    loadModuleItems(supabase, moduleId, 100),
+    /* user.id, NAMED. The progress half of this read is scoped to the viewer
+       by the argument and not by RLS — a manager-advisor reads every progress
+       row at their own rooftop, so an unscoped read put a colleague's tick on
+       this deck. See the note on loadModuleItems. */
+    loadModuleItems(supabase, moduleId, user.id, 100),
     loadCourseCrumb(supabase, mod.courseId),
     loadNextStep(supabase, moduleId, mod.courseId),
   ]);

@@ -125,6 +125,7 @@
     "accept:entitlement": "rm -rf .tmp-ent && tsc -p scripts/tsconfig.entitlement.json && mkdir -p .tmp-ent/node_modules/server-only && echo \"module.exports={};\" > .tmp-ent/node_modules/server-only/index.js && ln -sfn .. .tmp-ent/node_modules/@ && node .tmp-ent/scripts/entitlement-acceptance.js",
     "db:migrate": "bash scripts/db-migrate.sh",
     "check:gating": "rm -rf .tmp-cg && tsc scripts/check-gating-types.ts --outDir .tmp-cg --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-cg/check-gating-types.js",
+    "check:progress-scope": "rm -rf .tmp-cps && tsc scripts/check-progress-scope.ts --outDir .tmp-cps --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-cps/check-progress-scope.js",
     "accept:openers": "rm -rf .tmp-oca && tsc -p scripts/tsconfig.openers.json && mkdir -p .tmp-oca/node_modules/server-only && echo \"module.exports={};\" > .tmp-oca/node_modules/server-only/index.js && ln -sfn .. .tmp-oca/node_modules/@ && node .tmp-oca/scripts/openers-closers-acceptance.js",
     "refusals:0159": "bash scripts/refusals-0159.sh",
     "test:watched-rule": "rm -rf .tmp-wr && tsc -p scripts/tsconfig.watchedrule.json && mkdir -p .tmp-wr/node_modules && ln -sfn .. .tmp-wr/node_modules/@ && node .tmp-wr/scripts/watched-rule-scenarios.js",
@@ -142,6 +143,8 @@
     "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js",
     "check:entitlement-parity": "bash scripts/entitlement-parity.run.sh",
     "diag:manager-team": "rm -rf .tmp-mtd && tsc -p scripts/tsconfig.managerdiag.json && mkdir -p .tmp-mtd/node_modules && ln -sfn .. .tmp-mtd/node_modules/@ && node .tmp-mtd/manager-team-diagnostic.js",
+    "drive:menus-tick": "rm -rf .tmp-mtk && tsc -p scripts/tsconfig.menustick.json && mkdir -p .tmp-mtk/node_modules && ln -sfn .. .tmp-mtk/node_modules/@ && node .tmp-mtk/menus-tick-drive.js",
+    "diag:menus-trace": "rm -rf .tmp-vmt && tsc -p scripts/tsconfig.menustrace.json && mkdir -p .tmp-vmt/node_modules && ln -sfn .. .tmp-vmt/node_modules/@ && node .tmp-vmt/valerie-menus-trace.js",
     "test:quiz-gate": "rm -rf .tmp-qg && tsc -p scripts/tsconfig.quizgate.json && mkdir -p .tmp-qg/node_modules && ln -sfn .. .tmp-qg/node_modules/@ && node .tmp-qg/scripts/quiz-gate-scenarios.js",
     "test:rooftop-choice": "rm -rf .tmp-rfc && tsc -p scripts/tsconfig.rooftopchoice.json && mkdir -p .tmp-rfc/node_modules && ln -sfn .. .tmp-rfc/node_modules/@ && node .tmp-rfc/scripts/rooftop-choice-scenarios.js",
     "fixture:valerie": "rm -rf .tmp-vsh && tsc -p scripts/tsconfig.valerieshot.json && mkdir -p .tmp-vsh/node_modules && ln -sfn .. .tmp-vsh/node_modules/@ && node .tmp-vsh/valerie-screenshot-fixture.js"

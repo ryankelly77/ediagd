@@ -1,0 +1,188 @@
+
+> ediagd@0.1.0 diag:menus-trace
+> rm -rf .tmp-vmt && tsc -p scripts/tsconfig.menustrace.json && mkdir -p .tmp-vmt/node_modules && ln -sfn .. .tmp-vmt/node_modules/@ && node .tmp-vmt/valerie-menus-trace.js
+
+  resolved DIAG_USER_NAME to exactly one app_user row: dac906c0-71d7-478d-9f2a-10f20b77a1ed
+  course "Menus" (menus) → 8a2d7c9a-825b-4681-a077-2bd2b3ea1e1b
+  module 1 of 10 by sort_order: "The Maintenance Menu — the OE Approach" (sort_order 1) → 06b1b883-e920-449c-a5f6-ad1a9af4611d
+
+0 · the subject
+───────────────
+  supabase    https://kpbholbgfccwbzggcvbb.supabase.co
+  user_id     dac906c0-71d7-478d-9f2a-10f20b77a1ed
+  module_id   06b1b883-e920-449c-a5f6-ad1a9af4611d
+  session established over PostgREST — every row reading below is taken twice
+
+  active   manager    84bef302-ebd2-4536-ba9f-693c535f10d4  Doggett Ford of Beaumont  created 2026-10-12
+  active   advisor    84bef302-ebd2-4536-ba9f-693c535f10d4  Doggett Ford of Beaumont  created 2026-10-12  op 500570
+
+  chooseRooftop()        → 84bef302-ebd2-4536-ba9f-693c535f10d4 Doggett Ford of Beaumont   (completeLibraryItem)
+  oldest active by date  → 84bef302-ebd2-4536-ba9f-693c535f10d4 Doggett Ford of Beaumont   (record_watch_progress, 0057)
+  the two writers agree on the rooftop
+
+  rooftop_today(Doggett Ford of Beaumont) = 2026-11-10   tz America/Chicago
+  store day window: 2026-11-10T06:00:00.000Z → 2026-11-11T06:00:00.000Z
+
+1a · the module's content rows — as service AND as her
+──────────────────────────────────────────────────────
+  gating_content_types() = [advisor_video]
+
+  The OE Approach — The Maintenance Menu         7574149a-5477-4959-adbf-e34a09c02479
+    type=advisor_video GATES  status=published  retired_at=NULL
+    duration_sec=167  mux_playback_id=KCtPpq7UIL48o7Dkb5hxeRSp4jGp009MogFc8dcY02ln8  module_order=1  placement=daily_craft  family=NULL
+    player's bar gateThreshold=98.8024%  server's bar serverGateThreshold=98.2036%
+    readable as her: yes
+
+  as service 1 row(s); as her 1 row(s)
+
+1b · every content_progress row for these items — as service AND as her
+───────────────────────────────────────────────────────────────────────
+  as service role — 0 row(s)
+    NONE — no content_progress row of any kind for these items
+  as her (PostgREST, RLS applied) — 0 row(s)
+    NONE — no content_progress row of any kind for these items
+
+1b-ii · the deck's own query, unfiltered, as her — what the page really read
+────────────────────────────────────────────────────────────────────────────
+  1 row(s) came back; 1 belong to somebody else
+
+  NOT HERS 55b2615b-9ac9-48b4-ae8e-69e4e46350ec  The OE Approach — The Maintenance    pct=100 pos=0 completed_at=2026-11-06T12:45:39
+
+  the deck would render the film DONE; her own rows say not done
+  THE TICK IS SOMEBODY ELSE'S. And CueDeck seeds `done` from it, so markDone's `if (pending || done.has(id)) return` means she cannot complete this film at all.
+
+1c · my_module_progress for this module, evaluated AS HER
+─────────────────────────────────────────────────────────
+  The Maintenance Menu — the OE Approach  (Menus)
+    total_items      1
+    completed_items  0
+    all_items        1      cue_items 0
+    items_done       false
+    has_quiz         false       quiz_passed false
+    completed_at     NULL
+    last_activity    NULL
+
+    the header this produces  →  "0 of 1 done"
+  as service role the same view says total_items=1 completed_items=0 items_done=false — auth.uid() is null, so this is nobody's progress and is not evidence
+
+1d · module_completion for this module
+──────────────────────────────────────
+  as service   NONE — the module is not recorded as finished
+  as her       NONE
+
+2 · every app_event for her on 2026-11-10 (America/Chicago), in order
+─────────────────────────────────────────────────────────────────────
+  06:21:58  signed_in         —                                   
+             meta {"platform":"web"}
+  06:26:06  lesson_completed  3a9c5b21-1e33-48b1-be4b-065f4b5ca42e
+             meta {"source":"loop","content_id":"a5b2de6f-453b-4ae3-bffe-63f8ac5c208e"}
+  06:27:26  certs_opened      —                                   
+  06:27:40  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  06:27:45  lesson_opened     06b1b883-e920-449c-a5f6-ad1a9af4611d  ← this module
+  06:30:49  lesson_opened     a4557640-614a-4856-93c2-9af48cd873a4
+  06:30:54  lesson_opened     b2213977-a0d8-4675-9381-494c58f2cc5b
+  06:31:00  lesson_opened     fc80f1ec-8b83-41ec-b873-f9b0ca0a5e8d
+  06:31:04  lesson_opened     f9ae1332-155e-4480-9e17-f05ab4d5d9a3
+  06:31:07  lesson_opened     b1ad1916-b321-4b23-8c15-fbdb7dff4d06
+  06:31:11  lesson_opened     5a70411f-41af-4d5a-a248-d3b4cd9c291b
+  06:31:17  lesson_opened     d2781147-4096-4f87-bafc-bd842617bee6
+  06:31:23  lesson_opened     0345f4e7-01af-46cf-a579-faf77123f05d
+  06:31:28  lesson_opened     aaf562ac-0b0b-4500-832f-adc34af67c50
+  06:31:38  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:34:33  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:34:36  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:34:56  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:35:18  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:35:32  certs_opened      —                                   
+  06:35:44  track_opened      abd5efce-2b92-4b10-9b56-85cf8e0741b7
+  06:35:44  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:35:51  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:35:55  lesson_opened     85254b04-bdb2-4e8e-a3a1-1402da5070ce
+  06:36:03  track_opened      abd5efce-2b92-4b10-9b56-85cf8e0741b7
+  06:36:10  lesson_opened     53b27c8f-7bae-44fb-a007-f10d925ab97b
+  06:36:11  track_opened      abd5efce-2b92-4b10-9b56-85cf8e0741b7
+  06:36:29  certs_opened      —                                   
+  06:36:37  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  06:46:08  certs_opened      —                                   
+  06:46:42  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  06:46:50  certs_opened      —                                   
+  15:08:45  certs_opened      —                                   
+  15:08:52  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  15:08:57  lesson_opened     06b1b883-e920-449c-a5f6-ad1a9af4611d  ← this module
+  15:11:52  lesson_opened     a4557640-614a-4856-93c2-9af48cd873a4
+  15:11:58  certs_opened      —                                   
+  15:12:04  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  15:14:48  lesson_completed  —                                   
+             meta {"type":"advisor_video","source":"library","content_id":"a5b0f57b-55a7-4d18-b06f-6c569b72d5f0"}
+  15:15:02  certs_opened      —                                   
+  15:15:07  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  15:15:11  lesson_opened     06b1b883-e920-449c-a5f6-ad1a9af4611d  ← this module
+  15:18:22  lesson_opened     a4557640-614a-4856-93c2-9af48cd873a4
+  15:18:42  lesson_opened     b2213977-a0d8-4675-9381-494c58f2cc5b
+  15:18:45  lesson_opened     fc80f1ec-8b83-41ec-b873-f9b0ca0a5e8d
+  15:18:47  lesson_opened     f9ae1332-155e-4480-9e17-f05ab4d5d9a3
+  15:18:50  lesson_opened     b1ad1916-b321-4b23-8c15-fbdb7dff4d06
+  15:18:52  lesson_opened     5a70411f-41af-4d5a-a248-d3b4cd9c291b
+  15:18:56  lesson_opened     d2781147-4096-4f87-bafc-bd842617bee6
+  15:19:00  lesson_opened     0345f4e7-01af-46cf-a579-faf77123f05d
+  15:19:03  lesson_opened     aaf562ac-0b0b-4500-832f-adc34af67c50
+  15:19:19  certs_opened      —                                   
+  15:19:53  track_opened      de71816f-6911-4b41-b37b-c0fb75aeed95
+  15:21:22  lesson_opened     06b1b883-e920-449c-a5f6-ad1a9af4611d  ← this module
+  15:22:00  certs_opened      —                                   
+
+  lesson_opened    for this module today: 4
+  lesson_completed for this module today: 0
+  lesson_completed is written by completeLibraryItem AFTER every rollback-able step. Its absence means the action did not reach the end of the happy path; its presence means a row was claimed and paid.
+
+  all time for this module: 10 opened, 0 completed  (first 10/13/2026, 10:20:58, last 11/10/2026, 15:21:22)
+
+3 · her Sand Dollar ledger on 2026-11-10 (America/Chicago)
+──────────────────────────────────────────────────────────
+  06:26:06    10  daily_loop       ref 19f7613c-b70b-4c50-9144-a9a73bf8a8df
+  15:14:47     1  lesson_complete  ref bf81e8cd-1494-4b9b-9faf-e676a403336b
+             Video completed
+
+  lesson_complete entries today: 1 totalling 1
+  sand_lesson=1 cap=30 sand_module=15
+  earned since UTC midnight (the window the action counts) = 1  → not capped
+
+4 · could she have recorded progress at all? the write paths, as her
+────────────────────────────────────────────────────────────────────
+  content_is_readable(film) as her = true
+  chooseRooftop (completeLibraryItem)      84bef302-ebd2-4536-ba9f-693c535f10d4 Doggett Ford of Beaumont → active membership exists
+  oldest active (record_watch_progress)    84bef302-ebd2-4536-ba9f-693c535f10d4 Doggett Ford of Beaumont → active membership exists
+
+  film playback: mux_playback_id=KCtPpq7UIL48o7Dkb5hxeRSp4jGp009MogFc8dcY02ln8 → the deck renders a real player
+
+5 · the two readings, side by side
+──────────────────────────────────
+  the header (my_module_progress as her)   "0 of 1 done"
+  the film's row as service                 no row
+  the film's row as her                     no row
+  lesson_completed event today              no
+  paid today                                yes
+  module_completion                         no
+
+  what each candidate would require, and whether the rows show it
+    1 alreadyComplete branch   row exists, completed_at NULL, no event, no pay   ruled out
+    2 written but not counted  completed_at set, header still 0                  ruled out
+    3 stale header             completed_at set AND the view counts it           ruled out
+    4 nothing written at all   no row of any kind, opens with no progress        CONSISTENT
+
+6 · who else is reading a colleague's tick right now
+────────────────────────────────────────────────────
+  population: 34 active memberships, 6 hold manager/admin; 116 films on module decks; 132 completions on them
+
+  126 (viewer, film) pairs across 5 viewer(s) would draw a tick from somebody else's row
+
+  da96fa7a-ae4c-4c32-b97f-39fb6a0507b8    57 film(s)  manager/admin only
+  669677d6-d395-46b2-9a3c-145167c4a8cf    54 film(s)  ALSO AN ADVISOR
+  7323cabd-ff2e-4c39-aa74-0db4a634495f     8 film(s)  manager/admin only
+  c5e6ee88-770b-4760-9771-9a58dc3088f2     5 film(s)  ALSO AN ADVISOR
+  dac906c0-71d7-478d-9f2a-10f20b77a1ed     2 film(s)  ALSO AN ADVISOR  ← the subject
+  A manager who is not also an advisor still sees the wrong tick, but has no daily loop of their own, so the one it costs is the manager-advisor.
+
+summary
+───────
+  readings taken as her and as service; 0 marked UNKNOWN AS HER

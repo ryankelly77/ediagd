@@ -380,10 +380,43 @@ export async function loadModule(
  * cannot order by a computed expression; the module page asks for 100 items and
  * the largest module holds eleven, so nothing is at risk of being sorted after
  * being truncated.
+ *
+ * ---------------------------------------------------------------------------
+ * `userId` IS REQUIRED, AND IT IS AHEAD OF THE OPTIONAL ONE SO IT CANNOT BE
+ * FORGOTTEN
+ * ---------------------------------------------------------------------------
+ * The progress read below carried no user filter and leaned on RLS to scope
+ * itself. There is no self-read policy on `content_progress` to lean on.
+ * `progress_team_read` (0027) is
+ *
+ *     is_platform_owner() or user_id = auth.uid()
+ *                         or rooftop_id in (select managed_rooftops())
+ *
+ * so a MANAGER reads every progress row at their own rooftop, and this query —
+ * keyed only on `content_id` — handed one of those rows to the deck as if it
+ * were the viewer's own.
+ *
+ * Measured on production, 10 November 2026. Valerie Patterson holds manager and
+ * advisor at Beaumont. On `/library/m/06b1b883` (Menus module 1) this query
+ * returned ONE row for the film: advisor 902050's completion of 6 November,
+ * `completed_at` set and `watched_pct` 100. She has none. So the deck seeded
+ * `done` with the film's id, rendered the tick, and `markDone`'s
+ * `if (pending || done.has(id)) return` meant she could not complete it — ten
+ * opens, not one progress row. Meanwhile `my_module_progress`, which names its
+ * user (`cp.user_id = (select auth.uid())`), correctly said `0 of 1 done`. Two
+ * readings of one table through two scopings, on one screen.
+ *
+ * She can read 545 rows here and 179 of them are hers. The other 366 were
+ * indistinguishable to this query.
+ *
+ * NO DEFAULT, deliberately — a default is the thing a caller takes without
+ * deciding. TypeScript refuses a call site that does not name the viewer, which
+ * is the only version of this rule that survives the next page added.
  */
 export async function loadModuleItems(
   client: Client,
   moduleId: string,
+  userId: string,
   limit: number = MODULE_PAGE_SIZE
 ): Promise<{ items: LessonItem[]; total: number }> {
   const { data, count } = await client
@@ -410,10 +443,17 @@ export async function loadModuleItems(
   // One read for completion AND resume: furthest-reached and position, so a
   // half-watched lesson picks up where it was left — the same two fields the
   // morning seeds TrackedVideo with.
+  //
+  // `.eq("user_id", userId)` IS LOAD-BEARING. Without it a manager-advisor is
+  // served a colleague's row for the same film: the tick, the watched
+  // percentage AND the resume position. See the note on the signature. Keyed by
+  // content_id into a Map, two rows for one film also meant the LAST one won,
+  // with no ORDER BY to say which that was.
   const { data: progress } = ids.length
     ? await client
         .from("content_progress")
         .select("content_id, watched_pct, position_sec, completed_at")
+        .eq("user_id", userId)
         .in("content_id", ids)
     : { data: [] };
 
