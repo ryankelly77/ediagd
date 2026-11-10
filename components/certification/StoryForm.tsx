@@ -55,6 +55,19 @@ export type StoryFormProps = {
     submittedAt: string;
     updatedAt: string;
     reviewedAt: string | null;
+    /**
+     * 0180 — the outcome of Mitch's latest read.
+     *
+     * `kickback` CHANGES THIS SCREEN IN THREE PLACES and the three are one
+     * idea: his note above the box, a button that says "Save my rewrite", and a
+     * confirmation that does not claim the track is finished. An advisor
+     * arriving here from the banner has been asked a question, and a form that
+     * looked identical to the one they filled in last week would not be an
+     * answer to it.
+     */
+    reviewStatus: "pending" | "good" | "kickback";
+    /** His line to them, verbatim. Null when he said nothing but Kickback. */
+    reviewNote: string | null;
   } | null;
   /** Rooftop name, so "your team" is a place rather than an abstraction. */
   rooftopName: string | null;
@@ -87,8 +100,25 @@ export function StoryForm({
 
   const isEdit = existing !== null;
 
+  /*
+   * ---- THE REWRITE STATE, AND IT IS THE STATE THE PAGE LOADED IN ----------
+   *
+   * `existing.reviewStatus`, not a value that follows `saved`. Once the rewrite
+   * is saved the row is pending again, but this screen is still the answer to
+   * the question that was asked — keeping Mitch's note on screen through the
+   * save is what lets somebody check they addressed it. It clears on the next
+   * load, from the row, which is where the truth is.
+   */
+  const kickedBack = existing?.reviewStatus === "kickback";
+
   /* Reject empty and whitespace-only. NOTHING ELSE — see lib/story-actions.ts
-     for why there is no character minimum and why adding one is a mistake. */
+     for why there is no character minimum and why adding one is a mistake.
+
+     NOT EVEN ON A REWRITE, and that is the tempting place to add one. The
+     advisor has just been told their words were not substantial, so a length
+     floor here would read as the product repeating Mitch's judgement as a
+     number — and `dirty` already stops them re-saving the same text, which is
+     the only thing a floor would actually have caught. */
   const canSave = body.trim().length > 0 && !pending;
 
   function save() {
@@ -147,7 +177,11 @@ export function StoryForm({
         <SunWaveMotif />
         <div className="relative">
           <p className="ediagd-eyebrow">
-            {isEdit ? "Your Good News Story" : "One last thing"}
+            {kickedBack
+              ? "One more pass"
+              : isEdit
+                ? "Your Good News Story"
+                : "One last thing"}
           </p>
           <h1 className="mt-2 text-3xl font-extrabold leading-tight text-white">
             {trackName}
@@ -167,7 +201,7 @@ export function StoryForm({
               and it&apos;s the part nobody else asks for.
             </p>
           )}
-          {isEdit && (
+          {isEdit && !kickedBack && (
             <p className="mt-3 text-sm leading-relaxed text-ice-dim">
               Submitted{" "}
               {new Date(existing.submittedAt).toLocaleDateString("en-US", {
@@ -175,6 +209,19 @@ export function StoryForm({
                 day: "numeric",
               })}
               . It counts already — you can change it whenever you like.
+            </p>
+          )}
+          {/*
+            "IT COUNTS ALREADY" IS THE ONE THING THIS SCREEN MUST NOT SAY TO
+            SOMEBODY WHOSE STORY WAS KICKED BACK. It does not count: the leg is
+            unmet until they rewrite, and a hero promising otherwise above a box
+            asking them to try again is the screen arguing with itself — the
+            "label is not evidence" failure in two adjacent paragraphs.
+          */}
+          {kickedBack && (
+            <p className="mt-3 text-sm leading-relaxed text-ice-dim">
+              Mitch read it and asked for something more substantial to complete
+              the module. Your words are still here — add to them.
             </p>
           )}
         </div>
@@ -188,6 +235,32 @@ export function StoryForm({
         <label htmlFor="story" className="block text-lg font-extrabold leading-snug text-ink">
           Tell us about a time you did something differently on the drive.
         </label>
+
+        {/*
+          ---- MITCH'S NOTE, ABOVE THE BOX AND IN HIS OWN WORDS -------------
+
+          ABOVE rather than below, because it is the brief for what they are
+          about to type. Below the textarea it would be read after the writing,
+          which is the wrong order for an instruction.
+
+          QUOTED AND ATTRIBUTED. Unquoted it reads as the product's own
+          assessment of their work; "Mitch wrote:" makes it one person asking
+          another for more, which is what it is. His sentence is never
+          rewritten, trimmed or capitalised here — it is his to say.
+
+          NOTHING RENDERS WHEN HE LEFT NO NOTE. "No note provided" would be the
+          app narrating an absence; the hero line above already carries the ask.
+        */}
+        {kickedBack && existing.reviewNote && (
+          <div className="mt-3 rounded-card border-2 border-clay/40 bg-clay/10 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-clay">
+              Mitch wrote
+            </p>
+            <p className="mt-1 text-base leading-relaxed text-ink">
+              “{existing.reviewNote}”
+            </p>
+          </div>
+        )}
 
         <textarea
           id="story"
@@ -235,12 +308,23 @@ export function StoryForm({
         disabled={!canSave}
         className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gold px-4 py-3.5 text-base font-extrabold text-navy shadow-[0_4px_16px_rgba(12,28,44,0.24)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
       >
+        {/*
+          "SAVE MY REWRITE" ON A KICKBACK, and the word is the point: they are
+          answering somebody, not editing a document. "Save changes" is what a
+          settings screen says.
+
+          It keeps tracking what is TRUE, the fix this button already carries:
+          once the rewrite is saved and nothing is dirty it reads "Saved", so
+          the label never claims there is something left to press.
+        */}
         {pending
           ? "Saving…"
           : !submitted
             ? "Submit my story"
             : dirty
-              ? "Save changes"
+              ? kickedBack
+                ? "Save my rewrite"
+                : "Save changes"
               : "Saved"}
       </button>
 
@@ -311,11 +395,35 @@ export function StoryForm({
             the OFF state is worth stating too, because "your manager reads this
             either way" is something they should know before they write, not
             discover afterwards.
+
+            ---- 9 NOVEMBER: AND EDIAGD READS IT. THE COPY HAD TO CHANGE -----
+
+            This said "only you and your manager", which was true when it was
+            written: 0127's read policy had three arms, all rooftop-bounded, and
+            its header recorded that there was "deliberately no
+            is_platform_owner() arm".
+
+            0180 adds that arm, because Mitch reads every story and marks it. So
+            the sentence became FALSE while continuing to be reassuring, which
+            is the worst direction for a disclosure to be wrong in — this is the
+            one screen in the product where somebody decides how candid to be,
+            and they decide it by reading these words. Shipping the arm without
+            the copy would have been a quiet widening of an audience an advisor
+            was told the size of.
+
+            "EDIAGD" rather than "Mitch", and rather than "the platform team".
+            The policy admits platform owners, which is a role and today is two
+            people; naming one of them would be accurate this month and wrong
+            the month a third is added, and the advisor cannot check either way.
+            It names the company, which is what the permission actually is.
+
+            "Please don't use customer names" is untouched above and matters
+            more now, not less.
           */}
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             {shared
-              ? `Advisors at ${rooftopName ?? "your store"} can read it. Your manager reads it either way.`
-              : `Off — only you and your manager. Turn it on to let advisors at ${rooftopName ?? "your store"} read it too.`}
+              ? `Advisors at ${rooftopName ?? "your store"} can read it. Your manager and EDIAGD read it either way.`
+              : `Off — only you, your manager and EDIAGD. Turn it on to let advisors at ${rooftopName ?? "your store"} read it too.`}
           </p>
         </div>
       )}

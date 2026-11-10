@@ -184,6 +184,7 @@ export default async function TrackPage({
           <StoryRow
             slug={track.slug}
             submitted={track.storySubmitted}
+            kickedBack={track.storyKickedBack}
             lessonsDone={track.gatingDone}
             lessonsTotal={track.gatingTotal}
           />
@@ -212,28 +213,55 @@ export default async function TrackPage({
 function StoryRow({
   slug,
   submitted,
+  kickedBack,
   lessonsDone,
   lessonsTotal,
 }: {
   slug: string;
   submitted: boolean;
+  /**
+   * 0180 — Mitch read it and asked for something more substantial.
+   *
+   * SEPARATE FROM `submitted` BECAUSE THEY ARE DIFFERENT SENTENCES, NOT A
+   * DIFFERENT GATE. A kicked-back story is absent from loadStoryGate's
+   * `toldFor`, so `submitted` is already false and the leg is already unmet.
+   * What this fixes is the row offering a blank prompt — "something you did
+   * differently on the drive" — to somebody who wrote that paragraph last week
+   * and is waiting to be told what more to say.
+   *
+   * IT IS ALSO NEVER LOCKED. `locked` keys on `!submitted`, which a kickback
+   * makes true, so without this the row would show a padlock and refuse to
+   * navigate — telling an advisor to finish lessons they have already finished
+   * and taking away the one door they need. That is the failure this flag
+   * exists for; the wording is the smaller half.
+   */
+  kickedBack: boolean;
   lessonsDone: number;
   lessonsTotal: number;
 }) {
-  const locked = !submitted && !storyLessonsMet(lessonsDone, lessonsTotal);
+  const locked =
+    !submitted && !kickedBack && !storyLessonsMet(lessonsDone, lessonsTotal);
 
-  const glyph = submitted ? "✓" : locked ? "🔒" : "✎";
+  const glyph = submitted ? "✓" : kickedBack ? "✎" : locked ? "🔒" : "✎";
   const detail = submitted
     ? "Submitted — it closes the track"
-    : locked
-      ? /* The count is the useful half. "Finish the lessons first" alone invites
-           "which lessons?", and the answer is already on this page — the number
-           tells them how much of it is left. Films still to be shot read as
-           0 of 0, so the sentence changes rather than claiming a denominator. */
-        lessonsTotal > 0
-        ? `Finish the lessons first — ${lessonsDone} of ${lessonsTotal} done`
-        : "Finish the lessons first — they're still being filmed"
-      : "Something you did differently on the drive because of this track. No customer names.";
+    : kickedBack
+      ? /* THE SAME ASK, IN THE SAME WORDS as the banner on /advisor. Two
+           surfaces describing one request must not word it two ways — an
+           advisor reading "asked for something more substantial" on one screen
+           and "needs work" on another has met two different judgements. Mitch's
+           own note is NOT repeated here: it is on the banner and above the
+           textarea, and a third copy is a third thing to keep in step. */
+        "Mitch asked for something more substantial to complete the module"
+      : locked
+        ? /* The count is the useful half. "Finish the lessons first" alone invites
+             "which lessons?", and the answer is already on this page — the number
+             tells them how much of it is left. Films still to be shot read as
+             0 of 0, so the sentence changes rather than claiming a denominator. */
+          lessonsTotal > 0
+          ? `Finish the lessons first — ${lessonsDone} of ${lessonsTotal} done`
+          : "Finish the lessons first — they're still being filmed"
+        : "Something you did differently on the drive because of this track. No customer names.";
 
   const body = (
     <>
@@ -243,12 +271,22 @@ function StoryRow({
         style={{
           background: submitted
             ? "color-mix(in srgb, rgb(var(--ediagd-palm)) 18%, transparent)"
-            : locked
-              ? /* The muted disc reinforcement rows use — "not yours to do yet"
-                   in the same voice the page already speaks. */
-                "color-mix(in srgb, rgb(var(--ediagd-ink-soft)) 12%, transparent)"
-              : "color-mix(in srgb, rgb(var(--ediagd-gold)) 22%, transparent)",
-          color: submitted ? "rgb(var(--ediagd-palm))" : "rgb(var(--ediagd-ocean))",
+            : kickedBack
+              ? /* CLAY, THE SAME AS THE BANNER, AND NEVER RED — the token in
+                   styles/brand.css carries that instruction itself. The two
+                   surfaces that mention this request should look like the same
+                   request. */
+                "color-mix(in srgb, rgb(var(--ediagd-clay)) 16%, transparent)"
+              : locked
+                ? /* The muted disc reinforcement rows use — "not yours to do yet"
+                     in the same voice the page already speaks. */
+                  "color-mix(in srgb, rgb(var(--ediagd-ink-soft)) 12%, transparent)"
+                : "color-mix(in srgb, rgb(var(--ediagd-gold)) 22%, transparent)",
+          color: submitted
+            ? "rgb(var(--ediagd-palm))"
+            : kickedBack
+              ? "rgb(var(--ediagd-clay))"
+              : "rgb(var(--ediagd-ocean))",
         }}
       >
         {glyph}

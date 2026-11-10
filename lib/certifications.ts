@@ -54,6 +54,15 @@ export type CertificationTile = {
    */
   storyRequired: boolean;
   storySubmitted: boolean;
+  /**
+   * 0180 — Mitch read it and asked for more.
+   *
+   * ALWAYS FALSE WHEN storySubmitted IS TRUE: a kicked-back story is absent
+   * from loadStoryGate's `toldFor`, which is the single definition both of
+   * these come from. It changes the SENTENCE and never the leg — see the note
+   * on StoryGate.kickedBackFor.
+   */
+  storyKickedBack: boolean;
 
   earnedAt: string | null;
   /*
@@ -168,6 +177,7 @@ export async function loadCertifications(
       doneModules: Number(p?.done_modules ?? 0),
       storyRequired: storyGate.storyRequired,
       storySubmitted: storyGate.toldFor.has(c.id as string),
+      storyKickedBack: storyGate.kickedBackFor.has(c.id as string),
       earnedAt: (mine?.earned_at as string | undefined) ?? null,
       state: certificationState({ earnedOn }),
       currency: earnedLine({ earnedOn }),
@@ -437,7 +447,15 @@ export async function loadCertificationsOverview(
         /* Power of Positive Language today: cues only. Not a failure. */
         nextLine = "Lessons on the way";
       } else if (t.storyRequired && !t.storySubmitted) {
-        nextLine = "Story to write";
+        /*
+         * TWO SENTENCES FOR TWO STATES THAT ARE BOTH "UNMET" (0180).
+         *
+         * "Story to write" to somebody who already wrote one and had it kicked
+         * back reads as the app having lost their words. The tile is one line
+         * wide, so it names the ask rather than quoting Mitch — the banner on
+         * /advisor and the story page both carry his actual note.
+         */
+        nextLine = t.storyKickedBack ? "Story to rewrite" : "Story to write";
       } else {
         /* Every filmed lesson done; what remains is content still landing
            (cue-only modules, unfilmed lessons). Their queue, not the
@@ -501,6 +519,8 @@ export type TrackDetail = {
   gatingTotal: number;
   storyRequired: boolean;
   storySubmitted: boolean;
+  /** 0180 — Mitch asked for more. Changes the row's sentence, not the leg. */
+  storyKickedBack: boolean;
 };
 
 /**
@@ -560,6 +580,7 @@ export async function loadTrackDetail(
       gatingTotal: 0,
       storyRequired: false,
       storySubmitted: false,
+      storyKickedBack: false,
     };
   }
 
@@ -617,6 +638,7 @@ export async function loadTrackDetail(
     gatingTotal: gating.length,
     storyRequired: storyGate.storyRequired,
     storySubmitted: storyGate.toldFor.has(cert.id as string),
+    storyKickedBack: storyGate.kickedBackFor.has(cert.id as string),
   };
 }
 

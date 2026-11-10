@@ -16,6 +16,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { FocusFamilyCard } from "@/components/advisor/FocusFamilyCard";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
+import { loadKickback } from "@/lib/story";
+import { KickbackBanner } from "@/components/advisor/KickbackBanner";
 import { BRAND, rooftopGreeting } from "@/lib/brand";
 import {
   MIN_ROS_FOR_COACHING,
@@ -321,6 +323,24 @@ export default async function AdvisorPage() {
      unreadable, so this can never claim a time of day it did not measure. */
   const greeting = await rooftopGreeting(supabase, rooftopId);
 
+  /*
+   * ---- WHAT MITCH ASKED FOR, IF ANYTHING (0180) --------------------------
+   *
+   * THE ADVISOR'S OWN CLIENT. Arm 1 of 0127's read policy — `user_id =
+   * auth.uid()` — is what returns these rows, so the banner can only ever be
+   * built from the viewer's own stories. A service-role read would make this
+   * the one place in the product where somebody could be shown a sentence about
+   * a story that is not theirs, and it is a sentence naming a track.
+   *
+   * `user.id`, NOT the op code and not the roster name. This screen already
+   * knows the two are different people sometimes — the "You're viewing X's
+   * numbers" disclosure above exists for exactly that — and a story belongs to
+   * the ACCOUNT, never to the book. Keying this on op_code_id would put a
+   * colleague's kickback on an admin's screen, which is 0149's defect in a new
+   * costume.
+   */
+  const kickbacks = await loadKickback(supabase, user.id);
+
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
       {/* ---- Page title (the app greeting lives in AppHeader) ----------- */}
@@ -341,6 +361,20 @@ export default async function AdvisorPage() {
           with eleven rooftops and a part-finished August on the books that is
           not a small omission. */}
       <PeriodStamp label={periodLabel} className="mt-1" />
+
+      {/*
+        ---- MITCH ASKED FOR MORE, AND IT SITS ABOVE THE NUMBERS -----------
+
+        Ryan's ruling puts the kickback banner above labor sales, and the
+        position is the message: the one thing on this screen that is the
+        advisor's to ACT on goes above the figures that are only theirs to read.
+        Below the big number it would be a footnote on a dashboard.
+
+        Renders nothing when nothing is kicked back — the component returns null
+        rather than this page deciding, so there is one answer to "is there a
+        banner" and it lives next to the copy.
+      */}
+      <KickbackBanner kickbacks={kickbacks} />
 
       {/* ---- Daily stat: the screen's big number, warm not navy ---------- */}
       {/* Feature card rather than a second navy hero — DESIGN_LANGUAGE §5 says
