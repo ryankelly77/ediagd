@@ -163,6 +163,15 @@ export default async function StoryPage({
               submittedAt: existing.submittedAt,
               updatedAt: existing.updatedAt,
               reviewedAt: existing.reviewedAt,
+              /*
+               * 0180. Carried from the ROW, never derived here — the form shows
+               * Mitch's note above the textarea and reads "Save my rewrite", and
+               * both are claims about what somebody actually wrote. The preview
+               * branch above hands `existing: null`, so a walkthrough never
+               * renders a kickback and never quotes a note nobody typed.
+               */
+              reviewStatus: existing.reviewStatus,
+              reviewNote: existing.reviewNote,
             }
           : null
       }

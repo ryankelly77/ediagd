@@ -879,6 +879,28 @@ export async function loadRollcall(
       case "story_submitted":
         b.storiesSubmitted = fold(b.storiesSubmitted, row.events, last);
         break;
+      /*
+       * ---- 0180's TWO KINDS HAVE NO COLUMN, DELIBERATELY ------------------
+       *
+       * storiesSubmitted counts FIRST stories filed, which is the number Ryan
+       * asked this screen for. A rewrite is not another story and a review is
+       * not the advisor's act at all — adding either to that counter would make
+       * the column mean something different without renaming it, which is this
+       * file's own "no column for a kind" warning pointing the other way.
+       *
+       * They are NAMED here rather than left to the default so the silence is a
+       * decision a reader can see. The default below is a loud warning on every
+       * Rollcall load, and a decision expressed as a log line nobody reads is
+       * the "check that is silent by default" failure with the volume turned up.
+       *
+       * Where they ARE read: /admin/stories is the surface for both, and the
+       * events are the append-only record behind it — who marked what, when,
+       * and how often a story came back. If that ever wants a Rollcall column,
+       * it gets one here with a name of its own.
+       */
+      case "story_resubmitted":
+      case "story_reviewed":
+        break;
       default:
         /* An unfamiliar kind reaching here means 0163's constraint gained a
            value and this switch did not. Loud, because the alternative is a
@@ -1344,6 +1366,23 @@ export async function loadRollcallChanges(
       case "track_opened":
       case "library_opened":
       case "lesson_opened":
+        break;
+      /*
+       * 0180. A REWRITE IS NOT NEWS ON THIS POST AND A REVIEW IS NOT THE
+       * ADVISOR'S MOVEMENT.
+       *
+       * `change(user).story = true` is read as "they finished their story this
+       * week" — the credential leg landing. story_resubmitted would set the
+       * same flag for somebody whose leg is currently UNMET and who is being
+       * asked to do it again, which is the post claiming progress for a
+       * setback. And story_reviewed is Mitch's act filed under the advisor's
+       * row; the person it is about did nothing that week.
+       *
+       * Named rather than defaulted, same as the taps above: the default is a
+       * warning, and a deliberate omission must not look like a forgotten kind.
+       */
+      case "story_resubmitted":
+      case "story_reviewed":
         break;
       default:
         console.warn(`[rollcall] no change fact for app_event kind ${JSON.stringify(e.kind)}`);

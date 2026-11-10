@@ -11,5 +11,23 @@
     "baseUrl": "..",
     "paths": { "@/*": ["./*"] }
   },
-  "include": ["story-acceptance.ts"]
+  "include": [
+    "story-acceptance.ts",
+    /*
+     * 0180 — THE SUITE IMPORTS THE REAL READERS RATHER THAN RESTATING THEM.
+     *
+     * lib/story.ts so `loadStoryGate().toldFor` is asserted as the application
+     * computes it, and lib/story-slack.ts so the "#ediagd never carries the
+     * body" assertion reads the builder the action actually calls. A test with
+     * its own copy of either proves the copy — which is the "join on what was
+     * observed" rule applied to a fixture.
+     *
+     * Adding these moves the emitted entry point to .tmp-story/scripts/, which
+     * is why package.json's accept:story now runs that path and links
+     * node_modules/@ and a `server-only` stub, the same scaffolding
+     * accept:certification and accept:loop already use.
+     */
+    "../lib/story.ts",
+    "../lib/story-slack.ts"
+  ]
 }

@@ -18,8 +18,33 @@
 --   2. a manager reads stories of advisors AT THEIR OWN ROOFTOP, nothing else
 --   3. a shared story is visible to advisors at that rooftop, and only when
 --      shared_to_team is true
---   4. nobody reads across rooftops — not a manager at another Doggett store,
---      not an admin browsing
+--   4. no DEALER STAFF read across rooftops — not a manager at another Doggett
+--      store, not an admin browsing. EDIAGD's platform owners do; see below.
+--
+-- ---------------------------------------------------------------------------
+-- RULE 4 HAS ONE EXCEPTION, ADDED BY 0180 — Ryan, 9 November
+-- ---------------------------------------------------------------------------
+-- This file originally stated rule 4 as an absolute and said of the read policy
+-- "there is deliberately no is_platform_owner() arm". That wording is edited
+-- rather than left standing, because a comment asserting an absolute beside a
+-- policy that now has an exception instructs the next reader not to look — and
+-- an absolute is the one claim nobody re-checks.
+--
+-- WHAT CHANGED, AND WHY IT IS NOT A WEAKENING. 0127 shipped the review stamp
+-- (§4) and no review surface, so nothing in the product read a story: Valerie's
+-- three at Beaumont had an audience of one. Ryan ruled on 9 November that Mitch
+-- reads every story and marks it Good or Kickback, and Mitch reads across every
+-- store — so the surface 0127 built the stamp for needs the arm 0127 withheld.
+--
+-- The rule for DEALER staff is untouched and still proved as a refusal in
+-- npm run accept:story: a manager at one store reads nothing at another, and a
+-- rooftop admin at store A reads nothing at store B. What 0180 adds is EDIAGD,
+-- which is not a rooftop and was never what rule 4 was about.
+--
+-- Rule 4 as written could not distinguish "another dealer's manager" from "the
+-- people who make the content", and the honest reading of the paragraph above
+-- it — "one employee seeing another's performance, at a dealership" — was
+-- always about the former.
 --
 -- This is not theoretical. Phase 3d found that a mis-mapped membership.op_code_id
 -- already shows an advisor A COLLEAGUE'S ATTACH RATES PRESENTED AS THEIR OWN.
@@ -84,6 +109,18 @@ create table if not exists advisor_story (
    * all it does. A manager who has not got to it yet must never be the reason
    * somebody's credential is stuck — that failure arrives in month two at
    * Doggett and it is the manager's Tuesday, not the advisor's fault.
+   *
+   * ---- STILL TRUE OF A PENDING REVIEW, AND 0180 ADDS AN OUTCOME ----------
+   * 0180 adds review_status (pending | good | kickback) and a KICKBACK does
+   * return the track's story leg to unmet. The paragraph above survives intact
+   * because it is about the state these two columns describe: an UNREAD story
+   * gates nothing, so Mitch's backlog is never the reason a credential is
+   * stuck. Only an explicit kickback — somebody having read it and asked for
+   * more — changes the leg, and the advisor is told so on /advisor with a way
+   * to act on it.
+   *
+   * A track already EARNED is never revoked by a late kickback; 0180 touches
+   * advisor_certification not at all, and accept:story asserts that.
    */
   reviewed_by      uuid references app_user(id),
   reviewed_at      timestamptz,
@@ -151,7 +188,13 @@ create policy advisor_story_read on advisor_story
     or user_id = (select auth.uid())
     /* 2 — a manager reads their own rooftop's stories. managed_rooftops() is
            manager+admin, and it is per rooftop, so an admin at store A cannot
-           read store B. There is deliberately no is_platform_owner() arm. */
+           read store B.
+
+           NO is_platform_owner() ARM HERE, AND 0180 ADDS ONE. This policy is
+           superseded: 0180 restates it in full with a fourth arm, because
+           Mitch reads every story and marks it. The header above says when and
+           why. Left in place rather than edited — this is what 0127 did, and
+           the migration that changed it is the one that should say so. */
     or rooftop_id in (select managed_rooftops())
     /* 3 — a story its author chose to share, to advisors AT THAT ROOFTOP. */
     or (shared_to_team and rooftop_id in (select my_rooftops()))
@@ -220,6 +263,30 @@ grant select, insert on advisor_story_revision to authenticated;
  *
  * Gated on managed_rooftops() inside, so the rooftop rule holds here as well as
  * in the read policy — a second door into the same room needs the same lock.
+ *
+ * ---------------------------------------------------------------------------
+ * DROPPED BY 0180 AND REPLACED BY review_story(uuid, text, text)
+ * ---------------------------------------------------------------------------
+ * This function could record that somebody looked and nothing about what they
+ * concluded, which is all 0127 needed. It is gone, not kept beside its
+ * replacement: two ways to review would let a story be stamped with no outcome,
+ * and since 0180 the outcome is what the leg reads.
+ *
+ * The reasoning above is why the replacement is ALSO a definer function — and
+ * 0180 goes further in the same direction, revoking the author's blanket update
+ * grant for column-level grants. "A broad update policy would have let them
+ * change the body too" is exactly right, and once review_status decided a leg
+ * it also let them change their own verdict.
+ *
+ * AND THE REPLACEMENT IS NARROWER THAN THIS ONE. The sentence below — "a second
+ * door into the same room needs the same lock" — is right about the READ and
+ * wrong about the review, and 0180 first copied it before Ryan corrected it on
+ * 10 November. managed_rooftops() says which rooftops the CALLER manages and
+ * nothing about WHOSE story it is, so an advisor who also holds a manager row
+ * at their own store manages the rooftop their own story is stamped with. Here
+ * that was harmless — the function wrote only a read-stamp. Once the outcome
+ * decided a leg it was an advisor marking their own homework. review_story() is
+ * is_platform_owner() alone; managers still read via the policy above.
  */
 create or replace function mark_story_reviewed(_story uuid)
 returns void

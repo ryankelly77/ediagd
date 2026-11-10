@@ -85,8 +85,10 @@ invented here.
 | Date | Hours | Workstream | Description |
 |---|---|---|---|
 | 2026-11-01 | 1 | Captions & Sync | [reconstructed] Captions scan and restore script, daily flow names every outstanding leg; merged PR #79 day-gate evidence and retry |
+| 2026-11-01 | 1.6 | Marketing Site | [reconstructed] ediagd-site: show week popup that takes itself off the site, pricing as one starting price instead of three tier cards, cancelling the popup is a session no; Vegas promo script; site PRs #10 and #11 |
 | 2026-11-02 | 4 | Fixes & Repair Tools | [reconstructed] Quiz 404 fix, db:migrate consent, short film titles, watch ticket to store-day end, restore:day, replace:video, sync gate; PRs #80 to #88 |
 | 2026-11-02 | 5.6 | Trim & Ingest | [reconstructed] One cutter (trim:apply from the disk master), November ingest with 0173 Power of Positive Language 13 lessons, run records, branch rules, pitch picker ranking; PR #89 |
+| 2026-11-02 | 0.5 | Marketing Site | [reconstructed] ediagd-site: lead form and lead API changes with README notes, 9:30 to 9:58 am, not yet committed |
 | 2026-11-03 | 1.8 | Ingest | [reconstructed] Merged PR #91 November ingest, finished the 30 October ingest with corrections, migration number taken at PR time |
 | 2026-11-03 | 0.7 | Agent Coordination | [reconstructed] Who-owns-what rules for the coding agents: checkouts, migrations, file ownership, PR base |
 | 2026-11-04 | 0.4 | Work Log | [reconstructed] Wired up npm run log and log:report, committed the work log scripts |
@@ -95,3 +97,8 @@ invented here.
 | 2026-11-06 | 1.5 | Entitlement & Access | [reconstructed] The focus card counts only what the shelf can show an unentitled advisor (migration 0177), then started an entitlement parity check that runs after every migration apply; PR #97 |
 | 2026-11-07 | 2.4 | Entitlement & Access | [reconstructed] Migration 0178 puts the content policy back inline after 0177 measured 5x slower on every read, keeps the definer function for the card, and adds an entitlement parity check that db:migrate runs after every push; PR #98 |
 | 2026-11-07 | 0.6 | Rollcall | [reconstructed] Wrote the rollcall redesign brief for a compact Slack post, from the 6 November Beaumont post and the rollcall code |
+| 2026-11-08 | 3 | Rollcall | [reconstructed] Compact rollcall post that says who did their morning and how far each advisor is, with message scenarios, a preview script and expanded acceptance checks; PR #99 |
+| 2026-11-08 | 1 | Manager Screen | Managers see the EDIAGD Certified meter on the rollcall screen, with migration 0179 so managers can read their advisors completions; PR #100 merged, 0179 applied |
+| 2026-11-08 | 3.6 | Rollcall | Rest of the continuous compact rollcall session, 4:12 to 10:47 pm per Ryan, on top of the 3 hour reconstructed row; PR #99 |
+| 2026-11-09 | 1.7 | Manager Meetings | [reconstructed] Merged the manager meter, then re-grounded the Manager Meetings plan on main in the ediagd-manager worktree: migration 0180, the shape of 0179, the cost of 0178, the dedup key; merged main into the branch; PR #100 |
+| 2026-11-09 | 1.7 | Story Review | [reconstructed] Started the good news story review queue in the ediagd-goodnews worktree: migration 0180 story review, changes to the good news story migration and lib/story.ts; from file times 7:09 to 8:51 pm, not yet committed |

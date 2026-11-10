@@ -35,6 +35,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { completeLibraryItem } from "@/lib/library-actions";
+import { quizGate } from "@/lib/library-gate";
 import { TrackedVideo, WatchGateLine } from "@/components/video/TrackedVideo";
 import type { NextStep } from "@/lib/lms";
 import type { VideoRenditions } from "@/lib/mux/playback";
@@ -59,6 +60,14 @@ export type DeckItem = {
   /** Demo content borrowed from elsewhere; says so on the card. */
   isSample: boolean;
   completed: boolean;
+  /**
+   * Does finishing this item gate the module? GATING_CONTENT_TYPES, which is
+   * the mirror of the database's gating_content_types() that `npm run
+   * check:gating` asserts. Set on the page from content.type, never guessed
+   * here from `kind` — `kind` is "video" for anything that is not a cue, so a
+   * manager_video would read as gating and it is not.
+   */
+  gates: boolean;
 };
 
 type Props = {
@@ -119,6 +128,24 @@ export function CueDeck({
   const remaining = completable.filter((i) => !done.has(i.id)).length;
   const allDone = remaining === 0 && completable.length > 0;
 
+  /*
+   * ---- WHAT OPENS THE QUIZ: THE FILM, AND THE RULE LIVES IN lib/ ----------
+   *
+   * Ryan's ruling of 10 November, which is also what the quiz ROUTE has always
+   * enforced. This card used to gate on `allDone`, counting the cues, and so
+   * refused a quiz the server would have served — see lib/library-gate.ts for
+   * the whole account and for the agreement the function owes the view. It is
+   * not computed here because computing it here is what let it drift.
+   */
+  const gate = quizGate(
+    items.map((i) => ({
+      id: i.id,
+      completable: i.kind !== "video_placeholder",
+      gates: i.gates,
+    })),
+    done
+  );
+
   const reducedMotion = useRef(false);
   useEffect(() => {
     reducedMotion.current = window.matchMedia(
@@ -151,7 +178,12 @@ export function CueDeck({
       behavior: smooth && !reducedMotion.current ? "smooth" : "auto",
     });
     setIndex(clamped);
-  }, []);
+    /* setIndex IS LISTED, and it is a useState setter so its identity never
+       changes — this callback is still created once. The React Compiler infers
+       it as a dependency and refuses to preserve a manual memoization whose
+       list disagrees with the inferred one; with `[]` it skipped optimizing the
+       whole component, which it had been doing silently. */
+  }, [setIndex]);
 
   const goTo = useCallback(
     (i: number) => scrollToIndex(i, true),
@@ -188,7 +220,9 @@ export function CueDeck({
       }
     }
     setIndex((prev) => (prev === nearest ? prev : nearest));
-  }, []);
+    // See the note on scrollToIndex: a stable setter, listed so the compiler's
+    // inferred dependencies and the written ones agree.
+  }, [setIndex]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowRight") {
@@ -302,6 +336,9 @@ export function CueDeck({
             quizPassed={quizPassed}
             allDone={allDone}
             remaining={remaining}
+            gatingDone={gate.open}
+            hasGatingItem={gate.hasGatingItem}
+            cuesLeft={gate.cuesLeft}
             completedAt={completedAt}
             nextStep={nextStep}
           />
@@ -756,11 +793,16 @@ function SampleChip() {
  * The deck must not end on a wall.
  *
  * Swiping past the final card into nothing reads as a broken page, so the last
- * card always says something: take the quiz, the quiz is waiting on the cues,
- * or the module is finished. Which one is decided by the same facts the page
- * header uses, so the card and the gate can never disagree. `remaining` and
- * `allDone` still count the film, so a module whose film is unwatched still
- * waits here even though the film is not in the deck.
+ * card always says something: take the quiz, the film that opens it, or the
+ * module is finished.
+ *
+ * THE QUIZ IS DECIDED BY `gatingDone`, NOT BY `allDone`. The quiz route gates on
+ * my_module_progress.items_done, which is the film; `allDone` counts the cues
+ * too. Gating the button on the looser fact was the client refusing what the
+ * server permitted, with no way through — see the note on gatingDone above.
+ *
+ * `allDone` survives for the no-quiz branches, where it is the right fact: with
+ * no quiz to take, "everything in this one is behind you" does mean every card.
  */
 function TerminalCard({
   moduleId,
@@ -768,6 +810,9 @@ function TerminalCard({
   quizPassed,
   allDone,
   remaining,
+  gatingDone,
+  hasGatingItem,
+  cuesLeft,
   completedAt,
   nextStep,
 }: {
@@ -776,6 +821,9 @@ function TerminalCard({
   quizPassed: boolean;
   allDone: boolean;
   remaining: number;
+  gatingDone: boolean;
+  hasGatingItem: boolean;
+  cuesLeft: number;
   completedAt: string | null;
   nextStep: NextStep;
 }) {
@@ -813,14 +861,34 @@ function TerminalCard({
               Take the quiz again
             </Link>
           </>
-        ) : allDone ? (
+        ) : gatingDone ? (
           <>
             <h3 className="mt-4 text-xl font-extrabold text-navy">
-              That&apos;s everything
+              {allDone ? "That's everything" : "The quiz is open"}
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Nice work. A few questions on what you just read — unlimited
-              retries, and it&apos;s here to make it stick, not to trip you up.
+              {/* The cues are INVITED, never required. Saying nothing about
+                  them would be the other half of the same mistake: an advisor
+                  who skips to the quiz should still know the cards are there
+                  and still worth the swipe. */}
+              {allDone ? (
+                <>
+                  Nice work. A few questions on what you just read — unlimited
+                  retries, and it&apos;s here to make it stick, not to trip you
+                  up.
+                </>
+              ) : (
+                /* ONE TEMPLATE STRING, NOT INTERLEAVED JSX. The first version
+                   wrote `{cuesLeft === 1 ? "is" : "are"} still worth` across a
+                   line break and JSX ate the space between them — the screen
+                   read "3 cards back there arestill worth a swipe". Caught by
+                   photographing it rather than by reading it back. */
+                `You've watched the film, so the quiz is yours whenever you want it. ${cuesLeft} ${
+                  cuesLeft === 1 ? "card" : "cards"
+                } back there ${
+                  cuesLeft === 1 ? "is" : "are"
+                } still worth a swipe — they pay, and they don't hold anything up.`
+              )}
             </p>
             <Link
               href={`/library/m/${moduleId}/quiz`}
@@ -829,15 +897,28 @@ function TerminalCard({
               Start the quiz
             </Link>
           </>
-        ) : (
+        ) : hasGatingItem ? (
           <>
             <h3 className="mt-4 text-xl font-extrabold text-navy">
               Quiz is waiting
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              {remaining} {remaining === 1 ? "item" : "items"} still to finish —
-              the film and the cues. The quiz opens once you&apos;ve been through
-              them.
+              Watch the film to open the quiz. The cards in this deck are
+              reinforcement — mark them off if you like, but they don&apos;t
+              hold the quiz up.
+            </p>
+          </>
+        ) : (
+          /* A quiz on a module with no gating item. items_done is false for a
+             module with nothing to gate on (0143), so the route would redirect
+             — the deck must not offer a door that is shut. */
+          <>
+            <h3 className="mt-4 text-xl font-extrabold text-navy">
+              The film isn&apos;t here yet
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              This lesson&apos;s quiz opens with its film, and the film
+              hasn&apos;t landed. The cards above are yours in the meantime.
             </p>
           </>
         )

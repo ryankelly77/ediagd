@@ -30,6 +30,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   loadTrackDetail,
   storyLessonsMet,
+  type TrackDetail,
   type TrackModuleRow,
 } from "@/lib/certifications";
 import { trackRowProgress } from "@/lib/certification";
@@ -130,32 +131,7 @@ export default async function TrackPage({
 
       {track.entryFilm && (
         <Card className="mt-4 px-4">
-          <div className="flex min-h-[3.5rem] items-center gap-3 py-3">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill text-xs font-extrabold"
-              style={{
-                background: track.entryFilm.watched
-                  ? "color-mix(in srgb, rgb(var(--ediagd-palm)) 18%, transparent)"
-                  : "color-mix(in srgb, rgb(var(--ediagd-teal)) 14%, transparent)",
-                color: track.entryFilm.watched
-                  ? "rgb(var(--ediagd-palm))"
-                  : "rgb(var(--ediagd-ocean))",
-              }}
-            >
-              {track.entryFilm.watched ? "✓" : "▶"}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-base font-bold text-navy">
-                {track.entryFilm.title}
-              </span>
-              <span className="mt-0.5 block text-xs text-ink-soft">
-                {track.entryFilm.watched
-                  ? "Entry film · watched"
-                  : "Entry film · opens the track on your first morning"}
-              </span>
-            </span>
-          </div>
+          <EntryFilmRow slug={track.slug} film={track.entryFilm} />
         </Card>
       )}
 
@@ -184,12 +160,99 @@ export default async function TrackPage({
           <StoryRow
             slug={track.slug}
             submitted={track.storySubmitted}
+            kickedBack={track.storyKickedBack}
             lessonsDone={track.gatingDone}
             lessonsTotal={track.gatingTotal}
           />
         </Card>
       )}
     </main>
+  );
+}
+
+/**
+ * The entry film: a door when there is something behind it.
+ *
+ * ---------------------------------------------------------------------------
+ * IT USED TO BE A CARD WITH A PLAY GLYPH AND NO LINK
+ * ---------------------------------------------------------------------------
+ * The glyph said ▶ and the caption said "opens the track on your first
+ * morning", and tapping it did nothing. The film was served in exactly one
+ * place — the track_entry morning in lib/loop.ts — and nothing in the library
+ * played it, so a manager or an advisor working ahead had no way to watch the
+ * opener at all. A label is not evidence of what is behind it, and a glyph that
+ * promises playback is a label.
+ *
+ * Valerie Patterson reported it on 10 November for Menus and Name Tag. Ryan
+ * ruled the same day: the opener is playable from the track page.
+ *
+ * THE ROW LINKS ONLY WHEN /opener CAN PLAY IT. `playable` is the loop's third
+ * filter — a Mux playback id — so a ruled opener still in transcode is named
+ * here and does not pretend to be a door. Same reasoning as StoryRow below: no
+ * anchor rather than a dead one, because `pointer-events-none` on an <a> leaves
+ * it in the tab order and still announces a destination.
+ *
+ * A WATCHED OPENER STAYS OPEN. Replaying is free — completeLibraryItem is
+ * idempotent on the unique index and pays once, ever — and "watch that again"
+ * is a reasonable thing to want from a film that framed the whole track.
+ */
+function EntryFilmRow({
+  slug,
+  film,
+}: {
+  slug: string;
+  film: NonNullable<TrackDetail["entryFilm"]>;
+}) {
+  const body = (
+    <>
+      <span
+        aria-hidden="true"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill text-xs font-extrabold"
+        style={{
+          background: film.watched
+            ? "color-mix(in srgb, rgb(var(--ediagd-palm)) 18%, transparent)"
+            : "color-mix(in srgb, rgb(var(--ediagd-teal)) 14%, transparent)",
+          color: film.watched
+            ? "rgb(var(--ediagd-palm))"
+            : "rgb(var(--ediagd-ocean))",
+        }}
+      >
+        {film.watched ? "✓" : "▶"}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-base font-bold text-navy">
+          {film.title}
+        </span>
+        <span className="mt-0.5 block text-xs text-ink-soft">
+          {film.watched
+            ? "Entry film · watched"
+            : film.playable
+              ? "Entry film · watch it now"
+              : /* Named, honest, and not a door. */
+                "Entry film · it opens the track, and it's still uploading"}
+        </span>
+      </span>
+      {film.playable && (
+        <span aria-hidden="true" className="text-lg leading-none text-ink-soft">
+          ›
+        </span>
+      )}
+    </>
+  );
+
+  if (!film.playable) {
+    return (
+      <div className="flex min-h-[3.5rem] items-center gap-3 py-3">{body}</div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/certifications/${encodeURIComponent(slug)}/opener`}
+      className="flex min-h-[3.5rem] items-center gap-3 py-3 transition hover:bg-teal-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+    >
+      {body}
+    </Link>
   );
 }
 
@@ -212,28 +275,55 @@ export default async function TrackPage({
 function StoryRow({
   slug,
   submitted,
+  kickedBack,
   lessonsDone,
   lessonsTotal,
 }: {
   slug: string;
   submitted: boolean;
+  /**
+   * 0180 — Mitch read it and asked for something more substantial.
+   *
+   * SEPARATE FROM `submitted` BECAUSE THEY ARE DIFFERENT SENTENCES, NOT A
+   * DIFFERENT GATE. A kicked-back story is absent from loadStoryGate's
+   * `toldFor`, so `submitted` is already false and the leg is already unmet.
+   * What this fixes is the row offering a blank prompt — "something you did
+   * differently on the drive" — to somebody who wrote that paragraph last week
+   * and is waiting to be told what more to say.
+   *
+   * IT IS ALSO NEVER LOCKED. `locked` keys on `!submitted`, which a kickback
+   * makes true, so without this the row would show a padlock and refuse to
+   * navigate — telling an advisor to finish lessons they have already finished
+   * and taking away the one door they need. That is the failure this flag
+   * exists for; the wording is the smaller half.
+   */
+  kickedBack: boolean;
   lessonsDone: number;
   lessonsTotal: number;
 }) {
-  const locked = !submitted && !storyLessonsMet(lessonsDone, lessonsTotal);
+  const locked =
+    !submitted && !kickedBack && !storyLessonsMet(lessonsDone, lessonsTotal);
 
-  const glyph = submitted ? "✓" : locked ? "🔒" : "✎";
+  const glyph = submitted ? "✓" : kickedBack ? "✎" : locked ? "🔒" : "✎";
   const detail = submitted
     ? "Submitted — it closes the track"
-    : locked
-      ? /* The count is the useful half. "Finish the lessons first" alone invites
-           "which lessons?", and the answer is already on this page — the number
-           tells them how much of it is left. Films still to be shot read as
-           0 of 0, so the sentence changes rather than claiming a denominator. */
-        lessonsTotal > 0
-        ? `Finish the lessons first — ${lessonsDone} of ${lessonsTotal} done`
-        : "Finish the lessons first — they're still being filmed"
-      : "Something you did differently on the drive because of this track. No customer names.";
+    : kickedBack
+      ? /* THE SAME ASK, IN THE SAME WORDS as the banner on /advisor. Two
+           surfaces describing one request must not word it two ways — an
+           advisor reading "asked for something more substantial" on one screen
+           and "needs work" on another has met two different judgements. Mitch's
+           own note is NOT repeated here: it is on the banner and above the
+           textarea, and a third copy is a third thing to keep in step. */
+        "Mitch asked for something more substantial to complete the module"
+      : locked
+        ? /* The count is the useful half. "Finish the lessons first" alone invites
+             "which lessons?", and the answer is already on this page — the number
+             tells them how much of it is left. Films still to be shot read as
+             0 of 0, so the sentence changes rather than claiming a denominator. */
+          lessonsTotal > 0
+          ? `Finish the lessons first — ${lessonsDone} of ${lessonsTotal} done`
+          : "Finish the lessons first — they're still being filmed"
+        : "Something you did differently on the drive because of this track. No customer names.";
 
   const body = (
     <>
@@ -243,12 +333,22 @@ function StoryRow({
         style={{
           background: submitted
             ? "color-mix(in srgb, rgb(var(--ediagd-palm)) 18%, transparent)"
-            : locked
-              ? /* The muted disc reinforcement rows use — "not yours to do yet"
-                   in the same voice the page already speaks. */
-                "color-mix(in srgb, rgb(var(--ediagd-ink-soft)) 12%, transparent)"
-              : "color-mix(in srgb, rgb(var(--ediagd-gold)) 22%, transparent)",
-          color: submitted ? "rgb(var(--ediagd-palm))" : "rgb(var(--ediagd-ocean))",
+            : kickedBack
+              ? /* CLAY, THE SAME AS THE BANNER, AND NEVER RED — the token in
+                   styles/brand.css carries that instruction itself. The two
+                   surfaces that mention this request should look like the same
+                   request. */
+                "color-mix(in srgb, rgb(var(--ediagd-clay)) 16%, transparent)"
+              : locked
+                ? /* The muted disc reinforcement rows use — "not yours to do yet"
+                     in the same voice the page already speaks. */
+                  "color-mix(in srgb, rgb(var(--ediagd-ink-soft)) 12%, transparent)"
+                : "color-mix(in srgb, rgb(var(--ediagd-gold)) 22%, transparent)",
+          color: submitted
+            ? "rgb(var(--ediagd-palm))"
+            : kickedBack
+              ? "rgb(var(--ediagd-clay))"
+              : "rgb(var(--ediagd-ocean))",
         }}
       >
         {glyph}

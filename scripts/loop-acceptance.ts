@@ -170,6 +170,10 @@ let periodId = "";
 let grantedProduct = false;
 let borrowedCertId = "";
 let craftCertWasActive = false;
+/* The borrowed core track's entry film, so the catalogue is put back exactly as
+   it was found. Null is the shipped value for all eight today; writing null back
+   unconditionally would be a guess, so the prior value is read first. */
+let craftCertEntryFilmWas: string | null = null;
 
 const FAM = `${TAG} Focus Family`;
 
@@ -1008,6 +1012,104 @@ async function run() {
     "the empty morning above proved nothing — it was empty for another reason"
   );
 
+  /* ==================================================================== */
+  section("10 November — an opener watched from the track page is not re-served");
+
+  /*
+   * ---- WHY THIS SCENARIO EXISTS ------------------------------------------
+   *
+   * The entry film became playable from /certifications/<slug>/opener on
+   * 10 November, after Valerie Patterson reported that she could not open the
+   * opener at all. That removed an impossibility: before it, the ONLY way to
+   * see an entry film was the track_entry morning, so `entering` — which means
+   * nothing more than "no advisor_track_entry row" — was a safe proxy for "has
+   * not seen the opener".
+   *
+   * It is not a safe proxy any more, and the failure it would cause is silent:
+   * an advisor who watched the opener yesterday from the library gets a whole
+   * morning spent on a film they have already seen, and working ahead costs
+   * them instead of paying them. Nothing errors.
+   *
+   * BOTH HALVES, because the first on its own is satisfied by a loop that
+   * never serves an entry morning at all — which is the bug in the other
+   * direction and would silently withhold every opener Mitch ever rules:
+   *
+   *   E1  no completion → a track_entry morning, serving that exact film
+   *   E2  a completed content_progress row → a NORMAL morning, item restored
+   *
+   * E1 is the acceptance half and it is the one that would be skipped. The
+   * openers suite records the trap it guards against: with no Mux signing keys
+   * every film shapes to null, the morning falls through to two_slot, and a
+   * suite asserting only E2 would pass having proven nothing whatsoever.
+   */
+  const openerId = await makeFilm({
+    title: `${TAG} opener`,
+    /* NO module_id. The opener is not one of the track's items — if it were,
+       pickItem would serve it as the item slot and E2 would pass for the wrong
+       reason. It is reached only through entry_film_content_id. */
+    service_family: null,
+  });
+
+  craftCertEntryFilmWas =
+    (
+      await sb
+        .from("certification")
+        .select("entry_film_content_id")
+        .eq("id", craftCert.id)
+        .single()
+    ).data?.entry_film_content_id ?? null;
+  await sb
+    .from("certification")
+    .update({ entry_film_content_id: openerId })
+    .eq("id", craftCert.id);
+
+  /* A FRESH ADVISOR. Every other advisor in this suite has completed a day, so
+     they already hold an advisor_track_entry row and are not entering. */
+  const advE = await makeUser("advisor", `${TAG}-e`);
+  const asE = await signedInAs(advE);
+
+  const beforeWatch = await assembleMorning(asE, sb, advE, rooftopId, TODAY);
+  ok(
+    "E1 — an unentered track with a ruled opener gives a track_entry morning",
+    beforeWatch.kind === "track_entry",
+    `got ${beforeWatch.kind} — if two_slot, check MUX signing keys before reading it as a finding`
+  );
+  ok(
+    "↳ and the film it serves is that track's opener",
+    beforeWatch.track?.film?.contentId === openerId,
+    `got ${beforeWatch.track?.film?.contentId ?? "null"}`
+  );
+  ok(
+    "↳ with the pitch and item slots withheld, as an entry morning must",
+    beforeWatch.pitch === null && beforeWatch.item === null
+  );
+
+  /* THE WATCH THE OPENER PAGE WRITES. completeLibraryItem writes exactly this
+     row — completed_at set, source 'library' — so the fixture leaves behind the
+     evidence the real surface leaves rather than a shape of its own. */
+  await consume(advE, openerId);
+
+  const afterWatch = await assembleMorning(asE, sb, advE, rooftopId, TODAY);
+  ok(
+    "E2 — once the opener has a completed row, the morning is NOT track_entry",
+    afterWatch.kind !== "track_entry",
+    `got ${afterWatch.kind}`
+  );
+  ok(
+    "↳ and the item slot is served instead, so the morning is not simply emptier",
+    afterWatch.item !== null,
+    "a morning that lost the film and gained nothing is a different bug"
+  );
+  ok(
+    "↳ the track is STILL entering — the entry row is written at completion",
+    afterWatch.track?.entering === true,
+    "completeDay owns advisor_track_entry; the opener page must not write it"
+  );
+  ok(
+    "↳ and no film is offered, so evaluateDayGate asks for mindset and item",
+    afterWatch.track?.film === null
+  );
+
   void craftCert;
 }
 
@@ -1180,7 +1282,10 @@ async function cleanup() {
   if (borrowedCertId) {
     await sb
       .from("certification")
-      .update({ active: craftCertWasActive })
+      .update({
+        active: craftCertWasActive,
+        entry_film_content_id: craftCertEntryFilmWas,
+      })
       .eq("id", borrowedCertId);
   }
   if (madeCodes.length) {

@@ -101,13 +101,13 @@
     "test:dms-columns": "rm -rf .tmp-dcol && tsc scripts/dms-columns-scenarios.ts lib/dms/columns.ts lib/dms/parse-guards.ts --outDir .tmp-dcol --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-dcol/scripts/dms-columns-scenarios.js",
     "test:brand-mark": "rm -rf .tmp-bm && tsc scripts/brand-mark-scenarios.ts lib/brand-ink.ts --outDir .tmp-bm --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-bm/scripts/brand-mark-scenarios.js",
     "test:certificate-print": "rm -rf .tmp-cr && tsc -p scripts/tsconfig.certrender.json && mkdir -p .tmp-cr/node_modules && ln -sfn .. .tmp-cr/node_modules/@ && node .tmp-cr/scripts/certificate-print-check.js",
-    "accept:certification": "rm -rf .tmp-acc && tsc -p scripts/tsconfig.acceptance.json && mkdir -p .tmp-acc/node_modules && ln -sfn .. .tmp-acc/node_modules/@ && node .tmp-acc/scripts/certification-acceptance.js",
+    "accept:certification": "rm -rf .tmp-acc && tsc -p scripts/tsconfig.acceptance.json && mkdir -p .tmp-acc/node_modules/server-only && echo \"module.exports={};\" > .tmp-acc/node_modules/server-only/index.js && ln -sfn .. .tmp-acc/node_modules/@ && node .tmp-acc/scripts/certification-acceptance.js",
     "report:certifications": "rm -rf .tmp-cpl && tsc scripts/certification-punch-list.ts --outDir .tmp-cpl --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-cpl/certification-punch-list.js",
     "accept:focus-family": "rm -rf .tmp-ff && tsc -p scripts/tsconfig.focusfamily.json && node .tmp-ff/focus-family-acceptance.js",
     "accept:loop": "rm -rf .tmp-loop && tsc -p scripts/tsconfig.loop.json && mkdir -p .tmp-loop/node_modules/server-only && echo \"module.exports={};\" > .tmp-loop/node_modules/server-only/index.js && ln -sfn .. .tmp-loop/node_modules/@ && node .tmp-loop/scripts/loop-acceptance.js",
     "fixture:loop": "rm -rf .tmp-shot && tsc -p scripts/tsconfig.shotfixture.json && node .tmp-shot/loop-screenshot-fixture.js",
     "accept:family": "rm -rf .tmp-fam && tsc -p scripts/tsconfig.family.json && mkdir -p .tmp-fam/node_modules/server-only && echo \"module.exports={};\" > .tmp-fam/node_modules/server-only/index.js && ln -sfn .. .tmp-fam/node_modules/@ && node .tmp-fam/scripts/family-acceptance.js",
-    "accept:story": "rm -rf .tmp-story && tsc -p scripts/tsconfig.story.json && node .tmp-story/story-acceptance.js",
+    "accept:story": "rm -rf .tmp-story && tsc -p scripts/tsconfig.story.json && mkdir -p .tmp-story/node_modules/server-only && echo \"module.exports={};\" > .tmp-story/node_modules/server-only/index.js && ln -sfn .. .tmp-story/node_modules/@ && node .tmp-story/scripts/story-acceptance.js",
     "fixture:story": "rm -rf .tmp-shot2 && tsc -p scripts/tsconfig.storyshot.json && node .tmp-shot2/story-screenshot-fixture.js",
     "grant:beaumont-roles": "rm -rf .tmp-gbr && tsc scripts/grant-beaumont-roles.ts scripts/provisioning.ts --outDir .tmp-gbr --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-gbr/grant-beaumont-roles.js",
     "provision:advisor": "rm -rf .tmp-pa && tsc scripts/provision-advisor.ts scripts/provisioning.ts --outDir .tmp-pa --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --strict && node .tmp-pa/provision-advisor.js",
@@ -140,7 +140,11 @@
     "backfill:short-titles": "rm -rf .tmp-st && tsc -p scripts/tsconfig.shorttitles.json && mkdir -p .tmp-st/node_modules && ln -sfn .. .tmp-st/node_modules/@ && node .tmp-st/scripts/backfill-short-titles.js",
     "restore:day": "rm -rf .tmp-rd && tsc -p scripts/tsconfig.restoreday.json && mkdir -p .tmp-rd/node_modules && ln -sfn .. .tmp-rd/node_modules/@ && node .tmp-rd/scripts/restore-day.js",
     "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js",
-    "check:entitlement-parity": "bash scripts/entitlement-parity.run.sh"
+    "check:entitlement-parity": "bash scripts/entitlement-parity.run.sh",
+    "diag:manager-team": "rm -rf .tmp-mtd && tsc -p scripts/tsconfig.managerdiag.json && mkdir -p .tmp-mtd/node_modules && ln -sfn .. .tmp-mtd/node_modules/@ && node .tmp-mtd/manager-team-diagnostic.js",
+    "test:quiz-gate": "rm -rf .tmp-qg && tsc -p scripts/tsconfig.quizgate.json && mkdir -p .tmp-qg/node_modules && ln -sfn .. .tmp-qg/node_modules/@ && node .tmp-qg/scripts/quiz-gate-scenarios.js",
+    "test:rooftop-choice": "rm -rf .tmp-rfc && tsc -p scripts/tsconfig.rooftopchoice.json && mkdir -p .tmp-rfc/node_modules && ln -sfn .. .tmp-rfc/node_modules/@ && node .tmp-rfc/scripts/rooftop-choice-scenarios.js",
+    "fixture:valerie": "rm -rf .tmp-vsh && tsc -p scripts/tsconfig.valerieshot.json && mkdir -p .tmp-vsh/node_modules && ln -sfn .. .tmp-vsh/node_modules/@ && node .tmp-vsh/valerie-screenshot-fixture.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

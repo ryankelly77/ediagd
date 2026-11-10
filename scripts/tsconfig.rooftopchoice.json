@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": "../.tmp-rfc",
+    "module": "commonjs",
+    "target": "es2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["rooftop-choice-scenarios.ts"]
+}
