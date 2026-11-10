@@ -117,9 +117,16 @@ export function StoryForm({
      NOT EVEN ON A REWRITE, and that is the tempting place to add one. The
      advisor has just been told their words were not substantial, so a length
      floor here would read as the product repeating Mitch's judgement as a
-     number — and `dirty` already stops them re-saving the same text, which is
-     the only thing a floor would actually have caught. */
-  const canSave = body.trim().length > 0 && !pending;
+     number — and requiring a CHANGE, below, is the only thing a floor would
+     actually have caught.
+
+     A KICKED-BACK STORY NEEDS AN ACTUAL EDIT BEFORE IT CAN BE SAVED, which is
+     not a quality bar — it is the same rule the database holds. 0180's trigger
+     declines to clear a kickback when the body is unchanged, so without this an
+     untouched Save would reach the server, change nothing, and leave the screen
+     saying "Saved" over a story still sitting in Mitch's queue. The button
+     agrees with the row instead. */
+  const canSave = body.trim().length > 0 && !pending && (!kickedBack || dirty);
 
   function save() {
     setError(null);
@@ -313,6 +320,14 @@ export function StoryForm({
           answering somebody, not editing a document. "Save changes" is what a
           settings screen says.
 
+          IT MUST NOT READ "SAVED" ON AN UNTOUCHED KICKBACK. That was the first
+          version and the screenshot caught it: an advisor who followed the
+          banner here met a disabled-looking gold button saying "Saved" above
+          the very words Mitch had just refused. It is the label-is-not-evidence
+          rule on a four-character string — the story IS saved, and saying so is
+          an answer to a question nobody asked while the one that was asked goes
+          unmentioned. So the kickback branch names the ask until the ask is met.
+
           It keeps tracking what is TRUE, the fix this button already carries:
           once the rewrite is saved and nothing is dirty it reads "Saved", so
           the label never claims there is something left to press.
@@ -321,11 +336,13 @@ export function StoryForm({
           ? "Saving…"
           : !submitted
             ? "Submit my story"
-            : dirty
-              ? kickedBack
-                ? "Save my rewrite"
-                : "Save changes"
-              : "Saved"}
+            : kickedBack
+              ? saved && !dirty
+                ? "Saved"
+                : "Save my rewrite"
+              : dirty
+                ? "Save changes"
+                : "Saved"}
       </button>
 
       {/*

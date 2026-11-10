@@ -16,7 +16,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { FocusFamilyCard } from "@/components/advisor/FocusFamilyCard";
 import { loadFamiliesWithCues } from "@/lib/coachable-families";
 import { loadLaborPerRo } from "@/lib/family-labor";
-import { loadKickback } from "@/lib/story";
+import { loadKickback, type Kickback } from "@/lib/story";
 import { KickbackBanner } from "@/components/advisor/KickbackBanner";
 import { BRAND, rooftopGreeting } from "@/lib/brand";
 import {
@@ -40,6 +40,37 @@ export default async function AdvisorPage() {
   // No session, no screen. The performance views enforce this at the database
   // level too (0006), but redirecting is the honest user experience.
   if (!user) redirect("/login");
+
+  /*
+   * ---- WHAT MITCH ASKED FOR, LOADED BEFORE ANY BRANCH (0180) --------------
+   *
+   * ---------------------------------------------------------------------------
+   * THIS PAGE HAS THREE EARLY RETURNS AND THE BANNER HAS TO SURVIVE ALL OF THEM
+   * ---------------------------------------------------------------------------
+   * MEASURED, NOT ASSUMED. The banner was first placed beside the labor sales
+   * card — correct position, unreachable code. A fixture advisor with no DMS
+   * period hit `if (!totals)` two hundred lines above it and got "No numbers
+   * yet" with no banner at all. Caught by taking the screenshot, which is the
+   * only reason it is not in the PR.
+   *
+   * It is not a corner: this project has 2 active advisor accounts against ~60
+   * measured advisors, and an account whose `membership.op_code_id` is not
+   * linked yet returns at `NoAdvisorProfile` as well. A STORY BELONGS TO THE
+   * ACCOUNT AND NOT TO THE BOOK — nothing about a kickback depends on a DMS
+   * export having landed — so the one screen telling somebody their credential
+   * is waiting on them must not be gated behind a monthly file from the dealer.
+   *
+   * The technician branch is the single exception and it is deliberate: a
+   * technician holds no advisor membership, walks no tracks and writes no
+   * stories, and that screen's whole job is to say the category does not apply.
+   *
+   * THE ADVISOR'S OWN CLIENT and `user.id`, never op_code_id. This screen
+   * already knows the signed-in person and the book's owner can differ — the
+   * "You're viewing X's numbers" disclosure below exists for exactly that — and
+   * keying a kickback on the book would put a colleague's banner on an admin's
+   * screen, which is 0149's defect in a new costume.
+   */
+  const kickbacks = await loadKickback(supabase, user.id);
 
   // ---- Who is this advisor, and which op code are they in the DMS? ----------
   const { data: membership } = await supabase
@@ -69,9 +100,14 @@ export default async function AdvisorPage() {
       .eq("active", true);
     const roles = new Set((anyRole ?? []).map((m) => m.role as string));
     if (roles.has("technician") && !roles.has("advisor")) {
+      /* The ONE branch with no banner, and it is not an oversight: a technician
+         holds no advisor membership, walks no tracks and has written no story.
+         This screen exists to say the category does not apply to them. */
       return <NoTechnicianPerformance />;
     }
-    return <NoAdvisorProfile />;
+    /* An advisor whose op code is not linked yet still has tracks and still has
+       stories — the DMS link decides the NUMBERS, not the credential. */
+    return <NoAdvisorProfile kickbacks={kickbacks} />;
   }
 
   const opCodeId: string = membership.op_code_id;
@@ -149,7 +185,10 @@ export default async function AdvisorPage() {
   if (!totals) {
     return (
       <main className="mx-auto max-w-app px-4 py-10">
-        <Card className="p-6">
+        {/* ABOVE the card, which is where the labor sales block would have been.
+            A kickback does not wait on the dealer's monthly export. */}
+        <KickbackBanner kickbacks={kickbacks} />
+        <Card className="mt-5 p-6">
           <h1 className="text-lg font-extrabold text-navy">No numbers yet</h1>
           <p className="mt-2 text-sm text-ink-soft">
             We don&apos;t have a performance period for this advisor yet. Once the
@@ -322,24 +361,6 @@ export default async function AdvisorPage() {
      rooftopGreeting falls back to BRAND.greeting when the clock is
      unreadable, so this can never claim a time of day it did not measure. */
   const greeting = await rooftopGreeting(supabase, rooftopId);
-
-  /*
-   * ---- WHAT MITCH ASKED FOR, IF ANYTHING (0180) --------------------------
-   *
-   * THE ADVISOR'S OWN CLIENT. Arm 1 of 0127's read policy — `user_id =
-   * auth.uid()` — is what returns these rows, so the banner can only ever be
-   * built from the viewer's own stories. A service-role read would make this
-   * the one place in the product where somebody could be shown a sentence about
-   * a story that is not theirs, and it is a sentence naming a track.
-   *
-   * `user.id`, NOT the op code and not the roster name. This screen already
-   * knows the two are different people sometimes — the "You're viewing X's
-   * numbers" disclosure above exists for exactly that — and a story belongs to
-   * the ACCOUNT, never to the book. Keying this on op_code_id would put a
-   * colleague's kickback on an admin's screen, which is 0149's defect in a new
-   * costume.
-   */
-  const kickbacks = await loadKickback(supabase, user.id);
 
   return (
     <main className="mx-auto max-w-app px-4 pb-12 pt-5">
@@ -600,10 +621,21 @@ function NoTechnicianPerformance() {
   );
 }
 
-function NoAdvisorProfile() {
+/**
+ * An advisor account with no DMS op code linked yet.
+ *
+ * TAKES THE KICKBACKS, because "nothing to do on your end" is true of the
+ * NUMBERS and false of the credential. A story belongs to the account; an
+ * unlinked book says nothing about whether Mitch has asked this person for
+ * more. Without the banner here, the only advisors who would never see it are
+ * the ones whose dealer has not finished setting them up — which is most of
+ * them today, and exactly the people a silent screen misleads.
+ */
+function NoAdvisorProfile({ kickbacks }: { kickbacks: Kickback[] }) {
   return (
     <main className="mx-auto max-w-app px-4 py-10">
-      <Card className="p-6">
+      <KickbackBanner kickbacks={kickbacks} />
+      <Card className="mt-5 p-6">
         <h1 className="text-lg font-extrabold text-navy">
           No advisor profile linked to this account yet
         </h1>

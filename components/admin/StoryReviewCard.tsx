@@ -87,8 +87,16 @@ export function StoryReviewCard({
   return (
     <Card as="article" className="p-4">
       {/* ---- Who, where, which track ----------------------------------- */}
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
+      {/*
+        `min-w-0 flex-1` ON THE TEXT, NOT `flex-wrap` ON THE ROW.
+        With wrap alone the chip's position depended on the NAME'S LENGTH — it
+        sat top-right beside a short name and dropped onto its own line under a
+        long one, so a list of cards had the status in two different places. The
+        text column gives instead, which keeps the chip in one place down the
+        whole list; that consistency is what makes the queue scannable.
+      */}
+      <div className="flex items-start justify-between gap-x-4">
+        <div className="min-w-0 flex-1">
           <p className="text-base font-extrabold leading-snug text-navy">
             {story.advisorName}
           </p>
