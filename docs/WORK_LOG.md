@@ -95,3 +95,5 @@ invented here.
 | 2026-11-06 | 1.5 | Entitlement & Access | [reconstructed] The focus card counts only what the shelf can show an unentitled advisor (migration 0177), then started an entitlement parity check that runs after every migration apply; PR #97 |
 | 2026-11-07 | 2.4 | Entitlement & Access | [reconstructed] Migration 0178 puts the content policy back inline after 0177 measured 5x slower on every read, keeps the definer function for the card, and adds an entitlement parity check that db:migrate runs after every push; PR #98 |
 | 2026-11-07 | 0.6 | Rollcall | [reconstructed] Wrote the rollcall redesign brief for a compact Slack post, from the 6 November Beaumont post and the rollcall code |
+| 2026-11-08 | 3 | Rollcall | [reconstructed] Compact rollcall post that says who did their morning and how far each advisor is, with message scenarios, a preview script and expanded acceptance checks; PR #99 |
+| 2026-11-08 | 1 | Manager Screen | Managers see the EDIAGD Certified meter on the rollcall screen, with migration 0179 so managers can read their advisors completions; PR #100 merged, 0179 applied |
