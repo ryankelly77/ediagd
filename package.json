@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "log": "node scripts/work-log.mjs",
+    "log:report": "node scripts/work-log-report.mjs",
     "sync:finish": "node scripts/sync-finish.mjs",
     "sync:repair": "node scripts/sync-repair.mjs",
     "test:streak": "rm -rf .tmp-test && tsc scripts/streak-scenarios.ts --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-test/scripts/streak-scenarios.js",
@@ -32,6 +34,7 @@
     "test:manager-roster": "rm -rf .tmp-mrs && tsc -p scripts/tsconfig.managerroster.json && mkdir -p .tmp-mrs/node_modules && ln -sfn .. .tmp-mrs/node_modules/@ && node .tmp-mrs/scripts/manager-roster-scenarios.js",
     "accept:rollcall-cron": "rm -rf .tmp-rcc && tsc -p scripts/tsconfig.rollcallcron.json && mkdir -p .tmp-rcc/node_modules && ln -sfn .. .tmp-rcc/node_modules/@ && node .tmp-rcc/scripts/rollcall-cron-acceptance.js",
     "test:rollcall-schedule": "rm -rf .tmp-rsc && tsc -p scripts/tsconfig.rollcallschedule.json && mkdir -p .tmp-rsc/node_modules && ln -sfn .. .tmp-rsc/node_modules/@ && node .tmp-rsc/scripts/rollcall-schedule-scenarios.js",
+    "test:rollcall-message": "rm -rf .tmp-rcm && tsc -p scripts/tsconfig.rollcallmessage.json && mkdir -p .tmp-rcm/node_modules/server-only && echo \"module.exports={};\" > .tmp-rcm/node_modules/server-only/index.js && ln -sfn .. .tmp-rcm/node_modules/@ && node .tmp-rcm/scripts/rollcall-message-scenarios.js",
     "check:nav": "rm -rf .tmp-nav && tsc scripts/check-admin-nav.ts --outDir .tmp-nav --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-nav/scripts/check-admin-nav.js",
     "rebuild:periods": "rm -rf .tmp-rp && tsc scripts/rebuild-periods.ts --outDir .tmp-rp --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-rp/rebuild-periods.js",
     "snapshot:metrics": "rm -rf .tmp-sn && tsc scripts/metric-snapshot.ts --outDir .tmp-sn --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-sn/metric-snapshot.js",
@@ -117,6 +120,7 @@
     "accept:light-track": "rm -rf .tmp-lta && tsc -p scripts/tsconfig.lighttrack.json && mkdir -p .tmp-lta/node_modules/server-only && echo \"module.exports={};\" > .tmp-lta/node_modules/server-only/index.js && ln -sfn .. .tmp-lta/node_modules/@ && node .tmp-lta/scripts/light-track-acceptance.js",
     "accept:lock-basic": "rm -rf .tmp-lba && tsc -p scripts/tsconfig.lockbasic.json && mkdir -p .tmp-lba/node_modules/server-only && echo \"module.exports={};\" > .tmp-lba/node_modules/server-only/index.js && ln -sfn .. .tmp-lba/node_modules/@ && node .tmp-lba/scripts/lock-basic-acceptance.js",
     "accept:rollcall": "rm -rf .tmp-rc && tsc -p scripts/tsconfig.rollcall.json && mkdir -p .tmp-rc/node_modules/server-only && echo \"module.exports={};\" > .tmp-rc/node_modules/server-only/index.js && ln -sfn .. .tmp-rc/node_modules/@ && node .tmp-rc/scripts/rollcall-acceptance.js",
+    "preview:rollcall": "rm -rf .tmp-rcp && tsc -p scripts/tsconfig.rollcallpreview.json && mkdir -p .tmp-rcp/node_modules/server-only && echo \"module.exports={};\" > .tmp-rcp/node_modules/server-only/index.js && ln -sfn .. .tmp-rcp/node_modules/@ && node .tmp-rcp/scripts/rollcall-preview.js",
     "verify:rollcall": "rm -rf .tmp-rcd && tsc -p scripts/tsconfig.rollcalldrive.json && node .tmp-rcd/rollcall-drive.js",
     "accept:entitlement": "rm -rf .tmp-ent && tsc -p scripts/tsconfig.entitlement.json && mkdir -p .tmp-ent/node_modules/server-only && echo \"module.exports={};\" > .tmp-ent/node_modules/server-only/index.js && ln -sfn .. .tmp-ent/node_modules/@ && node .tmp-ent/scripts/entitlement-acceptance.js",
     "db:migrate": "bash scripts/db-migrate.sh",
@@ -135,7 +139,8 @@
     "backfill:modules": "rm -rf .tmp-mbf && tsc -p scripts/tsconfig.modulebackfill.json && mkdir -p .tmp-mbf/node_modules/server-only && echo \"module.exports={};\" > .tmp-mbf/node_modules/server-only/index.js && ln -sfn .. .tmp-mbf/node_modules/@ && node .tmp-mbf/scripts/backfill-module-completions.js",
     "backfill:short-titles": "rm -rf .tmp-st && tsc -p scripts/tsconfig.shorttitles.json && mkdir -p .tmp-st/node_modules && ln -sfn .. .tmp-st/node_modules/@ && node .tmp-st/scripts/backfill-short-titles.js",
     "restore:day": "rm -rf .tmp-rd && tsc -p scripts/tsconfig.restoreday.json && mkdir -p .tmp-rd/node_modules && ln -sfn .. .tmp-rd/node_modules/@ && node .tmp-rd/scripts/restore-day.js",
-    "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js"
+    "test:cut-point": "rm -rf .tmp-cpt && tsc -p scripts/tsconfig.cutpoint.json && mkdir -p .tmp-cpt/node_modules && ln -sfn .. .tmp-cpt/node_modules/@ && node .tmp-cpt/scripts/cut-point-scenarios.js",
+    "check:entitlement-parity": "bash scripts/entitlement-parity.run.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

@@ -33,6 +33,7 @@ import {
   WATCHED_PCT,
   gateThreshold,
   isWatched,
+  serverGateThreshold,
 } from "@/lib/watch-coverage";
 
 let passed = 0;
@@ -276,20 +277,34 @@ section("No percentage can appear on the lesson page");
   );
 }
 
-section("The server re-checks against the same function");
+section("The server re-checks, and its bar is never stricter than the player's");
 {
   const actions = code("lib/library-actions.ts");
   ok(
-    "completeLibraryItem imports gateThreshold and isWatched",
-    /import \{[^}]*gateThreshold[^}]*\} from "@\/lib\/watch-coverage"/.test(actions)
+    "completeLibraryItem imports serverGateThreshold and isWatched",
+    /import \{[^}]*serverGateThreshold[^}]*\} from "@\/lib\/watch-coverage"/.test(
+      actions
+    )
   );
   ok(
-    "it calls gateThreshold(duration_sec)",
-    /gateThreshold\(\s*item\.duration_sec/.test(actions)
+    "it calls serverGateThreshold(duration_sec)",
+    /serverGateThreshold\(\s*item\.duration_sec/.test(actions)
   );
+  /* THE ONE THAT MATTERS. gateThreshold is the PLAYER's bar, computed off the
+     media element; reaching for it here is the bug this section exists for, and
+     it is one character away from the right call. */
+  ok(
+    "and never the player's gateThreshold — that was the defect",
+    !/[^r]gateThreshold\(\s*item\.duration_sec/.test(actions),
+    "the server is computing its bar from the integer column again"
+  );
+  /* COLUMN-LIST ASSERTIONS GO STALE SILENTLY. This was pinned to an exact
+     four-column string and went red the day module_id was added, which is a
+     check failing for a reason that has nothing to do with what it guards. It
+     now asserts the column it actually needs is present. */
   ok(
     "it selects duration_sec, so the bar is computable",
-    /select\("id, type, service_family, duration_sec"\)/.test(actions)
+    /\.select\("[^"]*\bduration_sec\b[^"]*"\)/.test(actions)
   );
   ok(
     "it no longer reads video_complete_pct for credit",
@@ -303,6 +318,125 @@ section("The server re-checks against the same function");
   ok(
     `the one game_settings read is payment-only (${settingsReads.length} read: ${settingsReads.join(", ")})`,
     settingsReads.length === 1 && !settingsReads[0]!.includes("video_complete_pct")
+  );
+}
+
+/* ===========================================================================
+   TWO SYSTEMS MEASURE ONE FILM
+   ---------------------------------------------------------------------------
+   The player opens its gate at gateThreshold(el.duration) — the asset's real
+   length. The server verified against gateThreshold(content.duration_sec) — a
+   whole number of seconds. Same function, two quantities, and the disagreement
+   lands in the fourth decimal place of a percentage.
+
+   BOTH HALVES, as this file's header requires. The refusal is proven against a
+   film that genuinely was not watched, and the acceptance against a film the
+   player credited — which is the half that was broken, and the half a gate
+   failing in the cautious direction will always pass without.
+   =========================================================================== */
+section("The server's bar against the player's, which are different numbers");
+{
+  /* The player credits at this exact instant; `isWatched` is what the server
+     then applies, rounding the reported value and not the bar. */
+  const playerFires = (realDuration: number) => gateThreshold(realDuration);
+
+  /* After-MPI — Tire Rotation, one of the four Valerie lost. Measured on
+     production 5 November 2026: the column says 120, the asset is 120.02. */
+  const LOST = { db: 120, real: 120.02, title: "After-MPI — Tire Rotation" };
+
+  ok(
+    `${LOST.title}: the player's bar is ABOVE the server's old one (${playerFires(
+      LOST.real
+    ).toFixed(4)} vs ${gateThreshold(LOST.db).toFixed(4)})`,
+    playerFires(LOST.real) > gateThreshold(LOST.db)
+  );
+  ok(
+    "and the old server bar refused it anyway, because only the value is rounded",
+    !isWatched(playerFires(LOST.real), gateThreshold(LOST.db)),
+    "the historical defect no longer reproduces — check the constants"
+  );
+  ok(
+    "the new server bar accepts it",
+    isWatched(playerFires(LOST.real), serverGateThreshold(LOST.db))
+  );
+
+  /* ---- THE REFUSAL HALF. Slack is not a way in. ---------------------------- */
+  ok(
+    "a film watched to 60% is still refused",
+    !isWatched(60, serverGateThreshold(LOST.db))
+  );
+  ok(
+    "a film watched to the 95% floor is still refused on a long film",
+    !isWatched(95, serverGateThreshold(320))
+  );
+  ok(
+    "half a second of slack cannot be reached from a second short of the player's gate",
+    !isWatched(gateThreshold(LOST.real) - (1 / LOST.real) * 100,
+               serverGateThreshold(LOST.db)),
+    "a whole second below the player's gate was accepted"
+  );
+  ok(
+    "the floor is untouched: an unknown duration still demands 95",
+    serverGateThreshold(null) === WATCHED_PCT &&
+      !isWatched(94, serverGateThreshold(null))
+  );
+  ok(
+    "the player's own bar is unchanged — the advisor's experience does not move",
+    gateThreshold(221) === ((221 - GATE_TAIL_SEC) / 221) * 100
+  );
+
+  /* ---- THE CONSTRUCTION. Not a tolerance that usually holds. --------------- */
+  /*
+   * duration_sec is an integer, so |stored - real| <= 0.5 BY CONSTRUCTION. Sweep
+   * every whole second a film could plausibly be, at the worst corner of that
+   * half-second in both directions, and assert the server can never out-strict
+   * the player. 0.499 rather than 0.5 because a .5 boundary rounds to the other
+   * integer and would not be stored as this one.
+   */
+  let stricter = 0;
+  let total = 0;
+  let worst = { db: 0, real: 0, gap: 0 };
+  for (let db = 20; db <= 600; db++) {
+    for (const off of [-0.499, -0.25, 0, 0.25, 0.499]) {
+      total++;
+      const real = db + off;
+      const gap = playerFires(real) - serverGateThreshold(db);
+      if (gap < worst.gap || total === 1) worst = { db, real, gap };
+      if (!isWatched(playerFires(real), serverGateThreshold(db))) stricter++;
+    }
+  }
+  ok(
+    `across ${total} durations at the worst corner of the integer column, the server refuses none the player credited`,
+    stricter === 0,
+    `${stricter} refused`
+  );
+  /*
+   * NEVER ABOVE, which is not the same as always below — and the difference is
+   * a real case rather than pedantry. On a 20-second clip both bars are pinned
+   * to the 95% floor, so the margin is exactly zero. That is safe because
+   * isWatched compares with `>=`, and asserting a strictly positive margin
+   * failed here on the first run. The invariant the fix actually needs is the
+   * weaker one, so it is the one stated.
+   */
+  ok(
+    `the tightest margin is never negative (${worst.gap.toFixed(
+      4
+    )} points at db=${worst.db}s, real=${worst.real}s — the 95% floor, where both bars pin)`,
+    worst.gap >= 0
+  );
+
+  /* And the same sweep against the OLD bar, so this file records how large the
+     defect was rather than only that it is gone. */
+  let oldStricter = 0;
+  for (let db = 20; db <= 600; db++) {
+    for (const off of [-0.499, -0.25, 0, 0.25, 0.499]) {
+      if (!isWatched(playerFires(db + off), gateThreshold(db))) oldStricter++;
+    }
+  }
+  ok(
+    `the old bar refused ${oldStricter} of the same ${total} — which is what this fixes`,
+    oldStricter > 0,
+    "the old bar refused nothing, so this test proves nothing"
   );
 }
 

@@ -554,6 +554,21 @@ success.
 This is the same defect as a summary that prints regardless of what happened — the
 merge tells you it merged, and does not tell you where.
 
+## The work log: the task records what git sees, Ryan adds what it can't
+
+**The daily scheduled task already logs what git can see, so the rows that go
+missing are the ones it cannot.** If Ryan mentions EDIAGD work the repository has no
+record of (an App Store submission, a call with Mitch that counts as development, a
+content pipeline run), remind him to add it with `npm run log`. Coding agents never
+write rows, including that one: telling him it is missing is the whole of the job.
+
+**Rows Ryan has typed into `docs/WORK_LOG.md` are never stashed, reset, checked out
+over, or discarded.** If the file carries uncommitted rows when you start a branch or
+open a PR, commit them first, on their own, as `Work log rows through YYYY-MM-DD`, and
+change nothing inside them. They are the only record of hours nobody can reconstruct:
+git can show what was committed and when, never what a day cost. A stash that swallows
+them looks like tidiness and is a deletion.
+
 ## The Drop Zone ingest pipeline
 
 `INGEST.md` is the ingest procedure — the seven phases from Mitch's raw uploads to draft

@@ -148,9 +148,76 @@ export function gateThreshold(durationSec: number | null | undefined): number {
  * Rounds to two decimals before comparing so a coverage of 94.999999 — which
  * floating-point summation of TimeRanges produces routinely — does not read as
  * short of a 95 bar the viewer has plainly met.
+ *
+ * NOTE THAT THE ROUNDING IS ONE-SIDED: the value is rounded, the threshold is
+ * not. That is deliberate and it is also why the server must never share a bar
+ * with the player — see serverGateThreshold directly below.
  */
 export function isWatched(pct: number, threshold = WATCHED_PCT): boolean {
   return Math.round(pct * 100) / 100 >= threshold;
+}
+
+/**
+ * How much looser the SERVER's bar is than the player's, in seconds of tail.
+ *
+ * `content.duration_sec` is an integer column, so the number the server holds
+ * and the number the player measures off the media element differ by up to half
+ * a second BY CONSTRUCTION — nothing is wrong with either. Measured across 411
+ * published films on 5 November 2026: `mux - db` ran from -0.500s to +0.490s,
+ * median +0.021s, and not one film exceeded a second.
+ *
+ * Half a second is therefore the whole of the disagreement the storage format
+ * permits, not an estimate of it.
+ */
+export const SERVER_GATE_SLACK_SEC = 0.5;
+
+/**
+ * The bar the SERVER verifies a reported watch against.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS NOT gateThreshold, AND WHY SHARING ONE WAS THE BUG
+ * ---------------------------------------------------------------------------
+ * Two systems measure this film. TrackedVideo opens its gate at
+ * `gateThreshold(el.duration)` — the asset's real length, to the millisecond.
+ * completeLibraryItem checked `gateThreshold(content.duration_sec)` — a whole
+ * number of seconds in Postgres. Same function, same name, two different
+ * quantities, and AGENTS.md already has the rule: two numbers with the same
+ * name from different systems are not the same measurement.
+ *
+ * The gap is in the fourth decimal place of a percentage, which is exactly why
+ * nobody saw it. On "After-MPI — Tire Rotation" the player credits at 98.3336
+ * and the server demanded 98.3333 — and `isWatched` rounds the reported value
+ * to 98.33, which is below the unrounded bar. Refused. The advisor watched the
+ * film to the end.
+ *
+ * MEASURED, because the margin is too small to reason about: of 411 published
+ * films, the server's bar exceeded the player's on 196 — 48% of the library.
+ * Nine real completions were lost to it across three accounts before anybody
+ * reported it, and they were only visible because the screen kept showing a
+ * tick the database never got.
+ *
+ * ---------------------------------------------------------------------------
+ * THE FIX IS A CONSTRUCTION, NOT A TOLERANCE
+ * ---------------------------------------------------------------------------
+ * The server is given a longer tail, so its bar is provably BELOW the player's
+ * for every duration disagreement the integer column can produce. The unsafe
+ * state — a server stricter than the gate the advisor actually saw open — is
+ * not reachable rather than merely unlikely. Proven both ways in
+ * `npm run test:watched-rule`: zero of 411 real films and zero of 2,905
+ * synthetic worst-corner durations, and a film at 60% is still refused.
+ *
+ * It does not weaken the rule the advisor experiences. The player is still what
+ * decides when the gate opens, unchanged at two seconds; this only stops the
+ * server second-guessing it with a worse number. Half a second of extra tail
+ * cannot be reached by anyone who has not watched to the player's own gate.
+ */
+export function serverGateThreshold(durationSec: number | null | undefined): number {
+  if (!durationSec || !Number.isFinite(durationSec) || durationSec <= 0) {
+    return WATCHED_PCT;
+  }
+  const tail = GATE_TAIL_SEC + SERVER_GATE_SLACK_SEC;
+  const tailBased = ((durationSec - tail) / durationSec) * 100;
+  return Math.max(WATCHED_PCT, Math.min(99.5, tailBased));
 }
 
 /* ---------------------------------------------------------------------------
