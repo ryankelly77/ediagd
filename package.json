@@ -144,6 +144,7 @@
     "diag:manager-team": "rm -rf .tmp-mtd && tsc -p scripts/tsconfig.managerdiag.json && mkdir -p .tmp-mtd/node_modules && ln -sfn .. .tmp-mtd/node_modules/@ && node .tmp-mtd/manager-team-diagnostic.js",
     "test:quiz-gate": "rm -rf .tmp-qg && tsc -p scripts/tsconfig.quizgate.json && mkdir -p .tmp-qg/node_modules && ln -sfn .. .tmp-qg/node_modules/@ && node .tmp-qg/scripts/quiz-gate-scenarios.js",
     "test:rooftop-choice": "rm -rf .tmp-rfc && tsc -p scripts/tsconfig.rooftopchoice.json && mkdir -p .tmp-rfc/node_modules && ln -sfn .. .tmp-rfc/node_modules/@ && node .tmp-rfc/scripts/rooftop-choice-scenarios.js",
+    "test:deploy-env": "rm -rf .tmp-dpe && tsc -p scripts/tsconfig.deployenv.json && mkdir -p .tmp-dpe/node_modules && ln -sfn .. .tmp-dpe/node_modules/@ && node .tmp-dpe/scripts/deploy-env-scenarios.js",
     "fixture:valerie": "rm -rf .tmp-vsh && tsc -p scripts/tsconfig.valerieshot.json && mkdir -p .tmp-vsh/node_modules && ln -sfn .. .tmp-vsh/node_modules/@ && node .tmp-vsh/valerie-screenshot-fixture.js"
   },
   "dependencies": {
