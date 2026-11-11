@@ -33,6 +33,44 @@
    same memberships always choose the same rooftop.
 
    ---------------------------------------------------------------------------
+   THIS RULE NOW EXISTS TWICE, AND A CHECK HOLDS THE TWO TOGETHER
+   ---------------------------------------------------------------------------
+   `record_watch_progress` — the RPC the player calls on every ping — could not
+   call this function, because it is a plpgsql function in the database. It had
+   its own rule,
+
+       order by m.created_at limit 1
+
+   which is deterministic but is a DIFFERENT rule: oldest membership rather than
+   advisor-first. Deterministic was never the whole requirement. For anybody
+   holding memberships at two stores the row the PLAYER writes while a film is
+   playing and the row the COMPLETION writes seconds later could carry different
+   rooftops, for the same person on the same film — and `team_videos_completed`
+   filters on `content_progress.rooftop_id`, so one of the two would be
+   invisible on a manager's Team screen with no error and no empty state. The
+   same defect as the one above, one layer down, and it had not bitten only
+   because every advisor holding two memberships today holds them at ONE
+   rooftop, where the two rules agree.
+
+   0181 adds `choose_rooftop(_user uuid)`, which applies this function's rule in
+   SQL — advisor, manager, technician, any, with `rooftop_id` ascending inside
+   each arm — and `record_watch_progress` now calls it. The agreement the two
+   owe each other is:
+
+       for the same membership rows, choose_rooftop(user) = chooseRooftop(rows)
+
+   and `npm run check:rooftop-choice` asserts exactly that sentence against a
+   local database, as a signed-in user over PostgREST rather than as the
+   function's owner. Proven both ways: green here, and nine named disagreements
+   plus a misfiled ping when `choose_rooftop` is reverted to the created_at
+   ordering.
+
+   ONE SHAPE CANNOT CATCH IT, AND IT IS THE SHAPE PRODUCTION HAS. Advisor and
+   manager at ONE rooftop answers the same under either rule, so a check built
+   only from Beaumont's real data would pass on a broken copy. The cases that
+   discriminate are the ones that span two stores.
+
+   ---------------------------------------------------------------------------
    WHAT THIS IS NOT
    ---------------------------------------------------------------------------
    NOT an entitlement check, and it must never be mistaken for one. It answers
@@ -90,7 +128,14 @@ export function chooseRooftop(
        would silently change which rooftop their watch gate is filed at and
        which screen they are routed to on the day somebody adopts it. Carrying
        the arm makes adoption a no-op for them; dropping it later is a decision
-       somebody has to make out loud. */
+       somebody has to make out loud.
+
+       ADOPTED SO FAR: completeLibraryItem, completeDayAction, and — in SQL,
+       through `choose_rooftop()` rather than by calling this — 0181's
+       `record_watch_progress`. The arm is load-bearing for that last one
+       already: it is reachable by any signed-in technician whose player pings,
+       which is why `check:rooftop-choice` exercises technician-over-fallback on
+       both sides rather than treating the arm as dead code. */
     ordered.find((m) => m.role === "technician")?.rooftop_id ??
     ordered[0].rooftop_id
   );
