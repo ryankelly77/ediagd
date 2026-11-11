@@ -306,11 +306,32 @@ export async function loadManagerVideos(
 /**
  * The subset of `contentIds` this user has completed.
  *
- * Read with the CALLER'S client, so content_progress's self-read policy scopes
- * it — there is no user id parameter to get wrong.
+ * ---------------------------------------------------------------------------
+ * THE SENTENCE THAT USED TO BE HERE WAS THE BUG, AND IT TOLD THE READER NOT TO
+ * LOOK
+ * ---------------------------------------------------------------------------
+ *   "Read with the CALLER'S client, so content_progress's self-read policy
+ *    scopes it — there is no user id parameter to get wrong."
+ *
+ * There is no self-read policy on `content_progress`. `progress_team_read`
+ * (0027) is `is_platform_owner() or user_id = auth.uid() or rooftop_id in
+ * (select managed_rooftops())`, so the caller's client reads every progress row
+ * at any rooftop they manage. "Nothing to get wrong" named the one thing that
+ * was wrong, and in the voice of a definition — which is the construction
+ * AGENTS.md records as worse than a stale comment, because it ends the
+ * investigation.
+ *
+ * The same assumption in `loadModuleItems` put a colleague's completion tick on
+ * Valerie Patterson's Menus module 1 on 10 November 2026. This function has no
+ * callers today; it is fixed anyway, because a dormant helper carrying a
+ * confident wrong premise is what the next surface adopts.
+ *
+ * `userId` is required and ahead of the list, so a caller cannot inherit a
+ * scope nobody chose.
  */
 export async function loadCompletedIds(
   client: Client,
+  userId: string,
   contentIds: string[]
 ): Promise<Set<string>> {
   if (contentIds.length === 0) return new Set();
@@ -318,6 +339,7 @@ export async function loadCompletedIds(
   const { data } = await client
     .from("content_progress")
     .select("content_id")
+    .eq("user_id", userId)
     .in("content_id", contentIds)
     .not("completed_at", "is", null);
 

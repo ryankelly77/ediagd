@@ -1,0 +1,43 @@
+{
+  "tag": "menus-tick-007cbb",
+  "moduleId": "c41e06e0-4117-4d08-b55e-e49453344cbb",
+  "filmId": "2d3b7e2b-0635-4d6c-9fcf-417db378fa27",
+  "shots": {
+    "A": {
+      "file": "after-A-colleague-tick.png",
+      "pathname": "/library/m/c41e06e0-4117-4d08-b55e-e49453344cbb",
+      "header": "The Maintenance Menu — the OE Approach",
+      "subtitle": "0 of 1 done",
+      "filmFound": true,
+      "filmText": "VIDEO 3 min menus-tick-007cbb The OE Approach — The Maintenance Menu Couldn't play this one — moving on. No cues 0 of 0 done 1 still to finish Swipe back for the cues you haven't marked, and watch the film above if you haven't. ‹ Finish ›",
+      "donePill": false,
+      "watchedWord": false,
+      "terminal": "1 still to finish",
+      "deckText": "‹ LESSON LIBRARY › MENUS-TICK-007CBB MENUS The Maintenance Menu — the OE Approach 0 of 1 done VIDEO 3 min menus-tick-007cbb The OE Approach — The Maintenance Menu Couldn't play this one — moving on. No cues 0 of 0 done 1 still to finish Swipe back for the cues you haven't marked, and watch the film above if you haven't. ‹ Finish › Swipe through the cards, or use the arrows. Marking one done moves you along."
+    },
+    "B": {
+      "file": "after-B-own-completion.png",
+      "pathname": "/library/m/c41e06e0-4117-4d08-b55e-e49453344cbb",
+      "header": "The Maintenance Menu — the OE Approach",
+      "subtitle": "1 of 1 done",
+      "filmFound": true,
+      "filmText": "VIDEO 3 min DONE menus-tick-007cbb The OE Approach — The Maintenance Menu Couldn't play this one — moving on. Watched No cues 0 of 0 done Lesson complete Everything in this one is behind you. Back to the Lesson Library ‹ Finish ›",
+      "donePill": true,
+      "watchedWord": true,
+      "terminal": "Lesson complete",
+      "deckText": "‹ LESSON LIBRARY › MENUS-TICK-007CBB MENUS The Maintenance Menu — the OE Approach 1 of 1 done VIDEO 3 min DONE menus-tick-007cbb The OE Approach — The Maintenance Menu Couldn't play this one — moving on. Watched No cues 0 of 0 done Lesson complete Everything in this one is behind you. Back to the Lesson Library ‹ Finish › Swipe through the cards, or use the arrows. Marking one done moves you along."
+    },
+    "C": {
+      "file": "after-C-pct100-null.png",
+      "pathname": "/library/m/c41e06e0-4117-4d08-b55e-e49453344cbb",
+      "header": "The Maintenance Menu — the OE Approach",
+      "subtitle": "0 of 1 done",
+      "filmFound": true,
+      "filmText": "VIDEO 3 min menus-tick-007cbb The OE Approach — The Maintenance Menu Couldn't play this one — moving on. No cues 0 of 0 done 1 still to finish Swipe back for the cues you haven't marked, and watch the film above if you haven't. ‹ Finish ›",
+      "donePill": false,
+      "watchedWord": false,
+      "terminal": "1 still to finish",
+      "deckText": "‹ LESSON LIBRARY › MENUS-TICK-007CBB MENUS The Maintenance Menu — the OE Approach 0 of 1 done VIDEO 3 min menus-tick-007cbb The OE Approach — The Maintenance Menu Couldn't play this one — moving on. No cues 0 of 0 done 1 still to finish Swipe back for the cues you haven't marked, and watch the film above if you haven't. ‹ Finish › Swipe through the cards, or use the arrows. Marking one done moves you along."
+    }
+  }
+}
