@@ -13,11 +13,12 @@ one of them is the number it would have written into a migration filename.
 
 **What revision 3 changes, and why each one matters.**
 
-1. **The first migration number is `0180`, not `0174`.** `0174`–`0179` all landed
-   while revision 2 sat in review. This is the **second** time this branch has been
-   caught by it, and it is the clearest possible argument for the re-check rule:
-   revision 2 already told this story about `0173` and *still* went stale, because a
-   number written down is a claim about a moving target. See *Build order*.
+1. **The first migration number is `0181`.** Revision 2 said `0174`; revision 3
+   first said `0180`, because `0174`–`0179` landed while revision 2 sat in review;
+   then `0180_story_review.sql` landed overnight and took that too. **Three catches
+   on one branch**, which is the clearest possible argument for the re-check rule —
+   this document has now gone stale on the very line that explains why it goes
+   stale. See *Build order*.
 2. **Ruling H now has a precedent on `main`, and the plan should copy it rather
    than invent.** `0179` (8 November) widened a manager-facing read in exactly the
    shape slice 1 needs. See *The gate that excludes the viewer it is built for*.
@@ -205,12 +206,42 @@ the read path rather than a heuristic that detects its absence. It is shaped on
 - **`(select ...)` scalar subqueries rather than bare calls**, so the planner
   hoists them into an InitPlan instead of calling them per row. That is 0027's
   rule, and 0178 is the measurement behind it.
-- **One policy, not two that have to agree.** 0179 dropped `module_completion_own`
-  because its whole content had become an arm of the new policy, and two
-  permissive policies are ORed anyway — so leaving it would be a duplicate clause
-  nobody would think to edit in step. Slice 1 has no such duplicate
-  (`op_code_catalog_read` is the only select policy on the table), but the question
-  is asked here so the answer is on the record rather than assumed.
+- **One policy, not two that have to agree — and the first version of this
+  paragraph was wrong.** 0179 dropped `module_completion_own` because its whole
+  content had become an arm of the new policy, and two permissive policies are
+  ORed anyway, so leaving it would be a duplicate clause nobody would think to
+  edit in step.
+
+  This paragraph used to say *"slice 1 has no such duplicate —
+  `op_code_catalog_read` is the only select policy on the table."* **There is a
+  second policy.** `op_code_catalog_admin` (0062) is declared `for all`, so it
+  covers select as well as insert, update and delete, and the two policies are
+  **ORed** exactly as 0179 describes: an admin reads the catalog through either
+  one. It has granted admins full write access to this table since 0062.
+
+  **How the claim was reached is the part worth keeping.** It came from grepping
+  for the string `op_code_catalog_read` across the migrations, finding it in 0062
+  and 0081, and reporting that as a fact about the table's policies. That is
+  evidence about *one policy's history*, stated as a fact about *the table* — the
+  scope error this document already catalogues three times under "a sample is
+  evidence about the sample." A grep for a name can only find the name you
+  already thought of.
+
+  **The fix is the listing, not a better grep.** `select polname, polcmd from
+  pg_policy where polrelid = '<table>'::regclass` enumerates what is actually
+  there, including the policy whose name you would never have guessed, and it is
+  what caught this. Run against the live local database it returned two rows
+  where the plan predicted one. Any future claim in this document about who may
+  read or write a table is to be taken from that listing.
+
+  **0181 leaves `op_code_catalog_admin` untouched**, and asserts that it is
+  untouched — the read widens, the write does not move, and a manager gains no
+  insert, update or delete. That assertion is the reason this matters rather than
+  being a footnote: without the listing, slice 1 would have shipped an
+  "exactly one select policy" check that failed against a correct schema, and a
+  "no write policies" check that passed against a table whose admins can write
+  it. See `reports/POLICY-WRITE-COUNT-FINDING.md` for the second half, which is
+  a main concern and is not confined to this branch.
 - **Stale comments are replaced in the same pull request, not softened.** 0179
   rewrote the two sentences that still described the ruling it reversed, on the
   stated grounds that a comment describing a rule the codebase has stopped
@@ -596,14 +627,21 @@ in this document is a **reading, not a reservation** — it is accurate as of
 immediately before Ryan merges, and the thing to re-check against is current
 `origin/main`, not this line.
 
-Provisional, at `c1f3b4b`, and to be re-derived at PR time:
+**And it happened a third time, to the table that was correcting the second.**
+`0180` was taken by `0180_story_review.sql`, which landed on `main` the night
+after revision 3 was written — so slice 1 is **`0181`**, and every provisional
+number after it moves up by one. Three catches on one branch: `0173`, then
+`0174`–`0179`, now `0180`.
 
-| slice | migration |
-|---|---|
-| 1 — the catalog read widens | `0180` |
-| 2 — the two ranking views | `0181` |
-| 3 — the serve table and the setting | `0182` |
-| 5 — the event kinds | `0183` |
+Slice 1's number is **taken and real** — the file exists on this branch. The rest
+stay provisional and are to be re-derived at PR time.
+
+| slice | migration | status |
+|---|---|---|
+| 1 — the catalog read widens | **`0181`** | taken; file exists on this branch |
+| 2 — the two ranking views | `0182` | provisional |
+| 3 — the serve table and the setting | `0183` | provisional |
+| 5 — the event kinds | `0184` | provisional |
 
 **This branch is 22 commits behind `origin/main` and has not been merged since
 `b90f714`.** The branch rule is to merge at least weekly and *always* before
@@ -615,8 +653,8 @@ brings in `docs/WORK_LOG.md`, whose rows are never stashed or checked out over
 
 | # | slice | what lands | why here |
 |---|---|---|---|
-| **0** | **Preview write guard** | `lib/deploy-env.ts` → `refuseWriteOnPreview()`, reading `VERCEL_ENV` (read nowhere in the codebase today). Every write path added later calls it. | The branch constraint, by construction rather than by memory. No schema. First because everything after depends on it. |
-| **1** | **The catalog read widens** — ruling H | Merge `main` first. Migration: `op_code_catalog_read` → `managed_rooftops()`, shaped on `0179`, and 0081's stale commentary replaced in the same PR. Acceptance proving a `manager`-only fixture user reads it and a technician still does not. | Its own slice and its own migration, per the ruling. Independent of everything else, and it is a live defect today. |
+| **0** | **Preview write guard** ✅ **built** | `lib/deploy-env.ts` → `refuseWriteOnPreview()`, reading `VERCEL_ENV` (read nowhere else in the codebase). `scripts/deploy-env-scenarios.ts` / `npm run test:deploy-env` — 19/19, and proved non-vacuous in both directions: neutering the throw fails 4 cases, throwing always fails 8. No caller yet, by design. | The branch constraint, by construction rather than by memory. No schema. First because everything after depends on it. |
+| **1** | **The catalog read widens** — ruling H ✅ **built, `0181`** | `0181_a_manager_reads_the_op_code_catalog.sql`: `op_code_catalog_read` → `managed_rooftops()`, shaped on `0179`, two arms not three (the catalog has no owner column), `op_code_catalog_admin` asserted untouched. 0081's stale commentary corrected in place. `scripts/catalog-read-acceptance.ts` / `npm run accept:catalog-read` — 3 failing before the migration, 17/17 after. Not applied anywhere. | Its own slice and its own migration, per the ruling. Independent of everything else, and it was a live defect. |
 | **2** | **Rooftop family ranking** | `rooftop_family_missed`, `manager_meeting_supply`. Read-only; serves nothing. | The metric, provable in isolation against the fixture before any row is written. Reuses the picker's views, floor and clamp. |
 | **3** | **Serve table and the lock** | `manager_meeting_serve` (+ unique index on rooftop × week), `game_settings.manager_meeting_repeat_weeks int not null default 8` with a sanity CHECK. Schema only — no picker. | The pick in slice 4 needs somewhere to read history from. Splitting the table from the logic keeps both reviewable. |
 | **4** | **The pick** — rulings A, B, C | `pick_manager_meeting()`: family walk by rank, least-recently-served film within a family, never-served first, ties by op code, fall through on a fully suppressed family, honest null with a reason. | Reads 2 and 3. The first slice with real decision logic, and the one with the most acceptance surface. |
