@@ -13,12 +13,13 @@ one of them is the number it would have written into a migration filename.
 
 **What revision 3 changes, and why each one matters.**
 
-1. **The first migration number is `0181`.** Revision 2 said `0174`; revision 3
+1. **The first migration number is `0182`.** Revision 2 said `0174`; revision 3
    first said `0180`, because `0174`–`0179` landed while revision 2 sat in review;
-   then `0180_story_review.sql` landed overnight and took that too. **Three catches
-   on one branch**, which is the clearest possible argument for the re-check rule —
-   this document has now gone stale on the very line that explains why it goes
-   stale. See *Build order*.
+   then `0180_story_review.sql` took that; then PR #109 merged its own `0181`
+   while ours was already written and pushed. **Four catches on one branch**,
+   which is the clearest possible argument for the re-check rule — this document
+   has now gone stale on the very line that explains why it goes stale. See
+   *Build order*.
 2. **Ruling H now has a precedent on `main`, and the plan should copy it rather
    than invent.** `0179` (8 November) widened a manager-facing read in exactly the
    shape slice 1 needs. See *The gate that excludes the viewer it is built for*.
@@ -234,7 +235,7 @@ the read path rather than a heuristic that detects its absence. It is shaped on
   where the plan predicted one. Any future claim in this document about who may
   read or write a table is to be taken from that listing.
 
-  **0181 leaves `op_code_catalog_admin` untouched**, and asserts that it is
+  **0182 leaves `op_code_catalog_admin` untouched**, and asserts that it is
   untouched — the read widens, the write does not move, and a manager gains no
   insert, update or delete. That assertion is the reason this matters rather than
   being a footnote: without the listing, slice 1 would have shipped an
@@ -610,10 +611,10 @@ Four of the ten slices carry a migration: 1 (the catalog read), 2 (two views),
 3 (the serve table and the setting), 5 (the event kinds). They take consecutive
 numbers in that order at PR time.
 
-### The number, and the second time this branch was caught by it
+### The number, and the four times this branch has been caught by it
 
-**The next free number is `0180`.** `origin/main` holds `0174` through `0179`
-today, at `c1f3b4b`.
+**The next free number is `0182`, and slice 1 has taken it.** `origin/main` holds
+`0174` through `0181` as of `0693559`.
 
 Revision 2 said the first number here was `0174`, and told the story of `0173`
 landing from another branch as the reason the re-check rule exists. **Then the
@@ -623,38 +624,68 @@ same thing happened to revision 2, six times over, while it sat in review** —
 That is worth more than a corrected number, because it answers a question the rule
 only implied: *how fast does this go stale?* Six numbers in one week. So the number
 in this document is a **reading, not a reservation** — it is accurate as of
-`c1f3b4b` and it will be wrong again. The operative instruction is the re-check
+`0693559` and it will be wrong again. The operative instruction is the re-check
 immediately before Ryan merges, and the thing to re-check against is current
-`origin/main`, not this line.
+`origin/main` **and the migrations directory**, not this line.
 
 **And it happened a third time, to the table that was correcting the second.**
 `0180` was taken by `0180_story_review.sql`, which landed on `main` the night
-after revision 3 was written — so slice 1 is **`0181`**, and every provisional
-number after it moves up by one. Three catches on one branch: `0173`, then
-`0174`–`0179`, now `0180`.
+after revision 3 was written.
+
+**And a fourth time, which is a different failure from the first three.** Slice 1
+was written as `0181`, committed and pushed. PR #109 then merged its own
+`0181_a_watch_ping_files_where_the_completion_does.sql`, so slice 1 is now
+**`0182`**. Four catches: `0173`, then `0174`–`0179`, then `0180`, now `0181`.
+
+**The fourth is the first caused by two open PRs rather than by `main` moving
+ahead of a stale document.** The first three were staleness — a number read
+correctly and then overtaken. This one was a genuine collision: both numbers were
+live and correct when they were taken, and neither branch could have seen the
+other's file. Re-reading `origin/main` more often would not have prevented it,
+because at the moment slice 1 was numbered, `0181` *was* the next free number.
+
+**It also arrived with no error, exactly as the rule predicted.** `git merge
+origin/main` reported a clean merge and said nothing, because the two files have
+different names — `0181_a_manager_reads_the_op_code_catalog.sql` and
+`0181_a_watch_ping_files_where_the_completion_does.sql` — so there is no textual
+conflict for git to find. Both sat in `supabase/migrations/` at once, and the only
+thing that would have noticed is the replay, at whichever end of it ran second.
+This is the plan's own sentence coming true: *"a collision does not announce
+itself."*
+
+So the re-check before Ryan merges is not only about staleness. **It is also the
+only thing standing between two correctly-numbered branches and a silently
+dropped migration**, and it has to be a re-check of the *directory* and not just
+of `origin/main`'s high-water mark.
 
 Slice 1's number is **taken and real** — the file exists on this branch. The rest
 stay provisional and are to be re-derived at PR time.
 
 | slice | migration | status |
 |---|---|---|
-| 1 — the catalog read widens | **`0181`** | taken; file exists on this branch |
-| 2 — the two ranking views | `0182` | provisional |
-| 3 — the serve table and the setting | `0183` | provisional |
-| 5 — the event kinds | `0184` | provisional |
+| 1 — the catalog read widens | **`0182`** | taken; file exists on this branch |
+| 2 — the two ranking views | `0183` | provisional |
+| 3 — the serve table and the setting | `0184` | provisional |
+| 5 — the event kinds | `0185` | provisional |
 
-**This branch is 22 commits behind `origin/main` and has not been merged since
-`b90f714`.** The branch rule is to merge at least weekly and *always* before
-writing a migration, so the merge is the first act of slice 1 and not a chore to
-be sequenced later — a number taken on a stale base is the defect above, and a
-migration authored on one replays against a schema nobody is running. The merge
-brings in `docs/WORK_LOG.md`, whose rows are never stashed or checked out over
+**`main` is merged in, and stays merged in.** The branch rule is to merge at least
+weekly and *always* before writing a migration — a number taken on a stale base
+is the first defect above, and a migration authored on one replays against a
+schema nobody is running. Both merges so far were clean, and `docs/WORK_LOG.md`
+arrived byte-identical to `main`; its rows are never stashed or checked out over
 (AGENTS.md, 9 November).
+
+**But merging is not sufficient, and the fourth catch is why.** A clean merge is
+silent about two files claiming one number. After every merge, check the
+*directory* for a duplicated prefix — `ls supabase/migrations | cut -c1-4 | sort |
+uniq -d` returns nothing when the chain is sound and names the collision when it
+is not. That is a check which fails when it meets something, rather than one that
+says nothing and reads as a pass.
 
 | # | slice | what lands | why here |
 |---|---|---|---|
 | **0** | **Preview write guard** ✅ **built** | `lib/deploy-env.ts` → `refuseWriteOnPreview()`, reading `VERCEL_ENV` (read nowhere else in the codebase). `scripts/deploy-env-scenarios.ts` / `npm run test:deploy-env` — 19/19, and proved non-vacuous in both directions: neutering the throw fails 4 cases, throwing always fails 8. No caller yet, by design. | The branch constraint, by construction rather than by memory. No schema. First because everything after depends on it. |
-| **1** | **The catalog read widens** — ruling H ✅ **built, `0181`** | `0181_a_manager_reads_the_op_code_catalog.sql`: `op_code_catalog_read` → `managed_rooftops()`, shaped on `0179`, two arms not three (the catalog has no owner column), `op_code_catalog_admin` asserted untouched. 0081's stale commentary corrected in place. `scripts/catalog-read-acceptance.ts` / `npm run accept:catalog-read` — 3 failing before the migration, 17/17 after. Not applied anywhere. | Its own slice and its own migration, per the ruling. Independent of everything else, and it was a live defect. |
+| **1** | **The catalog read widens** — ruling H ✅ **built, `0182`** | `0182_a_manager_reads_the_op_code_catalog.sql`: `op_code_catalog_read` → `managed_rooftops()`, shaped on `0179`, two arms not three (the catalog has no owner column), `op_code_catalog_admin` asserted untouched. 0081's stale commentary corrected in place. `scripts/catalog-read-acceptance.ts` / `npm run accept:catalog-read` — 3 failing before the migration, 17/17 after. Not applied anywhere. | Its own slice and its own migration, per the ruling. Independent of everything else, and it was a live defect. |
 | **2** | **Rooftop family ranking** | `rooftop_family_missed`, `manager_meeting_supply`. Read-only; serves nothing. | The metric, provable in isolation against the fixture before any row is written. Reuses the picker's views, floor and clamp. |
 | **3** | **Serve table and the lock** | `manager_meeting_serve` (+ unique index on rooftop × week), `game_settings.manager_meeting_repeat_weeks int not null default 8` with a sanity CHECK. Schema only — no picker. | The pick in slice 4 needs somewhere to read history from. Splitting the table from the logic keeps both reviewable. |
 | **4** | **The pick** — rulings A, B, C | `pick_manager_meeting()`: family walk by rank, least-recently-served film within a family, never-served first, ties by op code, fall through on a fully suppressed family, honest null with a reason. | Reads 2 and 3. The first slice with real decision logic, and the one with the most acceptance surface. |

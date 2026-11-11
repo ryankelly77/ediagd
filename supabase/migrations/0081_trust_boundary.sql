@@ -259,15 +259,15 @@ create policy advisor_total_read on advisor_period_total_src
 
 -- ---- 6. The mapping is not public, and neither is anything else ------------
 /*
- * SUPERSEDED IN PART BY 0181 — READ THIS FIRST.
+ * SUPERSEDED IN PART BY 0182 — READ THIS FIRST.
  *
- * `op_code_catalog_read` below no longer describes the live policy. 0181
+ * `op_code_catalog_read` below no longer describes the live policy. 0182
  * widened it from `admin_rooftops()` to `managed_rooftops()`, because
  * admin_rooftops excludes `manager` and the Manager Meetings screen could not
  * read the name of the op code its own film teaches — zero rows, no error.
  * The DDL in this file is left exactly as it was applied, since this migration
  * has run and rewriting history would make the chain disagree with the
- * database; 0181 is the current definition for that one table.
+ * database; 0182 is the current definition for that one table.
  *
  * The sentence below that says admin_rooftops is "the shape being copied" is
  * therefore true of op_text_rule, op_code_family and mapping_alias, and NO
@@ -302,9 +302,9 @@ create policy op_text_rule_read on op_text_rule
     (select is_platform_owner()) or exists (select 1 from admin_rooftops())
   );
 
-/* SUPERSEDED BY 0181: this policy is now managed_rooftops(), not
+/* SUPERSEDED BY 0182: this policy is now managed_rooftops(), not
    admin_rooftops(). Left as applied — see the note at the top of section 6.
-   Do not edit this statement to match; edit 0181. */
+   Do not edit this statement to match; edit 0182. */
 drop policy if exists op_code_catalog_read on op_code_catalog;
 create policy op_code_catalog_read on op_code_catalog
   for select using (

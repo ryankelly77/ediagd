@@ -1,7 +1,7 @@
 # A `for all` policy is a write policy, and the obvious check misses it
 
 **A main concern, raised from the `ediagd-manager` branch and handed to the Sync
-agent via Ryan.** Found while writing `0181`; it is not confined to that
+agent via Ryan.** Found while writing `0182`; it is not confined to that
 migration and nothing on this branch can fix it.
 
 Nothing is swept here. This document states the defect, bounds the exposure, and
@@ -60,7 +60,7 @@ construction.
 propagation is already in motion: `0179` is the newest and cleanest policy
 migration in the tree, it is explicitly the shape `reports/MANAGER-MEETINGS-PLAN.md`
 tells slice 1 to copy, and the plan's own instruction was to copy its assertion
-block. `0181` was written from it and inherited the bug, which is how this was
+block. `0182` was written from it and inherited the bug, which is how this was
 found — the check failed against a correct schema on the first replay.
 
 ### `0179` already knows `*` matters, twenty lines earlier
@@ -126,15 +126,15 @@ would be worse than average:
   whole migration about the cost of touching its RLS. An assertion that reported
   `content` as unwritable would be wrong about the most heavily policed table in
   the schema.
-- **`game_settings`** is the single row the gamification economy reads. `0181`'s
+- **`game_settings`** is the single row the gamification economy reads. `0182`'s
   sibling slices add a column to it (`manager_meeting_repeat_weeks`), so a future
   slice on this branch will be writing assertions against a table on this list.
 
 ---
 
-## What `0181` does, and it is not the general fix
+## What `0182` does, and it is not the general fix
 
-`0181_a_manager_reads_the_op_code_catalog.sql` counts `'*'` as a write:
+`0182_a_manager_reads_the_op_code_catalog.sql` counts `'*'` as a write:
 
 ```sql
    and polcmd in ('a', 'w', 'd', '*');
@@ -185,6 +185,6 @@ where the question is asked, not in each asker.
 ---
 
 *Written 11 November 2026 from `~/ediagd-manager`, branch `ediagd-manager`.
-Nothing here was applied: `0181` is unapplied on every database, and the local
+Nothing here was applied: `0182` is unapplied on every database, and the local
 Supabase used to measure this was restored to its as-found state at `0180`
 (policy body and table comment both verified identical to `origin/main`).*

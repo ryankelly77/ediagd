@@ -1,5 +1,5 @@
 -- ============================================================================
--- EDIAGD — 0181 a manager reads the op code catalog
+-- EDIAGD — 0182 a manager reads the op code catalog
 --
 -- NOT APPLIED. Written for Ryan to read and apply, from the ~/ediagd main
 -- checkout. This branch never applies a migration: `.env.local` here points at
@@ -268,7 +268,7 @@ comment on table op_code_catalog is
   'numbers, which is what makes it safe to read widely. WHO MAY READ IT: the '
   'platform owner, and anybody managing a rooftop — manager, admin, '
   'group_owner and group_manager, via managed_rooftops() — under '
-  'op_code_catalog_read, widened by 0181 from 0081''s admin_rooftops() on '
+  'op_code_catalog_read, widened by 0182 from 0081''s admin_rooftops() on '
   'Ryan''s ruling H of 10 November 2026, because the Manager Meetings screen '
   'could not read the name of the op code its own film teaches. Advisors and '
   'technicians still read nothing. NOTE group_manager gains access here that '
@@ -278,7 +278,7 @@ comment on table op_code_catalog is
   'role = ''admin'', through op_code_catalog_admin (0062, declared FOR ALL, so '
   'it covers select as well as the three writes), plus the service role, which '
   'bypasses RLS and is how scripts/seed-op-codes.ts re-seeds Mitch''s '
-  'revisions. 0181 widened the READ ONLY and left that write policy untouched: '
+  'revisions. 0182 widened the READ ONLY and left that write policy untouched: '
   'a manager who could rename a code would silently re-point every surface '
   'that joins on it. op_code_family, op_text_rule and mapping_alias are NOT '
   'widened and remain admin_rooftops() — the meeting screen reads family as '
@@ -304,7 +304,7 @@ begin
 
   if _qual is null then
     raise exception
-      '0181: op_code_catalog_read does not exist on op_code_catalog';
+      '0182: op_code_catalog_read does not exist on op_code_catalog';
   end if;
 
   /* Both arms, named. A policy that kept only the managed arm would lock out a
@@ -312,14 +312,14 @@ begin
      exists to fix, reintroduced while fixing it. */
   if _qual not like '%is_platform_owner%' then
     raise exception
-      '0181: op_code_catalog_read does not admit the platform owner. '
+      '0182: op_code_catalog_read does not admit the platform owner. '
       'managed_rooftops() has no is_platform_owner() arm of its own, so '
       'dropping this one locks the owner out of the catalog. Expression: %',
       _qual;
   end if;
   if _qual not like '%managed_rooftops%' then
     raise exception
-      '0181: op_code_catalog_read does not admit managed_rooftops(), so a '
+      '0182: op_code_catalog_read does not admit managed_rooftops(), so a '
       'manager still reads zero rows and the meeting screen still cannot name '
       'the op code its film teaches. Expression: %', _qual;
   end if;
@@ -330,7 +330,7 @@ begin
      the other in every case that matters. */
   if _qual like '%admin_rooftops%' then
     raise exception
-      '0181: op_code_catalog_read still references admin_rooftops(). The '
+      '0182: op_code_catalog_read still references admin_rooftops(). The '
       'widening replaces that predicate rather than adding to it. '
       'Expression: %', _qual;
   end if;
@@ -346,7 +346,7 @@ begin
      and polcmd = 'r';
   if _selects <> 1 then
     raise exception
-      '0181: op_code_catalog carries % select-only policies, expected exactly '
+      '0182: op_code_catalog carries % select-only policies, expected exactly '
       '1 (op_code_catalog_read).', _selects;
   end if;
 
@@ -367,7 +367,7 @@ begin
      and polcmd in ('a', 'w', 'd', '*');
   if _writes <> 1 then
     raise exception
-      '0181: op_code_catalog carries % write-capable policies, expected '
+      '0182: op_code_catalog carries % write-capable policies, expected '
       'exactly 1 (op_code_catalog_admin, FOR ALL, from 0062). This migration '
       'widens the READ only.', _writes;
   end if;
@@ -379,7 +379,7 @@ begin
 
   if _admin is null then
     raise exception
-      '0181: op_code_catalog_admin has gone missing. 0181 must not touch the '
+      '0182: op_code_catalog_admin has gone missing. 0182 must not touch the '
       'write policy — dropping it would take admin write access away with it.';
   end if;
   /* Keyed on role = 'admin' and NOT on managed_rooftops(). If the widening had
@@ -387,13 +387,13 @@ begin
      code a film teaches, and every join against it would silently re-point. */
   if _admin like '%managed_rooftops%' then
     raise exception
-      '0181: op_code_catalog_admin now references managed_rooftops(), so a '
+      '0182: op_code_catalog_admin now references managed_rooftops(), so a '
       'MANAGER CAN WRITE THE CATALOG. The widening belongs on the read policy '
       'only. Expression: %', _admin;
   end if;
   if _admin not like '%admin%' then
     raise exception
-      '0181: op_code_catalog_admin no longer restricts to admin. '
+      '0182: op_code_catalog_admin no longer restricts to admin. '
       'Expression: %', _admin;
   end if;
 
@@ -409,19 +409,19 @@ begin
 
   if _family is null then
     raise exception
-      '0181: op_code_family_read has gone missing. This migration must not '
+      '0182: op_code_family_read has gone missing. This migration must not '
       'touch op_code_family.';
   end if;
   if _family not like '%admin_rooftops%' then
     raise exception
-      '0181: op_code_family_read no longer gates on admin_rooftops(). Only '
+      '0182: op_code_family_read no longer gates on admin_rooftops(). Only '
       'op_code_catalog widens in this migration — the meeting screen reads '
       'family as plain text and never needs the mapping. Expression: %',
       _family;
   end if;
 
   raise notice
-    '0181: op_code_catalog_read admits the platform owner and '
+    '0182: op_code_catalog_read admits the platform owner and '
     'managed_rooftops(); admin_rooftops() is gone; one select-only policy; '
     'write still admin-only via op_code_catalog_admin (FOR ALL, 0062); '
     'op_code_family_read unchanged. Behaviour is asserted by '

@@ -1,7 +1,7 @@
 /* ============================================================================
    EDIAGD — the op code catalog read, as the roles that will really call it
 
-   THE TEST 0181 EXISTS TO PASS. AGENTS.md: "A migration applying cleanly is not
+   THE TEST 0182 EXISTS TO PASS. AGENTS.md: "A migration applying cleanly is not
    evidence that a function works. A function shipped in a migration must be
    exercised BY THE ROLE AND THE PATH THAT WILL ACTUALLY CALL IT, or it is
    untested." The same goes double for an RLS policy, because a policy CANNOT be
@@ -10,11 +10,11 @@
 
    So every assertion below goes over PostgREST, signed in as a real auth user:
 
-     manager-only   reads the catalog. THE POINT OF 0181.
+     manager-only   reads the catalog. THE POINT OF 0182.
      technician     reads zero. The refusal.
      advisor        reads zero. The other refusal.
      admin          reads the catalog. The ACCEPTANCE of a known-good input —
-                    this was already true before 0181 and must stay true, and
+                    this was already true before 0182 and must stay true, and
                     it is the half that catches a migration which "fixed" the
                     read by breaking it for everybody.
 
@@ -28,7 +28,7 @@
    Beaumont's two real managers may well also hold `admin`. A suite that signed
    in as them would read the catalog through `op_code_catalog_admin` — which has
    granted admins everything since 0062 — and would pass identically whether or
-   not 0181 was ever applied. It would be testing the one context in which this
+   not 0182 was ever applied. It would be testing the one context in which this
    gate cannot fail.
 
    Every fixture user below therefore gets exactly ONE membership row, and the
@@ -186,7 +186,7 @@ async function teardown() {
 
 /* ---- the suite ------------------------------------------------------------ */
 async function main() {
-  console.log(`\nop_code_catalog read — 0181, fixture tag ${TAG}`);
+  console.log(`\nop_code_catalog read — 0182, fixture tag ${TAG}`);
   await setup();
 
   const managerId = await makeUser("manager", rooftopId);
@@ -232,13 +232,13 @@ async function main() {
   }
 
   /* ---------------------------------------------------------------------- */
-  section("1. A manager reads the catalog — the point of 0181");
+  section("1. A manager reads the catalog — the point of 0182");
   {
     const n = await catalogCount(asManager);
     ok(
       "a manager-only user reads the catalog over PostgREST",
       n > 0,
-      `read ${n} rows. BEFORE 0181 this is 0: op_code_catalog_read gates on ` +
+      `read ${n} rows. BEFORE 0182 this is 0: op_code_catalog_read gates on ` +
         `admin_rooftops(), which excludes manager — zero rows and no error.`
     );
     /* Not just "some rows": the rows this suite put there. A count that
@@ -297,14 +297,14 @@ async function main() {
     ok(
       "an admin still reads the catalog",
       n > 0,
-      `read ${n} — if this is 0, 0181 broke the read for admins too`
+      `read ${n} — if this is 0, 0182 broke the read for admins too`
     );
   }
 
   /* ---------------------------------------------------------------------- */
   section("4. The READ widened and the WRITE did not");
   {
-    /* The safety claim of 0181. op_code_catalog_admin (0062) is FOR ALL and
+    /* The safety claim of 0182. op_code_catalog_admin (0062) is FOR ALL and
        keyed on role = 'admin'; a manager must gain no write from a read
        widening. A manager who could rename a code would silently re-point
        every surface that joins on it. */
