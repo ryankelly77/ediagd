@@ -4,6 +4,11 @@
    LOCAL ONLY. It writes content, users and history. Refuses anything that is
    not localhost.
 
+   RE-RUNNABLE, including after the advisors have been driven through the app.
+   It wipes the previous run first and PROVES the wipe emptied before it
+   rebuilds — a refusal stops the run and names the table, rather than leaving
+   half a fixture and a crash somewhere downstream. See the wipe in main().
+
      export SB_URL=http://127.0.0.1:55321 SB_KEY=<local service role>
      npm run fixture:loop
 
@@ -42,43 +47,155 @@ function addDays(iso: string, n: number): string {
   return new Date(Date.UTC(y, m - 1, d) + n * 86_400_000).toISOString().slice(0, 10);
 }
 
+/** What a PostgREST refusal looks like, without importing the client's types. */
+type Refusal = { message: string; details?: string | null } | null;
+
 async function main() {
-  /* ---- wipe any previous run so this is re-runnable --------------------- */
+  /* ========================================================================
+     THE WIPE
+     ========================================================================
+
+     ---- WHAT WENT WRONG, AND WHY NOTHING SAID SO -------------------------
+
+     Every delete here discarded its result. So when the database refused one,
+     the wipe carried on, the rebuild hit a row that should not have existed,
+     and the run died with
+
+         TypeError: Cannot read properties of null (reading 'id')
+
+     — a message about an insert fifty lines downstream that names neither the
+     table that refused nor the constraint that refused it. Two separate
+     refusals hid behind that one sentence for as long as the script has
+     existed:
+
+       * `app_event.user_id` is ON DELETE NO ACTION, so the moment a fixture
+         advisor was actually DRIVEN through the app, deleting them failed.
+         The advisor survived the wipe.
+       * `certification_course.course_id` is ON DELETE RESTRICT, so the course
+         could never be deleted either. The rebuild's `course` insert then hit
+         the surviving `slug`, returned null, and threw the line above.
+
+     The second is the one that crashes; the first is the one that makes the
+     fixture dirty. They were invisible for the same reason, which is the
+     reason this file now checks.
+
+     ---- THE LIST IS GONE, AND THAT IS THE FIX ----------------------------
+
+     The old wipe hand-listed twelve tables to clear before `app_user`. All
+     twelve are ON DELETE CASCADE — the list was a copy of a guarantee the
+     schema already makes, and a copy is a thing that goes stale. It did:
+     `app_event` was never added to it, and `app_event` is exactly the table a
+     driven advisor fills.
+
+     So the cascade is left to do the cascading, and what is listed here is
+     only what the schema will NOT clean up: the NO ACTION and RESTRICT edges.
+     That list is short, it is named, and — because the wipe now proves itself
+     below — a new one cannot hide. */
+  const fails: string[] = [];
+  const note = (label: string, error: Refusal) => {
+    if (error) {
+      fails.push(
+        `${label} — ${error.message}` + (error.details ? `\n      ${error.details}` : "")
+      );
+    }
+  };
+
+  /* ---- the advisors ----------------------------------------------------- */
+  /* app_event and feedback are NO ACTION against app_user; everything else a
+     fixture advisor accumulates — swell, membership, daily_completion,
+     watch_gate, content_progress, the lot — cascades with the row. */
   const { data: old } = await sb.from("app_user").select("id").like("full_name", `${TAG}%`);
   for (const u of (old ?? []) as { id: string }[]) {
-    for (const t of [
-      "advisor_track_entry",
-      "advisor_pool_seen",
-      "advisor_focus_family",
-      "advisor_certification",
-      "module_completion",
-      "content_progress",
-      "watch_gate",
-      "sand_dollar_entry",
-      "user_badge",
-      "swell",
-      "daily_completion",
-      "membership",
-    ]) {
-      await sb.from(t).delete().eq("user_id", u.id);
-    }
-    await sb.from("app_user").delete().eq("id", u.id);
+    note("app_event", (await sb.from("app_event").delete().eq("user_id", u.id)).error);
+    note("feedback", (await sb.from("feedback").delete().eq("user_id", u.id)).error);
+    note("app_user", (await sb.from("app_user").delete().eq("id", u.id)).error);
     await sb.auth.admin.deleteUser(u.id).catch(() => {});
   }
-  await sb.from("content").delete().like("title", `${TAG}%`);
+
+  /* ---- the craft track -------------------------------------------------- */
+  /* certification_course is RESTRICT, so it goes before the course it points
+     at. `module` cascades from the course, and `content.module_id` is SET
+     NULL, so the films survive to be deleted by title just below. */
+  const { data: oldCourses } = await sb
+    .from("course")
+    .select("id")
+    .like("name", `${TAG}%`);
+  for (const c of (oldCourses ?? []) as { id: string }[]) {
+    note(
+      "certification_course",
+      (await sb.from("certification_course").delete().eq("course_id", c.id)).error
+    );
+  }
+  note("course", (await sb.from("course").delete().like("name", `${TAG}%`)).error);
+
+  /* ---- the films -------------------------------------------------------- */
+  /* After the advisors, never before: `daily_completion`'s five content
+     columns are NO ACTION, and the only rows that hold them belong to the
+     advisors whose cascade has just taken them. */
+  note("content", (await sb.from("content").delete().like("title", `${TAG}%`)).error);
+
+  /* ---- the store -------------------------------------------------------- */
+  /* app_event is NO ACTION against the ROOFTOP as well as the user, and an
+     event can carry a rooftop without a user. Everything beneath a rooftop —
+     perf_period, the two metric tables, rooftop_product — cascades. */
   const { data: oldRoof } = await sb.from("rooftop").select("id").like("name", `${TAG}%`);
   for (const r of (oldRoof ?? []) as { id: string }[]) {
-    await sb.from("advisor_op_metric").delete().eq("rooftop_id", r.id);
-    await sb.from("advisor_period_total_src").delete().eq("rooftop_id", r.id);
-    await sb.from("perf_period").delete().eq("rooftop_id", r.id);
-    await sb.from("rooftop_product").delete().eq("rooftop_id", r.id);
-    await sb.from("rooftop").delete().eq("id", r.id);
+    note("app_event", (await sb.from("app_event").delete().eq("rooftop_id", r.id)).error);
+    note("rooftop", (await sb.from("rooftop").delete().eq("id", r.id)).error);
   }
-  await sb.from("org").delete().like("name", `${TAG}%`);
-  await sb.from("course").delete().like("name", `${TAG}%`);
-  await sb.from("op_code_family").delete().like("note", `${TAG}%`);
-  await sb.from("op_code_catalog").delete().like("name", `${TAG}%`);
-  await sb.from("service_line").delete().like("description", `${TAG}%`);
+  note("org", (await sb.from("org").delete().like("name", `${TAG}%`)).error);
+
+  /* ---- the op codes ----------------------------------------------------- */
+  /* op_code_family is NO ACTION against the catalog, so it goes first. */
+  note("op_code_family", (await sb.from("op_code_family").delete().like("note", `${TAG}%`)).error);
+  note(
+    "op_code_catalog",
+    (await sb.from("op_code_catalog").delete().like("name", `${TAG}%`)).error
+  );
+  note(
+    "service_line",
+    (await sb.from("service_line").delete().like("description", `${TAG}%`)).error
+  );
+
+  /* ---- AND PROVE IT WIPED ----------------------------------------------- *
+
+     The refusals above are only the ones we know the names of. This is the
+     half that catches the next one: count what still answers to `shot%` and
+     refuse to rebuild on top of it.
+
+     It matters that this runs even when nothing reported an error, because a
+     delete that matched no rows and a delete that was never reached look
+     identical from the outside — and rebuilding over a survivor is how the
+     original `Cannot read properties of null` happened. A fixture that cannot
+     start clean must say so and stop, not produce a half-fixture and a
+     confusing crash. */
+  for (const [table, column] of [
+    ["app_user", "full_name"],
+    ["content", "title"],
+    ["course", "name"],
+    ["rooftop", "name"],
+    ["org", "name"],
+    ["op_code_catalog", "name"],
+    ["op_code_family", "note"],
+    ["service_line", "description"],
+  ] as const) {
+    const { count, error } = await sb
+      .from(table)
+      .select("*", { count: "exact", head: true })
+      .like(column, `${TAG}%`);
+    if (error) note(`${table} (survivor count)`, error);
+    else if (count) fails.push(`${table}: ${count} row(s) matching "${TAG}%" survived the wipe`);
+  }
+
+  if (fails.length > 0) {
+    console.error(`\n  THE WIPE DID NOT FINISH. Nothing has been rebuilt.\n`);
+    for (const f of fails) console.error(`    ${f}`);
+    console.error(
+      `\n  Each line names a table that still holds a previous run. Clear it,` +
+        `\n  or add its edge to the wipe above, then run this again.\n`
+    );
+    process.exit(1);
+  }
 
   /* ---- the store ------------------------------------------------------- */
   const org = (await sb.from("org").insert({ name: `${TAG} Group` }).select("id").single()).data!;
@@ -286,6 +403,33 @@ async function main() {
       active: true,
       op_code_id: opId,
     });
+    /*
+     * A SCHEDULE, OR THE ADVISOR NEVER REACHES THE LOOP.
+     *
+     * app/(app)/layout.tsx redirects anyone without a `work_schedule` row to
+     * /onboarding, so until this existed the three advisors this script
+     * announces as ready could not open /today at all — whoever used them had
+     * to write the row by hand, and the only clue was a redirect that looks
+     * exactly like a broken session cookie.
+     *
+     * Mon–Fri with no Saturday, so "today" is a work day for five days in
+     * seven. On a Saturday or Sunday /today is a rest card, correctly, and the
+     * loop is one tap behind "Take today's rep anyway".
+     */
+    await sb.from("work_schedule").upsert(
+      {
+        user_id: id,
+        works_mon: true,
+        works_tue: true,
+        works_wed: true,
+        works_thu: true,
+        works_fri: true,
+        saturday_mode: "none",
+        schedule_set_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
     /* A streak already running, so the celebration is not day one. */
     await sb.from("swell").upsert(
       {
