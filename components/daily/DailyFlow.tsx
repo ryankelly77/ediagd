@@ -1829,7 +1829,23 @@ function CelebrationStep({
           : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 
     return (
-      <section className="flex flex-1 flex-col justify-center">
+      /*
+       * THROUGH THE SHELL, FOR THE SAME REASON THE PAYOFF IS.
+       *
+       * This returned a bare <section> into PhoneScreen's column, which is
+       * the omission the celebration below had fixed and these two fallbacks
+       * did not: no px-5, so the full-width button ran edge to edge against
+       * the glass while every other step of the ritual sat inset — and, worse,
+       * NO SCROLLER AT ALL. The column is `flex-1 min-h-0` inside an
+       * `h-dvh overflow-hidden` shell, so a card that outgrew the viewport had
+       * nowhere to go: at large Dynamic Type the heading, the reason and the
+       * button that is the only way out were simply unreachable.
+       *
+       * A refusal screen is exactly the one an advisor meets on a bad morning
+       * and exactly the one that must not trap them.
+       */
+      <PhoneScreen.Body centre>
+      <section>
         <div className="rounded-card border border-line bg-surface-card p-6">
           <p className="text-base font-extrabold text-navy">
             {gated
@@ -1877,12 +1893,18 @@ function CelebrationStep({
           </button>
         )}
       </section>
+      </PhoneScreen.Body>
     );
   }
 
   if (!result) {
     return (
-      <section className="flex flex-1 flex-col items-center justify-center">
+      /* Through the shell too — see the refusal above. The sun and its one
+         line fit any text size, so this is the quieter half of the same
+         change; what it buys is that all three states of this step now sit in
+         the same box, and none of them can grow out of it. */
+      <PhoneScreen.Body centre>
+      <section className="flex flex-col items-center">
         <div
           aria-hidden="true"
           className="ediagd-sun h-20 w-20 rounded-pill"
@@ -1905,6 +1927,7 @@ function CelebrationStep({
           }
         `}</style>
       </section>
+      </PhoneScreen.Body>
     );
   }
 
