@@ -104,6 +104,7 @@
     "accept:certification": "rm -rf .tmp-acc && tsc -p scripts/tsconfig.acceptance.json && mkdir -p .tmp-acc/node_modules/server-only && echo \"module.exports={};\" > .tmp-acc/node_modules/server-only/index.js && ln -sfn .. .tmp-acc/node_modules/@ && node .tmp-acc/scripts/certification-acceptance.js",
     "report:certifications": "rm -rf .tmp-cpl && tsc scripts/certification-punch-list.ts --outDir .tmp-cpl --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-cpl/certification-punch-list.js",
     "accept:focus-family": "rm -rf .tmp-ff && tsc -p scripts/tsconfig.focusfamily.json && node .tmp-ff/focus-family-acceptance.js",
+    "accept:catalog-read": "rm -rf .tmp-cra && tsc -p scripts/tsconfig.catalogread.json && node .tmp-cra/catalog-read-acceptance.js",
     "accept:loop": "rm -rf .tmp-loop && tsc -p scripts/tsconfig.loop.json && mkdir -p .tmp-loop/node_modules/server-only && echo \"module.exports={};\" > .tmp-loop/node_modules/server-only/index.js && ln -sfn .. .tmp-loop/node_modules/@ && node .tmp-loop/scripts/loop-acceptance.js",
     "fixture:loop": "rm -rf .tmp-shot && tsc -p scripts/tsconfig.shotfixture.json && node .tmp-shot/loop-screenshot-fixture.js",
     "accept:family": "rm -rf .tmp-fam && tsc -p scripts/tsconfig.family.json && mkdir -p .tmp-fam/node_modules/server-only && echo \"module.exports={};\" > .tmp-fam/node_modules/server-only/index.js && ln -sfn .. .tmp-fam/node_modules/@ && node .tmp-fam/scripts/family-acceptance.js",
@@ -148,6 +149,7 @@
     "diag:menus-trace": "rm -rf .tmp-vmt && tsc -p scripts/tsconfig.menustrace.json && mkdir -p .tmp-vmt/node_modules && ln -sfn .. .tmp-vmt/node_modules/@ && node .tmp-vmt/valerie-menus-trace.js",
     "test:quiz-gate": "rm -rf .tmp-qg && tsc -p scripts/tsconfig.quizgate.json && mkdir -p .tmp-qg/node_modules && ln -sfn .. .tmp-qg/node_modules/@ && node .tmp-qg/scripts/quiz-gate-scenarios.js",
     "test:rooftop-choice": "rm -rf .tmp-rfc && tsc -p scripts/tsconfig.rooftopchoice.json && mkdir -p .tmp-rfc/node_modules && ln -sfn .. .tmp-rfc/node_modules/@ && node .tmp-rfc/scripts/rooftop-choice-scenarios.js",
+    "test:deploy-env": "rm -rf .tmp-dpe && tsc -p scripts/tsconfig.deployenv.json && mkdir -p .tmp-dpe/node_modules && ln -sfn .. .tmp-dpe/node_modules/@ && node .tmp-dpe/scripts/deploy-env-scenarios.js",
     "fixture:valerie": "rm -rf .tmp-vsh && tsc -p scripts/tsconfig.valerieshot.json && mkdir -p .tmp-vsh/node_modules && ln -sfn .. .tmp-vsh/node_modules/@ && node .tmp-vsh/valerie-screenshot-fixture.js"
   },
   "dependencies": {
