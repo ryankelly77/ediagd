@@ -467,3 +467,174 @@ alone for fourteen retires until 0134 added `retired_reason`.
 
 Not fixed here — it is a schema change, and it wants doing once for every
 deactivation path rather than bolted onto this one.
+
+---
+
+# Rulings applied, 12 November 2026
+
+**Ryan, 12 November**, in three instructions across one session:
+
+> *"stop reporting the 6 DMS advisors with no account. all of these people
+> stopped writing, so they must have left the company"*
+>
+> *"amanda HAS moved to internal advisor, and the data we pull doesn't get her
+> numbers. valerie may have also stopped writing as the manager, but she is
+> getting training and will soon get manager training"*
+>
+> *"do not include test advisors in the daily loop or progress"*
+
+All writes read-only-verified before and after. Nothing was deleted.
+
+## 1 · Eight DMS operators marked departed
+
+`set_advisor_departed(rooftop, op_code, departed_on, note)` — the function the
+roster already has, so the reason lands in the row rather than in a thread.
+
+| op | | departed_on | lifetime ROs |
+|---|---|---|---|
+| 733 | Danna, Anthony | 2026-08-17 | 7 |
+| 623 | Anthony, Jerry | 2026-08-05 | 4 |
+| 335 | Pickett, Kenny | 2026-07-31 | 0 |
+| 530094 | Glasser, Sarah | 2026-07-25 | 2,000 |
+| 901505 | Baldwin, Chris | 2026-07-08 | 610 |
+| 530059 | Fricano, David | 2026-03-27 | 930 |
+| 530084 | Herrera, Leonardo | 2026-02-28 | 1,093 |
+| 901595 | Van Metre, Derek | 2026-01-17 | 575 |
+
+**Each date is the operator's last day in an import file, not the day this was
+recorded.** A departure stamped "today" would say when somebody noticed rather
+than when the person left, and the gap between those is up to ten months here.
+
+Roster seats at Beaumont: **14 → 6**, which is now exactly the six advisors
+with an app account.
+
+### The two the note had to carry
+
+- **Fricano 530059** also traded at **Doggett Honda of Beaumont** (147 ROs, to
+  2025-04-21). He has moved rooftops before, so "left Beaumont Ford" and "left
+  the company" are not the same event for him. Marked departed *from this
+  rooftop*, which is what the column means.
+- **Pickett 335** has **335 raw import rows through 31 July** and **zero**
+  advisor-total rows, ever. By one table he never wrote an RO; by the other he
+  was in the file all year. Marked departed on the file date.
+
+### `departed_by` is null on all eight, and that is a gap
+
+`set_advisor_departed` fills it from `auth.uid()`, and a service-role call over
+PostgREST has no `auth.uid()`. So the row records **when** and **why** but not
+**who**. The attribution is in `departed_note` instead — the same half-measure
+the October entry above complains about for `membership`, now visible on the
+path that was supposed to be the good example.
+
+## 2 · Test Advisor deactivated
+
+Flagged on 5 October (*"it is one of the nine the Rollcall and the Slack post
+count as an advisor"*) and again on 20 October (*"still counted as advisors by
+the Rollcall and the Slack post"*). **Neither ruling covered it**, so it ran for
+six weeks after first being named.
+
+```
+app_user    32b7c1cb  "Test Advisor"  created 2026-10-01
+membership  advisor · op_code_id NULL · Beaumont  ->  active = false
+history     0 mornings · 0 content_progress · 0 module_completion
+            (7 app_event, 2 watch_gate — kept)
+```
+
+Deactivation rather than a code filter, because `app/(app)/layout.tsx` and every
+roster and progress query already gate on `membership.active`, and because
+matching a name like "Test" in code is the thing AGENTS.md forbids outright.
+
+**It was not a harmless passenger.** The team certification meter read **17%**
+with it and **20%** without — an account that can never progress was dragging
+the store's number down by three points, on the one line of the post a manager
+reads as the headline.
+
+## 3 · Amanda Tiner and Valerie Patterson — explicitly NOT departed
+
+- **Tiner 500573** has moved to **internal advisor**. The export we pull is
+  *Key Maintenance Sales*, which is customer-pay retail, so her work is
+  structurally invisible to it. Her last row is 2026-09-03 and she is employed,
+  working, and doing her mornings. **A quiet book is not a departure.**
+- **Patterson 500570** may have stopped writing as the manager; she is in
+  training and manager training is coming.
+
+Both are the standing counter-example to the inference applied in §1: at this
+rooftop, "stopped writing" has meant "left" eight times and "changed roles"
+twice, and nothing in the data distinguishes the two cases.
+
+## 4 · What the post reads now
+
+```
+before   4 of 8 did their morning · 17% · "6 DMS advisors still have no account"
+         ⚠ Test Advisor: more in-morning lesson events than mornings
+after    6 of 7 did their morning · 20% · no footer clause, no warning
+```
+
+The "no account" clause is gone **because the arithmetic resolved, not because
+it was removed** — `rosterSeats (6) − active advisor memberships (7)` is
+negative, so `Math.max(0, …)` prints nothing. The check is still live and will
+speak up the first time Doggett hires an advisor who has no login.
+
+### That clause never counted what it said
+
+`unprovisioned = rosterSeats − total` subtracts **app memberships** from **DMS
+operators**, which are not the same population. On 11 November it printed
+**6** while the true number of DMS advisors with no account was **8** — two
+memberships with no op code (Test Advisor, and Reck's advisor row) were
+cancelling two real gaps. Worth fixing properly: the number wanted is
+`roster seats not matched by an active membership's op_code_id`, counted
+directly rather than inferred from a difference.
+
+## 5 · Still open
+
+- **Reck's advisor row** is the remaining membership with no op code, and still
+  inflates the denominator — he also picked up an `admin` role on 10 November,
+  so he now holds three.
+- **Demo Advisor was unmapped from op 400025 — done, 12 November.** It carried
+  `op_code_id = 400025`, which is **Hill, Teroneka (400025)**, a real and still
+  active advisor (last RO 2026-11-10) with no account of her own. Two writes,
+  because one would have been cosmetic:
+
+  ```
+  membership.op_code_id        400025 -> NULL
+  advisor_focus_family         "Belts & Cooling" (derived, 20 Sep) -> ended_on 2026-11-12
+  ```
+
+  **Clearing the op code alone does not stop it reading her book.** The focus
+  family is a separate row and the loop reads the row, not the mapping — so a
+  demo would have gone on serving a family derived from Teroneka's repair
+  orders with the mapping already gone. The ended row keeps its note saying
+  where the family came from. Her roster row was not touched.
+
+  Consequence worth knowing: a demo now gets a **two-slot morning**, because a
+  pitch needs a book and this account no longer has one. If demos need to show
+  the full three-slot ritual, the answer is a demo rooftop with synthetic data,
+  not a live advisor's numbers.
+
+- **Demo Manager and Demo Technician** at the same rooftop are still active and
+  still counted in that rooftop's roster and progress. Neither carries an op
+  code, so neither reads anybody's book.
+
+- **Four accounts still point at an operator whose name is not theirs**, and
+  these are probably all deliberate rather than defects — staff and review
+  accounts given a real book so the screens have real numbers in them:
+
+  | account | op | reads the book of | rooftop |
+  |---|---|---|---|
+  | App Review | 500242 | Williams, Gwendolyn | Doggett Ford |
+  | Mitch Hardt | 671 | Helton, Erin | Doggett CDJR |
+  | Ryan Kelly | 35122 | Esparza, David | Doggett CDJR |
+  | Tracie Mendoza | 626 | Nguyen, Thomas | Doggett Honda Med Center |
+
+  Deliberate or not, each one renders a real person's attach rates under the
+  word **"Your"**, and none of those four people has an account that would show
+  them the same figures. Worth a decision rather than a drift.
+
+  **`dms_advisor.linked_user_id` is not the check for this.** It is NULL for
+  ten of the eleven mapped memberships, including every genuine one — Abate,
+  Booker, Sztaba, Upshaw, Patterson. The live link is `membership.op_code_id`;
+  `linked_user_id` is set on exactly one row (Tiner) and means nothing
+  elsewhere. Any audit keyed on it reports the whole store as unlinked.
+
+- **Nothing distinguishes an internal advisor from a departure** in the data.
+  §3 is handled by Valerie saying so out loud; the next one will not be.
