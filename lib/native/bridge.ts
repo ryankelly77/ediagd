@@ -232,6 +232,52 @@ export async function handleAppLinks(onOpen: Navigate): Promise<() => void> {
   return () => { void sub.remove(); };
 }
 
+/* ---- The Android back button ---------------------------------------------- */
+
+/**
+ * ANDROID CANNOT LEAVE THIS APP WITHOUT THIS LISTENER.
+ *
+ * Capacitor's App plugin installs an OnBackPressedCallback that is enabled for
+ * the life of the activity, and its default branch is:
+ *
+ *     if (!hasListeners(EVENT_BACK_BUTTON)) {
+ *         if (bridge.getWebView().canGoBack()) {
+ *             bridge.getWebView().goBack();
+ *         }
+ *     }                                   <- no else. Nothing happens.
+ *
+ * There is no `finish()` and the callback never disables itself, so once the
+ * webview is at the root of its history every back press is swallowed. Measured
+ * on an API 36 emulator against the 1.0.0 bundle: back correctly returned from
+ * /login to the landing page, and then SEVEN further presses — including one on
+ * a cold launch with a single history entry — left the app resumed and on
+ * screen. The only way out was the home gesture.
+ *
+ * Registering a listener moves execution to the other branch, which hands the
+ * decision to us. So this owns BOTH halves from here on: go back while there is
+ * somewhere to go, and exit when there is not. Half of it is not an improvement
+ * — a listener that only handles the going-back case reproduces the same trap.
+ *
+ * iOS has no back button and never fires this. No-op in a browser, like
+ * everything else in this file.
+ */
+export async function handleBackButton(): Promise<() => void> {
+  if (!(await isNative())) return () => {};
+  const { App } = await import("@capacitor/app");
+
+  const sub = await App.addListener("backButton", ({ canGoBack }) => {
+    if (canGoBack) {
+      window.history.back();
+    } else {
+      /* The home screen, or any screen reached without pushing history. The
+         person asked to leave; leaving is the honest answer. */
+      void App.exitApp();
+    }
+  });
+
+  return () => { void sub.remove(); };
+}
+
 /* ---- Chrome -------------------------------------------------------------- */
 
 export async function readyShell(): Promise<void> {

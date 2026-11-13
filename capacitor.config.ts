@@ -59,6 +59,27 @@ const config: CapacitorConfig = {
   server: {
     url: APP_URL,
     /*
+     * WITHOUT THIS LINE native/www/index.html IS NEVER SHOWN.
+     *
+     * The page was bundled, shipped and unreachable. Capacitor only substitutes
+     * a local page on a load failure when `errorPath` names one; with it unset
+     * the webview renders Chrome's own "Webpage not available /
+     * net::ERR_INTERNET_DISCONNECTED" instead — which on this app is black
+     * system text on the navy background, so it is barely legible as well as
+     * being the wrong words. Observed on an API 36 emulator in airplane mode:
+     * the browser error, not "No signal right now".
+     *
+     * The comment at the top of this file has said "offline fallback shown when
+     * the device has no network" since the shell was written. It described what
+     * the file was for and not what the shell did with it, which is the exact
+     * shape AGENTS.md calls a label that is not evidence of what is behind it.
+     *
+     * NOT AN ANDROID FIX. `errorPath` is a cross-platform server option, so the
+     * same page was unreachable on iOS through all twelve TestFlight builds.
+     * iOS picks this up on its next build; nothing else about it changes.
+     */
+    errorPath: "index.html",
+    /*
      * The webview will not load http:// in release builds, and should not.
      * Left explicit so nobody "fixes" a local-dev problem by turning it on.
      */
