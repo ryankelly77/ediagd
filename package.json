@@ -46,7 +46,7 @@
     "export-catalog": "rm -rf .tmp-cat && tsc scripts/export-catalog.ts --outDir .tmp-cat --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-cat/scripts/export-catalog.js",
     "preview:push": "rm -rf .tmp-push && tsc scripts/preview-push.ts --outDir .tmp-push --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck && node .tmp-push/scripts/preview-push.js",
     "native:sync": "bash scripts/native-sync.sh",
-    "native:add": "npx cap add ios && npx cap add android && bash scripts/native-sync.sh",
+    "native:add": "bash scripts/native-add.sh",
     "native:open:ios": "npx cap open ios",
     "native:open:android": "npx cap open android",
     "derive:vertical": "rm -rf .tmp-dv && tsc scripts/derive-vertical.ts scripts/trim-check.ts --outDir .tmp-dv --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --resolveJsonModule && node .tmp-dv/derive-vertical.js",
