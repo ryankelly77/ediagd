@@ -280,9 +280,20 @@ async function doFilm(w) {
      below asked for captions with `generated_subtitles` at the TOP LEVEL of
      new_asset_settings, where Mux accepts the request, creates the asset and
      silently generates nothing. That is how 256 masters and 261 verticals
-     lost their captions without one error. sync-finish.mjs had it inside
-     `inputs[0]` and kept its own. The shared cutter has it inside inputs[0],
-     so every caller gets the half this copy had lost. */
+     lost their captions without one error.
+
+     CORRECTED 12 NOVEMBER. This comment used to end "sync-finish.mjs had it
+     inside `inputs[0]` and kept its own." That was FALSE, and it was the
+     sentence that kept the defect buried: a reader who came here looking for
+     the other copies was told the other script was already fine. It was not.
+     sync-finish.mjs had the top-level form in phases 2 and 3, and phase 5 —
+     the VERTICAL, the cut a phone actually plays — asked for captions not at
+     all. Both are fixed by routing its uploads through uploadAsNewAsset.
+
+     A comment asserting that a sibling is healthy is a claim about code this
+     file cannot see, and it ages the moment either side moves. The shared
+     cutter has it inside inputs[0]; that is the fact this file can vouch for,
+     and it is the only one it now states. */
   const cut = await cutAndUpload({
     master, start, duration: dur,
     out: `${W}/sr_cut.mp4`,
