@@ -36,6 +36,11 @@ import { readFileSync, writeFileSync, existsSync, appendFileSync, readdirSync, u
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import crypto from "node:crypto";
+/* THE ONE CUTTER. Phases 2, 3 and 5 each carried a paraphrase of the cut and
+   the upload; the upload copies are what silently dropped captions. The cut
+   is shared where the shape allows it (phase 3, a plain window) and the
+   UPLOAD is shared everywhere, because that is where the defect lived. */
+import { cutAndUpload, uploadAsNewAsset } from "../lib/video/cut-master.mjs";
 
 const ROOT = "/Users/ryankelly/ediagd";
 for (const l of readFileSync(`${ROOT}/.env.local`, "utf8").split("\n")) {
@@ -188,6 +193,56 @@ const measure       = (m, pb, tag) => measureWith("sync-instrument.py", m, pb, t
 const measureMaster = (m, pb, tag) => measureWith("sync-master-align.py", m, pb, tag);
 const passes = (r) => r.status === "ok" && Math.abs(r.offset_ms) <= GATE.offset;
 
+/* NO ASSET IS SWAPPED IN, AND NO VERTICAL IS MARKED READY, WITHOUT CAPTIONS.
+   The sync gate measured picture against sound and had nothing to say about a
+   missing text track, so 256 masters and 261 verticals shipped silently
+   without one.
+
+   REQUESTED AND ACCEPTED, NOT FINISHED. Mux reports a generated track as
+   `preparing` for minutes after the asset is ready; waiting for `ready` would
+   block every swap behind a transcription queue. The test is that a track is
+   present and not errored. */
+const hasCaptionTrack = (asset) =>
+  ((asset?.tracks) ?? []).some((t) => t.type === "text" && /en/i.test(t.language_code || "") && t.status !== "errored");
+
+/* ---- AND IT NEVER REFUSES ON THE FIRST LOOK ------------------------------
+
+   The obvious way to write this gate is `if (!hasCaptionTrack(asset)) fail`,
+   read once off the asset the upload returned. That is a race in shape even
+   where it is not one in fact: the asset object is a snapshot, and a gate that
+   reads a snapshot once cannot tell "no captions were requested" from "the
+   list has not caught up yet". The first is a defect to refuse; the second is
+   a few hundred milliseconds.
+
+   MEASURED BEFORE IT WAS WRITTEN, 12 November, against real Mux:
+
+     20 s clip    asset ready at  2.7 s   text track listed at  2.7 s   gap 0.0 s
+     200 s clip   asset ready at 19.1 s   text track listed at 19.1 s   gap 0.0 s
+
+   Both listed `status=preparing`, `text_source=generated_vod`, in the same
+   response that first said `ready`. So the race does not occur today: a
+   single look would have passed both. The waiting is kept anyway, because two
+   assets are evidence about two assets, it costs one API call when the track
+   is already there — which both probes say is always — and the failure it
+   prevents is refusing a sound film for a list that was a second behind.
+
+   CEILING 90 s, polled every 3 s. That is thirty looks against an observed
+   latency of zero, and it is bounded, so a genuinely caption-less asset is
+   still refused rather than hanging the run. */
+const CAPTION_WAIT = { ceilingMs: 90_000, pollMs: 3_000 };
+
+async function awaitCaptionTrack(assetId, asset) {
+  if (hasCaptionTrack(asset)) return { ok: true, waitedMs: 0, looks: 1 };
+  const t0 = Date.now();
+  for (let looks = 2; Date.now() - t0 < CAPTION_WAIT.ceilingMs; looks++) {
+    await sleep(CAPTION_WAIT.pollMs);
+    const a = await mux(`/assets/${assetId}`).catch(() => null);
+    if (a && hasCaptionTrack(a)) return { ok: true, waitedMs: Date.now() - t0, looks };
+    if (a?.status === "errored") break;
+  }
+  return { ok: false, waitedMs: Date.now() - t0, looks: null };
+}
+
 /* A vertical against its master: same instrument, same judge, master cropped
    to match. The proxy is already 9:16 as Mux serves it, so only the master
    side carries the crop flag. */
@@ -282,6 +337,12 @@ async function phase1() {
         ledger[id] = { phase: 1, done: true, status: "failed-gate", title: c.title, after: re, lengthGot: Number(a.duration) }; save();
         logLine(`FAIL  ${c.title}  before ${v.before?.offset_ms} ms  after ${re.offset_ms ?? re.rejected_offset_ms} ms  method=re-judged  (gate)`); continue;
       }
+      const cap1 = await awaitCaptionTrack(v.newAssetId, a);
+      if (!cap1.ok) {
+        ledger[id] = { phase: 1, done: true, status: "failed-gate", title: c.title, after: re,
+          why: "no English caption track on the new asset", captionWaitMs: cap1.waitedMs }; save();
+        logLine(`FAIL  ${c.title}  ${re.offset_ms} ms but NO CAPTION TRACK after ${(cap1.waitedMs / 1000).toFixed(0)}s — not swapped`); continue;
+      }
       if (!APPLY) { ledger[id] = { phase: 1, status: "dry", after: re, title: c.title }; save(); continue; }
       ledger[id] = { phase: 1, status: "intent", title: c.title, newAssetId: v.newAssetId, oldAssetId: c.mux_asset_id, window: v.window }; save();
       const shifted = await swapIn(c, v.newAssetId, pb, a.duration, v.window ? v.window[0] : 0);
@@ -363,17 +424,21 @@ async function phase2() {
           "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out);
         execFileSync("ffmpeg", args, { stdio: "pipe", maxBuffer: MAXBUF });
 
-        const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
-          new_asset_settings: { playback_policy: ["signed"], video_quality: "basic", passthrough: `sync-recut-${id}`,
-            generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }, cors_origin: "*" }) });
-        execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
-        let aid = null;
-        for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { aid = u.asset_id; break; } await sleep(3000); }
-        let a = null;
-        for (let i = 0; i < 480 && aid; i++) { const x = await mux(`/assets/${aid}`); if (x.status === "ready") { a = x; break; } if (x.status === "errored") break; await sleep(5000); }
+        /* THE CUT IS LOCAL, THE UPLOAD IS SHARED. This attempt cannot use
+           cutFromMaster: the shifted variants are a two-input ffmpeg with
+           -itsoffset and an explicit -map, which the one cutter deliberately
+           does not model. The UPLOAD is the half that carried the caption bug,
+           and that half is now uploadAsNewAsset's and nobody else's. */
+        const { assetId: aid, asset: a } = await uploadAsNewAsset({
+          file: out, passthrough: `sync-recut-${id}`, mux, say: () => {},
+        });
         if (!a) return { assetId: aid, asset: null };
+        /* The caption wait happens ONCE PER ATTEMPT, here, so the three
+           selection tests below read a resolved answer instead of each taking
+           their own snapshot of the same asset. */
+        const cap = await awaitCaptionTrack(aid, a);
         const pb2 = (a.playback_ids ?? [])[0]?.id;
-        return { assetId: aid, asset: a, pb: pb2, after: measure(m, pb2, tag),
+        return { assetId: aid, asset: a, pb: pb2, cap, after: measure(m, pb2, tag),
           lenOk: Math.abs(Number(a.duration) - dur) <= GATE.lengthTol };
       };
 
@@ -381,7 +446,7 @@ async function phase2() {
       ledger[key] = { phase: 2, status: "intent", title: c.title, before, method: "no-shift", oldAssetId: c.mux_asset_id }; save();
       let t1 = await attempt(null, "p2a");
       let chosen = null, method = null;
-      if (t1.asset && passes(t1.after) && t1.lenOk) { chosen = t1; method = "re-cut, no shift"; }
+      if (t1.asset && passes(t1.after) && t1.lenOk && t1.cap?.ok) { chosen = t1; method = "re-cut, no shift"; }
 
       /* ---- attempt 2, only if a residual SURVIVED a clean re-encode ------- */
       let t2 = null, shiftSec = null;
@@ -391,7 +456,8 @@ async function phase2() {
         ledger[key] = { phase: 2, status: "intent", title: c.title, before, firstPass: t1.after,
           method: `audio-shift ${shiftSec}s`, oldAssetId: c.mux_asset_id, strandedAssetId: t1.assetId }; save();
         t2 = await attempt(shiftSec, "p2c");
-        if (t2.asset && passes(t2.after) && t2.lenOk) { chosen = t2; method = `audio-shift ${shiftSec}s`; }
+        if (t2.asset && passes(t2.after) && t2.lenOk && t2.cap?.ok) { chosen = t2; method = `audio-shift ${shiftSec}s`; }
+
       }
 
       if (!chosen) {
@@ -474,22 +540,22 @@ async function phase3() {
       ledger[key] = { phase: 3, group, status: "intent", title: c.title, align: r,
         start: lw.start, oldAssetId: c.mux_asset_id }; save();
 
-      const out = `${W}/p3_cut.mp4`;
-      execFileSync("ffmpeg", ["-nostdin", "-v", "error",
-        "-ss", lw.start.toFixed(3), "-i", m, "-t", dur.toFixed(3),
-        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out], { stdio: "pipe", maxBuffer: MAXBUF });
-
-      const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
-        new_asset_settings: { playback_policy: ["signed"], video_quality: "basic", passthrough: `sync-p3-${id}`,
-          generated_subtitles: [{ language_code: "en", name: "English (auto)" }] }, cors_origin: "*" }) });
-      execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
-      let assetId = null;
-      for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { assetId = u.asset_id; break; } await sleep(3000); }
-      let asset = null;
-      for (let i = 0; i < 480 && assetId; i++) { const a = await mux(`/assets/${assetId}`); if (a.status === "ready") { asset = a; break; } if (a.status === "errored") break; await sleep(5000); }
-      if (!asset) { ledger[key] = { phase: 3, done: true, group, status: "refused", why: "asset not ready", title: c.title, align: r, newAssetId: assetId }; save();
-        logLine(`FAIL  ${c.title}  phase3 refused: asset not ready`); continue; }
+      /* A PLAIN WINDOW CUT, so this one goes through the one cutter whole —
+         the ffmpeg AND the upload. cutFromMaster is the settlement of
+         October's repair (accurate seek before -i, full re-encode of both
+         streams, never from a Mux asset) and this was a paraphrase of it. */
+      const { assetId, asset, why: upWhy } = await cutAndUpload({
+        master: m, start: lw.start, duration: dur, out: `${W}/p3_cut.mp4`,
+        passthrough: `sync-p3-${id}`, mux, say: () => {},
+      });
+      if (!asset) { ledger[key] = { phase: 3, done: true, group, status: "refused", why: upWhy ?? "asset not ready", title: c.title, align: r, newAssetId: assetId }; save();
+        logLine(`FAIL  ${c.title}  phase3 refused: ${upWhy ?? "asset not ready"}`); continue; }
+      const cap3 = await awaitCaptionTrack(assetId, asset);
+      if (!cap3.ok) {
+        ledger[key] = { phase: 3, done: true, group, status: "failed-gate", title: c.title, align: r,
+          newAssetId: assetId, why: "no English caption track on the new asset", captionWaitMs: cap3.waitedMs }; save();
+        logLine(`FAIL  ${c.title}  NO CAPTION TRACK after ${(cap3.waitedMs / 1000).toFixed(0)}s — not swapped`); continue;
+      }
       const pb = (asset.playback_ids ?? [])[0]?.id;
       /* Gated by the SAME instrument that diagnosed it — the correlator still
          cannot read these films after the cut any more than before it. */
@@ -675,15 +741,15 @@ async function phase5() {
         "-vf", "crop=ih*9/16:ih,scale=1080:1920:flags=lanczos", "-c:v", "libx264", "-preset", "medium", "-crf", "20",
         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-y", out],
         { stdio: "pipe", maxBuffer: MAXBUF });
-      const up = await mux("/uploads", { method: "POST", body: JSON.stringify({
-        new_asset_settings: { playback_policy: ["signed"], video_quality: "basic", passthrough: `vertical-${c.id}` }, cors_origin: "*" }) });
-      execFileSync("curl", ["-sS", "--fail", "-X", "PUT", "--upload-file", out, up.url], { stdio: "pipe", maxBuffer: MAXBUF });
-      let assetId = null;
-      for (let i = 0; i < 100; i++) { const u = await mux(`/uploads/${up.id}`); if (u.asset_id) { assetId = u.asset_id; break; } await sleep(3000); }
-      let asset = null;
-      for (let i = 0; i < 480 && assetId; i++) { const a = await mux(`/assets/${assetId}`); if (a.status === "ready") { asset = a; break; } if (a.status === "errored") break; await sleep(5000); }
-      if (!asset) { ledger[key] = { phase: 5, done: true, status: "refused", why: "vertical asset not ready", title: c.title, newAssetId: assetId }; save();
-        logLine(`FAIL  ${c.title}  vertical refused: not ready`); return; }
+      /* THE CROP IS LOCAL, THE UPLOAD IS SHARED. cutFromMaster models a window,
+         not a 9:16 crop, so the ffmpeg above stays here. The upload is where
+         this phase asked for NO CAPTIONS AT ALL — and a phone plays the
+         vertical, so it was the cut most in need of them. */
+      const { assetId, asset, why: upWhy } = await uploadAsNewAsset({
+        file: out, passthrough: `vertical-${c.id}`, mux, say: () => {},
+      });
+      if (!asset) { ledger[key] = { phase: 5, done: true, status: "refused", why: upWhy ?? "vertical asset not ready", title: c.title, newAssetId: assetId }; save();
+        logLine(`FAIL  ${c.title}  vertical refused: ${upWhy ?? "not ready"}`); return; }
       const pb = (asset.playback_ids ?? [])[0]?.id;
       /* THE SYNC GATE ON THE VERTICAL ITSELF, before it is marked ready —
          crop mode, so the master it is judged against is the same picture. */
@@ -697,6 +763,12 @@ async function phase5() {
         ledger[key] = { phase: 5, done: true, status: "failed-gate", title: c.title, after: r,
           newAssetId: assetId, start, vertDur, landDur, lenOk }; save();
         logLine(`FAIL  ${c.title}  vertical ${r.offset_ms ?? r.rejected_offset_ms} ms  len ${vertDur.toFixed(2)}/${landDur.toFixed(2)}s${lenOk ? "" : " LENGTH"}  NOT marked ready`); return;
+      }
+      const cap5 = await awaitCaptionTrack(assetId, asset);
+      if (!cap5.ok) {
+        ledger[key] = { phase: 5, done: true, status: "failed-gate", title: c.title, after: r,
+          why: "no English caption track on the vertical", captionWaitMs: cap5.waitedMs }; save();
+        logLine(`FAIL  ${c.title}  vertical ${r.offset_ms} ms but NO CAPTION TRACK after ${(cap5.waitedMs / 1000).toFixed(0)}s — not marked ready`); return;
       }
       const { error } = await sb.from("content").update({
         vertical_playback_id: pb, vertical_asset_id: assetId, vertical_status: "ready",
