@@ -1,0 +1,650 @@
+[
+ {
+  "key": "p2:c18f52fd-8e05-4113-9e7f-eaac21f92df6",
+  "phase": "p2",
+  "title": "Piggyback",
+  "status": "failed-gate",
+  "newAssetId": "tsHdmqXOWqYzHje8txXDcX00xQHGTsPnh8NVDx3ySEYA",
+  "action": "deleted",
+  "passthrough": "sync-shift-c18f52fd-8e05-4113-9e7f-eaac21f92df6"
+ },
+ {
+  "key": "p2:6aa81f6e-f060-45d5-aff6-b588ca4fb25c",
+  "phase": "p2",
+  "title": "On the Drive",
+  "status": "failed-gate",
+  "newAssetId": "4LXXKUcJMX02nu1ywfSw24UUxzo9W5Z4LK01yeMBUJJxE",
+  "action": "deleted",
+  "passthrough": "sync-shift-6aa81f6e-f060-45d5-aff6-b588ca4fb25c"
+ },
+ {
+  "key": "p5:76dfe519-6c42-4eee-a1d3-e5122a6aae9c",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 6, Step 5, Washer Fluid",
+  "status": "failed-gate",
+  "newAssetId": "003MJMSmJAaim5bGQf9861mD801joRdllNM8DXgw9HhgE",
+  "action": "deleted",
+  "passthrough": "vertical-76dfe519-6c42-4eee-a1d3-e5122a6aae9c"
+ },
+ {
+  "key": "p5:b3d690cd-f9d1-4a5d-be33-c234d2c74fce",
+  "phase": "p5",
+  "title": "Two Minute Walk-Around, Part 2, 4 things under the hood",
+  "status": "failed-gate",
+  "newAssetId": "aw01LJ2znNogC5fZFsW4G01tijSwzOrdklfkiAI3pnC028",
+  "action": "deleted",
+  "passthrough": "vertical-b3d690cd-f9d1-4a5d-be33-c234d2c74fce"
+ },
+ {
+  "key": "p5:4a7b6ae9-df0e-4563-8d5d-6c259d0aede8",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 3, Steps 1 and 2, Are You Here to See Anyone",
+  "status": "failed-gate",
+  "newAssetId": "yDjUitE7NU4sO00lWRITq6KoWT01V00Ry3Gh28r8uEsnx8",
+  "action": "deleted",
+  "passthrough": "vertical-4a7b6ae9-df0e-4563-8d5d-6c259d0aede8"
+ },
+ {
+  "key": "p5:2d1b4feb-c002-4aa9-8b10-c01a2cfb992e",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 4, Step 3, Start It",
+  "status": "failed-gate",
+  "newAssetId": "xdqCMfwLSSHIOM7tEbtyHMlc4iW4suTl01alvC8Z00E6o",
+  "action": "deleted",
+  "passthrough": "vertical-2d1b4feb-c002-4aa9-8b10-c01a2cfb992e"
+ },
+ {
+  "key": "p5:2b05500d-4be0-474c-9879-90d7cd7ce9ec",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 2, Four Goals, Two Words",
+  "status": "failed-gate",
+  "newAssetId": "5ZGFBbEvcM7LlrX2zJL01017Zs3X02iaZMHjRCQp4M939Y",
+  "action": "deleted",
+  "passthrough": "vertical-2b05500d-4be0-474c-9879-90d7cd7ce9ec"
+ },
+ {
+  "key": "p5:6ce14ce1-e330-4b60-a67b-bbdd8d5e886a",
+  "phase": "p5",
+  "title": "The Four Minute Walk-Around, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "sSotfWKobFrFFiJYNbj65vNKrCBV028MJs02Z02GwL0248w",
+  "action": "deleted",
+  "passthrough": "vertical-6ce14ce1-e330-4b60-a67b-bbdd8d5e886a"
+ },
+ {
+  "key": "p5:ee8551f3-c0af-4345-8dc1-5c2e7d092a65",
+  "phase": "p5",
+  "title": "Two Minute Walk-Around, Part 1, Pop the Hood",
+  "status": "failed-gate",
+  "newAssetId": "d600NPruEOi3jQC8raGgVLqu00U7N7lqgDpPeTp33HKNU",
+  "action": "deleted",
+  "passthrough": "vertical-ee8551f3-c0af-4345-8dc1-5c2e7d092a65"
+ },
+ {
+  "key": "p5:f9f0edc7-cf89-4c06-83cd-07e3d7081d51",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 5, Step 4, Wheels to the Left",
+  "status": "failed-gate",
+  "newAssetId": "zYs6Hvv2pE013PdSZTdrImBskq01N5801e01Ub3OwvCeA8g",
+  "action": "deleted",
+  "passthrough": "vertical-f9f0edc7-cf89-4c06-83cd-07e3d7081d51"
+ },
+ {
+  "key": "p5:fe74e7f0-ae86-40c4-9550-fe3cbd0435e7",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 7, The Four Step Close",
+  "status": "failed-gate",
+  "newAssetId": "Lk2zszIsHOsBxtYAVqcG1TKHI1lS85Tj02ir5YfUnQvs",
+  "action": "deleted",
+  "passthrough": "vertical-fe74e7f0-ae86-40c4-9550-fe3cbd0435e7"
+ },
+ {
+  "key": "p5:2649e577-c010-4044-add6-25f4c30943bd",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 1, Before You Go Outside",
+  "status": "failed-gate",
+  "newAssetId": "lppeX8P4SwmlKt6luFBNhN024O1EPN2QFVe0102nd00A9Vw",
+  "action": "deleted",
+  "passthrough": "vertical-2649e577-c010-4044-add6-25f4c30943bd"
+ },
+ {
+  "key": "p5:42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05",
+  "phase": "p5",
+  "title": "The Four Minute Walk-Around, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "ptgw5ft4Yu3N0200mv2vRi9JmPQEK3rDMWF9CeNr00fQhE",
+  "action": "deleted",
+  "passthrough": "vertical-42aadd23-5e6f-4fcf-b4b5-c2d8d4f85d05"
+ },
+ {
+  "key": "p5:e119d101-da7a-4fd3-a51d-c971e83acd4c",
+  "phase": "p5",
+  "title": "The Four Minute Walk-Around, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "szyjcThibx01nOcAbJCB9Vj16PfTWMCQnTyGpHLHorIU",
+  "action": "deleted",
+  "passthrough": "vertical-e119d101-da7a-4fd3-a51d-c971e83acd4c"
+ },
+ {
+  "key": "p5:4fe0f497-9572-408f-a7ee-445770e5f7fa",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 8, Step 6 and 7, Miles, Shut It Off and Tires",
+  "status": "failed-gate",
+  "newAssetId": "ARbEK7h8lqVw3OoWa9Msp006AfWEn3W5cmFccQbBTmV8",
+  "action": "deleted",
+  "passthrough": "vertical-4fe0f497-9572-408f-a7ee-445770e5f7fa"
+ },
+ {
+  "key": "p5:248b1fd4-b0a9-4e52-9655-cd5e05c3ef86",
+  "phase": "p5",
+  "title": "30 Second Walk-Around, Part 9, 42 seconds",
+  "status": "failed-gate",
+  "newAssetId": "HBnVzI021odINxcF9mL90134jRkWDFpNa3dLBw8drRp3U",
+  "action": "deleted",
+  "passthrough": "vertical-248b1fd4-b0a9-4e52-9655-cd5e05c3ef86"
+ },
+ {
+  "key": "p5:215e08e5-3cde-4c4e-928a-bf77bc79df3e",
+  "phase": "p5",
+  "title": "MPI Setup — Coolant Hoses",
+  "status": "failed-gate",
+  "newAssetId": "OWV9wtTz4Xqbdj42AE0171nhNmrrtk8dZGGI01knThLKM",
+  "action": "deleted",
+  "passthrough": "vertical-215e08e5-3cde-4c4e-928a-bf77bc79df3e"
+ },
+ {
+  "key": "p5:19a689c4-faea-49d0-9a0f-1234e095ae4a",
+  "phase": "p5",
+  "title": "MPI Setup — Serpentine Belt",
+  "status": "failed-gate",
+  "newAssetId": "Q9b6mp7x9MDJO01tOjcdBgfAOQq3qKCAeYwsPW9RskfM",
+  "action": "deleted",
+  "passthrough": "vertical-19a689c4-faea-49d0-9a0f-1234e095ae4a"
+ },
+ {
+  "key": "p5:d8fe0772-213c-47b2-acbb-48882abdea8e",
+  "phase": "p5",
+  "title": "MPI Setup — Spark Plugs",
+  "status": "failed-gate",
+  "newAssetId": "q01hgcOsR4An02Ioq9P1yNoJIIqOpW2UJp01O1wUKptrqo",
+  "action": "deleted",
+  "passthrough": "vertical-d8fe0772-213c-47b2-acbb-48882abdea8e"
+ },
+ {
+  "key": "p5:b8248253-c45d-4202-9876-429ceaede341",
+  "phase": "p5",
+  "title": "MPI Setup — Timing Belt",
+  "status": "failed-gate",
+  "newAssetId": "OjAqU01Ehr3NViNRuu901XJ01AjHgdM8FGYI7mvGq6hUfo",
+  "action": "deleted",
+  "passthrough": "vertical-b8248253-c45d-4202-9876-429ceaede341"
+ },
+ {
+  "key": "p5:56b90a62-eb24-46dc-bc5c-0b238fd342b4",
+  "phase": "p5",
+  "title": "MPI Setup — Fuel System Cleaner",
+  "status": "failed-gate",
+  "newAssetId": "Krs02n3uX1TxKko5XkvAKkMCEamftHDdMcq7OCikSQWk",
+  "action": "deleted",
+  "passthrough": "vertical-56b90a62-eb24-46dc-bc5c-0b238fd342b4"
+ },
+ {
+  "key": "p5:f4bd7ac1-3d3a-4f03-9900-d768ec85bf45",
+  "phase": "p5",
+  "title": "MPI Setup — AC Recharge",
+  "status": "failed-gate",
+  "newAssetId": "Lksb7Bm003J1lctaNEBMJHGIG6pEfxIvdRIwWBmiTn2w",
+  "action": "deleted",
+  "passthrough": "vertical-f4bd7ac1-3d3a-4f03-9900-d768ec85bf45"
+ },
+ {
+  "key": "p5:50364c6c-ad8c-4785-a564-b595333f2d71",
+  "phase": "p5",
+  "title": "MPI Setup — Charge Port Cleaner",
+  "status": "failed-gate",
+  "newAssetId": "oCtF01g42uqHPBIOEoOSrbyRvAyW02CaCo5yaUGDZv5V00",
+  "action": "deleted",
+  "passthrough": "vertical-50364c6c-ad8c-4785-a564-b595333f2d71"
+ },
+ {
+  "key": "p5:8e19a2f0-925e-46ec-bda3-833ea67eee22",
+  "phase": "p5",
+  "title": "MPI Setup — Front Wiper Blades",
+  "status": "failed-gate",
+  "newAssetId": "SW01JDth601W67kc4yIO2LR7dsNMCzUPP9OBUlskDorC8",
+  "action": "deleted",
+  "passthrough": "vertical-8e19a2f0-925e-46ec-bda3-833ea67eee22"
+ },
+ {
+  "key": "p5:e639f19b-77d5-4a08-bfc6-f6cb7e07d5e9",
+  "phase": "p5",
+  "title": "MPI Setup — Rodent Deterrent",
+  "status": "failed-gate",
+  "newAssetId": "RQI0201ctXxAFNi4Vb7or5mIYIWN01M4jWj1zVQQZ01H01Gk",
+  "action": "deleted",
+  "passthrough": "vertical-e639f19b-77d5-4a08-bfc6-f6cb7e07d5e9"
+ },
+ {
+  "key": "p5:019ed8cd-116a-4ccb-af93-c36cac46ca33",
+  "phase": "p5",
+  "title": "Four Step Close, Part 8",
+  "status": "failed-gate",
+  "newAssetId": "Udgi6S2Xe800LDmHGJM2xxvDxwRoBtQ2sTBpF6pHbIa4",
+  "action": "deleted",
+  "passthrough": "vertical-019ed8cd-116a-4ccb-af93-c36cac46ca33"
+ },
+ {
+  "key": "p5:9d1370c9-3e0b-46cc-af02-41b49399e6f2",
+  "phase": "p5",
+  "title": "Four Step Close, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "GK6Fo4kqS9FS02SYDemWsyNzsyWp00xL9itkDVtTyvRF00",
+  "action": "deleted",
+  "passthrough": "vertical-9d1370c9-3e0b-46cc-af02-41b49399e6f2"
+ },
+ {
+  "key": "p5:ed2ecea0-660e-4a35-9813-31e9e21e5079",
+  "phase": "p5",
+  "title": "Four Step Close, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "dJlTcNRWiGEK32kFFA00cwcMrutbVqFfl3NNH8Tz4Iro",
+  "action": "deleted",
+  "passthrough": "vertical-ed2ecea0-660e-4a35-9813-31e9e21e5079"
+ },
+ {
+  "key": "p5:8170b494-6529-479b-8d62-e8b2c21d8f74",
+  "phase": "p5",
+  "title": "Success Cycle, Part 11, The Repair Call",
+  "status": "failed-gate",
+  "newAssetId": "uC1cidOJ01h1uOMCMxwaXeIAJqaKBpExgDD46VxK8pDo",
+  "action": "deleted",
+  "passthrough": "vertical-8170b494-6529-479b-8d62-e8b2c21d8f74"
+ },
+ {
+  "key": "p5:6f720ea2-c2f4-409e-857c-08c1976784d5",
+  "phase": "p5",
+  "title": "Success Cycle, Part 4, Green Yellow Red",
+  "status": "failed-gate",
+  "newAssetId": "qoqVVfkQpFEB3lGufFwg700lS849kv1tI6a9zoVzRAYA",
+  "action": "deleted",
+  "passthrough": "vertical-6f720ea2-c2f4-409e-857c-08c1976784d5"
+ },
+ {
+  "key": "p5:84f0d456-5971-4318-91b5-7d498831b278",
+  "phase": "p5",
+  "title": "Success Cycle, Part 5, The 6 Stages",
+  "status": "failed-gate",
+  "newAssetId": "fval47McDFu2kuhPy4ZG9YMZm602XIpyG02ozGbX2h3ko",
+  "action": "deleted",
+  "passthrough": "vertical-84f0d456-5971-4318-91b5-7d498831b278"
+ },
+ {
+  "key": "p5:123cfea7-62e6-467e-836f-27c7f0bc3e66",
+  "phase": "p5",
+  "title": "Success Cycle, Part 12, Your song, Go Sing It",
+  "status": "failed-gate",
+  "newAssetId": "iaz00tMcDMbbd81ZPAI8l01Bch025SHySf9Gr100frTiKaY",
+  "action": "deleted",
+  "passthrough": "vertical-123cfea7-62e6-467e-836f-27c7f0bc3e66"
+ },
+ {
+  "key": "p5:386c63f5-23e5-4507-9570-f71f5f920ad4",
+  "phase": "p5",
+  "title": "Selling Skills, The Steer Objection",
+  "status": "failed-gate",
+  "newAssetId": "XnHRVS594RTSP01nbMmBndmpBVQr8rPCv00X800Ha6uf2A",
+  "action": "deleted",
+  "passthrough": "vertical-386c63f5-23e5-4507-9570-f71f5f920ad4"
+ },
+ {
+  "key": "p5:83300585-9cd6-44c6-83dd-d1bed3f4ff0d",
+  "phase": "p5",
+  "title": "Overcoming Objections, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "J1AuVd00qkh3rBnWc3CLB9qAO00EcV5xgaPoPobHo2dRk",
+  "action": "deleted",
+  "passthrough": "vertical-83300585-9cd6-44c6-83dd-d1bed3f4ff0d"
+ },
+ {
+  "key": "p5:d0b6f376-0510-4b16-8324-25921a4f2149",
+  "phase": "p5",
+  "title": "Objections — Power Steering Fluid",
+  "status": "failed-gate",
+  "newAssetId": "dp02i23usj7NyaBT2K3JsGvAGahOeTZXlQ0299dyKt601o",
+  "action": "deleted",
+  "passthrough": "vertical-d0b6f376-0510-4b16-8324-25921a4f2149"
+ },
+ {
+  "key": "p5:4b977923-5f60-4c4d-b517-84acffbb76c8",
+  "phase": "p5",
+  "title": "Objections — Battery Replacement",
+  "status": "failed-gate",
+  "newAssetId": "xLi7kJn02IlCG01PdipeFxhX2xYx8uANR1Gpuekzhjldk",
+  "action": "deleted",
+  "passthrough": "vertical-4b977923-5f60-4c4d-b517-84acffbb76c8"
+ },
+ {
+  "key": "p5:448b7461-eb29-450b-b8cc-dfebb3fb5969",
+  "phase": "p5",
+  "title": "Objections — Brake Fluid Flush",
+  "status": "failed-gate",
+  "newAssetId": "mwEA5KJpjjFHLAJpBrmKQExDd3isUV601NFUSkAk02n8Q",
+  "action": "deleted",
+  "passthrough": "vertical-448b7461-eb29-450b-b8cc-dfebb3fb5969"
+ },
+ {
+  "key": "p5:a593edb7-4609-442e-a224-63c5f8128379",
+  "phase": "p5",
+  "title": "Objections — Coolant Flush",
+  "status": "failed-gate",
+  "newAssetId": "dMavt3cSPk3YyOdYy7EFCh7DIEAFCNHuzBTTsDr802cw",
+  "action": "deleted",
+  "passthrough": "vertical-a593edb7-4609-442e-a224-63c5f8128379"
+ },
+ {
+  "key": "p5:248e91c6-68ba-4040-893f-6f19a4e159d5",
+  "phase": "p5",
+  "title": "Objections — Engine Air Filter",
+  "status": "failed-gate",
+  "newAssetId": "hov3JqrweLcoi86eM6OWnvi6c925Mthxepa74TZUFzI",
+  "action": "deleted",
+  "passthrough": "vertical-248e91c6-68ba-4040-893f-6f19a4e159d5"
+ },
+ {
+  "key": "p5:ca2d353d-0957-48e6-8dd5-b72ef0d0fab0",
+  "phase": "p5",
+  "title": "Objections — Transmission Fluid",
+  "status": "failed-gate",
+  "newAssetId": "l01liZGdZslDHFKYto01TrdAcuNy9tbFLpsyG7m025N1X00",
+  "action": "deleted",
+  "passthrough": "vertical-ca2d353d-0957-48e6-8dd5-b72ef0d0fab0"
+ },
+ {
+  "key": "p5:a3560d82-2b7f-42ee-b717-6ff8cb880138",
+  "phase": "p5",
+  "title": "Name Tag, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "RnSKePElOZLwiw4m455dRnL00H7WwwwBcPrLtle8TpGU",
+  "action": "deleted",
+  "passthrough": "vertical-a3560d82-2b7f-42ee-b717-6ff8cb880138"
+ },
+ {
+  "key": "p5:949ad465-baf2-4043-a8a9-f9d241fa2c9e",
+  "phase": "p5",
+  "title": "Name Tag, Part 8",
+  "status": "failed-gate",
+  "newAssetId": "2PhQWvdp4QiVtd00xCsDEpU9ecZXAchddy3AxZKmeCUQ",
+  "action": "deleted",
+  "passthrough": "vertical-949ad465-baf2-4043-a8a9-f9d241fa2c9e"
+ },
+ {
+  "key": "p5:1fecaeec-2747-409d-a574-948e87b6e615",
+  "phase": "p5",
+  "title": "Name Tag, Part 9",
+  "status": "failed-gate",
+  "newAssetId": "Zy31lxnQZOFGdldJQrjE3iJzGd015JwBJm42G38Wb2no",
+  "action": "deleted",
+  "passthrough": "vertical-1fecaeec-2747-409d-a574-948e87b6e615"
+ },
+ {
+  "key": "p5:2c1248e3-e06f-4344-9c30-4869b9b7dcb9",
+  "phase": "p5",
+  "title": "Name Tag, Part 7",
+  "status": "failed-gate",
+  "newAssetId": "x7Wpt00BK27haYB01j9g1PcD00ZqRwlvVuT01RAcDT7nCVE",
+  "action": "deleted",
+  "passthrough": "vertical-2c1248e3-e06f-4344-9c30-4869b9b7dcb9"
+ },
+ {
+  "key": "p5:a676439e-0c22-4c62-bcd9-6153bf93425c",
+  "phase": "p5",
+  "title": "150,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "KlBuR5U6QOqEzqVE1ZxFf026wNXd009WK9lvCHTb502aWQ",
+  "action": "deleted",
+  "passthrough": "vertical-a676439e-0c22-4c62-bcd9-6153bf93425c"
+ },
+ {
+  "key": "p5:cc56bdc0-b4ae-411f-9bdc-1d4948b976fb",
+  "phase": "p5",
+  "title": "65,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "r62X10100ly7xucFUKLUbmnRBapxKsqYMkiCepe2Asnm8",
+  "action": "deleted",
+  "passthrough": "vertical-cc56bdc0-b4ae-411f-9bdc-1d4948b976fb"
+ },
+ {
+  "key": "p5:ad3bd915-9e95-4b58-b6bb-5fa234fe91ab",
+  "phase": "p5",
+  "title": "55,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "wC02gHpzWcXp02kSqvNpw6v018BXfhtRX6xHNajVAjvDGg",
+  "action": "deleted",
+  "passthrough": "vertical-ad3bd915-9e95-4b58-b6bb-5fa234fe91ab"
+ },
+ {
+  "key": "p5:7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e",
+  "phase": "p5",
+  "title": "110,000 Mile Dealer Upsell Menu",
+  "status": "failed-gate",
+  "newAssetId": "02G4zrTYAehqvciXzcx002X9Kzk81YS00UuV2Wyjbkaxsg",
+  "action": "deleted",
+  "passthrough": "vertical-7d278e4f-5efc-4549-b7b4-c3e8ffc5e46e"
+ },
+ {
+  "key": "p5:f7303616-faee-4836-be6e-eae8c2433da6",
+  "phase": "p5",
+  "title": "95,000 Mile Dealer Upsell Menu",
+  "status": "failed-gate",
+  "newAssetId": "Gl3s1yMNDXfYdDgE9Hq800ThuHy01neIdH901g7rl4vdSc",
+  "action": "deleted",
+  "passthrough": "vertical-f7303616-faee-4836-be6e-eae8c2433da6"
+ },
+ {
+  "key": "p5:dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3",
+  "phase": "p5",
+  "title": "Menu Wrap-Up, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "WdxseVbcoPBtE028ev6C4usRwYCfow5iZD00MxDDmnK01Q",
+  "action": "deleted",
+  "passthrough": "vertical-dbc3b4ad-c86b-4d69-86ee-5a1d05404ac3"
+ },
+ {
+  "key": "p5:effafbce-02e5-45cc-bcd8-f66d6559328c",
+  "phase": "p5",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "T3xicPrUlXWSen9JGkuvd7sbXmgyr1ofGRAjIsCcfhs",
+  "action": "deleted",
+  "passthrough": "vertical-effafbce-02e5-45cc-bcd8-f66d6559328c"
+ },
+ {
+  "key": "p5:27557eb4-833b-470d-bb7b-6f57832257d7",
+  "phase": "p5",
+  "title": "5,000/7,500 Mile Dealer Upsell Menu (2714)",
+  "status": "failed-gate",
+  "newAssetId": "raMkm7ml01CO8E7S28Cx7MccMpgBeiDvIzpqL202skBvk",
+  "action": "deleted",
+  "passthrough": "vertical-27557eb4-833b-470d-bb7b-6f57832257d7"
+ },
+ {
+  "key": "p5:6a53c1f3-cc3d-4eed-9ed1-21725417e4df",
+  "phase": "p5",
+  "title": "120,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "HusGDPyGT3HLTqT3M5700hmAQSkBU1H2NwIEol9qL1Z4",
+  "action": "deleted",
+  "passthrough": "vertical-6a53c1f3-cc3d-4eed-9ed1-21725417e4df"
+ },
+ {
+  "key": "p5:28061ce2-d886-4a44-9c02-83130361cf08",
+  "phase": "p5",
+  "title": "30,000 Mile Dealer Upsell Menu, Part 5",
+  "status": "failed-gate",
+  "newAssetId": "t02sIj1LVwHNPEO3sxn7XsdKTFHa8tq4Vlkbd58orOyE",
+  "action": "deleted",
+  "passthrough": "vertical-28061ce2-d886-4a44-9c02-83130361cf08"
+ },
+ {
+  "key": "p5:fa55abfe-1309-4be7-a282-3fa484144dc0",
+  "phase": "p5",
+  "title": "100,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "9aOpPQVNQUGt314Eo02aZD6gYYecsUd4ZFJsylB3G7Nc",
+  "action": "deleted",
+  "passthrough": "vertical-fa55abfe-1309-4be7-a282-3fa484144dc0"
+ },
+ {
+  "key": "p5:ab70fed9-b840-4df8-af45-d956f6e7360e",
+  "phase": "p5",
+  "title": "105,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "ndXmxFjl3a8h2tcb00nJP4FBtgmmkcLj9tV4hupm6XU8",
+  "action": "deleted",
+  "passthrough": "vertical-ab70fed9-b840-4df8-af45-d956f6e7360e"
+ },
+ {
+  "key": "p5:10254adf-a214-4066-b55c-f2bc6303bdb3",
+  "phase": "p5",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "failed-gate",
+  "newAssetId": "GhcoBgdbVXzjFiXP7r01JnlT02mo5XRR4Z01NHJGdCwDGg",
+  "action": "deleted",
+  "passthrough": "vertical-10254adf-a214-4066-b55c-f2bc6303bdb3"
+ },
+ {
+  "key": "p5:61532700-a504-4805-9e14-17fd4fa24897",
+  "phase": "p5",
+  "title": "75,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "DTHgXwwB8N2DDZjksEvExwU1gqlDD3t00nKApgLHGbOk",
+  "action": "deleted",
+  "passthrough": "vertical-61532700-a504-4805-9e14-17fd4fa24897"
+ },
+ {
+  "key": "p5:4a84c86c-def1-4692-bc5e-5864f69a58fc",
+  "phase": "p5",
+  "title": "105,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "4Hlb4sHkr6enHeS7IcyQlijpfHSOdhNl3q5RT8s4Iak",
+  "action": "deleted",
+  "passthrough": "vertical-4a84c86c-def1-4692-bc5e-5864f69a58fc"
+ },
+ {
+  "key": "p5:9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e",
+  "phase": "p5",
+  "title": "150,000 Mile Dealer Upsell Menu, Part 4",
+  "status": "failed-gate",
+  "newAssetId": "YL7IMVNyN6zBEuG6KZBZV6Q64wxyyHSUxQyYZEtfPgo",
+  "action": "deleted",
+  "passthrough": "vertical-9b68c7db-d1bb-44a7-84be-c9e4fc6a1a3e"
+ },
+ {
+  "key": "p5:2feff211-2775-49ce-8021-0e6e1670a7bd",
+  "phase": "p5",
+  "title": "Menu Wrap-Up, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "EgNuHgRf4jD52MfU7cTPAujt02Trtm4CtjsaNz9dhTFc",
+  "action": "deleted",
+  "passthrough": "vertical-2feff211-2775-49ce-8021-0e6e1670a7bd"
+ },
+ {
+  "key": "p5:354b725e-07cf-43a9-8b25-0f339bdfb2d9",
+  "phase": "p5",
+  "title": "25,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "Aao17xYT5rHDg00f5Vl1B23zk3mYPXWOCWygCZiBEag00",
+  "action": "deleted",
+  "passthrough": "vertical-354b725e-07cf-43a9-8b25-0f339bdfb2d9"
+ },
+ {
+  "key": "p5:f4222417-e03a-49c7-90e7-c8d16d72d45e",
+  "phase": "p5",
+  "title": "30,000 Mile Dealer Upsell Menu (2760)",
+  "status": "failed-gate",
+  "newAssetId": "5rFS00rFdKWUuYejgVeK6xQpcueQZnXx602FErkjjY9Wg",
+  "action": "deleted",
+  "passthrough": "vertical-f4222417-e03a-49c7-90e7-c8d16d72d45e"
+ },
+ {
+  "key": "p5:ee3849c1-9708-4ee7-b20e-8879f5a4606b",
+  "phase": "p5",
+  "title": "90,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "4ox9zXUDw02K02DjES9H00ZnloeCM8Mt9Yauijs4g2Fkck",
+  "action": "deleted",
+  "passthrough": "vertical-ee3849c1-9708-4ee7-b20e-8879f5a4606b"
+ },
+ {
+  "key": "p5:b497f293-eedb-4d07-9095-669cf5722b14",
+  "phase": "p5",
+  "title": "30,000 Mile Dealer Upsell Menu (2769)",
+  "status": "failed-gate",
+  "newAssetId": "zmypqglF5jYuo02Fx6Uf9OZf3t02jMZrI68tIFUqihZro",
+  "action": "deleted",
+  "passthrough": "vertical-b497f293-eedb-4d07-9095-669cf5722b14"
+ },
+ {
+  "key": "p5:c7726af7-ea0c-4671-a0ec-41fc394e2e8d",
+  "phase": "p5",
+  "title": "35,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "nQHkw1fKrkZPpit02vUGkOm6imSu4u01xVYhuIgTTPvpU",
+  "action": "deleted",
+  "passthrough": "vertical-c7726af7-ea0c-4671-a0ec-41fc394e2e8d"
+ },
+ {
+  "key": "p5:c4c4e3dd-6fdc-405c-9a9e-b64e0e117572",
+  "phase": "p5",
+  "title": "40,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "00RVYh5ld01xfXfO00Xs6ujNuqYComwaq2yE01VAyACGypc",
+  "action": "deleted",
+  "passthrough": "vertical-c4c4e3dd-6fdc-405c-9a9e-b64e0e117572"
+ },
+ {
+  "key": "p5:0b68e878-2113-4d74-ab96-5af80d3b544c",
+  "phase": "p5",
+  "title": "45,000 Mile Dealer Upsell Menu, Part 2",
+  "status": "failed-gate",
+  "newAssetId": "ddutqBMEFsNEWkrURYqfmTvRs82CovaW695L2GqxS8Q",
+  "action": "deleted",
+  "passthrough": "vertical-0b68e878-2113-4d74-ab96-5af80d3b544c"
+ },
+ {
+  "key": "p5:d220095f-5660-47fa-9bd8-6976b11a7e15",
+  "phase": "p5",
+  "title": "45,000 Mile Dealer Upsell Menu, Part 3",
+  "status": "failed-gate",
+  "newAssetId": "kqdN6YSQ6oXGT4imDgaHl01NHNpHtUAOUr2JQyGIuATc",
+  "action": "deleted",
+  "passthrough": "vertical-d220095f-5660-47fa-9bd8-6976b11a7e15"
+ },
+ {
+  "key": "p5:1e3b8e57-2fde-4af0-8f49-253572d8adf3",
+  "phase": "p5",
+  "title": "Seasonal Menus, Part 4",
+  "status": "failed-gate",
+  "newAssetId": "U9SFCYOClX6TvrLoBHxIaHjRLOWpAQtaX1vRuy7BINo",
+  "action": "deleted",
+  "passthrough": "vertical-1e3b8e57-2fde-4af0-8f49-253572d8adf3"
+ },
+ {
+  "key": "p5:db297b0f-8a16-4984-a5b8-80c9379b285a",
+  "phase": "p5",
+  "title": "50,000 Mile Dealer Upsell Menu, Part 1",
+  "status": "failed-gate",
+  "newAssetId": "crICGK5kS4FMtt02wvKFe13sdKBUHT01JQbBdixiwvKog",
+  "action": "deleted",
+  "passthrough": "vertical-db297b0f-8a16-4984-a5b8-80c9379b285a"
+ },
+ {
+  "key": "p5:c561b924-5d78-43fe-af79-89381567cdb2",
+  "phase": "p5",
+  "title": "Seasonal Menus, Part 5",
+  "status": "failed-gate",
+  "newAssetId": "CmUSnwuJsgoYtlPZ6FYF72y01DFNXD1U7XLhVTmXyNK4",
+  "action": "deleted",
+  "passthrough": "vertical-c561b924-5d78-43fe-af79-89381567cdb2"
+ }
+]

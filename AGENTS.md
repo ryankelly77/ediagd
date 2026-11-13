@@ -554,6 +554,33 @@ success.
 This is the same defect as a summary that prints regardless of what happened — the
 merge tells you it merged, and does not tell you where.
 
+### A session ends with `git status` clean
+
+Every file a session creates has exactly three honest endings: **committed on
+its branch**, **written under `.tmp-sync/`**, or **named in the handoff as
+deliberately left**. A file with none of those is not "pending" — it is
+abandoned in a shared checkout, and the next session inherits it with no way to
+tell whether it is somebody's work in flight or litter.
+
+**Run output that is not a record goes in `.tmp-sync/work/`, never `reports/`.**
+`reports/` is where a human looks for findings. A regenerable stdout log sitting
+beside a findings report makes the directory untrustworthy for the only purpose
+it has, and `.tmp-*/` is already gitignored, so the holding place costs nothing.
+
+The dividing question is **whether the file is the only record of something that
+happened to production.** A list of 72 Mux assets that were *deleted* cannot be
+regenerated once they are gone, and belongs in the repo. The candidate list the
+delete was computed *from* is not a record if the deletion log contains the same
+rows — assert the containment rather than assume it. A one-line stdout log
+saying `setsid: command not found` is a failed launch, not evidence.
+
+**A session ends with the shared checkout back on `main`.** Several agents work
+this repo at once; leaving HEAD on a working branch hands the next one a tree
+that looks like theirs and is not. Leaving a stash entry behind is worse — a
+stash exists only on this laptop and is invisible to every other checkout, so
+work parked there is one `git stash drop` from gone with no remote copy and no
+branch name to find it by.
+
 ## The work log: the task records what git sees, Ryan adds what it can't
 
 **The daily scheduled task already logs what git can see, so the rows that go
