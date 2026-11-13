@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   handleAppLinks,
+  handleBackButton,
   isNative,
   readyShell,
   PUSH_ENABLED,
@@ -39,6 +40,7 @@ export function NativeBridge() {
   useEffect(() => {
     let disposed = false;
     let cleanupLinks: (() => void) | undefined;
+    let cleanupBack: (() => void) | undefined;
 
     (async () => {
       if (!(await isNative())) return;
@@ -47,9 +49,12 @@ export function NativeBridge() {
         if (!disposed) router.push(route);
       };
 
-      /* Deep links and the splash must work signed out. Do them first, so a
-         failure in the push path below can never leave the splash up. */
+      /* Deep links, the back button and the splash must all work signed out.
+         Do them first, so a failure in the push path below can never leave the
+         splash up — and, since this component is the only thing that registers
+         the back listener, can never leave Android unable to exit the app. */
       cleanupLinks = await handleAppLinks(go);
+      cleanupBack = await handleBackButton();
       await readyShell();
 
       const supabaseAuth = createClient();
@@ -99,6 +104,7 @@ export function NativeBridge() {
     return () => {
       disposed = true;
       cleanupLinks?.();
+      cleanupBack?.();
     };
   }, [router]);
 

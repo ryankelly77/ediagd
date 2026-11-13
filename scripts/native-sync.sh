@@ -87,6 +87,9 @@ fi
 # Android 12+ splash colours — see the docstring in the script.
 if [ -d android ]; then
   python3 scripts/patch-android-theme.py
+  # Version, release signing and the permission set. Also generated, also lost
+  # on every regeneration, so also re-applied here rather than hand-edited.
+  python3 scripts/patch-android-release.py
 fi
 
 say "done"
