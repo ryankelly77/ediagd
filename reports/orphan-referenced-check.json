@@ -1,0 +1,9 @@
+{
+ "checkedColumns": [
+  "mux_asset_id",
+  "vertical_asset_id",
+  "archived_asset_id"
+ ],
+ "orphanCount": 72,
+ "referenced": []
+}

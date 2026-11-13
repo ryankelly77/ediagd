@@ -1,0 +1,6 @@
+{
+ "scope": "retired films (canonical_filename not null) with no retired_reason",
+ "tombstones": 11,
+ "written": 11,
+ "couldNotName": []
+}
