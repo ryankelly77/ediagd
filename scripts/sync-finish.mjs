@@ -417,7 +417,14 @@ async function phase2() {
       const attempt = async (shiftSec, tag) => {
         const out = `${W}/p2_cut.mp4`;
         const args = ["-nostdin", "-v", "error", "-ss", start.toFixed(3), "-i", m];
-        if (shiftSec !== null) args.push("-itsoffset", shiftSec, "-ss", start.toFixed(3), "-i", m,
+        /* Both -ss and -itsoffset are INPUT options and ffmpeg applies them
+           in its own order, not the command line's — reordering them changed
+           the result by exactly nothing (-61.4 ms both times). What is true
+           and measurable is that the sound moves about TWICE the shift asked
+           for: -65.8 ms of shift moved the cut -127.2 ms. Rather than model
+           why, attempt 3 SOLVES for the shift from the two points already
+           measured. See below. */
+        if (shiftSec !== null) args.push("-ss", start.toFixed(3), "-itsoffset", shiftSec, "-i", m,
           "-map", "0:v:0", "-map", "1:a:0");
         args.push("-t", dur.toFixed(3),
           "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
@@ -449,19 +456,53 @@ async function phase2() {
       if (t1.asset && passes(t1.after) && t1.lenOk && t1.cap?.ok) { chosen = t1; method = "re-cut, no shift"; }
 
       /* ---- attempt 2, only if a residual SURVIVED a clean re-encode ------- */
-      let t2 = null, shiftSec = null;
+      let t2 = null, shiftSec = null, last = null;
       if (!chosen && t1.asset && t1.after.status === "ok" && Math.abs(t1.after.offset_ms) > GATE.offset) {
-        shiftSec = (t1.after.offset_ms / 1000).toFixed(4);
+        /* MINUS the residual, because the shift CORRECTS it.
+           The first run used +residual and proved the sign by doubling the
+           error: On the Drive — Differential Fluid came out of a clean re-cut
+           at +65.8 ms, was shifted by +0.0658s, and landed at +126.5 ms —
+           further in the same direction by almost exactly the shift.
+           offset = picture lag - audio lag, so a POSITIVE offset means the
+           sound is already ahead of the picture and must be pulled BACK. */
+        shiftSec = (-t1.after.offset_ms / 1000).toFixed(4);
         logLine(`      ${c.title}  clean re-cut left ${t1.after.offset_ms} ms — the master is out of sync; shifting by ${shiftSec}s`);
         ledger[key] = { phase: 2, status: "intent", title: c.title, before, firstPass: t1.after,
           method: `audio-shift ${shiftSec}s`, oldAssetId: c.mux_asset_id, strandedAssetId: t1.assetId }; save();
         t2 = await attempt(shiftSec, "p2c");
         if (t2.asset && passes(t2.after) && t2.lenOk && t2.cap?.ok) { chosen = t2; method = `audio-shift ${shiftSec}s`; }
 
+        /* ---- attempt 3: SOLVE for the shift, do not assume a gain --------
+           Two measured points now exist for this film:
+               shift 0    -> t1.after.offset_ms
+               shift s2   -> t2.after.offset_ms
+           The response has been linear every time it has been looked at, so
+           the gain is (o2 - o1) / s2 and the shift that lands on zero is
+           -o1 / gain. This needs no constant and no theory about why the
+           gain is not 1 — it measures the film's own response and uses it.
+           Refuses rather than divides when the two points are too close to
+           tell a gain from noise. */
+        if (!chosen && t2 && t2.asset && t2.after?.status === "ok") {
+          const o1 = t1.after.offset_ms, o2 = t2.after.offset_ms, s2 = Number(shiftSec) * 1000;
+          const gain = (o2 - o1) / s2;
+          if (Math.abs(s2) >= 5 && gain > 0.2 && Number.isFinite(gain)) {
+            const s3 = (-o1 / gain / 1000).toFixed(4);
+            logLine(`      ${c.title}  measured gain ${gain.toFixed(2)} from ${o1} -> ${o2} ms; solving: shift ${s3}s`);
+            ledger[key] = { phase: 2, status: "intent", title: c.title, before, firstPass: t1.after,
+              secondPass: t2.after, gain: Number(gain.toFixed(3)), method: `audio-shift ${s3}s (solved)`,
+              oldAssetId: c.mux_asset_id, strandedAssetId: t2.assetId }; save();
+            const t3 = await attempt(s3, "p2d");
+            if (t3.asset && passes(t3.after) && t3.lenOk && t3.cap?.ok) {
+              chosen = t3; method = `audio-shift ${s3}s (solved, gain ${gain.toFixed(2)})`; shiftSec = s3;
+            } else if (t3.asset) { last = t3; }
+          } else {
+            logLine(`      ${c.title}  refusing to solve: gain ${gain} from a ${s2} ms shift is not a response`);
+          }
+        }
       }
 
       if (!chosen) {
-        const last = t2 ?? t1;
+        last = last ?? t2 ?? t1;
         ledger[key] = { phase: 2, done: true, status: "failed-gate", title: c.title, before,
           firstPass: t1.after ?? null, after: last.after ?? null, shiftSec,
           newAssetId: last.assetId, strandedAssetId: t2 ? t1.assetId : null }; save();
