@@ -95,7 +95,16 @@ else:
         + """ — versionCode climbs per Play upload and is
         // passed on the command line; versionName is the iOS MARKETING_VERSION,
         // written here by scripts/patch-android-release.py so it cannot drift.
-        versionCode (project.findProperty("ediagdVersionCode") ?: 1) as Integer
+        //
+        // THE PARENTHESES ARE LOAD-BEARING. Written first as
+        //     versionCode (expr) as Integer
+        // which Groovy parses as (versionCode(expr)) as Integer — the cast lands
+        // on the call's RESULT and the setter is handed the raw property, which
+        // is a String. That built fine at the default, because `?: 1` already
+        // yields an Integer, and threw "Value is null" the first time anybody
+        // actually passed -PediagdVersionCode. The conversion the line existed
+        // for had never once run. Cast the ARGUMENT, inside the call.
+        versionCode(((project.findProperty("ediagdVersionCode") ?: "1") as String) as Integer)
         versionName "{version_name}"
 """.replace(
             "{version_name}", version_name
@@ -209,5 +218,64 @@ manifest = manifest.replace(
 """,
 )
 
+# ---- Portrait, and the Android 16 opt-out that makes portrait mean anything --
+#
+# THE FILMS ARE PORTRAIT. Measured on the 1.0.0 bundle at API 36: rotating during
+# playback stopped the film and collapsed the video card to a wide strip with the
+# speaker's face cropped out of frame entirely. The player has no full-screen
+# control and no landscape layout was ever designed, so free rotation only ever
+# produced a worse screen than the one it replaced.
+#
+# screenOrientation ALONE WOULD BE A LABEL RATHER THAN A LOCK. Apps targeting
+# API 36 have screenOrientation ignored on any display whose smallest width is
+# >= 600dp — tablets, foldables, desktop windowing. The attribute would still be
+# sitting in the manifest, still reading as "this app is portrait", and still
+# doing nothing on exactly the devices where the broken landscape layout is most
+# likely to be seen. The property below is what the platform actually reads.
+#
+# Placement is per-ACTIVITY on purpose. The docs allow either; application-level
+# is described as the "too many parts of your app aren't ready" escape hatch, and
+# that is not the claim being made. This is one activity that is portrait.
+#
+# THE OPT-OUT HAS AN EXPIRY AND IT IS NOT A LONG ONE. It stops working when the
+# app targets API 37; Android 17 removes it. So this buys time for an adaptive
+# layout, it does not replace one — and because targetSdk is bumped by editing
+# one line of variables.gradle, the day that happens is a day this comment has
+# to be read. Written here rather than in a ticket for exactly that reason.
+TEMPLATE_ACTIVITY = """            android:name=".MainActivity"
+"""
+if TEMPLATE_ACTIVITY not in manifest:
+    fail("AndroidManifest.xml does not carry the expected MainActivity declaration")
+
+manifest = manifest.replace(
+    TEMPLATE_ACTIVITY,
+    """            android:name=".MainActivity"
+            android:screenOrientation="portrait"
+""",
+    1,
+)
+
+TEMPLATE_INTENT_CLOSE = """            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+"""
+if TEMPLATE_INTENT_CLOSE not in manifest:
+    fail("AndroidManifest.xml does not carry the expected launcher intent-filter")
+
+manifest = manifest.replace(
+    TEMPLATE_INTENT_CLOSE,
+    TEMPLATE_INTENT_CLOSE
+    + """
+            <!-- Without this, android:screenOrientation above is ignored on
+                 every display >= sw600dp. Expires at targetSdk 37. -->
+            <property
+                android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+                android:value="true" />
+""",
+    1,
+)
+
 MANIFEST.write_text(manifest)
 print("  android: POST_NOTIFICATIONS declared, AD_ID removed from the merge")
+print("  android: MainActivity locked to portrait, with the sw600dp opt-out")
