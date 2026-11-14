@@ -14,6 +14,12 @@ import { BRAND } from "@/lib/brand";
 import { EMPTY_DRAFT } from "@/lib/work-schedule";
 import type { LifestyleVideoData } from "@/lib/daily";
 import type { IsoDate } from "@/lib/gamification/streak";
+import {
+  swipeAnchor,
+  swipeDirection,
+  watchForScroll,
+  type SwipeAnchor,
+} from "@/lib/swipe";
 
 /* ============================================================================
    EDIAGD — first run
@@ -56,7 +62,24 @@ export function OnboardingFlow({
 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const touchStartX = useRef<number | null>(null);
+
+  /* ---- The swipe ---------------------------------------------------------
+     t63: ON A SCREEN LONG ENOUGH TO SCROLL, SCROLLING CHANGED THE SCREEN.
+
+     This used to be `touchStartX` and nothing else: one axis, a 48px
+     threshold, and the comment `// a tap, or a scroll that wandered` sitting
+     above a check that could not tell the difference. A vertical pull whose
+     thumb drifts 60px sideways is a swipe by that rule, and the phone tester's
+     recording has it going back three times on one screen.
+
+     The rules now come from lib/swipe.ts, the same ones SwipeNavigation has
+     used since it shipped — distance, direction ratio, duration, the opt-out
+     list, the edge zone, single touch. The one onboarding adds is `scrolled`:
+     if the body moved vertically while the finger was down, it was a scroll,
+     full stop. See the note in lib/swipe.ts for why the ratio alone is not
+     enough to say that. */
+  const anchor = useRef<SwipeAnchor | null>(null);
+  const scrollWatch = useRef<ReturnType<typeof watchForScroll> | null>(null);
 
   // Captured at mount, so the server re-render triggered by saving on screen 5
   // (which reports alreadyOnboarded = true) can't yank the flow off its own
@@ -69,6 +92,16 @@ export function OnboardingFlow({
     if (onboardedOnArrival && !preview) router.replace("/");
   }, [onboardedOnArrival, preview, router]);
 
+  // A finger still down when this unmounts would otherwise leave its scroll
+  // listener on the document for the rest of the session.
+  useEffect(
+    () => () => {
+      scrollWatch.current?.stop();
+      scrollWatch.current = null;
+    },
+    []
+  );
+
   if (onboardedOnArrival && !preview) return null;
 
   // Narrative screens move freely; once the schedule is saved there's no going
@@ -77,23 +110,39 @@ export function OnboardingFlow({
   const next = () => setStep((s) => Math.min(s + 1, TOTAL));
   const back = () => setStep((s) => Math.max(s - 1, 1));
 
-  function onTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0]?.clientX ?? null;
+  function endGesture() {
+    scrollWatch.current?.stop();
+    scrollWatch.current = null;
+    const from = anchor.current;
+    anchor.current = null;
+    return from;
   }
+
+  function onTouchStart(e: React.TouchEvent) {
+    endGesture(); // a second finger, or a touchend we never saw
+    anchor.current = swipeAnchor(e, Date.now(), window.innerWidth);
+    if (!anchor.current) return;
+    scrollWatch.current = watchForScroll(document);
+  }
+
   function onTouchEnd(e: React.TouchEvent) {
-    const from = touchStartX.current;
-    touchStartX.current = null;
-    if (from == null) return;
-    const delta = (e.changedTouches[0]?.clientX ?? from) - from;
-    if (Math.abs(delta) < 48) return; // a tap, or a scroll that wandered
-    if (delta < 0 && canAdvance) next();
-    if (delta > 0 && step > 1 && step < 7) back();
+    const scrolled = scrollWatch.current?.scrolled() ?? false;
+    const from = endGesture();
+    if (!from) return;
+
+    const dir = swipeDirection(from, e, Date.now(), scrolled);
+    if (dir === "left" && canAdvance) next();
+    if (dir === "right" && step > 1 && step < TOTAL) back();
   }
 
   return (
     <PhoneScreen
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
+      /* The system took the gesture — a long-press menu, a notification
+         shade. Without this the anchor survives to be measured against the
+         next touchend. */
+      onTouchCancel={endGesture}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight" && canAdvance) next();
         if (e.key === "ArrowLeft" && step > 1 && step < 7) back();
@@ -292,10 +341,20 @@ function Screen1({
  * It renders through Narrative's `media` slot, OUTSIDE the tap-to-advance body,
  * so playing or scrubbing the film never advances the screen and the CTA in the
  * footer stays the one way forward.
+ *
+ * THAT LAST SENTENCE WAS HALF TRUE AND IS THE REASON FOR `data-no-swipe`.
+ * Sitting outside the button stopped a TAP from advancing. It did nothing
+ * about the swipe handler, which is on PhoneScreen and saw every drag on this
+ * film — so dragging the scrubber left advanced the screen, which is exactly
+ * what the comment promised it would not do. The player is `<mux-player>`,
+ * whose own OPT_OUT entry had been written as the class `.mux-player` and
+ * matched nothing (see lib/swipe.ts); this marks the whole block instead, so
+ * the title and the eyebrow are covered too and it does not matter what the
+ * player renders next release.
  */
 function WelcomeFilm({ video }: { video: LifestyleVideoData }) {
   return (
-    <section className="mb-6">
+    <section className="mb-6" data-no-swipe>
       <p className="ediagd-eyebrow">A word from Mitch</p>
       <div className="mt-2 overflow-hidden rounded-card">
         <TrackedVideo
@@ -642,7 +701,17 @@ function Screen5({
         </div>
       </section>
 
-      <div className="ediagd-card mt-5 p-5">
+      {/* data-no-swipe: THE DAY TOGGLES ARE A ROW, AND A ROW INVITES A DRAG.
+          Seven buttons across, then three Saturday options, then a two-column
+          grid of dates — a thumb that starts on Monday and lands on Wednesday
+          is a mis-tap, and under the old rule it was a 48px leftward swipe.
+          Leftward did nothing here (canAdvance is false on this screen), but
+          RIGHTWARD took them back to the gear screen and lost every day they
+          had picked. Marking the card covers the toggles, the Saturday choices
+          and the anchor grid at once, so a control added inside it later is
+          safe without anybody remembering this. The hero above is still
+          swipeable, which is where a deliberate swipe back belongs. */}
+      <div className="ediagd-card mt-5 p-5" data-no-swipe>
         <ScheduleForm
           initial={EMPTY_DRAFT}
           saturdays={saturdays}

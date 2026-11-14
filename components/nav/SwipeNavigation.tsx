@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { swipeAnchor, swipeDirection, type SwipeAnchor } from "@/lib/swipe";
 
 /* ============================================================================
    EDIAGD — swipe back and forward from anywhere, not just the edge
@@ -38,105 +39,74 @@ import { useEffect } from "react";
    UIPanGestureRecognizer: only the DOM knows that the finger came down inside
    something horizontally scrollable. Native sees one webview and would have to
    guess.
+
+   ---------------------------------------------------------------------------
+   THE RULES THEMSELVES NOW LIVE IN lib/swipe.ts
+   ---------------------------------------------------------------------------
+   Onboarding had its own detector and it was 48px of clientX with no second
+   axis, which is the t63 bug. There is one set of rules now and both import
+   it; what stays here is only this gesture's CONSEQUENCE — back and forward on
+   the history stack. See lib/swipe.ts for why each threshold is the number it
+   is.
    ============================================================================ */
-
-/**
- * Touches starting this close to either edge belong to iOS.
- *
- * Wide enough to cover the system's own recogniser so the two never both fire
- * on one drag — a double `history.back()` would skip a screen, and the user
- * would have no idea why.
- */
-const EDGE_ZONE = 28;
-
-/** How far the thumb has to travel before this counts as a decision. */
-const MIN_DISTANCE = 80;
-
-/** Horizontal has to beat vertical by this much, or it is a scroll. */
-const DIRECTION_RATIO = 2;
-
-/**
- * Past this it is a drag, not a fling.
- *
- * Someone slowly dragging their finger across a screen is usually doing
- * something else — selecting, or scrolling a stubborn list. A back gesture is
- * quick and committed.
- */
-const MAX_DURATION_MS = 700;
-
-/** Anything that owns horizontal dragging for itself. */
-const OPT_OUT = "input[type=range], video, [data-no-swipe], .mux-player, media-controller";
-
-/** Did the touch land inside something that scrolls sideways? */
-function insideHorizontalScroller(start: EventTarget | null): boolean {
-  let node = start instanceof Element ? start : null;
-  while (node && node !== document.body) {
-    /* A carousel, a wide table, a code block. If it has room to move
-       horizontally, the drag is probably meant for it. */
-    if (node.scrollWidth > node.clientWidth + 1) {
-      const overflow = getComputedStyle(node).overflowX;
-      if (overflow === "auto" || overflow === "scroll") return true;
-    }
-    node = node.parentElement;
-  }
-  return false;
-}
 
 export function SwipeNavigation() {
   useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-    let startedAt = 0;
-    let armed = false;
+    let anchor: SwipeAnchor | null = null;
 
     function onStart(e: TouchEvent) {
-      armed = false;
-      /* Two fingers is a pinch or a system gesture, never this. */
-      if (e.touches.length !== 1) return;
-      const t = e.touches[0]!;
-
-      if (t.clientX <= EDGE_ZONE || t.clientX >= window.innerWidth - EDGE_ZONE) return;
-      if (e.target instanceof Element && e.target.closest(OPT_OUT)) return;
-      if (insideHorizontalScroller(e.target)) return;
-
-      startX = t.clientX;
-      startY = t.clientY;
-      startedAt = Date.now();
-      armed = true;
+      anchor = swipeAnchor(e, Date.now(), window.innerWidth);
     }
 
     function onEnd(e: TouchEvent) {
-      if (!armed) return;
-      armed = false;
+      const from = anchor;
+      anchor = null;
+      if (!from) return;
 
-      const t = e.changedTouches[0];
-      if (!t) return;
-
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-
-      if (Date.now() - startedAt > MAX_DURATION_MS) return;
-      if (Math.abs(dx) < MIN_DISTANCE) return;
-      if (Math.abs(dx) < Math.abs(dy) * DIRECTION_RATIO) return;
+      /*
+       * `scrolled: false`.
+       *
+       * THIS IS A REAL DIFFERENCE FROM ONBOARDING AND IT IS DELIBERATE. The
+       * app's own pages scroll the window, and a window scroll is what a page
+       * does all day — refusing every gesture that happened during one would
+       * turn this feature off on a long page, which is most of them. The
+       * direction ratio is what separates a scroll from a fling here, and it
+       * has held since this shipped.
+       *
+       * Onboarding is the other case: PhoneScreen is `h-dvh overflow-hidden`
+       * with one inner scroller, so a vertical scroll there is a specific,
+       * observable event on a specific element, and a gesture that caused one
+       * is unambiguously not a swipe.
+       */
+      const dir = swipeDirection(from, e, Date.now(), false);
+      if (!dir) return;
 
       /*
        * FORWARD IS OFFERED BECAUSE BACK IS. A back gesture you cannot undo is
        * a worse deal than the one iOS ships — the same reasoning that left
        * allowsBackForwardNavigationGestures on rather than restricting it.
        */
-      if (dx > 0) window.history.back();
+      if (dir === "right") window.history.back();
       else window.history.forward();
+    }
+
+    function onCancel() {
+      anchor = null;
     }
 
     /* Passive: this never calls preventDefault. It reads the touch after the
        fact and navigates, so it must not cost the scroller a frame. */
     document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchend", onEnd, { passive: true });
-    document.addEventListener("touchcancel", () => { armed = false; }, { passive: true });
+    document.addEventListener("touchcancel", onCancel, { passive: true });
 
     return () => {
       document.removeEventListener("touchstart", onStart);
       document.removeEventListener("touchend", onEnd);
+      /* touchcancel was left attached by the version before this one. An
+         anonymous listener cannot be removed, so every mount of this component
+         added one that outlived it. */
+      document.removeEventListener("touchcancel", onCancel);
     };
   }, []);
 
