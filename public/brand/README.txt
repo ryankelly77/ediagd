@@ -1,67 +1,68 @@
-EDIAGD — LOGO EXPORT KIT (v3)
-Signature mark from the brand book cover, tagline set to EVERY DAY IS A GREAT DAY.
+EDIAGD LOGO KIT (v4, the palm mark)
+Every file in svg/, png/ and jpg/ carries the current mark: a ring holding a
+gold sun with five rays, a teal wave with two foam lines, and a palm leaning
+in from the right. Tagline is EVERY DAY IS A GREAT DAY.
 
-WHAT CHANGED FROM THE FIRST KIT
-The first set used the reduced mark from the Visual Identity page — no sun
-rays, one foam line. This set uses the full signature mark: three gold rays
-off the sun and two foam lines beneath the wave, exactly as on the cover.
-Replace the earlier files entirely.
+WHAT CHANGED FROM v3
+v3 lockups, mark-simple files, the seafoam and sunrise one-ink marks and every
+PNG and JPG still carried the old mark with no palm. All of them were rebuilt
+on November 16, 2026 from svg/ediagd-mark-primary-dark.svg and
+svg/ediagd-mark-primary-light.svg, which are the masters. File names, canvas
+sizes and the position of the ring are unchanged, so each file is a drop-in
+replacement for its v3 version. If a logo has no palm, it is old and wrong.
 
-────────────────────────────────────────────────────────────
 SHAPES
 
-  mark            the signature symbol alone — rays, sun, wave, two foam
-                  lines. This is the primary mark. Use it everywhere.
-  mark-simple     reduced version — no rays, one foam line. Use ONLY below
-                  about 32px, where the rays close up and turn to mush:
-                  favicons, app icons, embroidery, small-format print.
+  mark            the symbol alone. This is the mark. Use it everywhere.
+  mark-simple     kept only so old references keep working. It is now the
+                  same full palm mark. There is no reduced version and no
+                  small-size exception.
   lockup          mark above a modest wordmark. The workhorse for documents,
-                  slides, email signatures, and letterhead.
-  lockup-hero     cover proportions — large wordmark under the mark.
+                  slides, email signatures and letterhead.
+  lockup-hero     cover proportions, large wordmark under the mark.
   lockup-tagline  cover proportions plus EVERY DAY IS A GREAT DAY beneath.
                   This is the full brand signature.
 
 VARIANTS
 
-  primary-light     full color, Deep Water ring — for light backgrounds
-  primary-dark      full color, Sand ring — for dark backgrounds
-  oneink-seafoam    single ink (#163A54) — for Seafoam/Mist fields
-  oneink-sunrise    single ink (#0C1C2C) — for Sunrise/gold fields
+  primary-light     full color, navy ring, for light backgrounds
+  primary-dark      full color, sand ring, for dark backgrounds
+  oneink-seafoam    single ink (#163A54), for Seafoam and Mist fields
+  oneink-sunrise    single ink (#0C1C2C), for Sunrise and gold fields
+  oneink-white      single ink white (svg only)
 
-The one-ink variants reduce to ring, sun, and wave with no rays and no foam
-lines, per the brand book's single-ink rule — the whole mark goes to one
-color and the sun never changes color on its own.
+One-ink marks are ring, sun, palm and wave in one color, with no rays and no
+foam lines.
+
+Also in svg/: ediagd-mark-on-navy (mark on a Midnight square),
+ediagd-favicon, ediagd-email-header.
 
 FORMATS
 
-  /svg   vector masters — print, signage, vinyl, embroidery digitizing
-  /png   transparent background — web, slides, video, overlays
-         mark 128–2048px · mark-simple 64–1024px · lockups 512–2048px
+  /svg   vector masters: print, signage, vinyl, embroidery digitizing
+  /png   transparent background: web, slides, video, overlays
+         mark 128 to 2048px, mark-simple 64 to 1024px, lockups 512 to 2048px
   /jpg   flattened onto that variant's field color (JPG has no
-         transparency) — use only where PNG isn't accepted. 1024 and 2048px.
+         transparency). Use only where PNG is not accepted. 1024 and 2048px.
 
-────────────────────────────────────────────────────────────
 COLORS
 
-  Midnight       #0C1C2C      Sunrise Gold   #E8B44C
-  Deep Water     #163A54      Mist           #D9ECEE
-  Ocean          #2C6E8A      Sand           #F5F1E8
-  Reef           #4AA8B0      White Water    #FCFAF5
-  Seafoam        #7EC8CD      Sunrise field  #F3E2BD
+The mark carries its own values and they are correct as drawn. Do not
+"correct" them to the palette:
+
+  ring and palm on dark   #F2EFE8      sun    #E3B15C
+  ring and palm on light  #132A40      wave   #6FBCC6
+
+Everything around the mark uses the brand palette in styles/brand.css.
 
 NOTES
 
-Clear space equal to the sun's diameter is built into every file, matching
-the brand book rule. Don't crop it out.
+Clear space is built into every PNG, JPG and lockup. Do not crop it out.
 
-The wordmark is real Marcellus and the tagline real Montserrat SemiBold,
-both converted to outlines — the SVGs render identically anywhere with no
-fonts installed, but the type is no longer editable. For new lockups, set
-fresh type: Marcellus at 0.24em tracking for the standard wordmark, 0.22em
-at cover scale, Montserrat SemiBold at 0.42em for the tagline.
+In the lockup SVGs the wordmark is Marcellus and the tagline is Montserrat
+SemiBold, both converted to outlines, so they render the same anywhere with
+no fonts installed.
 
-Standing rules: never rotate the wave, never let the sun sink below its
-centerline, never set the wordmark in anything but Marcellus, and keep the
-mark reading like morning — sun high on the right, wave rolling forward
-beneath it. The script "Mahalo" is a sign-off, not part of the logo; it sits
-near the mark, never inside it.
+Standing rules: never redraw the mark, never drop the palm, never rotate the
+wave, and keep the mark reading like morning. The script "Mahalo" is a
+sign-off, not part of the logo. It sits near the mark, never inside it.
