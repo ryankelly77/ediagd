@@ -48,7 +48,39 @@ For a guaranteed cross-platform match, load web equivalents in `app/fonts.ts` (e
 
 ## 3. Logo
 
-The mark is the **sun-and-wave badge**: a gold sunrise over teal waves inside a navy ring (`components/brand/Logo.tsx`). The tagline sits beneath the serif `EDIAGD` wordmark in tracked teal caps (`components/brand/Wordmark.tsx`).
+The mark is the **sunrise, palm and wave inside a ring**: a rayed gold sun, a
+leaning palm, and the wave beneath, held in a navy ring. **The palm is part of
+the mark**, not an optional flourish — a ring with only a sun and a wave is the
+old mark and is not current anywhere.
+
+The tagline sits beneath the serif `EDIAGD` wordmark in tracked teal caps
+(`components/brand/Wordmark.tsx`).
+
+### Where the mark actually lives
+
+```
+public/brand/svg/ediagd-mark-primary-dark.svg     the two sources
+public/brand/svg/ediagd-mark-primary-light.svg
+public/brand/svg|png|jpg/                         134 exports built from them
+public/brand/README.txt                           what each file is for
+```
+
+Every lockup, one-ink variant and raster export in that kit was rebuilt from
+those two sources, so they agree by construction. **Take the mark from the kit.
+Do not redraw it**, and do not copy it out of a component — a hand-copied mark
+is how the old one survived in the first place.
+
+The palm is the quickest way to tell current from stale: a current mark
+contains the path beginning `M86 78 C 86 68`. Anything with a ring at
+`r="44"`, a sun at `cx="60" cy="33"` or the wave `M14 62 C 23 40` is the old
+mark.
+
+> **`components/brand/Logo.tsx` is NOT current.** It draws the mark inline —
+> ring, sun, two wave paths, no palm — and is reached through `Wordmark.tsx`
+> from `FrontDoor.tsx`. It is listed here rather than fixed quietly because it
+> is the one copy a visitor actually sees. The same is true of the boot overlay
+> in `native/www/index.html` and `ios/App/App/public/index.html`, and of the
+> `big_wave` badge. `native/assets-src/splash.svg` already carries the palm.
 
 The prototype's "Eddie" tiki is **not** the logo and has been removed from the package. If you keep Eddie as an in-app guide *character*, treat it as a separate illustration — never the brand mark.
 
