@@ -1,59 +1,55 @@
-/**
- * EDIAGD logo mark — the brand-book badge: a gold sunrise over a teal wave,
- * inside a navy ring. Colors are driven by brand CSS variables.
- *
- * This replaces the prototype's "Eddie" tiki, which was not in the brand book.
- * (If you keep Eddie as an in-app guide *character*, treat it as a separate
- * illustration, not the logo.)
- */
-type LogoProps = { size?: number; className?: string; title?: string };
+/* ============================================================================
+   EDIAGD logo mark — now the master, not a second drawing of it
 
-const v = (name: string) => `rgb(var(${name}))`;
+   ---------------------------------------------------------------------------
+   WHAT THIS USED TO BE, AND WHY IT HAD TO STOP
+   ---------------------------------------------------------------------------
+   This file drew the mark inline: a ring at r=44, a sun at cx=50 cy=46, and
+   two quadratic wave bands, inked from the UI's CSS variables. That is the
+   PRE-PALM mark. It kept rendering it for as long as it existed, and because
+   FrontDoor -> Wordmark -> Logo is the chain a visitor actually meets, the old
+   mark was the first thing anyone saw of this brand.
 
-export function Logo({ size = 56, className, title = "EDIAGD" }: LogoProps) {
-  const navy = v("--ediagd-navy");
-  const teal = v("--ediagd-teal");
-  const gold = v("--ediagd-gold");
-  const cream = v("--ediagd-cream");
+   lib/brand-ink.ts already wrote down why: "the palm went into the master
+   files and appeared in none of the four places the mark is hand-drawn ...
+   because every one of them carried its own private copy of the geometry AND
+   its own hex codes." This was the fifth.
 
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      role="img"
-      aria-label={title}
-      className={className}
-    >
-      <defs>
-        <clipPath id="ediagd-ring">
-          <circle cx="50" cy="50" r="44" />
-        </clipPath>
-      </defs>
+   So it no longer draws anything. It renders <BrandMark>, which is the one
+   component that shows the designer's master file, and it cannot fall behind
+   that master because it no longer has a copy to fall behind with.
 
-      {/* paper fill inside the ring */}
-      <circle cx="50" cy="50" r="44" fill={cream} />
+   ---------------------------------------------------------------------------
+   THE PROPS ARE UNCHANGED ON PURPOSE
+   ---------------------------------------------------------------------------
+   `size`, `className` and `title` keep their names, their defaults and their
+   meanings, so Wordmark.tsx and FrontDoor.tsx needed no edit. `title` still
+   becomes the image's accessible name, which preserves what a screen reader
+   heard before rather than quietly changing it alongside the artwork.
 
-      <g clipPath="url(#ediagd-ring)">
-        {/* sun */}
-        <circle cx="50" cy="46" r="15" fill={gold} />
-        {/* sun rays */}
-        <g stroke={gold} strokeWidth="3" strokeLinecap="round">
-          <line x1="50" y1="18" x2="50" y2="26" />
-          <line x1="30" y1="26" x2="35" y2="31" />
-          <line x1="70" y1="26" x2="65" y2="31" />
-          <line x1="22" y1="46" x2="30" y2="46" />
-          <line x1="70" y1="46" x2="78" y2="46" />
-        </g>
-        {/* two teal waves */}
-        <path d="M4 66 q 12 -9 23 0 t 23 0 t 23 0 t 23 0 v 40 H4 Z" fill={teal} opacity="0.55" />
-        <path d="M4 74 q 12 -9 23 0 t 23 0 t 23 0 t 23 0 v 30 H4 Z" fill={teal} />
-      </g>
+   `onDark` is new and additive: BrandMark already draws a reverse master for
+   navy grounds, and exposing it here is what stops the next person hand-rolling
+   a dark variant. Nothing passes it today — Wordmark's own `onDark` switches
+   the TEXT only, and the one call site is the front door on cream.
+============================================================================ */
 
-      {/* navy ring */}
-      <circle cx="50" cy="50" r="44" fill="none" stroke={navy} strokeWidth="4" />
-    </svg>
-  );
+import { BrandMark } from "./BrandMark";
+
+type LogoProps = {
+  size?: number;
+  className?: string;
+  title?: string;
+  /** Navy ground: takes the reverse master, which is drawn, not filtered. */
+  onDark?: boolean;
+};
+
+export function Logo({
+  size = 56,
+  className,
+  title = "EDIAGD",
+  onDark = false,
+}: LogoProps) {
+  return <BrandMark size={size} onDark={onDark} className={className} alt={title} />;
 }
 
 export default Logo;
