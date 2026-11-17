@@ -90,6 +90,12 @@ if [ -d android ]; then
   # Version, release signing and the permission set. Also generated, also lost
   # on every regeneration, so also re-applied here rather than hand-edited.
   python3 scripts/patch-android-release.py
+  # The LEGACY launcher icons (API 24-25, below adaptive icons) come out of the
+  # generator transparent. --iconBackgroundColor only reaches the ADAPTIVE
+  # background layer; the legacy path hard-codes alpha 0 and takes no option
+  # for it. Same story as the two above: generated, lost on every run, so
+  # re-applied here.
+  python3 scripts/patch-android-legacy-icon.py
 fi
 
 say "done"
