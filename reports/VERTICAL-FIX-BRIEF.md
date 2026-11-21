@@ -26,3 +26,68 @@ It tried 67 stale verticals and passed none. The gate refused every one, so noth
 ## Report
 
 The three proofs with the numbers, how many orphan assets were deleted, the two Coolant Hoses candidates, PR number, and the time the run started. Then in the morning: the 13 by verdict, verticals ready and failed with the reason for each failure. Nothing else.
+
+---
+
+# Two confirmed wrong-cut mezzanines, 21 November
+
+`scripts/derive-vertical.ts`'s header has carried this open question since
+8 October:
+
+> *"On the two failing films the mezzanine begins about five seconds INTO the
+> film and contains no 'Aloha' at all, while the HLS — which is what a desktop
+> plays — opens on it. THE DURATIONS AGREE IN ALL FOUR CASES, to within a
+> quarter second. That is what hid it… Why only some rows is NOT known, and
+> trim status does not predict it. That is the open question, and it belongs to
+> the re-derive ticket."*
+
+**Two more rows are now confirmed to have it, with the transcripts to prove
+it.** Both were refused by the fidelity gate during the 21 November drain, and
+both refusals were correct. They are named here so the re-derive ticket has
+real cases rather than a description.
+
+### Lasting Impressions, Part 8
+
+```
+master (HLS)  "Aloha! Two more things in the packet, and both of them are
+               free to include. Number one is accessories. If a truck rolls
+               in, put a ..."
+vertical      "free to include. 1. The accessories. If a truck rolls in, put
+               a rack brochure in the packet..."
+```
+
+The crop begins at **"free to include"** — roughly five seconds in. Lengths
+agree: 96.73 s against a stored 97.
+
+### Brave Enough
+
+```
+master (HLS)  "Aloha! Brave Enough by Sarah Bahada. Let's be honest, the
+               service drive can feel like a relentless machine. Between the
+               angry customers..."
+vertical      "The service drive can feel like a relentless machine between
+               the angry customers, the backordered parts and the constant
+               pressure to hit your numbers."
+```
+
+The crop begins at **"The service drive"** — it loses the Aloha *and* the
+title card. Lengths agree: 70.63 s against a stored 71.
+
+### What this adds to the question
+
+Both tails are intact and correct — each closes on "Mahalo." in both the master
+and the crop. **So the mezzanine is not shifted; it is missing a piece of the
+front and nothing else.** The durations still agree to a quarter second, which
+means the mezzanine is padded or re-timed somewhere, not simply truncated. That
+is a sharper statement of the defect than 8 October could make, and it rules
+out "the vertical was derived before the trim" for these two: the crops were
+made on 21 November from the masters as they stand today.
+
+Neither film can be repaired by re-deriving. Until the mezzanine question is
+answered they serve the landscape cut letterboxed, which is the correct
+fallback and is what they do today.
+
+**Not to be confused with the three in the same batch that were refused
+wrongly** — Two Minute Walk-Around Part 1, Never Lose Money and Your Toughest
+Opponent. Those crops are faithful; the gate's one-word comparison was not.
+That is fixed separately, in `scripts/vertical-match.ts`.
