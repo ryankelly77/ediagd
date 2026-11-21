@@ -22,31 +22,54 @@
 name: derive-vertical
 
 # ----------------------------------------------------------------------------
-# THE SCHEDULE IS PAUSED, 8 OCTOBER 2026. RE-ENABLE IT DELIBERATELY.
+# PAUSED 8 OCTOBER 2026, RESUMED 21 NOVEMBER 2026 — and here is what settled it
 # ----------------------------------------------------------------------------
-# `vertical_derivation_queue` selects rows in ('pending', 'stale', 'failed'), and
-# the trim close-out puts rows INTO that queue on purpose: 29 verticals that do
-# not match their master were set 'stale' so phones fall back to the master, and
-# every film trimmed by trim:apply is marked 'stale' by replace_master_asset.
+# The pause was right, and it was held for two stated reasons. Both are now
+# answered, so the reasons are kept rather than deleted: a schedule that was
+# switched off for a documented cause should say what discharged the cause.
 #
-# With the schedule live, this worker would claim those rows within the hour and
-# re-derive them — which is a separate, unanswered ticket. Nobody yet knows why
-# Mux declined to prepare a master inside 200 s on 8 October (account setting,
-# asset age, or time), and that question has to be answered before a sweep is
-# trusted to re-cut 60-odd renditions unattended.
+#   1  "Nobody yet knows why Mux declined to prepare a master inside 200 s on
+#      8 October (account setting, asset age, or time)."
 #
-# It would also be a writer racing a reader: the 447-film verification measures
-# which rendition a phone gets, and a worker changing vertical_status underneath
-# it makes the measurement describe a library that no longer exists.
+#      Answered by running it. On 21 November the whole backlog of 22 rows was
+#      drained BY HAND with this same script, one film first and then the rest,
+#      and not one of them hit the 200 s wait. The failure did not reproduce on
+#      a single asset. It is still not explained, but it is no longer a reason
+#      to withhold the schedule: the script's own refusal path handles it — a
+#      master that never arrives raises `no master within 200 s`, the row is
+#      recorded refused, and the exit code is non-zero. The HLS fallback that
+#      made that case dangerous was removed long ago.
 #
-# `workflow_dispatch` is deliberately left in place, so a sweep is one click
-# whenever it is wanted — the pause removes the automatic claim, not the ability.
+#   2  "It would also be a writer racing a reader: the 447-film verification
+#      measures which rendition a phone gets."
+#
+#      That verification finished in October. There is no reader to race.
+#
+# ----------------------------------------------------------------------------
+# AND THE REASON IT CANNOT STAY PAUSED
+# ----------------------------------------------------------------------------
+# `replace_master_asset()` marks a vertical `stale` in the same statement that
+# swaps a master — correctly, because the old crop predates the new take. A
+# stale vertical mints no token, so lib/video-rendition.ts receives
+# `vertical: null` and serves the master letterboxed. That is the designed
+# fallback and it is fine for an hour.
+#
+# With the worker off it is permanent. Between 8 October and 20 November, 22
+# films had their masters swapped — by the trim close-out, the sync repair,
+# #87/#89 and the 30 October ingest — and every one of them served the
+# landscape cut to every phone from that day forward, with nothing anywhere
+# raising a word about it. It was found by somebody watching a film and saying
+# it looked wrong.
+#
+# The pause removed the automatic claim and left `workflow_dispatch` in place,
+# so the repair was always one click away — and in six weeks nobody clicked,
+# because nothing told them to. A queue with no drainer is not a queue.
 on:
-  # schedule:
-  #   # Every 30 minutes. Mux takes a few minutes per 4K master, so this picks up
-  #   # a batch in waves rather than all at once — which is what we want, since
-  #   # each derivation downloads a master and re-encodes it.
-  #   - cron: "*/30 * * * *"
+  schedule:
+    # Every 30 minutes. Mux takes a few minutes per 4K master, so this picks up
+    # a batch in waves rather than all at once — which is what we want, since
+    # each derivation downloads a master and re-encodes it.
+    - cron: "*/30 * * * *"
   # So a batch can be pushed along by hand without waiting for the next tick.
   workflow_dispatch:
 
