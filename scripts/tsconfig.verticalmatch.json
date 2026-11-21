@@ -1,0 +1,18 @@
+{
+  "//": "Standalone build for vertical-match-scenarios.ts. It reaches the REAL endsMatch in vertical-match.ts — the same function derive-vertical.ts calls — because a paraphrase would prove nothing about the gate that actually judges a rendition.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "outDir": "../.tmp-vm",
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] },
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["./vertical-match-scenarios.ts", "./vertical-match.ts"]
+}

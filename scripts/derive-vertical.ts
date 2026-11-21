@@ -15,6 +15,7 @@
    ============================================================================ */
 import { createClient } from "@supabase/supabase-js";
 import { readEnds, strip } from "./trim-check";
+import { endsMatch } from "./vertical-match";
 import Mux from "@mux/mux-node";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -342,15 +343,42 @@ async function deriveOne(row: Row) {
      * then a question for the library — trim:verify still reports it — and not a
      * reason to leave the row without a rendition.
      */
+    let matchDetail: string | null = null;
     if (!ok && lengthOk && row.mux_playback_id) {
+      /*
+       * ---- COMPARED AS TRANSCRIPTS, NOT AS ONE WORD ------------------------
+       *
+       * This used to be `strip(master.firstWord) === first && strip(
+       * master.lastWord) === last`. Run against the five films it refused on
+       * 21 November, three of those refusals were wrong — a numeral against
+       * its own number word ("2" vs "Two"), a trailing fragment whisper
+       * tokenised two ways, and one extra word caught at the window edge. One
+       * word is too small a sample to carry a refusal.
+       *
+       * endsMatch compares the head strictly and the tail with slack, which is
+       * what separates the three faithful crops from the two whose mezzanine
+       * genuinely starts four seconds late. scripts/vertical-match-scenarios.ts
+       * runs all five real transcripts and fails if either half moves.
+       *
+       * AND THE CATCH NO LONGER EATS THE REASON. It used to be `catch { }`, so
+       * a master read that FAILED was indistinguishable from one that
+       * DIFFERED, and the log said "[against Aloha/Mahalo]" either way. That
+       * cost an afternoon of reading transcripts to find out which had
+       * happened.
+       */
       try {
         const master = await readEnds(mux, row.mux_playback_id, row.duration_sec ?? 0, 10, "small.en", ".tmp-derive-check");
-        if (strip(master.firstWord ?? "") === first && strip(master.lastWord ?? "") === last) {
+        const m = endsMatch(master, ends);
+        matchDetail = m.detail;
+        if (m.ok) {
           ok = true;
-          against = `the master, which also opens "${master.firstWord}" and closes "${master.lastWord}"`;
-          console.log(`    faithful      matches the master word for word; the master itself is what differs from Aloha/Mahalo`);
+          against = `the master's own transcript (${m.detail})`;
+          console.log(`    faithful      ${m.detail}`);
         }
-      } catch { /* fall through to the refusal below */ }
+      } catch (e) {
+        matchDetail = `the master could not be read: ${e instanceof Error ? e.message : String(e)}`;
+        console.log(`    master read   FAILED — ${matchDetail}`);
+      }
     }
     console.log(
       `    checked       opens "${ends.firstWord ?? "—"}", closes "${ends.lastWord ?? "—"}", ` +
@@ -358,8 +386,8 @@ async function deriveOne(row: Row) {
     );
     if (!ok) {
       throw new Error(
-        `REFUSING to write this vertical: opens "${ends.firstWord ?? "—"}" closes ` +
-          `"${ends.lastWord ?? "—"}" ${asset.duration?.toFixed(2)}s vs ${row.duration_sec}s. ` +
+        `REFUSING to write this vertical: ${matchDetail ?? `opens "${ends.firstWord ?? "—"}" closes "${ends.lastWord ?? "—"}"`}` +
+          ` — ${asset.duration?.toFixed(2)}s vs ${row.duration_sec}s. ` +
           `The row keeps its previous vertical. Asset ${assetId} is left in Mux for inspection.`
       );
     }

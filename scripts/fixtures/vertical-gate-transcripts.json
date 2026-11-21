@@ -1,0 +1,132 @@
+[
+ {
+  "title": "Never Lose Money",
+  "expect": "pass",
+  "master": {
+   "firstWord": "Aloha!",
+   "lastWord": "-",
+   "leadIn": 0.411,
+   "tailAfterLast": 0,
+   "whisperFirstStart": 0,
+   "headHeard": "Aloha! Rule number one, never lose money. Rule number two, never forget rule number one. That's a quote by Warren Buffett.",
+   "tailHeard": "Do not discount. Take away features before gross. Customer won't lock in on a three -part service. Offer them a two -part service. Find where fee -",
+   "duration": 22,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "Aloha!",
+   "lastWord": "are.",
+   "leadIn": 0.426,
+   "tailAfterLast": 0,
+   "whisperFirstStart": 0,
+   "headHeard": "Aloha! Rule number one, never lose money. Rule number two, never forget rule number one. That's a quote by Warren Buffett.",
+   "tailHeard": "Do not discount. Take away features before gross. Customer won't lock in on a three -part service. Offer them a two -part service. Find where features are.",
+   "duration": 21.8,
+   "note": null
+  }
+ },
+ {
+  "title": "Your Toughest Opponent Is Staring at You",
+  "expect": "pass",
+  "master": {
+   "firstWord": "Aloha!",
+   "lastWord": "full...",
+   "leadIn": 0.288,
+   "tailAfterLast": 0.06,
+   "whisperFirstStart": 0,
+   "headHeard": "Aloha! Your toughest opponent is staring back at you. Look yourself in the mirror. You see this guy staring back at you? That's your toughest opponent.",
+   "tailHeard": "manifestation of bad thoughts is real, so is manifestation of good thoughts. You must first have that person in the glass as a believer before you can reach your full...",
+   "duration": 26,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "Aloha!",
+   "lastWord": "position.",
+   "leadIn": 0.304,
+   "tailAfterLast": 0.069,
+   "whisperFirstStart": 0,
+   "headHeard": "Aloha! Your toughest opponent is staring back at you. Look yourself in the mirror. You see this guy staring back at you? That's your toughest opponent.",
+   "tailHeard": "manifestation of bad thoughts is real, so is manifestation of good thoughts. You must first have that person in the glass as a believer before you can reach your full position.",
+   "duration": 25.8,
+   "note": null
+  }
+ },
+ {
+  "title": "Lasting Impressions, Part 8",
+  "expect": "refuse",
+  "master": {
+   "firstWord": "Aloha!",
+   "lastWord": "Mahalo!",
+   "leadIn": 0.155,
+   "tailAfterLast": 0.553,
+   "whisperFirstStart": 0,
+   "headHeard": "Aloha! Two more things in the packet, and both of them are free to include. Number one is accessories. If a truck rolls in, put a ...",
+   "tailHeard": "the customer. Your tires are in the green, they're in good shape, but I still put together a quote for you even though you didn't need them just to make sure you have it. Mahalo!",
+   "duration": 97,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "free",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.109,
+   "tailAfterLast": 5.51,
+   "whisperFirstStart": 0,
+   "headHeard": "free to include. 1. The accessories. If a truck rolls in, put a rack brochure in the packet. Most people have no idea what's available on",
+   "tailHeard": "quote for you, even though you didn't need them, just to make sure you have it. Mahalo.",
+   "duration": 96.733333,
+   "note": null
+  }
+ },
+ {
+  "title": "Two Minute Walk-Around, Part 1, Pop the Hood",
+  "expect": "pass",
+  "master": {
+   "firstWord": "2",
+   "lastWord": "Mahalo!",
+   "leadIn": 0.064,
+   "tailAfterLast": 0.552,
+   "whisperFirstStart": 0,
+   "headHeard": "2 minute walk around part 1. Pop the hood. Aloha. Now let's talk about the 2 minute walk around. We did the 30",
+   "tailHeard": "with a customer standing right next to you because then you lose their confidence. Next up, what we're actually looking for under the hood. Mahalo!",
+   "duration": 144,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "Two",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.355,
+   "tailAfterLast": 0.616,
+   "whisperFirstStart": 0,
+   "headHeard": "Two minute walk around part one pop the hood Aloha now, let's talk about the two minute walk around we did the 30",
+   "tailHeard": "with a customer standing right next to you because then you lose their confidence. Next up, what we're actually looking for under the hood. Mahalo.",
+   "duration": 144.066667,
+   "note": null
+  }
+ },
+ {
+  "title": "Brave Enough",
+  "expect": "refuse",
+  "master": {
+   "firstWord": "Aloha!",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.578,
+   "tailAfterLast": 0.991,
+   "whisperFirstStart": 0,
+   "headHeard": "Aloha! Brave Enough by Sarah Bahada. Let's be honest, the service drive can feel like a relentless machine. Between the angry customers...",
+   "tailHeard": "Take a breath, remember who you are doing this for, and keep being brave enough to chase it. Mahalo.",
+   "duration": 71,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "The",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.1,
+   "tailAfterLast": 6.082,
+   "whisperFirstStart": 0,
+   "headHeard": "The service drive can feel like a relentless machine between the angry customers, the backordered parts and the constant pressure to hit your numbers. It is incredible.",
+   "tailHeard": "and keep being brave enough to chase it. Mahalo.",
+   "duration": 70.633333,
+   "note": null
+  }
+ }
+]
