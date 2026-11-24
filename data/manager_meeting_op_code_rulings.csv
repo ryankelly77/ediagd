@@ -1,0 +1,6 @@
+workbook_title,op_code,ruling,rationale
+Engine Cleaning Service Boost Meeting,EFL-046,"Ryan + Mitch, 21 November 2026, ruling 1","EFL-046 Engine Flush. Family Oil Change, coachable."
+Tank Additive Boost Meeting,FSC-017,"Ryan + Mitch, 21 November 2026, ruling 2","FSC-017 Fuel System Cleaner. Family Fuel System, coachable."
+Complete Fuel System Service Boost Meeting,FSC-017,"Ryan + Mitch, 21 November 2026, ruling 3","FSC-017, explicitly NOT MNU-005 Engine Performance Menu. MNU-005 is coachable = false, so a film carrying it could never be picked — family_pitch_supply and manager_meeting_supply both filter on coachable."
+Decarb Service Boost Meeting,FSC-017,"Ryan + Mitch, 21 November 2026, ruling 4","FSC-017. No new catalog code is created for Decarb."
+A/C Performance Treatment Boost Meeting,ABT-054,"Ryan + Mitch, 21 November 2026, ruling 5","ABT-054. The meeting is retitled 'AC Performance' — see data/manager_meeting_overrides.csv. NOTE the catalog's own label for ABT-054 is the brand name 'Arctic Blast'; reported, not changed."
