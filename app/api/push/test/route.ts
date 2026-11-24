@@ -2,6 +2,21 @@
    EDIAGD — send a real notification to your own phone, on demand
 
    ---------------------------------------------------------------------------
+   BOTH PLATFORMS NOW, AND THE DEFAULT IS BOTH
+   ---------------------------------------------------------------------------
+   This used to end `.eq("platform", "ios")` because APNs was the only
+   transport. There are two now, and the route takes every live device the
+   caller has unless a body names one platform. Defaulting to BOTH rather than
+   to iOS is the whole value of the button: the question being asked is "does
+   push work for me", and an answer scoped to one handset while the other sits
+   silent is the scoped measurement reported as a general one that this
+   codebase keeps paying for.
+
+   Each device's line names its platform and the provider that answered it, so
+   "it worked" and "it worked on the phone you are holding" stay different
+   facts.
+
+   ---------------------------------------------------------------------------
    WHY THIS EXISTS
    ---------------------------------------------------------------------------
    The streak saver is deliberately almost impossible to trigger: it needs a
@@ -32,11 +47,41 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import {
-  describeApnsConfig,
-  isApnsConfigured,
-  sendToTokens,
-} from "@/lib/notifications/apns";
+  configuredPlatforms,
+  describePushTransports,
+  isAnyTransportConfigured,
+  sendPush,
+} from "@/lib/notifications/push-send";
 import { PUSH_COPY } from "@/lib/notifications/push-copy";
+
+/** `{"platform":"android"}` narrows the send; anything else means every device. */
+const TARGETS = ["ios", "android", "all"] as const;
+type Target = (typeof TARGETS)[number];
+
+/**
+ * The body is optional and a bad one is not a failure.
+ *
+ * The existing button posts no body at all and must keep working, so an
+ * unreadable or absent body means "all" rather than a 400. A VALUE that is not
+ * a known target is different — that is somebody asking for something specific
+ * and getting something else — so it is refused by name below.
+ */
+async function readTarget(
+  request: Request
+): Promise<{ target: Target } | { bad: string }> {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return { target: "all" };
+  }
+  const raw = (body as { platform?: unknown } | null)?.platform;
+  if (raw === undefined || raw === null) return { target: "all" };
+  if (typeof raw === "string" && (TARGETS as readonly string[]).includes(raw)) {
+    return { target: raw as Target };
+  }
+  return { bad: String(raw).slice(0, 40) };
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,7 +90,7 @@ export const dynamic = "force-dynamic";
    the least informative failure this route can produce. */
 export const maxDuration = 30;
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
   const supabase = await createClient();
   const {
@@ -63,12 +108,26 @@ export async function POST() {
     return NextResponse.json({ error: "platform owner only" }, { status: 403 });
   }
 
-  if (!isApnsConfigured()) {
+  const wanted = await readTarget(request);
+  if ("bad" in wanted) {
     return NextResponse.json({
       ok: false,
       reason:
-        "APNs is not configured — check APNS_KEY_ID, APNS_TEAM_ID and APNS_KEY_P8 " +
-        "are set in Vercel and that the deployment was rebuilt after adding them.",
+        `"${wanted.bad}" is not a platform. Send no body for every device, or ` +
+        `{"platform":"ios"} / {"platform":"android"} for one.`,
+    });
+  }
+  const target = wanted.target;
+
+  if (!isAnyTransportConfigured()) {
+    return NextResponse.json({
+      ok: false,
+      reason:
+        "No push transport is configured — APNs needs APNS_KEY_ID, APNS_TEAM_ID " +
+        "and APNS_KEY_P8; Firebase needs FCM_PROJECT_ID, FCM_CLIENT_EMAIL and " +
+        "FCM_PRIVATE_KEY. Set them in Vercel Production and redeploy; a Preview " +
+        "deployment refuses to send even with every variable present.",
+      config: await describePushTransports(),
     });
   }
 
@@ -76,32 +135,43 @@ export async function POST() {
      select-own, which would work, but the worker path reads them this way and a
      test should exercise the same route the real send does. */
   const service = createServiceClient();
-  const { data: devices } = await service
+  let query = service
     .from("device_push_token")
     .select("token, platform, last_seen")
     .eq("user_id", user.id)
-    .is("retired_at", null)
-    /* APNs is the only transport v1 has. Sending an Android token here earns a
-       guaranteed BadDeviceToken — which is exactly what the first real attempt
-       did, against an FCM token from August. See 0106. */
-    .eq("platform", "ios");
+    .is("retired_at", null);
+  /*
+   * NOT narrowed by default. 0106 added `.eq("platform","ios")` here because
+   * Apple was the only transport and an Android token earned a guaranteed
+   * BadDeviceToken. There are two transports now, so the filter's job has moved
+   * into push-send.ts, which picks a provider per device and refuses a platform
+   * it has no sender for BY NAME rather than dropping it.
+   */
+  if (target !== "all") query = query.eq("platform", target);
+  const { data: devices } = await query;
 
   if (!devices || devices.length === 0) {
+    const which = target === "all" ? "device" : `${target} device`;
     return NextResponse.json({
       ok: false,
       reason:
-        "No live iOS device on file for you. Open the app in the TestFlight " +
-        "shell on your iPhone — not a browser and not the simulator — and turn " +
-        "Streak reminders on in /profile, then allow the iOS prompt.",
-      config: describeApnsConfig(),
+        `No live ${which} on file for you. Open the app in the installed shell ` +
+        `on the phone itself — not a browser, not a simulator or emulator — and ` +
+        `turn Streak reminders on in /profile, then allow the system prompt. ` +
+        `On Android 13 and up that prompt is a separate permission and a "don't ` +
+        `allow" there leaves the registration with no token.`,
+      config: await describePushTransports(),
     });
   }
 
   /* The REAL copy, with a real streak number substituted, so what arrives on
      the lock screen is exactly what an advisor would see. */
   const copy = PUSH_COPY.streak_keeper;
-  const results = await sendToTokens(
-    devices.map((d) => d.token as string),
+  const results = await sendPush(
+    devices.map((d) => ({
+      token: d.token as string,
+      platform: d.platform as "ios" | "android",
+    })),
     {
       title: copy.title.replace("{days}", "7"),
       body: copy.body,
@@ -112,9 +182,16 @@ export async function POST() {
   return NextResponse.json({
     ok: [...results.values()].some((r) => r.ok),
     devices: devices.length,
-    config: describeApnsConfig(),
+    target,
+    /* What this deployment could have reached, beside what it tried. An
+       all-platforms send that found only an iPhone looks identical to a
+       working Android transport unless both are stated. */
+    configuredPlatforms: configuredPlatforms(),
+    config: await describePushTransports(),
     results: [...results.entries()].map(([token, r]) => ({
       device: token.slice(-6),
+      platform: r.platform,
+      transport: r.transport,
       ok: r.ok,
       status: r.status,
       reason: r.reason ?? null,
@@ -135,7 +212,10 @@ export async function POST() {
       {
         ok: false,
         reason: `Server error: ${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}`,
-        config: describeApnsConfig(),
+        /* The describe call is awaited inside a catch, so it must not be able
+           to throw on its own. Both halves return a plain object on every
+           path, including "not configured". */
+        config: await describePushTransports(),
       },
       { status: 200 }
     );

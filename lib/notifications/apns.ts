@@ -30,6 +30,7 @@
 
 import { createSign, createPrivateKey } from "node:crypto";
 import http2 from "node:http2";
+import type { PushMessage, PushResult } from "./push-result";
 
 const PRODUCTION_HOST = "https://api.push.apple.com";
 const SANDBOX_HOST = "https://api.sandbox.push.apple.com";
@@ -40,21 +41,25 @@ export const APNS_TOPIC = "ai.ediagd.app";
 /** Apple rejects tokens older than an hour; renew with room to spare. */
 const TOKEN_TTL_MS = 45 * 60 * 1000;
 
-export type ApnsResult = {
-  ok: boolean;
-  status: number;
-  /** Apple's machine-readable reason, e.g. "Unregistered", "BadDeviceToken". */
-  reason?: string;
-  /** Apple's id for the delivery, for a support conversation with them. */
-  apnsId?: string;
-};
-
-export type ApnsMessage = {
-  title: string;
-  body: string;
-  /** In-app route the tap lands on. Read by the listener in lib/native/bridge. */
-  deepLink: string;
-};
+/*
+ * ---------------------------------------------------------------------------
+ * THESE TWO TYPES NOW LIVE IN push-result.ts, AND THAT IS THE WHOLE CHANGE
+ * ---------------------------------------------------------------------------
+ * There is a second transport (lib/notifications/fcm.ts) and the delivery loop
+ * has to treat both alike: one result per device, one row recorded, retire what
+ * came back dead. Two structurally identical types with two names is how that
+ * loop grows a branch per provider — and a branch per provider is where
+ * "which one did we just record" gets lost.
+ *
+ * Kept as aliases rather than removed: `ApnsResult` is the name in
+ * isDeadToken's signature and in this file's own comments, and renaming it
+ * would churn a file whose value is largely what its comments remember.
+ * `apnsId` is the one field that changed shape — it is `providerId` now,
+ * because Google returns one too and a column called apns_id holding a
+ * Firebase message id is the mislabel this project keeps paying for.
+ */
+export type ApnsResult = PushResult;
+export type ApnsMessage = PushMessage;
 
 /**
  * The three secrets, read at call time rather than at module load.
@@ -348,12 +353,12 @@ export async function sendToTokens(
           });
 
           let status = 0;
-          let apnsId: string | undefined;
+          let providerId: string | undefined;
           let raw = "";
 
           req.on("response", (headers) => {
             status = Number(headers[":status"] ?? 0);
-            apnsId = headers["apns-id"] as string | undefined;
+            providerId = headers["apns-id"] as string | undefined;
           });
           req.on("data", (chunk) => (raw += chunk));
           req.on("end", () => {
@@ -365,7 +370,7 @@ export async function sendToTokens(
                 reason = raw.slice(0, 120);
               }
             }
-            results.set(token, { ok: status === 200, status, reason, apnsId });
+            results.set(token, { ok: status === 200, status, reason, providerId });
             resolve();
           });
           req.on("error", (err) => {
