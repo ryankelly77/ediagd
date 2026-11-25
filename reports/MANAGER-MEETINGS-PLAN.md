@@ -143,13 +143,87 @@ FSC-017 films are three separate candidates in the Fuel System family, served on
 after another on successive visits to that family rather than competing — which
 is the intended behaviour and needed no change.
 
-### Not folded in: the six changes from the adjustments doc
+### The six changes from the adjustments doc, folded in 24 November
 
-**`claude/manager-meetings-library-adjustments.md` is not on this machine.** It
-was searched for under the repo, `~/ediagd` and `~/ediagd/briefs`. Its six
-changes are therefore **not** incorporated, and nothing above should be read as
-including them. Stated rather than guessed: inventing six plausible changes and
-presenting them as Ryan's would be worse than the gap.
+`reports/manager-meetings-library-adjustments.md` is now in the repo, so the gap
+revision 4 recorded is closed. Its six changes, each with what this plan does
+about it:
+
+**1. Supply.** Folded — see *Every place that needs a fixture* below, rewritten.
+The doc's own conclusion holds and is now measured: every boost code maps to a
+`coachable` code, so **open question 2 does not bite this library**. That question
+stays open for a future menu-bundle film and is no longer blocking anything.
+
+**2. Identity is the Classification line, and ingest matches the spoken line.**
+Folded and built. `content.classification_line` (0183), and
+`lib/video/manager-slate.ts` reads it off the transcript — exact, then case and
+punctuation folded, and a miss **holds**. The doc's note that *"the 17 Bank
+Account films used a different slate shape and are not in this library"* is
+asserted in the fixture test rather than left as prose.
+
+**3. Browse metadata.** Folded, with **one correction to the doc**. It says
+*"`content.service_family` carries the topic today and `listManagerTopics` groups
+on it."* The second half is true; **the first half is not**, and acting on it is
+what put 213 films into the advisor pitch view — see the finding above. The
+columns the doc asks for are in 0183: `meeting_length`, `meeting_format`,
+`situation_tags text[]` with the 24-tag CHECK, plus `series`, `best_used_for`,
+`body` and `subcategory` as it specifies. `Status` and `Academy course` are not
+stored.
+
+**4. Family versus group — stated, not reconciled.** Folded as the doc asks.
+Mitch's boost group is a browse label and lives in `content.subcategory`; the
+ranking family comes from `op_code → op_code_family` and is a **different
+partition**. Oil Filter and Engine Oil Service rank under Oil Change while Mitch
+files them under Filters and Fluids; Battery and Bulbs sit under Electrical and
+lighting while the catalog splits Battery from Lighting.
+
+> **So a manager may see "Oil Change" named as the family on a film Mitch filed
+> under Filters, and that is correct rather than a bug.** The screen names the
+> family *the pick ranked*, because that is the number the meeting is about. The
+> two partitions are not reconciled and must not be: one is how Mitch organises a
+> library, the other is how the DMS measures a drive.
+
+**5. The meeting screen grows, and browse gains filters.** Recorded for slice 6
+rather than built — slice 6 is not in hand. It was film + family + attach rate by
+advisor; it now also shows the card (`best_used_for`) and the run sheet
+(`body`), because the run sheet is what the manager actually uses. `/meetings`
+gains filters on topic, length, format, situation tag and series. **Academy course
+is held back** — it belongs to a product that does not exist yet.
+
+**6. The 17 Bank Account films.** Folded; ruling 6 above. Not loaded, moved or
+retitled, and the slate matcher is asserted not to claim them.
+
+Two further facts from the doc, recorded because a later reader will want them:
+
+- **Catalog codes with no boost meeting:** DPF-059, SUS-058, ACC-060, MPI-061,
+  UCI-062, OAD-063, HYB-064 and the 13 MNU codes. **Families with no supply after
+  mapping:** Accessories, Inspections, Maintenance, Suspension. Expected, not a
+  gap — `no_supply` is the right answer for a rooftop whose weakest family is one
+  of those.
+- **The README's rules:** no meeting numbers, no MOC references, no op codes on
+  the sheet, *Series or set is a browse filter and not a play order*, and show
+  "When to use it" on the card. The third is why the op code mapping is its own
+  file; the fourth is why `content.series` is a label and nothing sorts by it.
+
+### `ABT-054` / "Arctic Blast" — ruled, 24 November
+
+The adjustments doc raised this as possibly covered by a cease and desist from
+MOC. **It is not.** Ryan, 24 November: *"Arctic Blast is a product that Doggett
+uses, so we are not violating anything. We should remove it at some point if we
+roll out to other dealers who do not use that product, but I think it can stay
+for now."*
+
+So the catalog label **stays**, and this is closed rather than open. The condition
+is worth keeping because it is a real future trigger: **the first rooftop that
+does not buy that product is the day the label becomes wrong**, and at that point
+it is a one-line change in `data/op_code_seed.csv` plus a re-seed — nothing joins
+on `name`, every join is on `code`. Recorded in
+`reports/MANAGER-MEETINGS-BRAND-REVIEW.md`.
+
+What remains true regardless: Mitch's own library never says "Arctic Blast". It
+says *"an A/C performance treatment"*. So a manager on the meeting screen will
+read the catalog's product name beside a film using the generic phrase — not a
+defect, just worth having decided on purpose.
 
 ---
 
@@ -945,6 +1019,56 @@ manager, `user_id` untouched. H: catalog read widened in its own slice. I: cron
 last.
 
 **Still open.**
+
+0. **THE `service_family` HOLE IN `service_family_content` — the one with a
+   deadline.** Listed first because it is the only open item that becomes a live
+   defect through somebody else's ordinary work rather than through neglect.
+
+   `service_family_content`'s family_tag arm is:
+
+   ```sql
+   select c.service_family as family, c.id, 'family_tag', true as coachable
+     from content c
+    where c.service_family is not null
+      and coalesce(c.placement::text, '') <> 'reference'
+   ```
+
+   It excludes **one placement, by name**, and hardcodes `coachable`. So **any**
+   manager film that acquires a `service_family` enters the view the advisor pitch
+   slot reads, announcing itself coachable. 0168 guarded the `content.op_code`
+   route into this view and its comment says why; **nobody guarded this arm**,
+   because until the loader existed no manager film had ever carried a
+   `service_family`.
+
+   **Measured, both ways.** Writing the Topic there put 213 of 213 manager films
+   into the view. Not writing it puts 0 there.
+
+   **Who this is for:** whoever buckets `/meetings` browse by Topic — which
+   adjustment 5 asks for, so it is scheduled work and not hypothetical. That
+   slice cannot simply set `service_family`; it must either close this arm first
+   or carry the topic somewhere else.
+
+   **The shape of the fix, if it is taken here:** exclude on `type`, not on
+   another placement name. `content.type` is `not null`, so `type <>
+   'manager_video'` cannot be forgotten by a row that takes a default — whereas a
+   second placement name in the exclusion list is one more value somebody must
+   remember to add, which is the defect this arm already has.
+
+   **Not done on this branch, deliberately.** It is a change to the view the
+   advisor daily loop reads, this branch's standing rule is to reproduce the
+   picker rather than improve it, and nothing here needs it because the loader
+   does not write the column. Recorded so the next person meets the question
+   before the rows meet the advisors.
+
+   **One thing I could not check from here, and it matters.** The adjustments doc
+   says `content.service_family` *"carries the topic today"*. If the 17 Bank
+   Account films already have it set in **production**, they are already in
+   `service_family_content` and this is a live defect rather than a future one.
+   The local stack carries no `manager_video` rows and this branch has no
+   production credentials, so it is unmeasured. **One query answers it:**
+   `select count(*) from content where type = 'manager_video' and service_family
+   is not null;`
+
 
 1. **The coverage measurement has not been run.** It needs a service-role key
    placed in `~/ediagd-manager/.env.local`, or you running the two queries above

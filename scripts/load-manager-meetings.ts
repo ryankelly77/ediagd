@@ -58,20 +58,124 @@
 ============================================================================ */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readFileSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { createInterface } from "node:readline";
 import { join } from "node:path";
 import { refuseWriteOnPreview } from "@/lib/deploy-env";
 
-const URL = process.env.SB_URL!;
-const KEY = process.env.SB_KEY!;
-const APPLY = process.argv.includes("--apply");
-
-if (!URL || !KEY) {
-  console.error("\n  need SB_URL and SB_KEY\n");
-  process.exit(1);
+/**
+ * Is this URL a local stack?
+ *
+ * ONE DEFINITION, USED BY BOTH DIRECTIONS, and that matters more than the
+ * pattern. The local path requires this to be true and the production path
+ * requires it to be false, so two separate regexes would eventually disagree
+ * and leave a URL that is neither accepted nor refused — or worse, accepted by
+ * both.
+ *
+ * `::1` and `0.0.0.0` are in here because the first version matched only the
+ * literal strings "127.0.0.1" and "localhost". That was wrong in the dangerous
+ * direction for the production path: `http://[::1]:55321` is a local stack and
+ * would have been accepted as production. Found while trying to exercise the
+ * typed confirmation against a local database, which is itself refused — see
+ * the note on the confirmation below.
+ */
+function isLocalUrl(u: string): boolean {
+  return /(^|\/\/)(localhost|127\.0\.0\.1|\[::1\]|::1|0\.0\.0\.0)(:|\/|$)/i.test(u);
 }
-if (!/127\.0\.0\.1|localhost/.test(URL)) {
-  console.error(`REFUSING to run against ${URL} — this writes content rows. Local only.`);
-  process.exit(1);
+
+const APPLY = process.argv.includes("--apply");
+const TARGET_PRODUCTION = process.argv.includes("--target") &&
+  process.argv[process.argv.indexOf("--target") + 1] === "production";
+
+/* ---- which database, and under what conditions --------------------------- */
+/**
+ * LOCAL IS THE DEFAULT AND PRODUCTION IS AN EXPLICIT, GUARDED ACT.
+ *
+ * Without `--target production` nothing about this script has changed: it needs
+ * SB_URL and SB_KEY, it refuses any URL that is not localhost, and `--apply`
+ * is still the only thing that writes.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THE PRODUCTION PATH IS GATED ON THE BRANCH BEING `main`
+ * ---------------------------------------------------------------------------
+ * `main` IS the deploy, and `main` is the only branch whose contents have been
+ * through a pull request Ryan read. The committed inputs this loader writes from
+ * — data/manager_meetings.csv, the op code mapping, the overrides — are exactly
+ * the sort of file a working branch edits freely. Loading production from a
+ * feature branch would put unreviewed rows into live rooftops and leave the
+ * library disagreeing with what shipped.
+ *
+ * So the branch is READ FROM GIT, not taken on trust, and it must be `main`.
+ * This also means the production load runs from ~/ediagd and not from a
+ * worktree, which is the same rule migrations already follow and for the same
+ * reason.
+ *
+ * ---------------------------------------------------------------------------
+ * AND WHY THE OPERATOR TYPES THE WORD
+ * ---------------------------------------------------------------------------
+ * Every other guard here is a machine checking a machine. The typed
+ * confirmation is the one place a PERSON confirms, after reading the dry-run
+ * report printed immediately above it — which is why the report is printed in
+ * full and the prompt comes after it rather than before. A y/n would be
+ * answered by reflex; the word has to be chosen.
+ */
+const URL = TARGET_PRODUCTION
+  ? process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SB_URL!
+  : process.env.SB_URL!;
+const KEY = TARGET_PRODUCTION
+  ? process.env.SUPABASE_SERVICE_ROLE_KEY!
+  : process.env.SB_KEY!;
+
+if (TARGET_PRODUCTION) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error(
+      "\n  --target production needs SUPABASE_SERVICE_ROLE_KEY in the environment.\n" +
+      "  It is deliberately not read from any file: a key that arrives from a\n" +
+      "  dotenv is a key nobody decided to use on this run.\n"
+    );
+    process.exit(1);
+  }
+  if (!URL) {
+    console.error("\n  --target production needs NEXT_PUBLIC_SUPABASE_URL (or SB_URL).\n");
+    process.exit(1);
+  }
+  if (isLocalUrl(URL)) {
+    console.error(
+      `\n  --target production was given a local URL (${URL}).\n` +
+      "  Refusing: the flag and the target disagree, and guessing which one is\n" +
+      "  meant is how a production run becomes a local one or the reverse.\n"
+    );
+    process.exit(1);
+  }
+  const branch = (() => {
+    try {
+      return execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+        encoding: "utf8",
+      }).trim();
+    } catch {
+      return null;
+    }
+  })();
+  if (branch !== "main") {
+    console.error(
+      `\n  REFUSING --target production: this checkout is on ${branch ?? "an unknown branch"}, not main.\n` +
+      "\n  main is the deploy and the only branch whose inputs Ryan has reviewed.\n" +
+      "  Load production from the main checkout (~/ediagd), on main.\n"
+    );
+    process.exit(1);
+  }
+} else {
+  if (!URL || !KEY) {
+    console.error("\n  need SB_URL and SB_KEY\n");
+    process.exit(1);
+  }
+  if (!isLocalUrl(URL)) {
+    console.error(
+      `REFUSING to run against ${URL} — this writes content rows. Local only,\n` +
+      "  unless you mean it and pass --target production."
+    );
+    process.exit(1);
+  }
 }
 
 /**
@@ -280,7 +384,11 @@ function differs(existing: Record<string, unknown>, desired: Record<string, unkn
 }
 
 async function main() {
-  console.log(`\nManager Meetings — load  (${APPLY ? "APPLY" : "DRY RUN"})`);
+  console.log(
+    `\nManager Meetings — load  (${APPLY ? "APPLY" : "DRY RUN"}` +
+      `${TARGET_PRODUCTION ? ", TARGET: PRODUCTION" : ""})`
+  );
+  if (TARGET_PRODUCTION) console.log(`  database: ${URL}`);
   console.log("=".repeat(70));
 
   const meetings = readCsv(MEETINGS_CSV);
@@ -457,8 +565,40 @@ async function main() {
   }
 
   /* ---- write ------------------------------------------------------------ */
-  // Slice 0's guard. A loader is exactly the "seeds" case the branch rule names.
+  /* Slice 0's guard, FIRST and before anything else on the write path. A loader
+     is exactly the "seeds" case the branch rule names, and Vercel Preview holds
+     a service-role key against the production project. */
   refuseWriteOnPreview("load the Manager Meetings library");
+
+  /* THE TYPED CONFIRMATION. Deliberately after the whole report above, so the
+     person answering has just read what is about to happen rather than being
+     asked before they know. */
+  if (TARGET_PRODUCTION) {
+    console.log("\n" + "!".repeat(70));
+    console.log("  This will write the rows planned above to PRODUCTION:");
+    console.log(`    ${URL}`);
+    console.log(
+      `    ${inserts.length} insert(s), ${updates.length} update(s), ` +
+        `${codes.length} op code mapping(s)`
+    );
+    console.log("  Nothing is written if you type anything else.");
+    console.log("!".repeat(70));
+    const answer = await new Promise<string>((resolve) => {
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      rl.question('\n  Type the word production to continue: ', (a) => {
+        rl.close();
+        resolve(a);
+      });
+    });
+    if (answer.trim() !== "production") {
+      console.log(
+        `\n  Not confirmed (read ${JSON.stringify(answer.trim())}) — nothing written.`
+      );
+      console.log("=".repeat(70));
+      return;
+    }
+    console.log("  confirmed.\n");
+  }
 
   let inserted = 0;
   let updated = 0;
