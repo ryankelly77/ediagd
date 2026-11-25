@@ -1,0 +1,33 @@
+{
+  "//": "Standalone build for fcm-scenarios.ts. It imports the REAL sender, router and push copy through the @/ alias — a paraphrase of the dead-token mapping would prove nothing about the mapping the cron actually runs. push-send.ts pulls in apns.ts, which is wanted: the router test leaves APNs unconfigured on purpose so an iOS token comes back with Apple's own reason string.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-fcm",
+    "baseUrl": "..",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "./fcm-scenarios.ts",
+    "../lib/notifications/fcm.ts",
+    "../lib/notifications/apns.ts",
+    "../lib/notifications/push-send.ts",
+    "../lib/notifications/push-result.ts",
+    "../lib/notifications/push-copy.ts"
+  ]
+}
