@@ -4,7 +4,11 @@ Mapping the spec onto the schema and code as they stand on `main` at `c1f3b4b`.
 No feature code written. Read with `MANAGER_MEETINGS.md` for the branch rules and
 the Preview constraint.
 
-**Revision 3**, re-grounded on current `origin/main`. Revision 2 mapped onto
+**Revision 4**, 21 November 2026 — the library arrives. Mitch's 213 meetings are
+catalogued and loadable, Ryan's six rulings are recorded as data, and three things
+the work discovered are written down. See *Revision 4* immediately below.
+
+**Revision 3**, re-grounded on `origin/main`. Revision 2 mapped onto
 `c94e835`; thirty-three commits and six new migrations have landed since, and this revision
 is what re-reading them changed. Nothing in the *design* moved — rulings A–I all
 still hold, and every view, function and library the plan leans on is byte-identical
@@ -32,6 +36,120 @@ one of them is the number it would have written into a migration filename.
    *required* to edit. Both are now in the slice. See *(d)*.
 
 Revision 2's own record of what the rulings settled is kept at the end, unchanged.
+
+---
+
+## Revision 4 — the library arrives, 21 November 2026
+
+Mitch's Manager Meetings library is catalogued: **213 meetings**, of which **57
+are op-code boost meetings**. The workbook, the cheat sheet and the teleprompter
+lines are Mitch's files and are not committed; `scripts/extract-manager-meetings.py`
+turns them into two reviewable inputs in `data/`, and
+`scripts/load-manager-meetings.ts` writes draft `content` rows and
+`manager_meeting_op_code` rows from those.
+
+**The library is not final and nothing in this plan asserts a count.** About 100
+films are shot and about 115 are still to come, with more manager mindset films
+after that. Every number here is a reading of the 18 November workbook, reported
+and never required — the one exception is that a boost meeting with no op code is
+a hard refusal, because such a film loads cleanly and can never be picked.
+
+### Ryan's rulings, with Mitch, 21 November 2026
+
+| # | meeting | ruling |
+|---|---|---|
+| 1 | Engine Cleaning Service | **EFL-046** Engine Flush |
+| 2 | Tank Additive | **FSC-017** Fuel System Cleaner |
+| 3 | Complete Fuel System Service | **FSC-017** — explicitly *not* MNU-005 |
+| 4 | Decarb Service | **FSC-017**, no new catalog code |
+| 5 | A/C Performance Treatment | **ABT-054**, retitled **"AC Performance"** |
+| 6 | the 17 Bank Account films | unchanged — own topic, placement as-is, never auto-picked, not loaded |
+
+Recorded as data, not only as prose:
+`data/manager_meeting_op_code_rulings.csv` and
+`data/manager_meeting_overrides.csv`. The loader reads both, so a ruling is an
+input rather than a thing somebody remembers.
+
+**Ruling 3 is the one with teeth, and the guard was proved.** MNU-005 is
+`coachable = false`, and both supply views filter on `coachable` — so a film on
+MNU-005 would load without complaint, sit in the library, and never be served.
+The extractor refuses any code that is absent from the catalog or marked
+`coachable = false`; pointing a ruling at MNU-005 on purpose produces
+`REFUSING TO WRITE — 1 problem(s)` and exit 1, and leaves the previously good
+CSVs untruncated.
+
+**Ruling 5's old title is gone from everything user-facing**: the exact string
+*"A/C Performance Treatment Boost Meeting"* appears **0 times** in any field the
+loader writes. The phrase *"performance treatment"* does survive inside Mitch's
+own prose on six meetings — five of which are not the renamed one — because that
+is him describing the service, not naming the meeting. Not edited; reported.
+
+### Three things the work discovered, which the plan did not know
+
+**1. `content.service_family` must not carry the Topic, and this was found by
+doing it.** It was the obvious home — `listManagerTopics` buckets browse on it.
+Loading 213 rows that way put **all 213 into `service_family_content`**, the view
+the advisor pitch slot reads, with `true as coachable` hardcoded on the arm they
+entered through.
+
+That arm is `where service_family is not null and coalesce(placement,'') <>
+'reference'`. It excludes **one placement, by name**, so `'manager_meeting'`
+passes straight through. 0168 saw this coming for the *other* route in — its
+comment is why the op code lives in `manager_meeting_op_code` rather than
+`content.op_code` — but the family_tag arm has the identical hole and nobody had
+to guard it, because until now no manager film had ever carried a
+`service_family`.
+
+So the loader does not write it. Nothing is lost: the Topic is segment 2 of the
+classification line and a column in the committed CSV, and browse behaves exactly
+as it does today, with every manager film in `MANAGER_GENERAL_TOPIC` alongside
+the 17 Bank Account films — ruling 6 honoured by doing nothing.
+
+> **Open, and it belongs to whoever buckets browse by Topic.** That slice has to
+> close the family_tag hole first, or publishing these films puts them in the
+> advisor pitch slot. `content.service_family` is read by six things that all
+> mean "which service": `family_pitch_supply`, `service_family_content`,
+> `service_family_cue_count`, `impact_coaching`, both `blog_corpus_*` views and
+> `lib/daily.ts`. "Leading Yourself" is not a service family.
+
+**2. The classification line cannot be rebuilt, so it is stored.** 0183 adds
+`content.classification_line`, unique where not null. The line is observed —
+Mitch wrote it and says it on camera — and every apparent component of it is
+derived: the line reads `10 mins` where `meeting_length` reads `10 minutes`, and
+**four A/C titles contain a literal `/`**, so the line does not split into four
+parts. `scripts/trim-slates.ts` already paid for this exact lesson here, matching
+0 of 73 on a derived name and reporting success.
+
+The unique index then earned itself immediately. One title is
+`"Questions, Comments, Concerns?" — The Three-Part Close`; a PostgREST
+`in.(...)` filter mangled the quote and the commas, the loader concluded the
+meeting was absent and tried to insert a second row, and the index refused it
+with a 23505. The loader's own duplicate check saw nothing — the duplicate was
+not in the input, it was in the lookup — so **only the construction was
+positioned to notice**. The lookup now pages and matches in memory, escaping
+nothing.
+
+**3. A code carries several films, and 0168 already allows it.** FSC-017 now
+carries three meetings after rulings 2, 3 and 4. `manager_meeting_op_code`'s
+primary key is `content_id` and `op_code` is only indexed, so three rows with one
+code are fine by construction — 0168 chose that deliberately, against a unique
+index, for exactly this case. Verified on the loaded data.
+
+**What a manager sees today: nothing new, and that is correct.** All 213 rows are
+`draft`, and both `listManagerTopics` and `loadManagerVideos` filter
+`status = 'published'`. Under ruling B the pick orders by last-served with
+never-served first and ties by op code, so once these are published the three
+FSC-017 films are three separate candidates in the Fuel System family, served one
+after another on successive visits to that family rather than competing — which
+is the intended behaviour and needed no change.
+
+### Not folded in: the six changes from the adjustments doc
+
+**`claude/manager-meetings-library-adjustments.md` is not on this machine.** It
+was searched for under the repo, `~/ediagd` and `~/ediagd/briefs`. Its six
+changes are therefore **not** incorporated, and nothing above should be read as
+including them. Stated rather than guessed: inventing six plausible changes and
+presenting them as Ryan's would be worse than the gap.
 
 ---
 
@@ -663,10 +781,11 @@ stay provisional and are to be re-derived at PR time.
 
 | slice | migration | status |
 |---|---|---|
-| 1 — the catalog read widens | **`0182`** | taken; file exists on this branch |
-| 2 — the two ranking views | `0183` | provisional |
-| 3 — the serve table and the setting | `0184` | provisional |
-| 5 — the event kinds | `0185` | provisional |
+| 1 — the catalog read widens | `0182` | **merged and applied to production** |
+| the library columns (revision 4) | **`0183`** | taken; file is in this PR, unapplied |
+| 2 — the two ranking views | `0184` | provisional |
+| 3 — the serve table and the setting | `0185` | provisional |
+| 5 — the event kinds | `0186` | provisional |
 
 **`main` is merged in, and stays merged in.** The branch rule is to merge at least
 weekly and *always* before writing a migration — a number taken on a stale base
@@ -720,18 +839,60 @@ nothing.
 
 ---
 
-## Every place that needs a fixture, because Vol 4 is not filmed
+## Every place that needs a fixture — and what the boost library changes
 
-No Vol 4 film exists, so **no family has a manager film, so the pick's inner join
-returns nothing for every rooftop** — the `no_supply` reason above is the correct
-answer for all eleven rooftops today. Every slice from 2 onward is untestable
-without fixtures. All local, created and deleted by the same script, per the
-Preview constraint.
+**Superseded in part, 21 November.** This section used to open *"No Vol 4 film
+exists, so no family has a manager film, so the pick's inner join returns nothing
+for every rooftop — the `no_supply` reason is the correct answer for all eleven
+rooftops today."* That was true when it was written and it is now false, which is
+the better outcome and the reason this section is rewritten rather than annotated.
 
-1. **Manager films and their codes** — throwaway `content` rows
-   (`type='manager_video'`, `placement='manager_meeting'`, `status='published'`,
-   a `mux_playback_id`) plus `manager_meeting_op_code` rows pointing at catalog
-   codes whose families the fixture feed measures. *Slices 2, 4, 6–9.*
+**Mitch's library gives the pick real supply.** 213 meetings are catalogued, 57
+of them op-code boost meetings, and **every one of the 57 carries exactly one
+catalog code that is present and `coachable = true`** — measured, see the loader
+report. Those 57 codes fall into real families, so a rooftop whose weakest family
+is Brakes or Fuel System now has something to be served.
+
+Two things that have NOT changed, and both matter more than the supply:
+
+- **Nothing is published.** The loader writes `status = 'draft'` with no Mux id,
+  because the films are not shot — about 100 of the library is in the can and
+  about 115 is still to come. Whatever the pick's supply view ends up filtering
+  on, a draft row is not a servable film, so `no_supply` remains the correct
+  answer in production until Ryan publishes.
+- **`no_supply` therefore still needs its fixture.** It is now the *expected
+  state while filming continues* rather than the permanent state, which makes it
+  more important to test and not less: it is the reason a manager sees nothing on
+  a Monday, and it must read as a normal state rather than a fault.
+
+**The supply view must filter on `status`, and that is new work this discovers.**
+`manager_meeting_supply` was specified as "families that have at least one
+published manager film". With 213 draft rows in the table that word *published*
+stops being decorative and becomes the whole of the gate — and it is exactly the
+shape of condition this document has been caught by twice (an exclusion by value,
+on a column that something else writes). Slice 2 asserts it with a draft fixture
+that must NOT appear in supply.
+
+1. **Manager films and their codes** — *rewritten 21 November.* The real library
+   now exists, so this is no longer "invent some films". Two different fixtures
+   are needed and conflating them is how a suite passes for the wrong reason:
+
+   - **A published film, hand-built** (`type='manager_video'`,
+     `placement='manager_meeting'`, `status='published'`, a `mux_playback_id`)
+     plus its `manager_meeting_op_code` row, on a code whose family the fixture
+     DMS feed measures. This is the only way to exercise a successful pick, and
+     it stays a throwaway fixture precisely because no real film is publishable
+     yet. *Slices 2, 4, 6–9.*
+   - **A draft film from the real library**, left exactly as the loader wrote it,
+     asserted to be **absent** from `manager_meeting_supply` and never picked.
+     Without this the `status` filter above is a convention. *Slices 2, 4.*
+
+   **Do not build fixtures by loading the real library into the test rooftop.**
+   The loader is keyed on the classification line and `content` has no rooftop
+   column, so the 213 rows are global — a suite that loaded them would be
+   mutating the shared library to test a pick, and its teardown would be deleting
+   rows somebody else's run depends on. The acceptance suite builds its own films
+   and deletes them; the loader is exercised separately, by its own dry run.
 2. **The DMS side** — `perf_period`, `advisor_op_metric` and `sub_category_map`
    rows giving two or more families a real spread across advisors, so one family
    genuinely outranks another. Extends the shape `focus-family-acceptance.ts`

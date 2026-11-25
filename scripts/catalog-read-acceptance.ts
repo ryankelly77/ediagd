@@ -78,10 +78,6 @@ function ok(label: string, cond: boolean, detail?: string) {
   }
 }
 const section = (t: string) => console.log(`\n${t}`);
-function need<T>(v: T | null | undefined, what: string): T {
-  if (v == null) throw new Error(`fixture expected ${what}, got nothing`);
-  return v;
-}
 
 /* ---- fixtures ------------------------------------------------------------- */
 const TAG = `cat-${randomUUID().slice(0, 8)}`;

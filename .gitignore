@@ -168,3 +168,8 @@ reports/sync-repair.log
 reports/sync-finish.json
 reports/.sync-finish.lock
 reports/.sync-repair.lock
+
+# Mitch's source files for the manager meetings library — untracked on purpose.
+# The committed input is data/manager_meeting_op_codes.csv and the workbook
+# export, both reproducible from these; the originals are not ours to commit.
+drop/
