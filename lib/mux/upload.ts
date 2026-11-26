@@ -57,12 +57,31 @@ export type UploadDraft = {
  * so the origin has to be named; leaving it open would let any page that
  * learned a URL upload into this account.
  */
-export async function createDirectUpload(origin: string, title?: string) {
+export async function createDirectUpload(
+  origin: string,
+  title?: string,
+  /**
+   * What this asset is FOR, carried by Mux onto the asset and back out on every
+   * webhook event about it.
+   *
+   * The Manager Meetings library is loaded before it is filmed, so the content
+   * row already exists and the film has to attach to it rather than create a
+   * second one. `{"content_id": "<uuid>"}` here is how the ingest says which
+   * row, at the moment it creates the upload — see lib/video/asset-attach.ts.
+   *
+   * OPTIONAL, AND ABSENT MEANS THE OLD BEHAVIOUR. The admin uploader and the
+   * 9:16 derive do not pass it and must keep working exactly as they did; the
+   * webhook treats a missing passthrough as "insert from the draft", which is
+   * what it has always done.
+   */
+  passthrough?: string
+) {
   const mux = muxClient();
 
   const upload = await mux.video.uploads.create({
     cors_origin: origin,
     new_asset_settings: {
+      ...(passthrough ? { passthrough } : {}),
       /*
        * THE DASHBOARD SHOWS meta.title, AND NOTHING ELSE.
        *

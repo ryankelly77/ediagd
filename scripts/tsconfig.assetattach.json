@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "outDir": "../.tmp-aat",
+    "module": "commonjs",
+    "target": "es2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": [
+    "asset-attach-scenarios.ts",
+    "../lib/video/asset-attach.ts",
+    "../lib/events/kinds.ts"
+  ]
+}
