@@ -1,5 +1,22 @@
 # MOC references and branded product names a user can see
 
+> **RULED, 24 November 2026 — `ABT-054` keeps the label `Arctic Blast`.** Ryan:
+> *"Arctic Blast is a product that Doggett uses, so we are not violating
+> anything. We should remove it at some point if we roll out to other dealers who
+> do not use that product, but I think it can stay for now."*
+>
+> So §2 and §4 below are **closed, not open**. One correction to what §2 first
+> implied: `reports/manager-meetings-library-adjustments.md` records that Mitch
+> retitled the meeting *"to comply with the cease and desist from MOC"*, which
+> made it look as though the catalog label might be covered too. It is not — the
+> rename was about the meeting title, and the product is one Doggett actually
+> buys.
+>
+> **The condition is the part to keep.** The label becomes wrong on the day the
+> first rooftop that does not use the product is onboarded, and nothing will
+> announce that day. Trigger written down here so it is met deliberately: the fix
+> is one line in `data/op_code_seed.csv` plus a re-seed.
+
 **Read-only. Nothing in this report was changed.** Step 3 of Ryan's 21 November
 prompt: find every place the manager meetings library text or the op code catalog
 shows a user a MOC reference or a branded product name, including the catalog
@@ -119,15 +136,17 @@ measure would be a scoped measurement reported as a general one.
 
 ---
 
-## 4. What Ryan is actually being asked
-
-One decision, and it is small either way:
+## 4. Asked, and answered
 
 > **Does `ABT-054` keep the catalog label `Arctic Blast`, now that a manager will
 > read it on the meeting screen next to a film that calls it an A/C performance
 > treatment?**
 
-If it changes: `data/op_code_seed.csv` and `data/op_code_family_map.csv` carry the
+**Answered 24 November: yes, for now.** It is a product Doggett uses, so there is
+nothing to comply with, and a manager recognising the name is a point in its
+favour. Revisit on rollout to a dealer that does not use it.
+
+Kept because it is still true of the mechanics. If it changes: `data/op_code_seed.csv` and `data/op_code_family_map.csv` carry the
 name, `scripts/seed-op-codes.ts` re-seeds it, and nothing joins on `name` — every
 join is on `code`, so a rename cannot break a mapping. If it stays, the only
 action is to know that the two words will appear together.

@@ -449,6 +449,37 @@ home:
 | Name Tag | CSI | Ryan's ruling — and the quiz bank named CSI parts with Name Tag titles |
 | Success Cycle, Vocabulary That Sails | Power of Positive Language? | the two films that teach vocabulary are slated Success Cycle |
 
+**The Manager Meetings shape, added 24 November — and it is the exception that
+proves the rule rather than a counter-example to it.**
+
+| the slate says | it belongs to | how it is resolved |
+|---|---|---|
+| `Manager Meetings/<Topic>/<length>/<Title>` | the row whose `content.classification_line` equals it | looked up, exact then case-and-punctuation folded — never approximated |
+
+Every film in this track speaks its Classification line before the Aloha, and
+that line IS the meeting's identity: it is what `content.classification_line`
+stores (0183, unique where not null) and what the loader keys on. So for this one
+track the slate is not a hypothesis about the curriculum — **it is a primary key
+the film reads aloud**, and identification is a lookup rather than a judgement.
+
+**What makes that safe is that it is never widened into a guess.** An unknown
+line HOLDS. A line that folds onto two rows HOLDS and names both. A near-miss is
+never resolved to the closest title — which is exactly what the five rows above
+would have cost us, since four of the five share three of their four segments
+with the film they were nearly filed under. `lib/video/manager-slate.ts`, proved
+by `npm run test:manager-slate` on an exact match, a folded match and a miss.
+
+**Two things it must not claim, both asserted.** An advisor or craft film has no
+slate and still goes through `transcript-match.ts` untouched. The 17 Bank Account
+films use a different slate shape — "Manager Bank Account, deposit number four" —
+and are not in this library, so they are not claimed by it.
+
+**And the boundary is the Aloha, which is load-bearing.** Mitch reads the card
+aloud inside some films, so a Classification line appearing *after* the Aloha is
+another meeting being mentioned, not this film declaring itself. Reading only the
+head is what keeps those apart.
+
+
 **And the same shape inside a single series.** Four Step Close parts 1–9 agree
 between the quiz bank and the films; from part 10 they diverge, because the
 workbook carries a lesson — *Fit the Close to the Customer* — that no film exists

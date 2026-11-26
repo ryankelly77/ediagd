@@ -40,6 +40,7 @@ import {
   type FilmScript,
   type Proposal,
 } from "../lib/video/transcript-match";
+import { matchSlate, type SlateRow, type SlateMatch } from "../lib/video/manager-slate";
 
 /**
  * What is already in the library, so a reshoot is named as a reshoot.
@@ -84,6 +85,40 @@ async function liveVersions(): Promise<Map<string, number>> {
     if (!map.has(identity) || v > (map.get(identity) as number)) map.set(identity, v);
   }
   return map;
+}
+
+/**
+ * The Manager Meetings library, for slate identification.
+ *
+ * ---------------------------------------------------------------------------
+ * THIS TRACK IS IDENTIFIED BY LOOKUP, NOT BY THE MATCHER
+ * ---------------------------------------------------------------------------
+ * Every Manager Meetings film opens with its Classification line before the
+ * Aloha — "Manager Meetings/<Topic>/<length>/<Title>" — which IS the meeting's
+ * identity and is what `content.classification_line` holds (0183). So the film
+ * says what it is and there is nothing to infer.
+ *
+ * NO OTHER TRACK IS AFFECTED. Advisor and craft films have no slate, `matchSlate`
+ * returns no match for them, and they go through `matchTranscript` exactly as
+ * before. The 17 Bank Account films use a different slate shape and are not in
+ * this library, so they are not claimed either — both asserted in
+ * npm run test:manager-slate.
+ *
+ * Without SB_URL / SB_KEY the library is empty and every slate film HOLDS rather
+ * than being matched by content — which is the right failure. A manager meeting
+ * guessed at by the keyword matcher would be named after whatever service it
+ * happens to discuss, and the matcher has no way to know it should not try.
+ */
+async function managerLibrary(): Promise<SlateRow[]> {
+  const url = process.env.SB_URL, key = process.env.SB_KEY;
+  if (!url || !key) return [];
+  const res = await fetch(
+    `${url}/rest/v1/content?select=id,title,classification_line` +
+      `&classification_line=not.is.null`,
+    { headers: { apikey: key, authorization: `Bearer ${key}` } }
+  );
+  const rows = (await res.json()) as SlateRow[];
+  return Array.isArray(rows) ? rows : [];
 }
 
 const TRANSCRIPTS = "reports/dropzone-transcripts.json";
@@ -153,19 +188,50 @@ function opening(text: string, chars = 150): string {
 
 async function main() {
   const LIVE = await liveVersions();
+  const LIBRARY = await managerLibrary();
+  if (LIBRARY.length) {
+    console.log(`  ${LIBRARY.length} Manager Meetings rows available for slate lookup`);
+  }
   const { rows, profiles, scripts } = load();
   const usable = rows.filter((r) => r.transcript && r.transcript.length > 0);
 
   console.log(`\n  ${rows.length} files · ${usable.length} transcribed\n`);
 
-  const matched = usable.map((r) => ({
-    ...r,
-    id: r.file,
-    proposal: matchTranscript(r.transcript, profiles, scripts),
-  }));
+  /* The slate is read FIRST, and only where it is absent does the matcher run.
+     A film that declares itself must not then be argued with. */
+  const matched = usable.map((r) => {
+    const slate: SlateMatch = matchSlate(r.transcript, LIBRARY);
+    return {
+      ...r,
+      id: r.file,
+      slate,
+      /* Still computed for a slate film, because the report shows what the
+         matcher WOULD have said — useful evidence when a slate holds — but it
+         is never used to name one. */
+      proposal: matchTranscript(r.transcript, profiles, scripts),
+    };
+  });
 
-  /** The one place a file's proposed name is decided — ruling or matcher. */
+  const slateFilms = matched.filter((m) => m.slate.ok || m.slate.line !== null);
+  if (slateFilms.length) {
+    console.log(`  ${slateFilms.length} file(s) carry a Manager Meetings slate\n`);
+  }
+
+  /** The one place a file's proposed name is decided — slate, ruling or matcher. */
   const nameFor = (m: (typeof matched)[number]): string | null => {
+    /* A SLATE OUTRANKS BOTH. The film declared itself, so the name is the
+       library's title for the row it named. A slate that did NOT resolve
+       returns null here, which makes it a hold — never the matcher's guess,
+       because a manager meeting run through the keyword matcher would be named
+       after whichever service it happens to discuss. */
+    if (m.slate.ok) {
+      const t = (m.slate.row.title ?? "").trim();
+      if (!t) return null;
+      const live = LIVE.get(t.toLowerCase()) ?? 0;
+      return `${t} — v${live + 1}`;
+    }
+    if (m.slate.line !== null) return null;
+
     const r = RULINGS[m.file];
     const stem = r ? `${r.code} — ${r.title}` : proposedName(m.proposal, 0)?.replace(/ — v0$/, "");
     if (!stem) return null;
@@ -224,9 +290,16 @@ async function main() {
         : " [take: spare]"
       : "";
 
+    const conf = m.slate.ok ? (m.slate.how === "exact" ? "slate" : "slate~") : p.confidence;
+    const evidence = m.slate.ok
+      ? [`slate ${m.slate.how}: "${m.slate.line}"`]
+      : m.slate.line !== null
+        ? [`slate unresolved: "${m.slate.line}"`]
+        : p.evidence.slice(0, 5);
+
     console.log(
       `  ${m.file.padEnd(15)} ${(name ?? "— no proposal —").padEnd(42)} ` +
-        `${p.confidence.padEnd(8)} ${p.evidence.slice(0, 5).join(", ")}${dupe}`
+        `${conf.padEnd(8)} ${evidence.join(", ")}${dupe}`
     );
     console.log(`  ${"".padEnd(15)} ${opening(m.transcript)}`);
     if (!name) console.log(`  ${"".padEnd(15)} why: ${p.reason ?? "no code for this deck"}`);
@@ -234,7 +307,14 @@ async function main() {
 
     /* A file in a take pair is never renamed automatically, even the proposed
        keeper — the pair is the thing a person confirms. */
-    if (name && !inAPair.has(m.file) && p.confidence !== "low" && !collides(m)) {
+    /* A SLATE FILM IS GATED ON THE SLATE, NOT ON THE MATCHER'S CONFIDENCE.
+       `p.confidence` is what matchTranscript thought, and for a manager meeting
+       it is frequently "low" — it is reading a film about running a meeting and
+       looking for service keywords. Letting that block the rename would hold
+       every correctly-identified slate film. An UNRESOLVED slate has no name at
+       all by now, so it is already held. */
+    const confidentEnough = m.slate.ok || p.confidence !== "low";
+    if (name && !inAPair.has(m.file) && confidentEnough && !collides(m)) {
       renames.push({ file: m.file, to: `${name}.MOV` });
     }
   }
@@ -286,7 +366,22 @@ async function main() {
   const plan = matched.map((m) => {
     const ruled = RULINGS[m.file];
     const name = nameFor(m);
-    const held = ruled
+    /* A slate film's hold reason comes from the lookup, not from the matcher's
+       confidence — "the spoken slate is not in the library" is the actionable
+       sentence, and "low confidence" would be a report about a matcher nobody
+       asked. */
+    const slateHeld =
+      !m.slate.ok && m.slate.line !== null
+        ? `hold — ${m.slate.reason}` +
+          (m.slate.candidates?.length
+            ? ` (${m.slate.candidates.map((c) => c.title ?? c.id).join(" | ")})`
+            : "")
+        : null;
+    const held = slateHeld
+      ? slateHeld
+      : m.slate.ok
+      ? null
+      : ruled
       ? null
       : collides(m)
       ? "hold — two films proposed for this same name; one is misread"
@@ -306,11 +401,15 @@ async function main() {
       action: held ? "hold" : "rename",
       renameTo: held ? null : `${name}.MOV`,
       reason: held,
-      deck: ruled ? "The Big Ticket Visit" : m.proposal.deck,
-      stage: ruled ? "Part 2" : m.proposal.stage,
-      title: ruled ? ruled.title : m.proposal.title,
-      identifiedBy: ruled ? "ruled" : m.proposal.source,
-      confidence: m.proposal.confidence,
+      deck: m.slate.ok ? "Manager Meetings" : ruled ? "The Big Ticket Visit" : m.proposal.deck,
+      stage: m.slate.ok ? m.slate.row.title ?? null : ruled ? "Part 2" : m.proposal.stage,
+      title: m.slate.ok ? m.slate.row.title ?? null : ruled ? ruled.title : m.proposal.title,
+      identifiedBy: m.slate.ok ? "slate" : ruled ? "ruled" : m.proposal.source,
+      /* The matched line, quoted, so a reader can check it against the audio.
+         Null for every other track, so nothing downstream has to guess. */
+      slateLine: m.slate.line,
+      contentId: m.slate.ok ? m.slate.row.id : null,
+      confidence: m.slate.ok ? `slate-${m.slate.how}` : m.proposal.confidence,
       seconds: m.seconds ?? null,
       words: m.words ?? null,
       evidence: m.proposal.evidence.slice(0, 6),
@@ -326,10 +425,11 @@ async function main() {
   );
 
   const csv = [
-    "drive_title,action,rename_to,deck,stage,identified_by,confidence,reason",
+    "drive_title,action,rename_to,deck,stage,identified_by,confidence,slate_line,content_id,reason",
     ...plan.map((p) =>
       [p.driveTitle, p.action, p.renameTo ?? "", p.deck ?? "", p.stage ?? "",
-       p.identifiedBy ?? "", p.confidence, p.reason ?? ""]
+       p.identifiedBy ?? "", p.confidence, p.slateLine ?? "", p.contentId ?? "",
+       p.reason ?? ""]
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(",")
     ),
