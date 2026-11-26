@@ -1,0 +1,23 @@
+{
+  "//": "Standalone build for opened-stamp-acceptance.ts. It imports nothing from the app on purpose: the thing under test is a database function reached over PostgREST, and pulling in lib/ would only add a second place for the test to be wrong.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "../.tmp-os",
+    "baseUrl": "..",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "./opened-stamp-acceptance.ts"
+  ]
+}
