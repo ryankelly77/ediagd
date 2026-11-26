@@ -28,6 +28,11 @@
 import { NextRequest } from "next/server";
 import Mux from "@mux/mux-node";
 import { createServiceClient } from "@/lib/supabase/service";
+import {
+  attachColumns,
+  decideAttach,
+  readAttachIntent,
+} from "@/lib/video/asset-attach";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -83,36 +88,168 @@ export async function POST(req: NextRequest) {
   if (event.type === "video.asset.ready") {
     const assetId = event.data.id as string;
 
+    const signed = (event.data.playback_ids ?? []).find(
+      (p: { policy: string }) => p.policy === "signed"
+    );
+    const hasCaptions = (event.data.tracks ?? []).some(
+      (t: { type: string; status?: string }) => t.type === "text" && t.status === "ready"
+    );
+    const NO_SIGNED_PLAYBACK =
+      "Asset is ready but carries no SIGNED playback id. It was created " +
+      "outside this pipeline, or the policy was overridden.";
+
     const { data: upload } = await service
       .from("mux_upload")
       .select("id, draft, content_id, status")
       .eq("asset_id", assetId)
       .maybeSingle();
 
+    /* ---- ATTACH: the asset names the row it belongs to -------------------
+       The Manager Meetings library is loaded BEFORE it is filmed, so the row
+       already exists carrying its run sheet and its classification_line. The
+       ingest states that in `new_asset_settings.passthrough` and it arrives
+       here on the asset. See lib/video/asset-attach.ts for why inserting
+       instead would silently produce two rows per meeting.
+
+       THIS ARM RUNS BEFORE THE mux_upload GATE. The gate below is what keeps
+       the derived 9:16 renditions and hand-made clips out of the library —
+       they have no mux_upload row — and it is also what makes the legacy path
+       idempotent. Neither of those jobs belongs to the attach, which is keyed
+       on the asset's own stated intention rather than on a lookup. */
+    const intent = readAttachIntent(event.data.passthrough);
+    if (intent) {
+      const { data: row } = await service
+        .from("content")
+        .select("id, mux_asset_id")
+        .eq("id", intent.content_id)
+        .maybeSingle();
+
+      const decision = decideAttach({
+        passthrough: event.data.passthrough,
+        assetId,
+        row: row ?? null,
+      });
+
+      /*
+       * UNREACHABLE, AND ASSERTED RATHER THAN CAST.
+       *
+       * decideAttach returns `insert` only when there is no intent, and we are
+       * inside `if (intent)`. A `!` or an `as` here would mean that if
+       * decideAttach ever did return insert on this path, the asset would
+       * silently take the legacy route and create the duplicate row this whole
+       * mechanism exists to prevent. Failing loudly is the cheaper mistake.
+       */
+      if (decision.mode === "insert") {
+        console.error(
+          `[mux webhook] asset ${assetId} named content ${intent.content_id} but the ` +
+            `decision came back 'insert'. Refusing rather than inserting a second row.`
+        );
+        return Response.json({ ok: true });
+      }
+
+      /* A redelivery of the same asset. Mux retries; this has always been
+         idempotent, and a second delivery must not read as a problem. */
+      if (decision.mode === "noop") return Response.json({ ok: true });
+
+      if (decision.mode === "refuse") {
+        console.error(`[mux webhook] attach refused — ${decision.reason}`);
+        if (upload) {
+          await service
+            .from("mux_upload")
+            .update({ status: "errored", error_message: decision.reason })
+            .eq("id", upload.id);
+        }
+        return Response.json({ ok: true });
+      }
+
+      if (!signed) {
+        console.error(`[mux webhook] attach refused — ${NO_SIGNED_PLAYBACK}`);
+        if (upload) {
+          await service
+            .from("mux_upload")
+            .update({ status: "errored", error_message: NO_SIGNED_PLAYBACK })
+            .eq("id", upload.id);
+        }
+        return Response.json({ ok: true });
+      }
+
+      /*
+       * `.is("mux_asset_id", null)` IS THE GUARD, NOT THE READ ABOVE.
+       *
+       * decideAttach read the row a moment ago and two deliveries can both get
+       * past that read. Carrying the emptiness into the UPDATE's WHERE means
+       * the second one matches ZERO ROWS instead of overwriting the first —
+       * the unsafe state cannot be represented rather than merely avoided.
+       *
+       * `.select()` so the count is observed. A bare update reports success
+       * whether it matched a row or not, which is a summary that is not an
+       * observation.
+       */
+      const attachDraft = (upload?.draft ?? {}) as Record<string, unknown>;
+      const { data: attached, error: attachErr } = await service
+        .from("content")
+        .update(
+          attachColumns(
+            {
+              assetId,
+              playbackId: signed.id,
+              durationSec: event.data.duration ? Math.round(event.data.duration) : null,
+              aspectRatio: event.data.aspect_ratio ?? null,
+              hasCaptions,
+            },
+            {
+              sourceFilename: (attachDraft.source_filename as string) ?? null,
+              canonicalFilename: (attachDraft.canonical_filename as string) ?? null,
+              voice: (attachDraft.voice as string) ?? null,
+            }
+          )
+        )
+        .eq("id", decision.contentId)
+        .is("mux_asset_id", null)
+        .select("id");
+
+      if (attachErr || !attached?.length) {
+        const why = attachErr
+          ? attachErr.message
+          : "matched no row — something attached an asset between the read and the write";
+        console.error(`[mux webhook] attach ${decision.contentId} failed — ${why}`);
+        if (upload) {
+          await service
+            .from("mux_upload")
+            .update({ status: "errored", error_message: `attach failed: ${why}` })
+            .eq("id", upload.id);
+        }
+        return Response.json({ ok: true });
+      }
+
+      /* Provenance, and the legacy gate's idempotency key. Writing content_id
+         here is what makes a third delivery stop at the gate above.
+
+         NOTHING IS WRITTEN TO manager_meeting_op_code. The loader already
+         wrote all 57 boost-meeting rows with origin='manifest', and this arm's
+         whole promise is that it leaves what the loader wrote alone. */
+      if (upload) {
+        await service
+          .from("mux_upload")
+          .update({ status: "ready", playback_id: signed.id, content_id: decision.contentId })
+          .eq("id", upload.id);
+      }
+      return Response.json({ ok: true });
+    }
+
     // Not ours, or already promoted. Either way there is nothing to do, and
     // saying so with a 200 stops Mux retrying forever.
     if (!upload || upload.content_id) return Response.json({ ok: true });
 
-    const signed = (event.data.playback_ids ?? []).find(
-      (p: { policy: string }) => p.policy === "signed"
-    );
     if (!signed) {
       await service
         .from("mux_upload")
-        .update({
-          status: "errored",
-          error_message:
-            "Asset is ready but carries no SIGNED playback id. It was created " +
-            "outside this pipeline, or the policy was overridden.",
-        })
+        .update({ status: "errored", error_message: NO_SIGNED_PLAYBACK })
         .eq("id", upload.id);
       return Response.json({ ok: true });
     }
 
     const draft = (upload.draft ?? {}) as Record<string, unknown>;
-    const hasCaptions = (event.data.tracks ?? []).some(
-      (t: { type: string; status?: string }) => t.type === "text" && t.status === "ready"
-    );
 
     const { data: content } = await service
       .from("content")

@@ -277,6 +277,162 @@ section("7. foldLine folds spelling and never meaning");
   );
 }
 
+/* ===========================================================================
+   8. REAL WHISPER TRANSCRIPTS
+   ---------------------------------------------------------------------------
+   EVERY FIXTURE ABOVE IS HAND-TYPED WITH SLASHES IN IT, AND THAT IS WHY ALL
+   27 OF THEM PASSED WHILE THE PARSER READ 0 OF 6 REAL CLIPS.
+
+   A slash is how the workbook WRITES the line. A transcriber hears a pause and
+   writes a comma, a full stop, or nothing. So the suite was evidence about a
+   string the parser is never handed — "a sample is evidence about the sample",
+   and the sample was not the population.
+
+   These six are verbatim `reports/dropzone-transcripts.json` output from the
+   26 November batch, faster-whisper small.en, copied without edits. They are
+   the inputs that actually occur, and they are what makes this file a check
+   rather than a description.
+=========================================================================== */
+section("8. Real whisper transcripts, verbatim from the batch");
+{
+  /** The six library rows these clips belong to, with their real ids. */
+  const REAL: SlateRow[] = [
+    { id: "9d3cc574-2698-47d2-aab9-6a8bfaec1660", title: "Teach Mode vs. Preach Mode",
+      classification_line: "Manager Meetings/Leading Yourself/5-15 mins/Teach Mode vs. Preach Mode" },
+    { id: "2278dc63-581d-40cb-bfc6-6acbd366438b", title: "Invest Deeply in Your Advisors",
+      classification_line: "Manager Meetings/Leading Yourself/5-15 mins/Invest Deeply in Your Advisors" },
+    { id: "58a088e8-4706-4de2-af72-388d301483eb", title: "Positivity and Inspiration (Solo)",
+      classification_line: "Manager Meetings/Leading Yourself/5-15 mins/Positivity and Inspiration (Solo)" },
+    { id: "923beeea-fe19-46e2-8e94-c79c5082f172", title: "Pressure, Not Manipulation — The Six Checks of Real Coaching",
+      classification_line: "Manager Meetings/Leading Yourself/5-15 mins/Pressure, Not Manipulation — The Six Checks of Real Coaching" },
+    { id: "6960acf0-e4f4-4911-be6c-3e2248e39e83", title: "Succession Plan",
+      classification_line: "Manager Meetings/Leading Yourself/15 plus mins/Succession Plan" },
+    { id: "007249e3-b26b-41ae-a98e-27478fe911b2", title: "The Value Scavenger Hunt",
+      classification_line: "Manager Meetings/Leading Yourself/15 plus mins/The Value Scavenger Hunt" },
+  ];
+
+  /** file -> (transcript head as whisper wrote it, the row it must resolve to). */
+  const CLIPS: { file: string; head: string; id: string; why: string }[] = [
+    { file: "IMG_3655.MOV", id: "9d3cc574-2698-47d2-aab9-6a8bfaec1660",
+      why: "commas for slashes",
+      head: "Manager meetings leading yourself, 5-15 minutes, Teach Mode vs. Preach Mode. " },
+    { file: "IMG_3656.MOV", id: "2278dc63-581d-40cb-bfc6-6acbd366438b",
+      why: '"Manage your meetings", and no separator at all before the length',
+      head: "Manage your meetings leading yourself 5-15 minutes, invest deeply in your advisors. " },
+    { file: "IMG_3658.MOV", id: "58a088e8-4706-4de2-af72-388d301483eb",
+      why: "the workbook's trailing (Solo), which Mitch does not read aloud",
+      head: "Manage your meetings leading yourself 5-15 minutes, positivity and inspiration. " },
+    { file: "IMG_3664.MOV", id: "923beeea-fe19-46e2-8e94-c79c5082f172",
+      why: 'whisper writes the digit 6 where the workbook writes "Six"',
+      head: "Manage your meetings leading yourself 5-15 minutes. Pressure, not manipulation. The 6 checks of real coaching. " },
+    { file: "IMG_3665.MOV", id: "6960acf0-e4f4-4911-be6c-3e2248e39e83",
+      why: '"15 plus minutes" against a stored "15 plus mins"',
+      head: "Manage your meetings leading yourself 15 plus minutes, Succession Plan. " },
+    { file: "IMG_3676.MOV", id: "007249e3-b26b-41ae-a98e-27478fe911b2",
+      why: 'a lower-cased leading "the" in the title',
+      head: "Manager meetings, leading yourself 15 plus minutes, the Value Scavenger Hunt. " },
+  ];
+
+  const aloha = "Aloha. And that is the body of the film, which the head stops before.";
+
+  for (const c of CLIPS) {
+    const r = matchSlate(c.head + aloha, REAL);
+    ok(
+      `${c.file} resolves — ${c.why}`,
+      r.ok === true && r.row.id === c.id,
+      r.ok ? r.row.id : `HELD: ${r.reason}`
+    );
+  }
+
+  /* THE REGRESSION GUARD WITH TEETH. The slashed parser finds nothing in any of
+     them, so if somebody reverts the fold to requiring slashes, these six fail
+     while every fixture above still passes. */
+  ok(
+    "and the slashed parser reads none of the six, which is the whole defect",
+    CLIPS.every((c) => readSlate(c.head + aloha) === null),
+    CLIPS.filter((c) => readSlate(c.head + aloha) !== null).map((c) => c.file).join(", ")
+  );
+
+  /* The parenthetical arm says which arm it used, so the report can show it. */
+  const paren = matchSlate(CLIPS[2].head + aloha, REAL);
+  ok(
+    "the (Solo) match is reported as the parenthetical arm, not as exact",
+    paren.ok === true && paren.how === "folded-parenthetical",
+    paren.ok ? paren.how : ""
+  );
+}
+
+section("9. A claimed track never falls through to the advisor matcher");
+{
+  /*
+   * THIS IS THE DANGEROUS HALF OF THE OLD BEHAVIOUR.
+   *
+   * `line: null` means "not a manager film" to identify-videos.ts, which then
+   * runs transcript-match.ts and names the clip after whatever service it
+   * mentions. Measured on the real six: IMG_3655 came back
+   * `TRF-011 — On the Drive — v2` — a Tire Repair RESHOOT, which the ingest
+   * would have applied as a replacement of a live advisor film.
+   *
+   * So once the track is claimed there are exactly two outcomes, and
+   * "somebody else's guess" is not one of them.
+   */
+  const unknown =
+    "Manage your meetings op code boost meetings 10 minutes, Sunroof Drain Boost Meeting. " +
+    "Aloha. Nobody has loaded this one.";
+  const r = matchSlate(unknown, LIBRARY);
+  ok("an unknown meeting does not match", r.ok === false);
+  ok(
+    "but it reports the spoken line, so the caller holds instead of guessing",
+    r.ok === false && r.line !== null,
+    r.ok === false ? String(r.line) : ""
+  );
+  ok(
+    "and quotes what was actually said, for checking against the audio",
+    r.ok === false && /Sunroof Drain/.test(String(r.line)),
+    r.ok === false ? String(r.line) : ""
+  );
+
+  /* A film whose slate whisper mangled past recognition still holds, because
+     the anchor survived even though nothing else did. */
+  const mangled = "Manage your meetings, uh, leading yourself, something something. Aloha.";
+  const m = matchSlate(mangled, LIBRARY);
+  ok("a mangled slate holds rather than falling through", m.ok === false && m.line !== null);
+
+  /* And the other side of the same gate: a film that never claimed the track
+     must still return line null, or every advisor film would be held. */
+  ok(
+    "an advisor film still returns a null line, so it reaches its own matcher",
+    matchSlate("Aloha. Today we are at the kiosk talking about tire wear.", LIBRARY).line === null
+  );
+  /* The real Bank Account slate shape, which is a DIFFERENT series. */
+  ok(
+    "and a Bank Account film is still not claimed",
+    matchSlate(
+      "Manager Bank Account, deposit number four. Aloha. Having someone's back.",
+      LIBRARY
+    ).line === null
+  );
+}
+
+section("10. The parenthetical arm refuses when it is not decisive");
+{
+  /* Stripping the annotation makes two rows identical, so there is no longer
+     one meeting being named. Ryan's rule: match only when exactly one remains. */
+  const twoSolos: SlateRow[] = [
+    { id: "solo-a", classification_line: "Manager Meetings/Leading Yourself/5-15 mins/Positivity and Inspiration (Solo)" },
+    { id: "solo-b", classification_line: "Manager Meetings/Leading Yourself/5-15 mins/Positivity and Inspiration (Team)" },
+  ];
+  const r = matchSlate(
+    "Manage your meetings leading yourself 5-15 minutes, positivity and inspiration. Aloha.",
+    twoSolos
+  );
+  ok("it refuses rather than picking the first", r.ok === false, r.ok ? "(matched)" : r.reason);
+  ok(
+    "and names both so a person can split them",
+    r.ok === false && (r.candidates?.length ?? 0) === 2
+  );
+}
+
 console.log("\n" + "=".repeat(64));
 console.log(`  ${passed} passed, ${failed} failed`);
 if (failed) {

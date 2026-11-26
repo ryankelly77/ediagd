@@ -42,6 +42,38 @@
    0 of 73 on a name the ingest invented where the observed name matched 73 of 73.
 ============================================================================ */
 
+/* ---------------------------------------------------------------------------
+   WHISPER DOES NOT SPEAK SLASHES, AND THIS FILE USED TO REQUIRE THEM
+   ---------------------------------------------------------------------------
+   Measured on the first six clips of the 26 November batch: the as-shipped
+   parser read **0 of 6** slates, because the regex below wanted literal `/`
+   characters and a transcriber hears a pause. What Mitch actually says comes
+   back as
+
+       "Manager meetings leading yourself, 5-15 minutes, Teach Mode vs.
+        Preach Mode. Aloha!"
+
+   — a comma, a full stop, or nothing at all where the workbook has a slash.
+
+   ALL 27 ASSERTIONS PASSED THROUGHOUT, because every fixture transcript was
+   hand-typed WITH the slashes in. That is the workbook's spelling fed in as
+   though it were a transcript, so the suite was evidence about a string the
+   parser will never be handed — AGENTS.md, "a sample is evidence about the
+   sample", and the sample was not the population.
+
+   It is also the `trim-slates.ts` defect again: that joined on
+   `canonical_filename`, a form the ingest INVENTS, and matched 0 of 73 where
+   the observed name matched 73 of 73. The separator is a derived detail of how
+   the line is WRITTEN; the words are what was SPOKEN. So the words are the key.
+
+   WHAT MAKES THE WIDENING SAFE IS THAT IT WAS MEASURED, NOT ARGUED.
+   Folded across all 213 library rows, both ways, the fold produces
+   **0 exact collisions and 0 prefix collisions** — so no two meetings can
+   become one. And where it is ambiguous anyway it still HOLDS and names the
+   candidates, so the widening cannot return a confident wrong answer; it can
+   only return a hold.
+--------------------------------------------------------------------------- */
+
 /** A row of the library, as the caller read it. */
 export type SlateRow = {
   id: string;
@@ -57,8 +89,17 @@ export type SlateRead = {
   title: string;
 };
 
+/**
+ * How the spoken line was reconciled with the library.
+ *
+ * Reported rather than collapsed, because "this needed the parenthetical
+ * stripped" is a different quality of evidence from "this was verbatim" and a
+ * person reading the run should see which.
+ */
+export type SlateHow = "exact" | "folded" | "folded-prefix" | "folded-parenthetical";
+
 export type SlateMatch =
-  | { ok: true; row: SlateRow; line: string; how: "exact" | "folded" }
+  | { ok: true; row: SlateRow; line: string; how: SlateHow }
   | { ok: false; line: string | null; reason: string; candidates?: SlateRow[] };
 
 /** How far into the transcript a slate may begin and still count as "opens with". */
@@ -130,6 +171,27 @@ export function readSlate(transcript: string): SlateRead | null {
 }
 
 /**
+ * Cardinal number words only, and the omission of ordinals is deliberate.
+ *
+ * "second" is an ordinal AND a unit of time, and this library has
+ * `The Thirty-Second Coaching Session` and `The 73-Second Pitch`. Folding
+ * ordinals would turn "thirty-second" into "30 2" and break the two films the
+ * rule was supposed to help. Cardinals cannot do that.
+ *
+ * COMPOUNDS DO NOT FOLD — "seventy-three" becomes "70 3", not "73". That is a
+ * MISS, which HOLDS, which is the safe direction: the rule buys back the
+ * films whose numbers are simple and declines the ones that are not.
+ */
+const NUMERALS: Record<string, string> = {
+  zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6",
+  seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12",
+  thirteen: "13", fourteen: "14", fifteen: "15", sixteen: "16",
+  seventeen: "17", eighteen: "18", nineteen: "19", twenty: "20", thirty: "30",
+  forty: "40", fifty: "50", sixty: "60", seventy: "70", eighty: "80",
+  ninety: "90", hundred: "100", thousand: "1000",
+};
+
+/**
  * Case and punctuation folded, for the second pass only.
  *
  * WHAT IS FOLDED AND WHY EACH ONE. Every rule here exists because a transcriber
@@ -139,27 +201,94 @@ export function readSlate(transcript: string): SlateRead | null {
  *   · dashes          — em, en and hyphen are one character to a listener
  *   · quotes          — curly and straight, and whisper prefers curly
  *   · "and" / "&"     — the workbook uses both
- *   · spacing         — around slashes, and runs of whitespace
+ *   · spacing         — around separators, and runs of whitespace
  *   · trailing stops  — a spoken line ends in a full stop the workbook has not
  *   · "mins"/"minutes"— the line says "10 mins", the column says "10 minutes",
  *                       and a speaker may say either
+ *   · SEPARATORS      — slash, comma, full stop and nothing are one thing,
+ *                       because the slash is how the line is WRITTEN and the
+ *                       pause is how it is SPOKEN. This is the 26 November fix.
+ *   · "A/C"           — three library titles carry a literal slash in the
+ *                       product name; whisper writes "AC" or "A.C.".
+ *   · numbers         — "The Six Checks" against a transcribed "the 6 checks".
  *
- * WHAT IS NOT FOLDED: letters and digits. Nothing here can turn one meeting
- * into another, only one SPELLING of a meeting into the same meeting.
+ * WHAT IS NOT FOLDED: letters, and the VALUE of a number. Nothing here can
+ * turn one meeting into another, only one SPELLING of a meeting into the same
+ * meeting — "Ten and Five" and "Nine and Five" stay apart, asserted below.
  */
 export function foldLine(line: string): string {
-  return line
+  const folded = line
     .toLowerCase()
     .replace(/[‐-―−]/g, "-")
     .replace(/[‘’‚‛]/g, "'")
     .replace(/[“”„‟]/g, '"')
     .replace(/\s*&\s*/g, " and ")
     .replace(/\bminutes\b/g, "mins")
-    .replace(/\s*\/\s*/g, "/")
-    .replace(/[^\p{L}\p{N}/]+/gu, " ")
+    /* Before the separators collapse, or "a/c" becomes "a c" and the spoken
+       "AC" no longer reaches it. */
+    .replace(/\ba\s*[/.]\s*c\b/g, "ac")
+    /* THE SEPARATOR GOES THE SAME WAY AS EVERY OTHER PUNCTUATION MARK. The
+       slash is no longer preserved — that is the whole of the fix. */
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    /* And the same product name spelled "A.C." or "A C", now that the stops
+       have become spaces. */
+    .replace(/\ba c\b/g, "ac");
+
+  return folded
+    .split(" ")
+    .map((w) => NUMERALS[w] ?? w)
+    .join(" ")
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/**
+ * The track's name, as the only thing in the line whose SPELLING may vary.
+ *
+ * Whisper renders "Manager Meetings" as "Manage your meetings" more often than
+ * not — five of the first six clips. That is one phrase, transcribed two ways,
+ * and it is the anchor rather than a discriminator: it chooses no film, it only
+ * says which track is speaking. So it folds, and nothing downstream of it does.
+ *
+ * NARROW ON PURPOSE. `Manager Bank Account, deposit number four` is the other
+ * manager series' slate shape and must not be claimed — ruling 6, asserted in
+ * the suite. "manager bank account" matches none of these.
+ */
+const ANCHOR = /\b(?:manager meetings?|manage your meetings?)\b/;
+
+/** How much leading filler may precede the anchor and still count as "opens with". */
+const ANCHOR_WITHIN = 24;
+
+/**
+ * Fold a line and take off its leading anchor, so what is left is the part that
+ * identifies the MEETING rather than the track.
+ *
+ * ONE DEFINITION, USED BOTH WAYS. `claimed` answers "is this a Manager Meetings
+ * film at all" and `rest` is the comparison key — and they must agree about
+ * where the anchor ends or the jurisdiction test and the lookup would disagree
+ * about the same string. Two implementations of that is how one of them drifts.
+ *
+ * LEADING ONLY. A bare `.replace(ANCHOR, "")` eats the phrase from the middle of
+ * a title too, which is how a normaliser quietly becomes a different function
+ * from the one its name claims.
+ */
+function splitAnchor(line: string): { claimed: boolean; rest: string } {
+  const folded = foldLine(line);
+  const m = folded.match(ANCHOR);
+  if (!m || m.index === undefined || m.index > ANCHOR_WITHIN) {
+    return { claimed: false, rest: folded };
+  }
+  return { claimed: true, rest: folded.slice(m.index + m[0].length).trim() };
+}
+
+/** A trailing `(Solo)`-style annotation, which the workbook carries and nobody reads aloud. */
+function withoutTrailingParenthetical(line: string): string {
+  return line.replace(/\s*\([^()]*\)\s*$/, "").trim();
+}
+
+const anchorless = (line: string) => splitAnchor(line).rest;
 
 /**
  * Look the spoken line up in the library: exact first, then folded.
@@ -171,34 +300,90 @@ export function foldLine(line: string): string {
  * this codebase keeps paying for. Exact matching cannot be ambiguous:
  * `content_classification_line_idx` is unique.
  */
+/*
+ * A CLAIMED TRACK NEVER FALLS THROUGH TO THE ADVISOR MATCHER.
+ *
+ * This is the half of the 26 November fix that matters more than the matching,
+ * and it is the dangerous half of the old behaviour. When the parser could not
+ * read the slate it returned `line: null`, which identify-videos.ts reads as
+ * "not a manager film" — so the clip went to `transcript-match.ts`, which
+ * weighs service keywords, and a leadership meeting came back named after
+ * whichever service it happened to mention. Measured on the six:
+ *
+ *   IMG_3655  ->  TRF-011 — On the Drive — v2     (a Tire Repair RESHOOT)
+ *   IMG_3656  ->  FND — Objections — v1           at MEDIUM confidence
+ *   IMG_3658  ->  FND — Sing It — v1              at MEDIUM confidence
+ *
+ * Medium is not held, so `--apply` would have renamed two of them, and the
+ * first would have been ingested as a v2 REPLACEMENT — swapping a live advisor
+ * pitch film's master for a manager meeting. A confident wrong answer with no
+ * error anywhere, which AGENTS.md calls worse than a crash.
+ *
+ * So the anchor decides jurisdiction, and the lookup decides identity. Once a
+ * transcript says "manager meetings" in any spelling, the ONLY two outcomes
+ * are a library row or a hold — never another track's guess.
+ */
 export function matchSlate(transcript: string, rows: SlateRow[]): SlateMatch {
-  const read = readSlate(transcript);
-  if (!read) {
+  const head = slateHead(transcript);
+  const { claimed, rest: spoken } = splitAnchor(head);
+  if (!claimed) {
     return { ok: false, line: null, reason: "no Manager Meetings slate in the opening" };
   }
 
-  const exact = rows.find((r) => r.classification_line === read.line);
-  if (exact) return { ok: true, row: exact, line: read.line, how: "exact" };
+  /* What gets quoted in the report. The slashed form is preferred when it is
+     there, because it is the richer evidence; otherwise it is the head exactly
+     as spoken, minus the full stop a sentence ends with. Folding must never
+     rewrite the evidence — a reader checks this against the audio. */
+  const read = readSlate(transcript);
+  const line =
+    read?.line ?? head.replace(/\s+/g, " ").trim().replace(/\s*[.。!?]+\s*$/, "");
 
-  const target = foldLine(read.line);
-  const folded = rows.filter((r) => foldLine(r.classification_line) === target);
-  if (folded.length === 1) {
-    return { ok: true, row: folded[0], line: read.line, how: "folded" };
-  }
-  if (folded.length > 1) {
-    return {
-      ok: false,
-      line: read.line,
-      reason:
-        `the spoken line folds onto ${folded.length} library rows, so it does ` +
-        `not identify one meeting`,
-      candidates: folded,
-    };
+  /* Arm 1 — verbatim. Cannot be ambiguous: the index is unique. */
+  const exact = rows.find((r) => r.classification_line === line);
+  if (exact) return { ok: true, row: exact, line, how: "exact" };
+
+  /*
+   * Arms 2-4, each tried only when the one before it found nothing, and each
+   * refusing rather than choosing when it finds several.
+   *
+   * The comparison drops the anchor from BOTH sides, because that is the one
+   * phrase whose spelling varies, and compares what is left word for word. A
+   * library line that is a word-PREFIX of the head is accepted because whisper
+   * sometimes runs the first words of the film onto the slate; measured over
+   * all 213 rows, no library line is a prefix of another, so this arm cannot
+   * be ambiguous through the library's own shape.
+   */
+  const arms: { how: SlateHow; hit: (target: string) => boolean; of: (l: string) => string }[] = [
+    { how: "folded", of: anchorless, hit: (t) => spoken === t },
+    { how: "folded-prefix", of: anchorless, hit: (t) => spoken.startsWith(`${t} `) },
+    {
+      how: "folded-parenthetical",
+      of: (l) => anchorless(withoutTrailingParenthetical(l)),
+      hit: (t) => spoken === t,
+    },
+  ];
+
+  for (const arm of arms) {
+    const hits = rows.filter((r) => {
+      const target = arm.of(r.classification_line);
+      return Boolean(target) && arm.hit(target);
+    });
+    if (hits.length === 1) return { ok: true, row: hits[0], line, how: arm.how };
+    if (hits.length > 1) {
+      return {
+        ok: false,
+        line,
+        reason:
+          `the spoken line folds onto ${hits.length} library rows, so it does ` +
+          `not identify one meeting`,
+        candidates: hits,
+      };
+    }
   }
 
   return {
     ok: false,
-    line: read.line,
+    line,
     reason: "spoken slate is not in the library — HOLD, not a guess",
   };
 }

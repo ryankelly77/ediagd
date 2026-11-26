@@ -227,8 +227,31 @@ async function main() {
     if (m.slate.ok) {
       const t = (m.slate.row.title ?? "").trim();
       if (!t) return null;
-      const live = LIVE.get(t.toLowerCase()) ?? 0;
-      return `${t} — v${live + 1}`;
+      /*
+       * ---- THE MANAGER PREFIX, AND WHY ITS ABSENCE WAS INERT -------------
+       *
+       * This returned a bare `<Title> — vN`, which `splitPrefix` reads as the
+       * first word being the collection: "Teach Mode vs. Preach Mode — v1"
+       * gives prefix "TEACH", which is in no routing table, so every manager
+       * film would have been listed as UNKNOWN COLLECTION and skipped. The
+       * rename would have succeeded and the ingest would have done nothing —
+       * the silent-success shape this pipeline keeps paying for.
+       *
+       * MANAGER is the route key (ROUTES in ingest-videos.ts) and it is also
+       * what the 17 Bank Account films actually carry on disk: their
+       * `source_filename` is `MANAGER — <title> — Mitch Hardt — v1.mov`, and
+       * the `MANAGER MEETINGS — … (Mitch Hardt)` form is the canonical name
+       * the ingest INVENTS afterwards. So this matches the observed name, not
+       * the derived one.
+       *
+       * ALWAYS v1, NEVER A COMPUTED VERSION. A Manager Meetings film attaches
+       * to a loaded row that has no asset; if that row already has one, the
+       * attach refuses and it is a HOLD for a person rather than a v2. So
+       * there is nothing for a version to count, and deriving one from LIVE
+       * would be arithmetic on a key that never matches — right by accident,
+       * which is worse than right on purpose.
+       */
+      return `MANAGER — ${t} — Mitch Hardt — v1`;
     }
     if (m.slate.line !== null) return null;
 
@@ -395,16 +418,36 @@ async function main() {
           ? "hold — low confidence"
           : null;
 
+    /*
+     * ---- A HELD MANAGER FILM CARRIES NO ADVISOR GUESS ----------------------
+     *
+     * These four fields used to fall through to `m.proposal` whenever the slate
+     * did not resolve — so a Manager Meetings film whose line is not in the
+     * library was written into the plan as deck "Tire Repair", title "On the
+     * Drive", identifiedBy "declared". Every one of those is a false statement
+     * about the file, sitting in the artefact another agent reads.
+     *
+     * The anchor is evidence, so the deck IS known: the film said it is a
+     * manager meeting. What is NOT known is which one — so title and stage are
+     * null, and `identifiedBy` is null because nothing identified it. A hold
+     * that names a mechanism is claiming an identification it did not make.
+     */
+    const claimedButUnresolved = !m.slate.ok && m.slate.line !== null;
+
     return {
       file: m.file,
       driveTitle: m.file.replace(/ \(\d+\)(?=\.[A-Za-z0-9]+$)/, ""),
       action: held ? "hold" : "rename",
       renameTo: held ? null : `${name}.MOV`,
       reason: held,
-      deck: m.slate.ok ? "Manager Meetings" : ruled ? "The Big Ticket Visit" : m.proposal.deck,
-      stage: m.slate.ok ? m.slate.row.title ?? null : ruled ? "Part 2" : m.proposal.stage,
-      title: m.slate.ok ? m.slate.row.title ?? null : ruled ? ruled.title : m.proposal.title,
-      identifiedBy: m.slate.ok ? "slate" : ruled ? "ruled" : m.proposal.source,
+      deck: m.slate.ok || claimedButUnresolved
+        ? "Manager Meetings"
+        : ruled
+        ? "The Big Ticket Visit"
+        : m.proposal.deck,
+      stage: m.slate.ok ? m.slate.row.title ?? null : claimedButUnresolved ? null : ruled ? "Part 2" : m.proposal.stage,
+      title: m.slate.ok ? m.slate.row.title ?? null : claimedButUnresolved ? null : ruled ? ruled.title : m.proposal.title,
+      identifiedBy: m.slate.ok ? "slate" : claimedButUnresolved ? null : ruled ? "ruled" : m.proposal.source,
       /* The matched line, quoted, so a reader can check it against the audio.
          Null for every other track, so nothing downstream has to guess. */
       slateLine: m.slate.line,

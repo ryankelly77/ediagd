@@ -512,6 +512,62 @@ async function loadManagerManifest(): Promise<Map<string, string>> {
   }
   return out;
 }
+/* ---------------------------------------------------------------------------
+   WHICH LOADED ROW A SLATE-IDENTIFIED FILM BELONGS TO
+   ---------------------------------------------------------------------------
+   Manager Meetings arrive in the opposite order from every other track: the
+   row is loaded from Mitch's workbook first — run sheet, best_used_for,
+   situation_tags and the classification_line that is its identity — and the
+   film is shot weeks later. So the film ATTACHES to a row rather than creating
+   one. See lib/video/asset-attach.ts for what inserting instead would do.
+
+   `identify-videos.ts` already resolved the row, by the Classification line
+   Mitch reads aloud, and wrote the id into the plan. This reads it back.
+
+   KEYED ON THE NAME ON DISK, WHICH IS THE NAME THAT WAS OBSERVED.
+   `renameTo` is the string identify-videos passed to renameSync, so it is what
+   the file is actually called — not a form anything re-derived. That is the
+   trim-slates.ts lesson, which joined on the invented `canonical_filename` and
+   matched 0 of 73 where the observed name matched 73 of 73, then skipped all
+   73 and reported success.
+--------------------------------------------------------------------------- */
+const RENAME_PLAN = "reports/dropzone-rename-plan.json";
+
+type PlanRow = {
+  file: string;
+  renameTo: string | null;
+  action: string;
+  contentId: string | null;
+  identifiedBy: string | null;
+  slateLine: string | null;
+};
+
+/** on-disk filename -> the content row the film attaches to. */
+async function loadAttachTargets(): Promise<Map<string, { contentId: string; line: string | null }>> {
+  const out = new Map<string, { contentId: string; line: string | null }>();
+  let text: string;
+  try {
+    text = await readFile(RENAME_PLAN, "utf8");
+  } catch {
+    /* Absent is ordinary: a hand-dropped file, an older folder, a batch with
+       no manager films in it. Every film then takes the legacy path. */
+    return out;
+  }
+  let rows: PlanRow[];
+  try {
+    rows = (JSON.parse(text) as { files?: PlanRow[] }).files ?? [];
+  } catch {
+    console.log(`  ${RENAME_PLAN} is not readable JSON — no attach targets loaded`);
+    return out;
+  }
+  for (const r of rows) {
+    if (r.action !== "rename" || !r.renameTo || !r.contentId) continue;
+    if (r.identifiedBy !== "slate") continue;   // only a spoken slate names a row
+    out.set(r.renameTo, { contentId: r.contentId, line: r.slateLine });
+  }
+  return out;
+}
+
 let trims: Map<string, number> | null = null;
 
 function trimFor(canonicalFile: string): number | null {
@@ -734,6 +790,7 @@ async function main() {
   const tables: RoutingTables = { staticRoutes: ROUTES, collectionAliases, opCodes, collectionRoutes };
   const routeOf = (prefix: string) => routeFor(prefix, tables);
   const managerManifest = await loadManagerManifest();
+  const attachTargets = await loadAttachTargets();
   /** Exact title match only — see MANAGER_MANIFEST. */
   const opCodeForManager = (title: string): string | null => {
     const hit = managerManifest.get(title.trim());
@@ -792,22 +849,68 @@ async function main() {
   if (managerFilms.length) {
     const r0 = routeOf(managerFilms[0].collection)!;
     console.log(`\n  MANAGER MEETINGS — ${managerFilms.length} file(s)`);
-    console.log(`    manifest: ${MANAGER_MANIFEST} (${managerManifest.size} title(s))`);
     console.log(
-      `    ${"route".padEnd(8)}${"collection".padEnd(18)}${"op code".padEnd(10)}${"disposition".padEnd(14)}title`
+      `    route:    collection=${r0.collection} placement=${r0.placement} ` +
+        `type=${r0.contentType}`
+    );
+    console.log(`    manifest: ${MANAGER_MANIFEST} (${managerManifest.size} title(s))`);
+    console.log(`    plan:     ${RENAME_PLAN} (${attachTargets.size} slate-identified target(s))`);
+    console.log(
+      `    ${"route".padEnd(8)}${"op code".padEnd(10)}${"disposition".padEnd(16)}${"content row".padEnd(14)}title`
     );
     for (const p of managerFilms) {
       const code = opCodeForManager(p.title);
       const conflict = managerManifest.get(p.title.trim()) === "__CONFLICT__";
-      const disposition = conflict ? "HOLD conflict" : code ? "draft" : "HOLD no match";
+      const target = attachTargets.get(p.file);
+      const disposition = target
+        ? "ATTACH"
+        : conflict
+        ? "HOLD conflict"
+        : code
+        ? "new draft"
+        : "new draft";
       console.log(
-        `    ${"MANAGER".padEnd(8)}${String(r0.collection).padEnd(18)}${(code ?? "null").padEnd(10)}${disposition.padEnd(14)}${p.title}`
+        `    ${"MANAGER".padEnd(8)}${(code ?? "null").padEnd(10)}${disposition.padEnd(16)}` +
+          `${(target ? target.contentId.slice(0, 8) : "—").padEnd(14)}${p.title}`
       );
     }
+
+    /*
+     * ---- THE JOIN IS ASSERTED, AND ZERO REFUSES -----------------------------
+     *
+     * A plan sitting beside a folder of manager films that matches NONE of them
+     * is the trim-slates.ts failure exactly: it skipped all 73 silently and
+     * reported success. The only safe reading of "the plan names manager films
+     * and none of them is this batch" is that the key is wrong, so this stops
+     * rather than quietly uploading 125 films down the insert path and creating
+     * 125 duplicate rows.
+     *
+     * A PARTIAL match is reported, not refused — a batch legitimately mixes
+     * identified films with holds, and the holds have no target by design.
+     */
+    const attachable = managerFilms.filter((p) => attachTargets.get(p.file));
+    if (attachTargets.size > 0 && attachable.length === 0) {
+      console.error(
+        `\n  REFUSING: ${RENAME_PLAN} names ${attachTargets.size} slate-identified ` +
+          `film(s) and NOT ONE of them matches a file in this folder.\n` +
+          `  The plan is keyed on the on-disk name it renamed to. Either the plan is ` +
+          `stale or the files were renamed by something else.\n` +
+          `  Re-run: npm run identify:videos -- --apply --dir="<Drop Zone>"\n`
+      );
+      process.exit(1);
+    }
+    if (attachable.length) {
+      console.log(
+        `\n    ${attachable.length} of ${managerFilms.length} attach to a loaded row by ` +
+          `spoken slate. The rest take the legacy insert path.`
+      );
+    }
+
     const holds = managerFilms.filter((p) => !opCodeForManager(p.title));
     if (holds.length) {
-      console.log(`\n    HOLDS — ${holds.length} manager film(s) have no exact manifest title.`);
-      console.log(`    They ingest as DRAFT with op_code null. Never fuzzy-matched.`);
+      console.log(`\n    ${holds.length} manager film(s) have no exact manifest title.`);
+      console.log(`    An ATTACH does not need one — the loader already wrote`);
+      console.log(`    manager_meeting_op_code for the boost meetings. Never fuzzy-matched.`);
       holds.forEach((p) => console.log(`      ${p.title}`));
     }
   }
@@ -964,10 +1067,23 @@ async function main() {
   if (DRY) {
     console.log(`\n  --dry: nothing uploaded, nothing replaced.\n`);
     console.log(`    ${replacements.length} would REPLACE an existing take, ${pending.length} would ingest fresh, ${skipped.length} skipped\n`);
-    pending.slice(0, LIMIT || pending.length).forEach((p) =>
+    /* ATTACH AND NEW ARE DIFFERENT ACTIONS AND THE TABLE SAYS WHICH. An attach
+       fills in a row that already exists; "new" creates one. Printing both as
+       "new" would describe 125 attaches as 125 new rows, which is the thing
+       this change exists to stop. */
+    pending.slice(0, LIMIT || pending.length).forEach((p) => {
+      const attach = attachTargets.get(p.file);
       console.log(
-        `    new      ${p.collection.padEnd(11)} ${p.title.slice(0, 46).padEnd(48)}${(p.voice ?? "—").padEnd(14)}${(p.bytes / 1e6).toFixed(0)}MB`
-      )
+        `    ${attach ? "attach  " : "new     "} ${p.collection.padEnd(11)} ` +
+          `${p.title.slice(0, 46).padEnd(48)}${(p.voice ?? "—").padEnd(14)}` +
+          `${(p.bytes / 1e6).toFixed(0)}MB` +
+          (attach ? `  -> content ${attach.contentId.slice(0, 8)}` : "")
+      );
+    });
+    const attachCount = pending.filter((p) => attachTargets.get(p.file)).length;
+    console.log(
+      `\n    of those ${pending.length}: ${attachCount} would ATTACH to a loaded row, ` +
+        `${pending.length - attachCount} would create a new draft row\n`
     );
     return;
   }
@@ -1011,7 +1127,23 @@ async function main() {
        */
       const muxTitle = canonicalName(p, route.opCode ?? route.collection ?? p.collection)
         .replace(/\.[a-z0-9]+$/i, "");
-      const { uploadId, url } = await createDirectUpload(origin, muxTitle);
+      /*
+       * THE INTENTION RIDES ON THE ASSET, NOT IN A SECOND LOOKUP.
+       *
+       * A slate-identified manager film attaches to the row the loader already
+       * wrote. Saying so in the passthrough means the claim arrives with the
+       * asset that fulfils it, so the webhook needs no join on a filename —
+       * which is the only form of this that trim-slates.ts has not already
+       * proved can match zero of everything.
+       *
+       * Absent for every other film, and absence is the legacy insert path.
+       */
+      const attach = attachTargets.get(p.file);
+      const { uploadId, url } = await createDirectUpload(
+        origin,
+        muxTitle,
+        attach ? JSON.stringify({ content_id: attach.contentId }) : undefined
+      );
       // Mux types the one-time URL as optional. It is always present on a
       // successful create, but a missing one would mean PUTting into the void,
       // so it fails this file loudly rather than silently skipping the bytes.
