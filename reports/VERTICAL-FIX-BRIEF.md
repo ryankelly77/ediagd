@@ -75,13 +75,44 @@ title card. Lengths agree: 70.63 s against a stored 71.
 
 ### What this adds to the question
 
-Both tails are intact and correct — each closes on "Mahalo." in both the master
-and the crop. **So the mezzanine is not shifted; it is missing a piece of the
-front and nothing else.** The durations still agree to a quarter second, which
-means the mezzanine is padded or re-timed somewhere, not simply truncated. That
-is a sharper statement of the defect than 8 October could make, and it rules
-out "the vertical was derived before the trim" for these two: the crops were
-made on 21 November from the masters as they stand today.
+Both tails close on "Mahalo." in the master and in the crop, and the durations
+agree to within a tenth of a second.
+
+> **CORRECTED 22 NOVEMBER.** This section first said *"the mezzanine is not
+> shifted; it is missing a piece of the front and nothing else."* **The second
+> half was wrong**, and it was wrong because it was inferred from a ten-second
+> tail window instead of measured against the whole file. Timing both ends says
+> something much more specific:
+
+```
+                              duration   "Mahalo." ends   silence after
+Brave Enough        master      70.55 s        69.52 s         1.03 s
+                    crop        70.63 s        64.52 s         6.11 s
+                                           DELTA  -5.00 s
+
+Lasting Impressions master      96.79 s        96.10 s         0.69 s
+  Part 8            crop        96.75 s        91.10 s         5.65 s
+                                           DELTA  -5.00 s
+```
+
+**The export window slid late by five seconds, and the duration was preserved
+with silence at the end.** The crop's content is the master from +5 s onward,
+laid down at crop-time zero, then padded. That is why the front is missing, why
+the total length still matches, and why the tail still says "Mahalo" — at
+91.10 s instead of 96.10 s, which a ten-second tail read still catches and so
+reported as agreement.
+
+**MINUS FIVE POINT ZERO ZERO ON BOTH FILMS.** Not 4.8 and 5.3 — the same number
+twice, to the centisecond, on two films of different lengths cut on different
+days. AGENTS.md already says what to do with that: *"when a difference is
+suspiciously uniform, that uniformity is the thing to explain, not the thing
+that makes it credible."* Two independent accidents do not agree to a
+centisecond. Whatever produces the mezzanine is applying a constant five-second
+offset, and that is a far narrower thing to go looking for than "why only some
+rows".
+
+It also rules out "the vertical was derived before the trim" for these two: the
+crops were made on 21 November from the masters as they stand today.
 
 Neither film can be repaired by re-deriving. Until the mezzanine question is
 answered they serve the landscape cut letterboxed, which is the correct
