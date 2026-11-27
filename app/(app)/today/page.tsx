@@ -14,6 +14,7 @@ import {
   restDayFor,
 } from "@/lib/work-schedule";
 import { mintDayStamp } from "@/lib/day-stamp";
+import { storeDateOf } from "@/lib/store-day";
 import { firstName } from "@/lib/advisor";
 import { rooftopGreeting } from "@/lib/brand";
 import {
@@ -48,7 +49,13 @@ export default async function TodayPage({
   // ---- Membership decides the rooftop, and the rooftop decides "today" -----
   const { data: memberships } = await supabase
     .from("membership")
-    .select("rooftop_id, role, op_code_id, app_user:user_id(full_name)")
+    /* `rooftop(timezone)` rides along on a query that already runs, because
+       the soft-ask's one-per-day rule needs the STORE clock and this page had
+       no other reason to know the zone. An embedded read on the FK, not a
+       second round trip — /today's per-tap cost is watched. */
+    .select(
+      "rooftop_id, role, op_code_id, app_user:user_id(full_name), rooftop:rooftop_id(timezone)"
+    )
     .eq("user_id", user.id)
     .eq("active", true);
 
@@ -390,13 +397,54 @@ export default async function TodayPage({
    * adds the last condition, which only the client can answer: is this the
    * native shell. Skipped entirely for anybody who already has a live device.
    */
+  /*
+   * ONE ASK PER STORE-DAY, ACROSS BOTH SURFACES.
+   *
+   * The card renders in two places now — the celebration the moment a morning
+   * is finished, and the done-for-today screen on any later visit. Comparing
+   * the last SHOWN stamp against the rooftop's today is what stops the second
+   * surface re-asking somebody who already answered on the first. UTC would be
+   * wrong for exactly the advisors this product is built around: a 7pm Hawaii
+   * ask and a 9am next-morning visit are the same UTC date.
+   */
+  const rooftopTz =
+    ((membership as { rooftop?: { timezone?: string | null } | null }).rooftop
+      ?.timezone) ?? null;
+  const askedToday =
+    pushPref.softAskLastAt !== null &&
+    storeDateOf(pushPref.softAskLastAt, rooftopTz) === today;
+
   const offerSoftAsk =
     !alreadyRegistered &&
     shouldOfferSoftAsk({
       completions: completionCount,
       streak: currentStreak,
       pref: pushPref,
+      askedToday,
     });
+
+  /*
+   * ---- THE SAME DECISION, AS IT WILL STAND ON THE CELEBRATION SCREEN ------
+   *
+   * Not the same boolean, and the difference is the whole reason the card
+   * never appeared on a first completion.
+   *
+   * `completionCount` is read BEFORE the morning is finished. On the day
+   * somebody completes their very first block it is 0, so `shouldOfferSoftAsk`
+   * refuses — and by the time the celebration renders, the thing it was
+   * waiting for has just happened. The rule is "never before the app has been
+   * useful"; on that screen it has been.
+   *
+   * So the celebration gets the INPUTS rather than the answer, and asks the
+   * same pure function with the count that will be true when it renders. The
+   * streak it cannot know here at all — a completion can advance or reset it —
+   * so that comes from the completion's own result, client-side.
+   */
+  const softAskAfterCompletion = {
+    blocked: alreadyRegistered || askedToday,
+    completions: completionCount,
+    pref: pushPref,
+  };
 
   /*
    * WHICH DAY THEIR SWELL PICKS UP ON, computed rather than assumed. The card
@@ -547,6 +595,8 @@ export default async function TodayPage({
       videoThreshold={videoThreshold}
       alreadyCompleteOnLoad={alreadyCompleteOnLoad}
       offerSoftAsk={offerSoftAsk}
+      /* The celebration decides for itself — see softAskAfterCompletion. */
+      softAskAfterCompletion={softAskAfterCompletion}
       /*
        * A rest day opens as a card, not a ritual. The whole day is still
        * assembled above and handed down — the quote, the video, the stamp — so

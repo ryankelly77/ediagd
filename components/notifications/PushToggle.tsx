@@ -82,6 +82,8 @@ export function PushToggle({
 
     /* No token yet. Ask — this is the one place left that can, once the
        soft-ask budget is spent. */
+    /* The tap-handler argument is gone — it used to be `() => {}` here, which
+       silently replaced the shell's navigator for the rest of the session. */
     const outcome = await registerForPush(
       async (token, platform) => {
         const supabase = createClient();
@@ -91,7 +93,6 @@ export function PushToggle({
         });
         setRegistered(true);
       },
-      () => {},
       { prompt: true }
     );
 

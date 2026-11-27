@@ -121,6 +121,70 @@ check(
    OS dialog is the opt-in, so sends are on once a token exists. */
 check("a person with no row has been asked nothing", DEFAULT_PUSH_PREF.softAskCount, 0);
 check("and is not opted out by default", DEFAULT_PUSH_PREF.pushEnabled, true);
+check("and has no show stamp to compare against", DEFAULT_PUSH_PREF.softAskLastAt, null);
+
+/* ---- One ask per store-day, across both surfaces (t65) ------------------- */
+/*
+ * The card has two homes now: the celebration the moment a morning is
+ * finished, and the done-for-today screen on any later visit. The budget
+ * alone does not stop the second one re-asking somebody who answered on the
+ * first — exactly the case below, where the streak is long enough to unlock
+ * the second ask and only one has been spent.
+ *
+ * `askedToday` is computed by the caller because "today" is the ROOFTOP's
+ * today, and this function holds no timezone.
+ */
+check(
+  "the same day's second surface does not re-ask after 'not now'",
+  shouldOfferSoftAsk({
+    completions: 5,
+    streak: SECOND_ASK_STREAK,
+    pref: pref({ softAskCount: 1, softAskAnswer: "not_now" }),
+    askedToday: true,
+  }),
+  false
+);
+
+/* The acceptance half: the same person TOMORROW is asked, because the second
+   ask's argument — a streak worth protecting — is still true and unspent. A
+   rule that suppressed both days would look identical in the test above. */
+check(
+  "but tomorrow they are, because the budget was not spent",
+  shouldOfferSoftAsk({
+    completions: 5,
+    streak: SECOND_ASK_STREAK,
+    pref: pref({ softAskCount: 1, softAskAnswer: "not_now" }),
+    askedToday: false,
+  }),
+  true
+);
+
+/* Omitting it must not silently suppress. A caller that does not know gets
+   the pre-t65 behaviour rather than a card that never appears. */
+check(
+  "omitting askedToday behaves as 'not asked today'",
+  shouldOfferSoftAsk({
+    completions: 1,
+    streak: 1,
+    pref: pref(),
+  }),
+  true
+);
+
+/* The celebration's own case, and the reason the card never appeared on a
+   first completion: the server reads completions BEFORE the morning is
+   written, so it sees 0 and refuses. The screen asks with the count that is
+   true by the time it renders. */
+check(
+  "server-side count on a first completion day refuses",
+  shouldOfferSoftAsk({ completions: 0, streak: 1, pref: pref() }),
+  false
+);
+check(
+  "the celebration, asking with the completion it has just written, offers",
+  shouldOfferSoftAsk({ completions: 0 + 1, streak: 1, pref: pref() }),
+  true
+);
 
 /* ---- The signing key ----------------------------------------------------- */
 
