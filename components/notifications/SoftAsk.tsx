@@ -19,10 +19,44 @@
    ---------------------------------------------------------------------------
    THE PROMISE IN THE COPY IS A PROMISE THE CODE KEEPS
    ---------------------------------------------------------------------------
-   "One nudge, only on days you work, only when it matters" is not marketing.
-   It is the five eligibility conditions in 0102, in a sentence: one per day by
-   a unique index, rest days excluded by is_scheduled_day(), and nothing at all
-   unless the streak is live and the day is unfinished.
+   The card makes two promises and both are enforced somewhere, not written
+   here as reassurance.
+
+   "when your morning's waiting or you're close to earning something" — every
+   send has a reason it can name. outbox_policy gates each kind, and no kind
+   fires on nothing: streak_keeper and streak_last_call need a live Swell on a
+   scheduled work day with the day unfinished, return needs a lapse against
+   previous_scheduled_day(), start needs an accepted invite and no completed
+   morning. Rest days are excluded by is_scheduled_day(), so a day off is
+   silent.
+
+   "Turn them off any time in Profile" — the switch in PushToggle writes
+   push_enabled, and push_outbox_due joins on it, so turning it off stops every
+   send while the OS permission and the device token stay where they are. That
+   is the whole reason the switch exists; see the docblock there.
+
+   WHAT THE CARD DELIBERATELY NO LONGER PROMISES, AND WHY "ONE" WAS THE WRONG
+   THING TO SAY. One per advisor per day is enforced by a unique index on
+   (recipient_id, local_date), and that number is CURRENT BEHAVIOUR rather than
+   a promise the card should be making: it is one index away from changing, and
+   the card is the last place that should have to be edited when it does.
+
+   It is also not quite "one". The index reads
+
+       where kind <> 'personal_best' and status <> 'skipped'
+
+   so personal_best is exempt by design, and a row that ends up SKIPPED leaves
+   the index — which means an advisor whose noon nudge failed to deliver can
+   still receive the 16:50 last call, while one whose noon nudge went out
+   cannot. That is a defensible rule and it is not "one nudge" either.
+
+   Worth knowing if you read push-copy.ts: its streak_last_call note calls
+   itself "the second exemption", which the schema does not bear out. The index
+   has been defined exactly once, in 0056, and names only personal_best.
+
+   So the copy now describes WHY a reminder arrives and HOW TO STOP IT — the
+   two things the code actually guarantees — rather than how many arrive, which
+   it does not.
 
    ---------------------------------------------------------------------------
    THE SHELL ONLY
@@ -105,10 +139,11 @@ export function SoftAsk() {
         <SwellSun size={44} className="shrink-0" />
         <div className="min-w-0">
           <h2 className="text-base font-extrabold text-navy">
-            Want a heads-up when your streak&rsquo;s on the line?
+            Want a nudge to keep your Swell rolling?
           </h2>
           <p className="mt-1 text-sm text-navy/80">
-            One nudge, only on days you work, only when it matters.
+            Short reminders when your morning&rsquo;s waiting or you&rsquo;re
+            close to earning something. Turn them off any time in Profile.
           </p>
         </div>
       </div>

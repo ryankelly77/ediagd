@@ -185,8 +185,10 @@ export function PushToggle({
           "and try the switch again."
       );
     } else if (typeof outcome === "string" && outcome.startsWith("failed:")) {
+      /* A colon, not an em dash. Advisor-facing copy does not use them, and
+         this string reaches a profile screen rather than a report. */
       setProblem(
-        `This phone refused to register for reminders — ${outcome.slice(8)}`
+        `This phone refused to register for reminders: ${outcome.slice(8)}`
       );
     } else if (outcome === "unavailable") {
       setProblem(
@@ -200,14 +202,22 @@ export function PushToggle({
     <div>
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-navy">Streak reminders</p>
+          {/* "Streak reminders" until t69. The switch governs every push the
+              app sends, not only the streak saver — return and start reach
+              somebody with no streak at all — so naming it after one kind
+              understated what turning it off actually stops. */}
+          <p className="text-sm font-bold text-navy">Reminders</p>
           <p className="mt-0.5 text-xs text-navy/70">
-            One nudge at the end of the day, only when your streak is on the line.
+            A nudge when your morning&rsquo;s waiting, your Swell is on the line,
+            or you&rsquo;re close to earning something.
           </p>
         </div>
         <Toggle
           checked={on}
-          label="Streak reminders"
+          /* Matches the visible label above. A switch whose accessible name
+             says something different from the words beside it is two controls
+             as far as a screen reader is concerned. */
+          label="Reminders"
           onChange={(next) => {
             void change(next);
           }}

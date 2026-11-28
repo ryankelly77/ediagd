@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { nativePlatform } from "@/lib/native/bridge";
 
 /* ============================================================================
    EDIAGD — what text size is this phone actually asking for?
@@ -22,8 +23,14 @@ import { useEffect, useState } from "react";
    bridge nobody can tell is broken. When this says 100% on a phone set to
    xxxLarge, the answer is one glance instead of an afternoon.
 
-   THE SETTING NAMES ARE APPLE'S, so the line can be compared directly against
-   Settings › Display & Brightness › Text Size without counting notches.
+   THE STEP NAMES IN `STEPS` BELOW ARE APPLE'S Dynamic Type categories, so on
+   an iPhone the line can be compared directly against the slider without
+   counting notches. They are shown on Android too, where the scale is a
+   percentage with no such names — the percentage and the pixel value are
+   still right there, so the readout keeps working, but the WORD is borrowed.
+   Naming the Android scale properly needs a mapping measured on a real
+   handset, so it is left rather than guessed. The path into the settings,
+   which is the actionable half, does branch: see textSizePath.
    ============================================================================ */
 
 /** The standard slider, in the order it appears. Accessibility sizes go past this. */
@@ -49,8 +56,40 @@ function describe(px: number): string {
   return best.name;
 }
 
+/**
+ * Where to change it, on the phone it is being read on.
+ *
+ * This said "iOS Settings › Display & Brightness › Text Size" to everybody,
+ * including Android, where that path does not exist. The component is not
+ * platform-gated — it renders on /profile for every advisor — so the sentence
+ * has to branch, the same way PushToggle's settings sentence does.
+ *
+ * No OS name in any branch: a path through a phone is not a claim about who
+ * made it. The browser case gets the neutral sentence, and it is reachable —
+ * an advisor can open /profile on a laptop.
+ */
+function textSizePath(platform: "ios" | "android" | null): string {
+  if (platform === "android") return "Settings › Display › Display size and text";
+  if (platform === "ios") return "Settings › Display & Brightness › Text Size";
+  return "your phone's display settings";
+}
+
 export function TextScaleReadout({ className }: { className?: string }) {
   const [px, setPx] = useState<number | null>(null);
+  /* Null until it settles, and null is the safe value: textSizePath falls
+     back to the neutral sentence rather than guessing a platform. */
+  const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const p = await nativePlatform();
+      if (!cancelled) setPlatform(p);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const read = () =>
@@ -85,11 +124,12 @@ export function TextScaleReadout({ className }: { className?: string }) {
       <span className="font-bold text-navy">Text size:</span>{" "}
       <span className="ediagd-numeral tabular-nums">{pct}%</span>{" "}
       <span className="ediagd-numeral tabular-nums">({px.toFixed(1)}px)</span>
-      {" — "}
+      {/* A colon, not an em dash: advisor-facing copy does not use them. */}
+      {": "}
       {describe(px)}.{" "}
       {pct === 100
-        ? "Change it in iOS Settings › Display & Brightness › Text Size."
-        : "From iOS Settings › Display & Brightness › Text Size."}
+        ? `Change it in ${textSizePath(platform)}.`
+        : `From ${textSizePath(platform)}.`}
     </p>
   );
 }
