@@ -569,20 +569,42 @@ function PushesLine({ rollcall }: { rollcall: Rollcall }) {
           ) : (
             <>
               {p.sent} {p.sent === 1 ? "message was" : "messages were"} attempted
-              and Apple accepted none of them, so there is no return rate to
-              report. The failures are on the rows below with Apple&apos;s own
-              reason.
+              and none of them were accepted, so there is no return rate to
+              report. The failures are on the rows below with the provider&apos;s
+              own reason.
             </>
           )}
         </p>
       )}
 
+      {/*
+        NO PROVIDER IS NAMED HERE, AND THAT IS A LIMIT RATHER THAN A STYLE
+        CHOICE.
+
+        Both sentences said "Apple", written when APNs was the only transport.
+        Android ships now, so a delivery Google refused was being reported as
+        refused by Apple.
+
+        Naming each one properly needs the platform, and Rollcall cannot see
+        it: it reads `push_return` (0165), whose columns are delivery_id,
+        outbox_id, user_id, rooftop_id, kind, store_date, queued_for, sent_at,
+        attempted_at, delivered_ok, apns_status, apns_reason, token_tail and
+        the three return fields. No platform. The column exists on
+        device_push_token and push_delivery.token_id points at it, so the fix
+        is one expression in the view — but that is a migration, and this
+        change was scoped to copy.
+
+        Inferring it from the reason string is NOT the shortcut it looks like:
+        Apple says "Unregistered" and Google says "UNREGISTERED", which is a
+        derived key standing in for an observed one, and the day a vocabulary
+        changes it mislabels silently. So the copy says what it can defend.
+      */}
       {p.failedDeliveries > 0 && (
         <p className="mt-1 text-xs font-bold leading-relaxed text-clay">
           {p.failedDeliveries} device{" "}
-          {p.failedDeliveries === 1 ? "delivery" : "deliveries"} refused by
-          Apple. A person carrying two handsets can have one refused and still
-          have received the push — the reason is on their row.
+          {p.failedDeliveries === 1 ? "delivery was" : "deliveries were"} refused.
+          A person carrying two handsets can have one refused and still have
+          received the push: the reason is on their row.
         </p>
       )}
 
