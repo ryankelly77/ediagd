@@ -76,6 +76,10 @@ export function SoftAsk() {
     await answerSoftAsk("yes");
 
     const supabase = createClient();
+    /* No tap handler argument any more, and that is the point: this used to
+       pass `() => {}`, and registerForPush replaces every listener — so saying
+       yes here broke the first notification tap until the app was relaunched.
+       The shell owns the destination now. See setPushNavigator. */
     await registerForPush(
       async (token, platform) => {
         await supabase.rpc("register_push_token", {
@@ -83,7 +87,6 @@ export function SoftAsk() {
           _platform: platform,
         });
       },
-      () => {},
       { prompt: true }
     );
 

@@ -32,6 +32,7 @@ import {
   readyShell,
   PUSH_ENABLED,
   registerForPush,
+  setPushNavigator,
 } from "@/lib/native/bridge";
 
 export function NativeBridge() {
@@ -48,6 +49,18 @@ export function NativeBridge() {
       const go = (route: string) => {
         if (!disposed) router.push(route);
       };
+
+      /*
+       * THE SHELL OWNS WHERE A NOTIFICATION TAP GOES, and it says so once here
+       * rather than handing a navigator to whoever happens to call
+       * registerForPush. Set BEFORE the push path below, so a tap that arrives
+       * while registration is still in flight already has somewhere to land.
+       *
+       * Before this, SoftAsk and PushToggle each passed `() => {}` as their
+       * tap handler, and registerForPush replaces all listeners — so opting in
+       * silently broke the first tap. See setPushNavigator in lib/native/bridge.
+       */
+      setPushNavigator(go);
 
       /* Deep links, the back button and the splash must all work signed out.
          Do them first, so a failure in the push path below can never leave the
@@ -89,7 +102,6 @@ export function NativeBridge() {
           });
           if (error) console.error("[ediagd] register_push_token", error.message);
         },
-        go,
         { prompt: false }
       );
 
@@ -103,6 +115,16 @@ export function NativeBridge() {
 
     return () => {
       disposed = true;
+      /*
+       * CLEARED, NOT LEFT POINTING AT A DISPOSED CLOSURE.
+       *
+       * `go` short-circuits on `disposed`, so leaving it installed would make
+       * the navigator a no-op again between this unmount and the next mount —
+       * the exact defect this PR exists to remove, reintroduced one level up.
+       * Null hands the tap to openRoute's hard-navigation fallback, which
+       * cannot silently do nothing.
+       */
+      setPushNavigator(null);
       cleanupLinks?.();
       cleanupBack?.();
     };

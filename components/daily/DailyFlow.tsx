@@ -19,6 +19,27 @@ import {
 import { BadgeCelebration } from "./BadgeCelebration";
 import { MILESTONES } from "@/lib/gamification/streak";
 import { SoftAsk } from "@/components/notifications/SoftAsk";
+import {
+  shouldOfferSoftAsk,
+  type PushPref,
+} from "@/lib/notifications/push-prefs";
+
+/**
+ * What the celebration needs to decide the ask for ITSELF.
+ *
+ * The server cannot pre-compute this one. `completions` is read before the
+ * morning is finished, and the streak after a completion is only known once
+ * the completion has been written — so the screen that renders after both is
+ * the only place with the real inputs. It still asks the same pure function
+ * with the same two-ask budget; nothing about the rules is duplicated here.
+ */
+type SoftAskAfterCompletion = {
+  /** A live token already on file, or the card was already shown today. */
+  blocked: boolean;
+  /** Completions BEFORE today's, which is what the server could see. */
+  completions: number;
+  pref: PushPref;
+};
 import { SwellSun } from "@/components/brand/badges/SwellSun";
 import { SandDollarIcon } from "@/components/brand/SandDollarIcon";
 import { BRAND } from "@/lib/brand";
@@ -148,6 +169,7 @@ export function DailyFlow({
   nextWorkDayLabel = "",
   milestoneText = null,
   offerSoftAsk = false,
+  softAskAfterCompletion = null,
   quizWaiting = null,
 }: {
   alreadyCompleteOnLoad: boolean;
@@ -165,6 +187,7 @@ export function DailyFlow({
    * whole flow is written to avoid.
    */
   offerSoftAsk?: boolean;
+  softAskAfterCompletion?: SoftAskAfterCompletion | null;
   currentStreak: number;
   today: string;
   greetingName: string;
@@ -731,6 +754,7 @@ export function DailyFlow({
             today={today}
             fallbackStreak={currentStreak}
             quizWaiting={quizWaiting}
+            softAskAfterCompletion={softAskAfterCompletion}
           />
         )}
     </PhoneScreen>
@@ -1621,6 +1645,7 @@ function CelebrationStep({
   previewResult = null,
   dailyLoopSand,
   quizWaiting = null,
+  softAskAfterCompletion = null,
 }: {
   dayStamp: string;
   pitchWatchPct: number | null;
@@ -1649,6 +1674,8 @@ function CelebrationStep({
   dailyLoopSand: number;
   /** The quiz whose lesson is finished — see pendingQuiz in lib/loop.ts. */
   quizWaiting?: QuizWaiting | null;
+  /** Inputs for the notifications ask; the screen decides. Null = never ask. */
+  softAskAfterCompletion?: SoftAskAfterCompletion | null;
 }) {
   const router = useRouter();
   // In demo mode the outcome is handed in, and the cache is bypassed entirely
@@ -2102,6 +2129,40 @@ function CelebrationStep({
           <ClosingQuote quote={closingQuote} />
         </div>
       )}
+
+      {/*
+        ---- THE NOTIFICATIONS ASK, ON THE SCREEN THAT EARNED IT -------------
+
+        This is the moment the card was designed for and never got: they have
+        just finished a morning and the streak number is above them, which is
+        the only argument the card has. Until now it rendered solely on the
+        done-for-today screen, reachable only by ARRIVING at /today already
+        complete — so on the day of a first completion the ask was impossible,
+        and the first thing an advisor could be asked was on some later visit.
+
+        Below the closing quote and above the footer, matching where
+        DoneForTodayScreen puts it. Left-aligned inside a centred section for
+        the same reason the quote is: a card of body copy that is centred stops
+        being readable.
+
+        The screen decides rather than the server — `completions` is read
+        before the morning is finished and the post-completion streak does not
+        exist yet. Same pure function, same two-ask budget; see
+        SoftAskAfterCompletion.
+
+        Renders nothing outside the native shell: SoftAsk gates on isNative().
+      */}
+      {softAskAfterCompletion &&
+        !softAskAfterCompletion.blocked &&
+        shouldOfferSoftAsk({
+          completions: softAskAfterCompletion.completions + 1,
+          streak: result.streak,
+          pref: softAskAfterCompletion.pref,
+        }) && (
+          <div className="mt-8 text-left">
+            <SoftAsk />
+          </div>
+        )}
 
       </section>
       </PhoneScreen.Body>

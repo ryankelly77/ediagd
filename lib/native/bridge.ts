@@ -63,6 +63,59 @@ export async function shellInfo(): Promise<{
 type TokenSink = (token: string, platform: "ios" | "android") => Promise<void>;
 type Navigate = (route: string) => void;
 
+/* ---- Where a notification tap goes --------------------------------------- */
+
+/**
+ * THE TAP DESTINATION IS A PROPERTY OF THE APP, NOT OF WHOEVER LAST ASKED FOR
+ * PERMISSION. This used to be an argument to registerForPush and that was the
+ * bug.
+ *
+ * `registerForPush` begins with `removeAllListeners()` and then re-adds the tap
+ * listener bound to the `onOpen` ITS caller passed. Three callers, and they did
+ * not agree:
+ *
+ *   components/native/NativeBridge.tsx   `go`      — the real router navigate
+ *   components/notifications/SoftAsk     `() => {}`
+ *   components/notifications/PushToggle  `() => {}`
+ *
+ * Last writer wins. So the moment somebody opted in — the soft-ask card, or the
+ * /profile switch — the working handler was torn down and replaced with a no-op
+ * for the rest of that app session. Observed on an API 36 emulator: the first
+ * tap after opting in opened the app and left it on /profile; after a relaunch,
+ * with NativeBridge owning the listener again, the same notification's tap
+ * landed on /today?opened_via=streak_saver.
+ *
+ * The first reminder a new opt-in receives is the one most likely to be tapped,
+ * and it was the one guaranteed to land nowhere.
+ *
+ * So the parameter is GONE rather than fixed at each call site. A caller cannot
+ * pass the wrong navigator because it cannot pass one at all — the unsafe state
+ * is unrepresentable rather than merely avoided, which is the shape this
+ * codebase asks for. The destination is set once, by the shell.
+ */
+let pushNavigator: Navigate | null = null;
+
+/** Called by the shell on mount. The last real navigator wins, as it should. */
+export function setPushNavigator(go: Navigate | null): void {
+  pushNavigator = go;
+}
+
+/**
+ * A tap always goes somewhere.
+ *
+ * The fallback is not defensive decoration: without it, a tap arriving before
+ * the shell has mounted — a cold launch straight from the notification, which
+ * is the common case — would be swallowed exactly as the no-op swallowed it.
+ * A full page assign is slower than a client navigation and it cannot fail.
+ */
+function openRoute(route: string): void {
+  if (pushNavigator) {
+    pushNavigator(route);
+    return;
+  }
+  if (typeof window !== "undefined") window.location.assign(route);
+}
+
 /**
  * Ask for permission, register with APNs/FCM, and hand the token upward.
  *
@@ -110,7 +163,6 @@ export const PUSH_ENABLED = true;
  */
 export async function registerForPush(
   onToken: TokenSink,
-  onOpen: Navigate,
   options: { prompt?: boolean } = {}
 ): Promise<
   "granted" | "denied" | "unavailable" | "not_asked" | "no_token" | `failed: ${string}`
@@ -178,7 +230,11 @@ export async function registerForPush(
    */
   await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
     const route = action.notification?.data?.deep_link;
-    if (typeof route === "string" && route.startsWith("/")) onOpen(route);
+    /* openRoute, never a caller's handler — see setPushNavigator above. The
+       leading-slash test stays: deep_link is written by the generator in 0056
+       and is always an in-app route, and this is the one place a malformed one
+       could become an external navigation. */
+    if (typeof route === "string" && route.startsWith("/")) openRoute(route);
   });
 
   await PushNotifications.register();
