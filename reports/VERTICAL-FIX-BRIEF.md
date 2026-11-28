@@ -199,6 +199,66 @@ immediately) opens on "Aloha!" for both, which says the stored asset is correct
 from its start and points the finger at the source the derive reads, not at the
 asset.
 
+## The two "unreadable" films — and two more crops that start five seconds late
+
+`At the Kiosk — Battery Replacement` and `Piggyback — Front Wiper Blades` were
+refused by the 25 November sweep with no master transcript at all, at either
+end, while their crops read fine. **It is neither of the two things that looked
+likely.** Not a silent or musical open: the master's first ten seconds measure
+**−25.1 dB and −27.0 dB** with speech in them. Not a failed transcription
+either — a pull that *accepts* a short read transcribes them correctly. The
+cause is in a field nothing downstream reads:
+
+```
+readEnds -> note: "partial pull: came back 6.78s of 10.00s"   At the Kiosk
+readEnds -> note: "partial pull: came back 6.47s of 10.00s"   Piggyback
+```
+
+The master's HLS returns a short read, `pull()` requires `got >= expect - 0.75`,
+retries three times and gives up — and `readEnds` funnels that into `e.note` and
+returns empty strings. `EndsLike` has no `note`, so **the comparator never sees
+why it got nothing**, and a reason that exists was sitting one field away from
+the verdict for a fortnight. Re-read at 30 s: still a partial pull, still
+unreadable. The widening is right and it is not enough; the pull itself is what
+needs fixing, and that is not in this change.
+
+**And the reason it matters more than a logging defect.** Probing the master at
+successive offsets and asking where it starts saying what the crop says first:
+
+```
+At the Kiosk — Battery Replacement
+  crop   @0s  "Think about the other opcodes, cabin air filter, coolant, wipers…"
+  master @0s  "The kiosk is not normally where batteries get sold."
+  master @4s  "get sold. Think about the other opcodes, cabin air filter…"
+  master @6s  "other op codes, cabin air filter, coolant, wipers…"
+                              -> the crop begins about 5.5 s into its master
+
+Piggyback — Front Wiper Blades
+  crop   @0s  "And this one turns a $40 sale into a real ticket item…"
+  master @0s  "You sold the front blades, now let's talk about the rest of it. The piggyback"
+  master @4s  "The piggyback and this one turns a $40 sale into a real ticket item…"
+                              -> the crop begins about 5 s into its master
+```
+
+Lengths agree: 168.07 s against 167.98 s, and 178.90 s against 178.72 s. **Late
+start, duration preserved** — the same shape as Lasting Impressions, Part 8 and
+the 21 November Brave Enough crop, and now the same ≈5 s on four films.
+
+> **Both rows are `vertical_status = 'ready'` and are being served to phones
+> today.** They were linked in October, before any transcript comparison
+> existed, and the gate that would have caught them could not read their
+> masters. Nothing has been changed: this prompt permitted one database write
+> and it was spent on Brave Enough. These two are reported, not touched.
+
+That makes the uniform ≈5 s the thing to explain rather than a coincidence, on a
+fourth and fifth independent film — and it means the population of late-starting
+crops is **not** the two that refuse. It is at least four, and the only reason we
+know about these two is that their masters happened to be unreadable. **Nobody
+has asked how many `ready` crops would fail the comparison if it were run
+against them**, which is a sweep, not a guess: the 25 November sweep's 472
+passes include every row the `absolute` Aloha/Mahalo test rescued without the
+comparator ever agreeing.
+
 ## Can `derive-vertical` still cut from an old timeline if a swap lands mid-run?
 
 **Yes, and the gate cannot see it.**
@@ -234,3 +294,51 @@ that is no longer the master then **cannot** be linked, rather than merely being
 unlikely to be — which is the construction this file prefers. Note this is also
 the only guard that would have caught the race at the moment it happened; a
 later sweep comparing transcripts catches it only after a phone has played it.
+
+## Re-judging the whole library from the saved sweep
+
+The 25 November sweep saved every transcript it read, so the new comparator was
+re-run over all 479 records without transcribing anything again.
+
+**Exactly four verdicts change, and they are the four false refusals:**
+
+| film | collection | 25 November | now |
+|---|---|---|---|
+| 30 Second Walk-Around, Part 2, Four Goals, Two Words | Craft | refuse (head) | **pass** |
+| Name Tag — Closer | Craft | refuse (head) | **pass** |
+| Dealer Upsell Menus and Interval Charts — Opener | Craft | refuse (tail) | **pass** |
+| MPI Setup — AC Evaporator Cleaning | Pitches by Op Code | refuse (tail) | **pass** |
+
+```
+25 November   472 pass   5 head        2 tail
+now           476 pass   1 head        2 unreadable
+```
+
+The one remaining refusal is Lasting Impressions, Part 8. The two `unreadable`
+are the pair above — same films, same outcome of not being served a crop, but
+now distinguishable from a film that was judged and failed.
+
+### A correction, because the first version of this table said 41
+
+My first re-run reported **41** changed verdicts. That was my mistake and not
+the comparator's, and the cause is worth keeping because it is this file's
+recurring one: **I inferred what a stored field meant instead of reading the
+code that wrote it.**
+
+`sweep.js` stores `ok: absolute || nm.ok`, where `absolute` is "the crop opens
+Aloha and closes Mahalo". So a row could pass live on the absolute test while
+the transcript comparison refused it, and `which`/`detail` were nulled on those
+rows — the comparator's own verdict is **not recoverable** from the file. I
+compared my new comparator against that conflated field and counted 37 rows
+where nothing about the served outcome had ever changed.
+
+Reading `sweep.js` corrected a second assumption in the same pass: heads are
+stored `slice(0, 160)` and tails `slice(-160)`, so heads keep their **starts**
+and tails keep their **endings** — which is exactly what the head test and the
+tail test each read. The saved text was fit for purpose; I had assumed tails
+were clipped at the end and nearly discarded the whole re-run on it.
+
+**Scope of the re-run, before the finding:** it is evidence about the **text**
+comparison only. `whisperFirstStart` was never stored, so the start-time guard
+is not exercised by it. Any row whose only defect is a late start with matching
+words would pass this re-run and refuse in a live derive.
