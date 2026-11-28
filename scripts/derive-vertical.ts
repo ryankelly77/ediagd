@@ -27,6 +27,17 @@ import { Readable } from "node:stream";
 
 const run = promisify(execFile);
 
+/**
+ * The read windows, in seconds at each end.
+ *
+ * NARROW is what every read starts at, and is enough for a film that opens on
+ * the Aloha. WIDE is used only to answer an `unreadable` — a window that landed
+ * on no speech — and only once. It is not a second chance for a refusal: see
+ * the comment at the retry.
+ */
+const NARROW_WINDOW = 10;
+const WIDE_WINDOW = 30;
+
 const SB_URL = process.env.SB_URL!;
 const SB_KEY = process.env.SB_KEY!;
 const sb = createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
@@ -309,11 +320,11 @@ async function deriveOne(row: Row) {
      * Refusing on a transient read is the expensive direction: the row keeps the
      * broken vertical this derive exists to replace.
      */
-    let ends = await readEnds(mux, pid.id, asset.duration ?? 0, 10, "small.en", ".tmp-derive-check");
+    let ends = await readEnds(mux, pid.id, asset.duration ?? 0, NARROW_WINDOW, "small.en", ".tmp-derive-check");
     for (let attempt = 2; attempt <= 3; attempt++) {
       if (strip(ends.firstWord ?? "") === "aloha" && strip(ends.lastWord ?? "") === "mahalo") break;
       await new Promise((r) => setTimeout(r, 15000));
-      const again = await readEnds(mux, pid.id, asset.duration ?? 0, 10, "small.en", ".tmp-derive-check");
+      const again = await readEnds(mux, pid.id, asset.duration ?? 0, NARROW_WINDOW, "small.en", ".tmp-derive-check");
       console.log(`    re-read ${attempt}    opens "${again.firstWord ?? "—"}", closes "${again.lastWord ?? "—"}"`);
       ends = again;
     }
@@ -367,8 +378,36 @@ async function deriveOne(row: Row) {
        * happened.
        */
       try {
-        const master = await readEnds(mux, row.mux_playback_id, row.duration_sec ?? 0, 10, "small.en", ".tmp-derive-check");
-        const m = endsMatch(master, ends);
+        let master = await readEnds(mux, row.mux_playback_id, row.duration_sec ?? 0, NARROW_WINDOW, "small.en", ".tmp-derive-check");
+        let m = endsMatch(master, ends);
+
+        /*
+         * ---- UNREADABLE IS A FACT ABOUT THE READ, SO READ AGAIN ------------
+         *
+         * Measured on the 25 November sweep: two films — At the Kiosk — Battery
+         * Replacement and Piggyback — Front Wiper Blades — came back with NO
+         * master transcript at all in a ten-second window, at both ends, while
+         * their crops read fine. That is not a crop that starts in the wrong
+         * place; it is a window that happened to land on no speech, and
+         * recording it as a refusal would have been a verdict the read did not
+         * earn.
+         *
+         * So widen and ask again, ONCE, and only on `unreadable` — never on a
+         * refusal. A refusal has an answer and widening the window to look for
+         * a better one is how a gate talks itself out of a true finding.
+         */
+        if (m.which === "unreadable") {
+          console.log(`    unreadable    ${NARROW_WINDOW}s window read nothing — re-reading at ${WIDE_WINDOW}s`);
+          const wider = await readEnds(mux, row.mux_playback_id, row.duration_sec ?? 0, WIDE_WINDOW, "small.en", ".tmp-derive-check");
+          const widerVert = await readEnds(mux, pid.id, asset.duration ?? 0, WIDE_WINDOW, "small.en", ".tmp-derive-check");
+          const again = endsMatch(wider, widerVert);
+          if (again.which !== "unreadable" || !m.ok) {
+            master = wider;
+            m = again;
+            console.log(`    at ${WIDE_WINDOW}s        ${again.which === "unreadable" ? "still unreadable" : again.ok ? "readable, and it matches" : `readable, and it does not: ${again.which}`}`);
+          }
+        }
+
         matchDetail = m.detail;
         if (m.ok) {
           ok = true;

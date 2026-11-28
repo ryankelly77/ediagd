@@ -122,3 +122,65 @@ invented here.
 | 2026-11-18 | 0.5 | Android Release | [reconstructed] ediagd-android worktree: closed the t59 onboarding test with a read-only check on the borrowed seat for op 500032, deactivated the test account and recorded the closure in the agent ownership brief, 10:55 to 11:00 am; the worktree then moved to the android-fcm branch at 5:16 pm for push notifications; from reflog and file times, no commits; no PR |
 | 2026-11-19 | 0.1 | Fixes & Repair Tools | [reconstructed] Ran the video rendition test (which cut plays on desktop versus phone) in the main checkout after a checkout of main, 10:23 to 10:25 am; from reflog and file times, no commits or hand-authored files; no PR |
 | 2026-11-20 | 0.1 | Trim Pipeline | [reconstructed] Moved the main checkout to the vertical/re-enable-schedule branch and built the vertical derive and trim check tools for the vertical backlog, 10:11 pm; from reflog and file times, no hand-authored files, the schedule change was committed 21 November; no PR |
+| 2026-11-21 | 2.9 | Trim Pipeline | [reconstructed] Vertical cut repair: re-enabled the vertical derive schedule that had been paused since 8 October and left 22 phones films on the landscape cut, made the vertical gate compare transcripts instead of one word at each end, then measured the wrong-cut mezzanine as a five second window slide on both films (committed on vertical/wrong-cut-evidence, not yet merged); 10:50 am to 1:33 pm and 2:37 to 2:48 pm; PRs #120 and #121 |
+| 2026-11-21 | 1.1 | Manager Meetings | [reconstructed] Reviewed and merged the ediagd-manager worktree to production (Preview deploy write guard and the op code catalog read, migration 0182), ran the catalog read acceptance check against it and fast-forwarded the worktree, which then refreshed the meeting and op code data; 1:43 to 3:00 pm; PR #90 |
+| 2026-11-21 | 0.4 | Android Release | [reconstructed] ediagd-android worktree on android-fcm: Android push notifications get an FCM transport beside APNs, with the shared push send and result modules, the push self test, FCM scenarios and a transport migration; 3:00 to 3:21 pm from file times, not committed; no PR |
+| 2026-11-22 | 2 | Manager Meetings | [reconstructed] ediagd-manager worktree: Manager Meetings library loader, with migration 0183 giving a meeting its run sheet, series, situation tags held to the 24 tag guide and the classification line as its key (not applied), a dry by default local only loader keyed on that line, and the ruling 5 retitle override so a renamed meeting updates instead of duplicating; about 830 new lines written 8:56 to 8:58 am, not committed, hours from scope; no PR |
+| 2026-11-24 | 1.7 | Manager Meetings | [reconstructed] ediagd-manager worktree: committed and merged to production the Manager Meetings library load (213 meetings, 57 op codes, the 21 November rulings as data, migration 0183), then the slate lookup that identifies a manager film by its spoken Classification line and a production target for the loader gated four ways, committed on ediagd-manager, not yet merged; the loader itself was written 22 November; 5:41 to 7:03 pm and 8:36 to 8:58 pm, with the idle 6:20 to 7:45 pm stretch split between the two workstreams; PR #124 |
+| 2026-11-24 | 1.7 | Android Release | [reconstructed] ediagd-android worktree: Android reminders go to Firebase with a router choosing the provider and migration 0184 (written 21 November), committed and amended, then a rebase, an Android build and the Android release report before merging to production; 5:36 to 5:41 pm and 7:03 to 8:36 pm; PR #123 |
+| 2026-11-25 | 2.1 | Push & Engagement | [reconstructed] ediagd-android worktree: the push open stamp can reach its row, with migration 0185 making mark_push_opened a definer function that writes only the opened column and an acceptance check over real advisor sign-ins, worked 11:07 am to 12:49 pm from reflog and file times and committed 8:18 pm on t67-opened-at-stamp, not yet merged; then the push opt-in path on t65 (native bridge, push toggle, soft ask, Today and the daily flow), 8:25 to 8:42 pm, not committed; no PR |
+| 2026-11-25 | 0.9 | Manager Meetings | [reconstructed] Merged the Manager Meetings slate and guarded loader target to production (written 24 November), then in the ediagd-ingest worktree a manager film attaches through the Mux passthrough to the row the loader already wrote instead of creating a second row, and the slate parser reads a spoken slate, both found by transcribing the November Drop Zone batch; 8:26 pm merge, then 8:42 to 9:37 pm, committed on ingest/attach-by-passthrough and merged as PR #127 on 26 November; PR #125 |
+| 2026-11-26 | 0.3 | Manager Meetings | [reconstructed] ediagd-ingest worktree: Gate One report on the 26 November Manager Meetings Drop Zone batch (125 transcribed, 21 identified, 104 held) and the rulings file, merged the passthrough attach to production, then uncommitted edits so the identifier and ingest accept Ryan's rulings for held clips and trim:measure covers manager films, not only advisor films; 10:45 to 11:01 am and 12:44 pm from file times, the 11:06 am to 12:41 pm gap with nothing hand-authored left out; PR #127 |
+| 2026-11-26 | 0.4 | Push & Engagement | [reconstructed] ediagd-android worktree on t65: the push soft ask is held to once a day at the store clock, then web and native test runs of the opt-in path against a local build with an Android build at 12:50 pm; 10:43 am, 11:01 to 11:06 am and 12:41 to 12:59 pm from file times, not committed; no PR |
+
+---
+
+## Production writes made at Ryan's instruction
+
+Not hours, and not rows — the table above is an hours ledger and its header says
+no coding agent writes a row in it. This section is the other thing a log is
+for: a database change that happened outside a migration, so the next reader of
+the row can see that it was deliberate and why.
+
+### 2026-11-27 — Brave Enough: the 8 October crop is served again
+
+`content.f42e5e4f-4af4-4fdd-b00d-9e4b8be8c469`, one call to
+`set_vertical_rendition()` with the ids the row already held. No new Mux asset,
+no encode, no upload.
+
+| | before | after |
+|---|---|---|
+| `vertical_status` | `stale` | `ready` |
+| `vertical_derived_at` | `2026-10-08T20:03:34.939997+00:00` | `2026-11-28T02:23:18.007215+00:00` |
+| `vertical_asset_id` | `nNgMQvxSOfSO2qoNgrM5le02g2K902JWb02Qy8J00a2G8I00` | unchanged |
+| `vertical_playback_id` | `nF024t2RYLDtgJWeY01chHT01ZwZ7uSveAwpt2i02rPDy6Y` | unchanged |
+| `vertical_error` | `REFUSING to write this vertical: opens "The" closes "Mahalo." 70.63s vs 71s…` | `null` |
+
+**The reason.** The crop was measured against the master it is actually cut
+from, head, middle and tail: both open *"Aloha! Brave Enough by Sarah Bahada"*,
+both close on *"Mahalo."* within 0.04 s, duration differs by 0.11 s, trailing
+silence by 0.07 s, and the transcripts agree word-for-word at 30 s and at 55 s.
+The crop was created in Mux on 8 October from the master that has been in place
+since 8 September, so it never had a later take to fall behind. It was a
+faithful rendition being withheld.
+
+`vertical_error` held a refusal of a **different, newly cut** asset
+(`rX501BVzkNf3nqQ78GRvn02r6D801NbsN00O5w02PUwEnLEs`, 21 November) which really is
+wrong-cut — it opens on *"The service drive"*, five seconds in. That asset is
+still in Mux and is not what this row points at.
+
+Proven after the write through the real path — `renditionsFor()` then
+`pickRendition()` on the live row: iPhone 14, iPhone SE and iPad portrait all
+return `vertical-fits`; desktop still returns `wide-viewport` and the server's
+first render still returns `not-measured`, which are the correct answers for
+those viewers.
+
+**What is NOT explained, and is the reason the audit trail in the next PR
+exists:** nothing in the repository or on the row accounts for the row being
+`stale` in the first place. `replace_master_asset()` is the only writer of that
+value anywhere, it sets `archived_at` in the same statement, and this row's
+`archived_at` is 8 September — a month *before* the crop was made and linked
+`ready`. Searched: all of git history across every ref, every script and
+migration, the scratch directories, and the deployed function list. Not
+checkable from here: deployed function bodies and triggers, there being no
+direct database connection.
