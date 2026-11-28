@@ -132,3 +132,55 @@ invented here.
 | 2026-11-25 | 0.9 | Manager Meetings | [reconstructed] Merged the Manager Meetings slate and guarded loader target to production (written 24 November), then in the ediagd-ingest worktree a manager film attaches through the Mux passthrough to the row the loader already wrote instead of creating a second row, and the slate parser reads a spoken slate, both found by transcribing the November Drop Zone batch; 8:26 pm merge, then 8:42 to 9:37 pm, committed on ingest/attach-by-passthrough and merged as PR #127 on 26 November; PR #125 |
 | 2026-11-26 | 0.3 | Manager Meetings | [reconstructed] ediagd-ingest worktree: Gate One report on the 26 November Manager Meetings Drop Zone batch (125 transcribed, 21 identified, 104 held) and the rulings file, merged the passthrough attach to production, then uncommitted edits so the identifier and ingest accept Ryan's rulings for held clips and trim:measure covers manager films, not only advisor films; 10:45 to 11:01 am and 12:44 pm from file times, the 11:06 am to 12:41 pm gap with nothing hand-authored left out; PR #127 |
 | 2026-11-26 | 0.4 | Push & Engagement | [reconstructed] ediagd-android worktree on t65: the push soft ask is held to once a day at the store clock, then web and native test runs of the opt-in path against a local build with an Android build at 12:50 pm; 10:43 am, 11:01 to 11:06 am and 12:41 to 12:59 pm from file times, not committed; no PR |
+
+---
+
+## Production writes made at Ryan's instruction
+
+Not hours, and not rows — the table above is an hours ledger and its header says
+no coding agent writes a row in it. This section is the other thing a log is
+for: a database change that happened outside a migration, so the next reader of
+the row can see that it was deliberate and why.
+
+### 2026-11-27 — Brave Enough: the 8 October crop is served again
+
+`content.f42e5e4f-4af4-4fdd-b00d-9e4b8be8c469`, one call to
+`set_vertical_rendition()` with the ids the row already held. No new Mux asset,
+no encode, no upload.
+
+| | before | after |
+|---|---|---|
+| `vertical_status` | `stale` | `ready` |
+| `vertical_derived_at` | `2026-10-08T20:03:34.939997+00:00` | `2026-11-28T02:23:18.007215+00:00` |
+| `vertical_asset_id` | `nNgMQvxSOfSO2qoNgrM5le02g2K902JWb02Qy8J00a2G8I00` | unchanged |
+| `vertical_playback_id` | `nF024t2RYLDtgJWeY01chHT01ZwZ7uSveAwpt2i02rPDy6Y` | unchanged |
+| `vertical_error` | `REFUSING to write this vertical: opens "The" closes "Mahalo." 70.63s vs 71s…` | `null` |
+
+**The reason.** The crop was measured against the master it is actually cut
+from, head, middle and tail: both open *"Aloha! Brave Enough by Sarah Bahada"*,
+both close on *"Mahalo."* within 0.04 s, duration differs by 0.11 s, trailing
+silence by 0.07 s, and the transcripts agree word-for-word at 30 s and at 55 s.
+The crop was created in Mux on 8 October from the master that has been in place
+since 8 September, so it never had a later take to fall behind. It was a
+faithful rendition being withheld.
+
+`vertical_error` held a refusal of a **different, newly cut** asset
+(`rX501BVzkNf3nqQ78GRvn02r6D801NbsN00O5w02PUwEnLEs`, 21 November) which really is
+wrong-cut — it opens on *"The service drive"*, five seconds in. That asset is
+still in Mux and is not what this row points at.
+
+Proven after the write through the real path — `renditionsFor()` then
+`pickRendition()` on the live row: iPhone 14, iPhone SE and iPad portrait all
+return `vertical-fits`; desktop still returns `wide-viewport` and the server's
+first render still returns `not-measured`, which are the correct answers for
+those viewers.
+
+**What is NOT explained, and is the reason the audit trail in the next PR
+exists:** nothing in the repository or on the row accounts for the row being
+`stale` in the first place. `replace_master_asset()` is the only writer of that
+value anywhere, it sets `archived_at` in the same statement, and this row's
+`archived_at` is 8 September — a month *before* the crop was made and linked
+`ready`. Searched: all of git history across every ref, every script and
+migration, the scratch directories, and the deployed function list. Not
+checkable from here: deployed function bodies and triggers, there being no
+direct database connection.
