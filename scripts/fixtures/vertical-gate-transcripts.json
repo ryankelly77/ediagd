@@ -128,5 +128,113 @@
    "duration": 70.633333,
    "note": null
   }
+ },
+ {
+  "title": "Name Tag — Closer",
+  "expect": "pass",
+  "master": {
+   "firstWord": "That's",
+   "lastWord": "Mahalo.",
+   "leadIn": 0,
+   "tailAfterLast": 0.629,
+   "whisperFirstStart": 0,
+   "headHeard": "That's what's in a nametag. Your dealership, your brand, you, and your advice. So now what? How about a challenge?",
+   "tailHeard": "Not four things, what's one thing? And remember, if you need some inspiration, just look down at that name tag. Mahalo.",
+   "duration": 70,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "That's",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.065,
+   "tailAfterLast": 0.639,
+   "whisperFirstStart": 0.76,
+   "headHeard": "That's what's in the nametag. Your dealership, your brand, you, and your advice. So now what? How about a challenge?",
+   "tailHeard": "four things, what's one thing? And remember, if you need some inspiration, just look down at that name tag. Mahalo.",
+   "duration": 70.366667,
+   "note": null
+  },
+  "note": "false refusal found by the 25 November full-library sweep; the crop is faithful and the gate was measuring the transcriber"
+ },
+ {
+  "title": "30 Second Walk-Around, Part 2, Four Goals, Two Words",
+  "expect": "pass",
+  "master": {
+   "firstWord": "30",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.319,
+   "tailAfterLast": 0.65,
+   "whisperFirstStart": 0,
+   "headHeard": "30 Second Walkaround Part 2. Four goals, two words. Aloha! What are you actually doing when you go to do a third...",
+   "tailHeard": "said, that makes you right. And being right is how a stranger decides to trust you in less than a minute. Mahalo.",
+   "duration": 136,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "30",
+   "lastWord": "Mahalo.",
+   "leadIn": 0.364,
+   "tailAfterLast": 0.647,
+   "whisperFirstStart": 0,
+   "headHeard": "30 second walk around part two. Four goals, two words. Aloha! What are you actually doing when you go to do a th...",
+   "tailHeard": "What you said makes you right. And being right is how a stranger decides to trust you in less than a minute. Mahalo.",
+   "duration": 135.666667,
+   "note": null
+  },
+  "note": "false refusal found by the 25 November full-library sweep; the crop is faithful and the gate was measuring the transcriber"
+ },
+ {
+  "title": "Dealer Upsell Menus and Interval Charts — Opener",
+  "expect": "pass",
+  "master": {
+   "firstWord": "Aloha!",
+   "lastWord": "need.",
+   "leadIn": 3.345,
+   "tailAfterLast": 0.137,
+   "whisperFirstStart": 3.44,
+   "headHeard": "Aloha! Using the factory recommendations is a solid strategy for some, but many places are not",
+   "tailHeard": "We are going to cover each mileage interval in your arsenal and by the end of this segment you will be ready to offer menus and services based on any of the materials you need.",
+   "duration": 157,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "Aloha!",
+   "lastWord": "need.",
+   "leadIn": 3.345,
+   "tailAfterLast": 0.149,
+   "whisperFirstStart": 3.44,
+   "headHeard": "Aloha! Using the factory recommendations is a solid strategy for some, but many places are not",
+   "tailHeard": "We are going to cover each mileage interval in your arsenal and by the end of this segment you will be ready to offer menus and services based on any of the items you need.",
+   "duration": 157,
+   "note": null
+  },
+  "note": "false refusal found by the 25 November full-library sweep; the crop is faithful and the gate was measuring the transcriber"
+ },
+ {
+  "title": "MPI Setup — AC Evaporator Cleaning",
+  "expect": "pass",
+  "master": {
+   "firstWord": "Let's",
+   "lastWord": "Hector.",
+   "leadIn": 0,
+   "tailAfterLast": 0.299,
+   "whisperFirstStart": 0.78,
+   "headHeard": "Let's set up the multi -point inspection and see if we can offer an AC Evaporator Core Cleaning Service. So remember, you could have done it at pre -write.",
+   "tailHeard": "all. Now, to get certified in that, you can go to the Get the Hell Outta Here Speech and get certified and truly set up Hector.",
+   "duration": 146,
+   "note": null
+  },
+  "vertical": {
+   "firstWord": "Let's",
+   "lastWord": "Hector.",
+   "leadIn": 0.064,
+   "tailAfterLast": 0.353,
+   "whisperFirstStart": 0.8,
+   "headHeard": "Let's set up the multi -point inspection and see if we can offer an AC evaporator core cleaning service. So remember, you could have done it at pre -rise.",
+   "tailHeard": "at all. Now, to get certified in that, you can go to the Get the Hell Outta Here Speech and get certified and truly set up Hector.",
+   "duration": 145.766667,
+   "note": null
+  },
+  "note": "false refusal found by the 25 November full-library sweep; the crop is faithful and the gate was measuring the transcriber"
  }
 ]
