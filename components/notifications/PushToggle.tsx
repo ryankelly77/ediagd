@@ -4,14 +4,26 @@
    EDIAGD — turning the nudge on and off without going to Settings
 
    The reason this exists is the reason the soft-ask exists, run backwards.
-   iOS permission is expensive to get and, once revoked in Settings, expensive
-   to get back — the dialog does not return. So the in-app switch has to be the
-   easy one: turning this off stops every send while the OS permission and the
-   device tokens stay exactly where they are, and turning it back on is instant
-   and silent.
+   OS notification permission is expensive to get and, once revoked in the
+   phone's settings, expensive to get back — the dialog does not return on
+   either platform. So the in-app switch has to be the easy one: turning this
+   off stops every send while the OS permission and the device tokens stay
+   exactly where they are, and turning it back on is instant and silent.
 
-   If the only way to stop the notification were iOS Settings, the cost of a
-   single unwanted buzz would be the permission itself, permanently.
+   If the only way to stop the notification were the phone's own settings, the
+   cost of a single unwanted buzz would be the permission itself, permanently.
+
+   ---------------------------------------------------------------------------
+   NOTHING ON THIS SCREEN NAMES AN OPERATING SYSTEM
+   ---------------------------------------------------------------------------
+   Every failure message here used to begin "iOS", and one of them said "This
+   iPhone" — all written when iOS was the only shell. EDIAGD 1.0.0 is on Google
+   Play now, so each of those told an Android advisor something false about the
+   device in their hand.
+
+   The route into the phone's settings is the one thing that genuinely differs,
+   so that single sentence branches on nativePlatform() and the rest is written
+   to be true on both. See settingsPath below.
 
    ---------------------------------------------------------------------------
    TURNING IT ON HAS TO BE ABLE TO ASK
@@ -33,11 +45,44 @@
    "unavailable" and does nothing.
    ============================================================================ */
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { setPushEnabled } from "@/lib/notifications/push-actions";
-import { registerForPush } from "@/lib/native/bridge";
+import { nativePlatform, registerForPush } from "@/lib/native/bridge";
 import { createClient } from "@/lib/supabase/client";
 import { Toggle } from "@/components/brand/Toggle";
+
+/**
+ * Where to turn notifications back on, in the words of the phone in their hand.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS BRANCHES INSTEAD OF SAYING "YOUR PHONE'S SETTINGS"
+ * ---------------------------------------------------------------------------
+ * Every message on this screen used to begin "iOS", written when iOS was the
+ * only shell there was. EDIAGD 1.0.0 is on Google Play, so an Android advisor
+ * who declines the permission is now told their iPhone is blocking it.
+ *
+ * The neutral fix — "turn them on in your phone's settings" — would be true
+ * everywhere and useful nowhere. The two paths genuinely differ, and this
+ * message exists to be FOLLOWED: it is shown to somebody who has just hit a
+ * dead end and whose permission dialog is not coming back. So it names the
+ * real path on the platform it is being read on, and falls back to the neutral
+ * sentence only when the platform is genuinely unknown — which, per
+ * nativePlatform(), means a browser, where the message below is not reachable
+ * anyway because registerForPush returns "unavailable" first.
+ *
+ * NO OS NAME IN ANY BRANCH. "Settings → Notifications → EDIAGD" is a route
+ * through the phone, not a claim about who made it, and it stays correct if
+ * somebody is reading it on a tablet.
+ */
+function settingsPath(platform: "ios" | "android" | null): string {
+  if (platform === "android") {
+    return "Open Settings → Apps → EDIAGD → Notifications and turn them on";
+  }
+  if (platform === "ios") {
+    return "Open Settings → Notifications → EDIAGD and allow them";
+  }
+  return "Turn notifications on for EDIAGD in your phone's settings";
+}
 
 export function PushToggle({
   enabled,
@@ -71,6 +116,24 @@ export function PushToggle({
   const [problem, setProblem] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  /*
+   * Resolved once on mount rather than at the moment of failure, because the
+   * hint below the switch needs it too and that renders without anybody
+   * touching anything. Null until it settles, and null is a safe value — every
+   * caller falls back to the neutral sentence.
+   */
+  const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const p = await nativePlatform();
+      if (!cancelled) setPlatform(p);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function change(next: boolean) {
     setOn(next);
     startTransition(() => {
@@ -103,17 +166,28 @@ export function PushToggle({
      */
     if (outcome === "denied") {
       setProblem(
-        "iOS is blocking notifications for EDIAGD. Open Settings → Notifications " +
-          "→ EDIAGD and allow them, and this will start working straight away."
+        `Notifications are turned off for EDIAGD in this phone's settings. ` +
+          `${settingsPath(platform)}, and this will start working straight away.`
       );
     } else if (outcome === "no_token") {
+      /*
+       * "device token" and "push entitlement" were in this sentence and are
+       * gone. It is read by a service advisor on their own profile screen, and
+       * neither phrase tells them anything they can act on. The one thing they
+       * CAN do is try again, so that is what it says.
+       *
+       * Nothing diagnostic is lost: the three outcomes still produce three
+       * different sentences, and the failed: branch below still carries the
+       * provider's own words verbatim.
+       */
       setProblem(
-        "iOS did not return a device token. Check the connection and try the " +
-          "switch again; if it keeps happening the build is missing its push " +
-          "entitlement."
+        "This phone didn't finish setting up reminders. Check your connection " +
+          "and try the switch again."
       );
     } else if (typeof outcome === "string" && outcome.startsWith("failed:")) {
-      setProblem(`iOS refused to register this device — ${outcome.slice(8)}`);
+      setProblem(
+        `This phone refused to register for reminders — ${outcome.slice(8)}`
+      );
     } else if (outcome === "unavailable") {
       setProblem(
         "Notifications only work in the EDIAGD app on your phone, not in a " +
@@ -148,10 +222,14 @@ export function PushToggle({
 
       {/* No device yet, and the switch is off because of it. Say why, so the
           state reads as a step to take rather than as a setting somebody has
-          already dealt with. */}
+          already dealt with.
+
+          This read "This iPhone" until t68. It is JSX text rather than a
+          quoted string, which is why the first sweep for OS names in this file
+          missed it — a grep over string literals is not a grep over copy. */}
       {!registered && !on && (
         <p className="mt-3 text-xs leading-relaxed text-navy/60">
-          This iPhone isn&rsquo;t set up for reminders yet. Turn the switch on and
+          This phone isn&rsquo;t set up for reminders yet. Turn the switch on and
           allow the prompt.
         </p>
       )}
